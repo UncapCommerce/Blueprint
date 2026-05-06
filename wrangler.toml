@@ -1,0 +1,25 @@
+name = "uncap-blueprint"
+main = "worker/index.js"
+compatibility_date = "2025-04-01"
+account_id = "0ff8ba3297e0672ce4b1b53f66496300"
+workers_dev = false
+preview_urls = false
+
+routes = [
+  { pattern = "blueprint.uncap.com", custom_domain = true }
+]
+
+[assets]
+directory = "./public"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+
+[vars]
+# Where fit-call form submissions are emailed.
+NOTIFY_EMAIL = "hay@uncap.com"
+# From-address shown to recipient. Must be on a domain you've verified in Resend
+# (or use Resend's default "onboarding@resend.dev" for testing).
+EMAIL_FROM = "Blueprint Fit Call <onboarding@resend.dev>"
+
+# Secrets required (set with: wrangler secret put RESEND_API_KEY):
+#   RESEND_API_KEY — from https://resend.com/api-keys

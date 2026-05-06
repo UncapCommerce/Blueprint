@@ -1,0 +1,552 @@
+// QuizApp.jsx — Pharmacy-style full-page intake quiz
+// 5 questions + confirmation. One question per screen. Auto-advance on select.
+
+const ERP_OPTIONS = [
+  {id:'netsuite',  label:'NetSuite'},
+  {id:'msdyn',     label:'Microsoft Dynamics'},
+  {id:'acumatica', label:'Acumatica'},
+  {id:'epicor',    label:'Epicor'},
+  {id:'sage',      label:'Sage'},
+  {id:'sap',       label:'SAP'},
+  {id:'infor',     label:'Infor'},
+  {id:'odoo',      label:'Odoo'},
+  {id:'other',     label:'Other / not sure'},
+];
+
+const ERP_EDITIONS = {
+  netsuite:  ['Standard','Premium','Enterprise','OneWorld','Not sure'],
+  msdyn:     ['Business Central','Finance & Operations (F&O)','Dynamics 365 Sales / CRM','GP (legacy)','NAV (legacy)','AX (legacy)','Not sure'],
+  acumatica: ['Small Business','Advanced','Enterprise','Not sure'],
+  epicor:    ['Kinetic','Prophet 21','Eclipse','BisTrack','Eagle','Not sure'],
+  sage:      ['Intacct','X3','100','300','50','200','Not sure'],
+  sap:       ['S/4HANA','S/4HANA Cloud','Business One','ECC','Business ByDesign','Not sure'],
+  infor:     ['M3','LN','CloudSuite','SyteLine','VISUAL','Not sure'],
+  odoo:      ['Community','Enterprise','Online (SaaS)','Not sure'],
+  other:     null, // free text
+};
+
+const PLATFORM_OPTIONS = [
+  'None — first ecommerce site',
+  'Magento / Adobe Commerce',
+  'BigCommerce',
+  'Salesforce Commerce Cloud',
+  'WooCommerce',
+  'Optimizely Commerce',
+  'SAP Commerce Cloud',
+  'commercetools',
+  'VTEX',
+  'NetSuite SuiteCommerce',
+  'Custom-built',
+  'Other',
+];
+
+const REVENUE_OPTIONS = [
+  'Under $1M',
+  '$1M – $5M',
+  '$5M – $25M',
+  '$25M – $100M',
+  '$100M+',
+];
+
+const MODEL_OPTIONS = [
+  {id:'b2b',  label:'B2B',  sub:'Wholesale, distribution, dealer networks'},
+  {id:'dtc',  label:'DTC',  sub:'Direct-to-consumer'},
+  {id:'both', label:'Both', sub:'Unified commerce'},
+];
+
+// ============================================================================
+// SHOPIFY CHECKOUT WIRING
+// ----------------------------------------------------------------------------
+// Replace these two constants with your real Shopify shop and Blueprint variant.
+//
+// SHOP_DOMAIN:
+//   Either your *.myshopify.com domain (e.g. 'uncap.myshopify.com') or your
+//   primary storefront domain if it serves Shopify directly (e.g. 'shop.uncap.com').
+//   Don't use the dashboard domain (admin.shopify.com / checkout.uncap.com).
+//
+// BLUEPRINT_VARIANT_ID:
+//   The numeric variant ID of the Blueprint product (NOT the product ID).
+//   To find it:
+//     1. Shopify admin → Products → "Migration Blueprint" → click the variant.
+//     2. The URL ends in `/variants/123456789012` — copy the trailing number.
+//     OR
+//     1. Open the product page on your live store.
+//     2. View source, search for `"id":` inside the variants JSON, copy the
+//        ~13-digit number.
+// ============================================================================
+const SHOP_DOMAIN = 'my.uncap.com';
+const BLUEPRINT_VARIANT_ID = '50141909352738';   // product 8910400913698 ("Blueprint", $7,000)
+
+// Builds a Shopify cart-permalink URL that adds the Blueprint variant and
+// jumps to checkout, with the user's quiz answers attached as cart attributes.
+// Cart attributes appear on the order in Shopify admin under "Additional
+// details", so your team can see who answered what.
+//
+// Format: https://{shop}/cart/{variant_id}:{qty}?attributes[Key]=Value&...
+// On modern Shopify stores this 302-redirects straight to the Shop Pay /
+// universal checkout (skipping the /cart page). The legacy `/checkout`
+// suffix path is no longer needed — and in fact 404s on newer themes.
+// Docs: https://help.shopify.com/manual/online-store/themes/customizing/permalinks
+function buildCheckoutUrl(answers, otherErp){
+  if (!SHOP_DOMAIN || !BLUEPRINT_VARIANT_ID) {
+    // Not yet configured — keep the placeholder so QA / preview still works.
+    return 'https://checkout.uncap.com/blueprint?variant=blueprint-7k';
+  }
+  const erpLabel = answers.erp === 'other'
+    ? (otherErp || 'Other')
+    : (ERP_OPTIONS.find(o=>o.id===answers.erp)?.label || '');
+  const modelLabel = MODEL_OPTIONS.find(o=>o.id===answers.model)?.label
+    || answers.model || '';
+  const attrs = {
+    'ERP':              erpLabel,
+    'ERP Edition':      answers.edition || '',
+    'Current Platform': answers.platform || '',
+    'Annual Revenue':   answers.revenue || '',
+    'Model':            modelLabel,
+    'Source':           'blueprint-quiz',
+  };
+  const query = Object.entries(attrs)
+    .filter(([,v]) => !!v)
+    .map(([k,v]) => `attributes[${encodeURIComponent(k)}]=${encodeURIComponent(v)}`)
+    .join('&');
+  return `https://${SHOP_DOMAIN}/cart/${BLUEPRINT_VARIANT_ID}:1${query ? '?' + query : ''}`;
+}
+
+function QuizApp(){
+  const [step, setStep] = React.useState(0);
+  const [answers, setAnswers] = React.useState({
+    erp: null,
+    edition: null,
+    platform: null,
+    revenue: null,
+    model: null,
+  });
+  const [otherErp, setOtherErp] = React.useState('');
+
+  // Number of "real" steps before confirmation. Confirmation is index = STEPS.length.
+  const STEPS = ['erp', 'edition', 'platform', 'revenue', 'model'];
+  const isConfirm = step >= STEPS.length;
+  const totalProgress = STEPS.length;
+
+  const set = (key, value) => {
+    setAnswers(prev => ({...prev, [key]: value}));
+  };
+
+  const advance = () => setStep(s => s + 1);
+  const back = () => setStep(s => Math.max(0, s - 1));
+
+  // Auto-advance helper for radio steps
+  const choose = (key, value) => {
+    set(key, value);
+    setTimeout(advance, 220);
+  };
+
+  return (
+    <div data-screen-label="Blueprint Quiz" style={{
+      minHeight:'100vh',
+      background:'var(--uc-cream)',
+      color:'var(--fg-1)',
+      fontFamily:'var(--font-sans)',
+      display:'flex',flexDirection:'column',
+    }}>
+      <QuizHeader
+        step={step}
+        total={totalProgress}
+        onBack={back}
+        isConfirm={isConfirm}
+      />
+
+      <main style={{
+        flex:1,
+        display:'flex',
+        alignItems:'flex-start',
+        justifyContent:'center',
+        padding:'48px 24px 96px',
+      }}>
+        <div style={{width:'100%',maxWidth:680}}>
+          {step === 0 && (
+            <Step
+              eyebrow="Step 1 of 5"
+              title="What ERP do you run on?"
+              sub="We'll tailor the migration plan around your system of record."
+            >
+              <OptionGrid
+                options={ERP_OPTIONS.map(o=>({value:o.id,label:o.label}))}
+                selected={answers.erp}
+                onChoose={(v)=>choose('erp', v)}
+              />
+            </Step>
+          )}
+
+          {step === 1 && (
+            <Step
+              eyebrow="Step 2 of 5"
+              title={editionTitle(answers.erp)}
+              sub="Different editions integrate very differently with Shopify."
+            >
+              {answers.erp === 'other' ? (
+                <FreeTextStep
+                  placeholder="Type your ERP name and edition…"
+                  value={otherErp}
+                  onChange={setOtherErp}
+                  onSubmit={()=>{
+                    if (otherErp.trim()) {
+                      set('edition', otherErp.trim());
+                      advance();
+                    }
+                  }}
+                />
+              ) : answers.erp ? (
+                <OptionGrid
+                  options={(ERP_EDITIONS[answers.erp] || []).map(e=>({value:e,label:e}))}
+                  selected={answers.edition}
+                  onChoose={(v)=>choose('edition', v)}
+                  columns={2}
+                />
+              ) : null}
+            </Step>
+          )}
+
+          {step === 2 && (
+            <Step
+              eyebrow="Step 3 of 5"
+              title="What ecommerce platform are you on today?"
+              sub="Where you're migrating from shapes the entire data plan."
+            >
+              <OptionGrid
+                options={PLATFORM_OPTIONS.map(o=>({value:o,label:o}))}
+                selected={answers.platform}
+                onChoose={(v)=>choose('platform', v)}
+              />
+            </Step>
+          )}
+
+          {step === 3 && (
+            <Step
+              eyebrow="Step 4 of 5"
+              title="What's your annual online revenue?"
+              sub="Helps us calibrate scale: catalog, traffic, B2B accounts."
+            >
+              <OptionGrid
+                options={REVENUE_OPTIONS.map(o=>({value:o,label:o}))}
+                selected={answers.revenue}
+                onChoose={(v)=>choose('revenue', v)}
+                columns={1}
+                size="lg"
+              />
+            </Step>
+          )}
+
+          {step === 4 && (
+            <Step
+              eyebrow="Step 5 of 5"
+              title="Which best describes your model?"
+              sub=""
+            >
+              <OptionGrid
+                options={MODEL_OPTIONS.map(o=>({value:o.id,label:o.label,sub:o.sub}))}
+                selected={answers.model}
+                onChoose={(v)=>choose('model', v)}
+                columns={1}
+                size="lg"
+              />
+            </Step>
+          )}
+
+          {isConfirm && (
+            <Confirm answers={answers} otherErp={otherErp}/>
+          )}
+        </div>
+      </main>
+    </div>
+  );
+}
+
+/* ------- Header w/ progress ------- */
+function QuizHeader({step, total, onBack, isConfirm}){
+  const pct = isConfirm ? 100 : Math.round((step / total) * 100);
+  return (
+    <header style={{
+      position:'sticky',top:0,zIndex:10,
+      background:'rgba(242,239,231,0.92)',
+      backdropFilter:'blur(10px)',WebkitBackdropFilter:'blur(10px)',
+      borderBottom:'1px solid var(--line-1)',
+    }}>
+      <div style={{maxWidth:1280,margin:'0 auto',padding:'14px 24px 16px',position:'relative',display:'flex',flexDirection:'column',alignItems:'center',gap:12}}>
+        {/* Back button — absolute top-left so it doesn't disrupt centering */}
+        {step > 0 && !isConfirm && (
+          <button onClick={onBack} style={{
+            position:'absolute',left:24,top:'50%',transform:'translateY(-50%)',
+            background:'transparent',border:'none',cursor:'pointer',
+            fontFamily:'var(--font-sans)',fontSize:13,fontWeight:500,color:'var(--fg-2)',
+            padding:'8px 12px',borderRadius:5,
+            display:'flex',alignItems:'center',gap:6,
+          }}>
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M8 3L4 7l4 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            Back
+          </button>
+        )}
+
+        {/* Centered brand */}
+        <a href="/" style={{display:'flex',alignItems:'center',gap:12,textDecoration:'none',color:'var(--fg-1)'}}>
+          <img src="/assets/uncap-logo-black.svg" style={{height:20}} alt="Uncap"/>
+          <span style={{height:14,width:1,background:'var(--line-1)'}}/>
+          <span style={{fontFamily:'var(--font-display)',fontWeight:600,fontSize:13,letterSpacing:'-.01em'}}>Blueprint</span>
+        </a>
+
+        {/* Centered progress row */}
+        <div style={{display:'flex',alignItems:'center',gap:12,width:'100%',maxWidth:520}}>
+          <div style={{flex:1,height:4,background:'var(--uc-stone-200)',borderRadius:999,overflow:'hidden'}}>
+            <div style={{
+              width:`${pct}%`,height:'100%',
+              background:'var(--uc-black)',
+              transition:'width 360ms var(--ease-out)',
+            }}/>
+          </div>
+          <span style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--fg-3)',letterSpacing:'.06em',whiteSpace:'nowrap'}}>
+            {isConfirm ? 'COMPLETE' : `${Math.min(step+1,total)} / ${total}`}
+          </span>
+        </div>
+      </div>
+    </header>
+  );
+}
+
+/* ------- Step layout ------- */
+function Step({eyebrow, title, sub, children}){
+  return (
+    <div style={{
+      animation:'quizFadeIn 380ms var(--ease-out) both',
+    }}>
+      <div className="uc-eyebrow" style={{marginBottom:14}}>{eyebrow}</div>
+      <h1 style={{
+        fontFamily:'var(--font-display)',fontWeight:700,
+        fontSize:'clamp(32px,3.4vw,48px)',lineHeight:1.05,letterSpacing:'-.025em',
+        color:'var(--fg-1)',margin:'0 0 12px',textWrap:'balance',
+      }}>{title}</h1>
+      {sub && (
+        <p style={{
+          fontFamily:'var(--font-serif)',fontStyle:'italic',
+          fontSize:'clamp(17px,1.5vw,20px)',lineHeight:1.4,
+          color:'var(--fg-2)',margin:'0 0 36px',maxWidth:560,
+        }}>{sub}</p>
+      )}
+      {!sub && <div style={{height:36}}/>}
+      {children}
+    </div>
+  );
+}
+
+/* ------- Option grid (radio-style cards) ------- */
+function OptionGrid({options, selected, onChoose, columns=2, size='md'}){
+  const padY = size==='lg' ? 22 : 18;
+  const fontSize = size==='lg' ? 18 : 16;
+  return (
+    <div style={{
+      display:'grid',
+      gridTemplateColumns:`repeat(${columns}, 1fr)`,
+      gap:12,
+    }}>
+      {options.map(opt=>{
+        const isSel = selected === opt.value;
+        return (
+          <button
+            key={opt.value}
+            onClick={()=>onChoose(opt.value)}
+            style={{
+              cursor:'pointer',textAlign:'left',
+              background: isSel ? 'var(--uc-black)' : '#fff',
+              color: isSel ? '#fff' : 'var(--fg-1)',
+              border:'1px solid', borderColor: isSel ? 'var(--uc-black)' : 'var(--line-1)',
+              borderRadius:5,
+              padding:`${padY}px 20px`,
+              fontFamily:'var(--font-sans)',fontSize,fontWeight:500,
+              display:'flex',alignItems:'center',justifyContent:'space-between',gap:14,
+              transition:'all .18s var(--ease-out)',
+              boxShadow: isSel ? '0 4px 12px rgba(10,10,10,0.12)' : '0 1px 2px rgba(10,10,10,0.03)',
+            }}
+            onMouseEnter={e=>{
+              if (!isSel) {
+                e.currentTarget.style.borderColor = 'var(--uc-black)';
+                e.currentTarget.style.transform = 'translateY(-1px)';
+              }
+            }}
+            onMouseLeave={e=>{
+              if (!isSel) {
+                e.currentTarget.style.borderColor = 'var(--line-1)';
+                e.currentTarget.style.transform = 'translateY(0)';
+              }
+            }}>
+            <span style={{display:'flex',flexDirection:'column',gap:3}}>
+              <span>{opt.label}</span>
+              {opt.sub && <span style={{fontSize:13,fontWeight:400,opacity:.7}}>{opt.sub}</span>}
+            </span>
+            <span style={{
+              width:22,height:22,borderRadius:999,
+              border:'1.5px solid', borderColor: isSel ? '#fff' : 'var(--line-1)',
+              display:'inline-flex',alignItems:'center',justifyContent:'center',
+              flexShrink:0,
+            }}>
+              {isSel && <span style={{width:10,height:10,borderRadius:999,background:'#fff'}}/>}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+/* ------- Free-text step (used for "Other" ERP) ------- */
+function FreeTextStep({placeholder, value, onChange, onSubmit}){
+  return (
+    <div style={{display:'flex',flexDirection:'column',gap:16}}>
+      <input
+        type="text"
+        value={value}
+        onChange={e=>onChange(e.target.value)}
+        onKeyDown={e=>{ if(e.key==='Enter') onSubmit(); }}
+        placeholder={placeholder}
+        autoFocus
+        style={{
+          width:'100%',
+          padding:'18px 20px',
+          fontSize:18,fontFamily:'var(--font-sans)',fontWeight:500,
+          color:'var(--fg-1)',
+          background:'#fff',
+          border:'1px solid var(--line-1)',borderRadius:5,
+          outline:'none',
+          transition:'border-color .15s var(--ease-out)',
+        }}
+        onFocus={e=>e.currentTarget.style.borderColor='var(--uc-black)'}
+        onBlur={e=>e.currentTarget.style.borderColor='var(--line-1)'}
+      />
+      <button
+        onClick={onSubmit}
+        disabled={!value.trim()}
+        className="uc-btn b-primary"
+        style={{alignSelf:'flex-start',opacity:value.trim()?1:.4,cursor:value.trim()?'pointer':'default'}}>
+        Continue <span>→</span>
+      </button>
+    </div>
+  );
+}
+
+/* ------- Edition step title helper ------- */
+function editionTitle(erpId){
+  const erp = ERP_OPTIONS.find(o=>o.id===erpId);
+  if (!erp) return 'Which edition?';
+  if (erpId === 'other') return 'Which ERP and edition?';
+  return `Which edition of ${erp.label}?`;
+}
+
+/* ------- Confirmation screen ------- */
+function Confirm({answers, otherErp}){
+  const erpName = answers.erp === 'other'
+    ? (otherErp || 'Other')
+    : (ERP_OPTIONS.find(o=>o.id===answers.erp)?.label || '—');
+  const editionName = answers.edition || '—';
+  const platformName = answers.platform || '—';
+  const revenueName = answers.revenue || '—';
+  const modelName = MODEL_OPTIONS.find(o=>o.id===answers.model)?.label || answers.model || '—';
+
+  const rows = [
+    {l:'ERP',                      v:erpName},
+    {l:'Edition',                  v:editionName},
+    {l:'Current platform',         v:platformName},
+    {l:'Annual online revenue',    v:revenueName},
+    {l:'Model',                    v:modelName},
+  ];
+
+  return (
+    <div style={{animation:'quizFadeIn 480ms var(--ease-out) both'}}>
+      <div style={{display:'inline-flex',alignItems:'center',gap:10,padding:'6px 14px',background:'var(--uc-signal)',borderRadius:999,marginBottom:24}}>
+        <span style={{width:8,height:8,borderRadius:999,background:'var(--uc-black)'}}/>
+        <span style={{fontFamily:'var(--font-mono)',fontSize:11,fontWeight:700,letterSpacing:'.12em',color:'var(--uc-black)'}}>READY TO START</span>
+      </div>
+      <h1 style={{
+        fontFamily:'var(--font-display)',fontWeight:700,
+        fontSize:'clamp(36px,4vw,56px)',lineHeight:1.02,letterSpacing:'-.03em',
+        color:'var(--fg-1)',margin:'0 0 14px',textWrap:'balance',
+      }}>
+        Your Blueprint is scoped.
+      </h1>
+      <p style={{
+        fontFamily:'var(--font-serif)',fontStyle:'italic',
+        fontSize:'clamp(20px,1.8vw,26px)',lineHeight:1.35,
+        color:'var(--fg-2)',margin:'0 0 36px',maxWidth:560,letterSpacing:'-.01em',
+      }}>
+        Lock it in. We'll be in touch within one business day to schedule your kickoff.
+      </p>
+
+      {/* Recap card */}
+      <div style={{
+        background:'#fff',border:'1px solid var(--uc-black)',borderRadius:5,
+        padding:'8px 24px',marginBottom:28,
+        boxShadow:'0 4px 16px rgba(10,10,10,0.06)',
+      }}>
+        {rows.map((r,i)=>(
+          <div key={r.l} style={{
+            display:'grid',gridTemplateColumns:'180px 1fr',gap:24,
+            padding:'16px 0',
+            borderTop: i===0 ? 'none' : '1px solid var(--line-1)',
+            alignItems:'baseline',
+          }}>
+            <span style={{fontFamily:'var(--font-mono)',fontSize:11,fontWeight:600,letterSpacing:'.1em',color:'var(--fg-3)',textTransform:'uppercase'}}>{r.l}</span>
+            <span style={{fontSize:16,fontWeight:500,color:'var(--fg-1)'}}>{r.v}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Price + checkout */}
+      <div style={{
+        background:'var(--uc-black)',color:'#fff',borderRadius:5,
+        padding:28,marginBottom:24,
+        display:'grid',gridTemplateColumns:'1fr auto',gap:24,alignItems:'center',
+      }}>
+        <div>
+          <div style={{fontSize:12,fontWeight:600,letterSpacing:'.12em',textTransform:'uppercase',color:'var(--uc-stone-500)',marginBottom:6}}>Migration Blueprint · 4 weeks · yours to keep</div>
+          <div style={{fontFamily:'var(--font-display)',fontWeight:800,fontSize:48,letterSpacing:'-.04em',lineHeight:1}}>$7,000</div>
+        </div>
+        <a
+          href={buildCheckoutUrl(answers, otherErp)}
+          className="uc-btn b-signal"
+          style={{padding:'18px 26px',fontSize:16,fontWeight:600,whiteSpace:'nowrap',gap:10}}
+        >
+          <Lock/>
+          Place Order
+          <span>→</span>
+        </a>
+      </div>
+
+      <div style={{display:'flex',gap:24,flexWrap:'wrap',fontSize:13,color:'var(--fg-3)'}}>
+        <span style={{display:'inline-flex',alignItems:'center',gap:8}}>
+          <Lock/> Secure Shopify Checkout
+        </span>
+        <span style={{display:'inline-flex',alignItems:'center',gap:8}}>
+          <CheckSm/> Refund if it doesn't give you clarity
+        </span>
+        <span style={{display:'inline-flex',alignItems:'center',gap:8}}>
+          <CheckSm/> Credited toward implementation
+        </span>
+      </div>
+
+      <div style={{marginTop:48,paddingTop:24,borderTop:'1px solid var(--line-1)',fontSize:13,color:'var(--fg-3)'}}>
+        Not ready? <a href="/call" style={{color:'var(--fg-1)',fontWeight:500}}>Book a 25-min fit call</a> instead.
+      </div>
+    </div>
+  );
+}
+
+function Lock(){ return (
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+    <rect x="2.5" y="6" width="9" height="6.5" rx="1" stroke="currentColor" strokeWidth="1.3"/>
+    <path d="M4.5 6V4.2a2.5 2.5 0 015 0V6" stroke="currentColor" strokeWidth="1.3"/>
+  </svg>
+);}
+function CheckSm(){ return (
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+    <path d="M2.5 7.5L5.5 10L11.5 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);}
+
+window.QuizApp = QuizApp;

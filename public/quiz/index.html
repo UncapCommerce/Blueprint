@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Start the Blueprint — Uncap</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png"/>
+<link rel="apple-touch-icon" href="/favicon-32.png"/>
+<link rel="stylesheet" href="/colors_and_type.css"/>
+<style>
+  html,body{margin:0;background:var(--bg-1);color:var(--fg-1);font-family:var(--font-sans);-webkit-font-smoothing:antialiased}
+  *{box-sizing:border-box}
+  ::selection{background:var(--uc-signal);color:var(--uc-black)}
+
+  .uc-btn{display:inline-flex;align-items:center;gap:8px;padding:14px 22px;border-radius:5px;font-weight:600;font-size:15px;font-family:var(--font-sans);border:1px solid transparent;cursor:pointer;transition:all .15s var(--ease-out);text-decoration:none;line-height:1;white-space:nowrap}
+  .uc-btn.b-primary{background:var(--uc-brand);color:#fff}
+  .uc-btn.b-primary:hover{background:var(--uc-brand-hover)}
+  .uc-btn.b-signal{background:var(--uc-signal);color:var(--uc-black)}
+  .uc-btn.b-signal:hover{background:#d8ee3c}
+  .uc-btn span{transition:transform .15s var(--ease-out);display:inline-block}
+  .uc-btn:hover span{transform:translateX(3px)}
+  a{color:inherit}
+
+  @keyframes quizFadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ============== MOBILE QUIZ EXPERIENCE ==============
+     Optimized for thumb-reach + iOS no-zoom + tight conversion path.
+     Targets the inline styles produced by QuizApp.jsx; uses !important
+     to override React's element-level styles. */
+  @media (max-width: 640px) {
+    /* Header — tighter padding, smaller logo, less intrusive Back button */
+    header > div { padding: 10px 16px 14px !important; gap: 10px !important; }
+    header img[alt="Uncap"] { height: 18px !important; }
+    header > div > button { left: 12px !important; padding: 6px 8px !important; font-size: 12px !important; }
+
+    /* Main step container — less side padding, less bottom (no fixed bar here) */
+    main { padding: 24px 18px 56px !important; }
+
+    /* Step typography — smaller display headline */
+    main h1 {
+      font-size: clamp(26px, 7.6vw, 34px) !important;
+      line-height: 1.08 !important;
+      letter-spacing: -0.02em !important;
+      margin-bottom: 10px !important;
+    }
+    main h1 + p { font-size: 16px !important; margin-bottom: 24px !important; }
+
+    /* OptionGrid — collapse 2-col to 1-col so option cards are full width */
+    main [style*="grid-template-columns: repeat(2, 1fr)"] {
+      grid-template-columns: 1fr !important;
+    }
+
+    /* OptionGrid card — bigger tap target, allow the label to wrap */
+    main [style*="grid-template-columns: 1fr"] > button {
+      padding: 18px 18px !important;
+      font-size: 16px !important;
+    }
+
+    /* Free-text "Other ERP" input — 16px to prevent iOS zoom-on-focus */
+    main input[type="text"] { font-size: 16px !important; padding: 16px 18px !important; }
+    main input[type="text"] + button { width: 100% !important; justify-content: center !important; }
+
+    /* ----- Confirmation step (Place Order screen) ----- */
+    /* Recap card — stack label/value rather than 180px-1fr two-col */
+    main [style*="grid-template-columns: 180px 1fr"] {
+      grid-template-columns: 1fr !important;
+      gap: 4px !important;
+      padding-top: 12px !important;
+      padding-bottom: 12px !important;
+    }
+    main [style*="grid-template-columns: 180px 1fr"] span:first-child { font-size: 10px !important; }
+    main [style*="grid-template-columns: 180px 1fr"] span:last-child { font-size: 15px !important; }
+
+    /* Price + Place Order card — stack price above button, button full width */
+    main [style*="grid-template-columns: 1fr auto"] {
+      grid-template-columns: 1fr !important;
+      gap: 18px !important;
+    }
+    main [style*="grid-template-columns: 1fr auto"] a {
+      width: 100% !important;
+      justify-content: center !important;
+    }
+
+    /* Trust row below Place Order — smaller, centered */
+    main [style*="font-size: 13px"][style*="color: var(--fg-3)"] { gap: 16px !important; }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="/components/QuizApp.jsx"></script>
+
+<script type="text/babel">
+  ReactDOM.createRoot(document.getElementById('root')).render(<QuizApp/>);
+</script>
+</body>
+</html>

@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>The Blueprint — Uncap</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png"/>
+<link rel="apple-touch-icon" href="/favicon-32.png"/>
+<link rel="stylesheet" href="colors_and_type.css"/>
+<style>
+  html,body{margin:0;background:var(--bg-1);color:var(--fg-1);font-family:var(--font-sans);-webkit-font-smoothing:antialiased}
+  *{box-sizing:border-box}
+  ::selection{background:var(--uc-signal);color:var(--uc-black)}
+
+  /* Buttons */
+  .uc-btn{display:inline-flex;align-items:center;gap:8px;padding:14px 22px;border-radius:5px;font-weight:600;font-size:15px;font-family:var(--font-sans);border:1px solid transparent;cursor:pointer;transition:all .15s var(--ease-out);text-decoration:none;line-height:1;white-space:nowrap}
+  .uc-btn:disabled{opacity:.7;cursor:default}
+  .uc-btn.b-primary{background:var(--uc-brand);color:#fff}
+  .uc-btn.b-primary:hover{background:var(--uc-brand-hover)}
+  .uc-btn.b-outline{background:transparent;border-color:var(--uc-brand);color:var(--uc-brand)}
+  .uc-btn.b-outline:hover{background:var(--uc-brand);color:#fff}
+  .uc-btn.b-text{background:transparent;color:var(--uc-black);padding:14px 8px}
+  .uc-btn.b-text:hover{text-decoration:underline}
+  .uc-btn.b-signal{background:var(--uc-signal);color:var(--uc-black)}
+  .uc-btn.b-signal:hover{background:#d8ee3c}
+  .uc-btn span{transition:transform .15s var(--ease-out);display:inline-block}
+  .uc-btn:hover span{transform:translateX(3px)}
+  a{color:inherit}
+
+  /* Reveal-on-scroll */
+  .reveal{opacity:0;transform:translateY(16px);transition:opacity 700ms var(--ease-out),transform 700ms var(--ease-out)}
+  .reveal.in{opacity:1;transform:translateY(0)}
+
+  /* ============== MOBILE / TABLET RESPONSIVE ============== */
+
+  /* Tablet: ≤960px — collapse 2-col grids, shrink padding */
+  @media (max-width: 960px) {
+    section[id], section { padding-left: 24px !important; padding-right: 24px !important; }
+    /* Collapse all 2-column and 3-column grids inside sections to single column */
+    section [style*="grid-template-columns: 1fr 1.1fr"],
+    section [style*="grid-template-columns: 1fr 1.2fr"],
+    section [style*="grid-template-columns: 1.1fr 1fr"],
+    section [style*="grid-template-columns: 1.2fr 1fr"],
+    section [style*="grid-template-columns: 1.6fr 1fr"],
+    section [style*="grid-template-columns: 1fr 1.6fr"],
+    section [style*="grid-template-columns: 1fr 1fr"],
+    section [style*="grid-template-columns: repeat(3, 1fr)"],
+    section [style*="grid-template-columns: 2fr 1fr 1fr 1fr"],
+    footer [style*="grid-template-columns: 2fr 1fr 1fr 1fr"] {
+      grid-template-columns: 1fr !important;
+      gap: 32px !important;
+    }
+    /* 4-col card grids → 2 columns */
+    section [style*="grid-template-columns: repeat(4, 1fr)"] {
+      grid-template-columns: repeat(2, 1fr) !important;
+    }
+    /* Mosaic columns → 2 cols */
+    section [style*="column-count: 3"] { column-count: 2 !important; }
+
+    /* Header — hide nav links + secondary CTA */
+    header nav { display: none !important; }
+    header a[href="#book"]:not(.uc-btn) { display: none !important; }
+
+    /* Smaller section padding top/bottom */
+    section[id="problem"], section[id="offer"], section[id="proof"],
+    section[id="math"], section[id="process"], section[id="faq"] {
+      padding-top: 80px !important; padding-bottom: 80px !important;
+    }
+  }
+
+  /* Mobile: ≤640px — single column everything, smaller type */
+  @media (max-width: 640px) {
+    section, footer { padding-left: 20px !important; padding-right: 20px !important; }
+    section [style*="grid-template-columns: repeat(2, 1fr)"],
+    section [style*="grid-template-columns: repeat(4, 1fr)"] {
+      grid-template-columns: 1fr !important;
+    }
+    section [style*="column-count: 2"] { column-count: 1 !important; }
+    section [style*="column-count: 3"] { column-count: 1 !important; }
+
+    /* Trust strip — stack label above marquee */
+    section [style*="grid-template-columns: auto 1fr"] {
+      grid-template-columns: 1fr !important;
+      gap: 16px !important;
+    }
+
+    /* Buttons — bigger tap target, allow wrap, never block */
+    .uc-btn { font-size: 14px !important; padding: 14px 20px !important; min-height: 44px; }
+
+    /* Hide rotation on case files (Problem section) */
+    .case-file { transform: none !important; }
+
+    /* Hero stats / inline rows — wrap */
+    [style*="display: flex"][style*="gap: 24px"],
+    [style*="display: flex"][style*="gap: 32px"] { flex-wrap: wrap !important; }
+
+    /* ===== Performance: skip the 600KB+ decorative bg vectors on mobile.
+       They're hidden visually anyway in narrow viewports — and modern
+       browsers will *not* fetch images on display:none parents in many
+       cases, so this saves ~2MB on first paint. ===== */
+    section img[src*="bg-vector-"] { display: none !important; }
+
+    /* ===== Hero — tighter on mobile so the right column (artifact card)
+       lines up below the headline without wasted white space. ===== */
+    section [style*="padding: 72px 32px 96px"] {
+      padding: 36px 20px 56px !important;
+    }
+    section h1[style*="clamp(48px, 5.6vw, 88px)"] {
+      font-size: clamp(32px, 9vw, 44px) !important;
+      line-height: 1.05 !important;
+    }
+    section [style*="grid-template-columns: 1.35fr 1fr"] {
+      grid-template-columns: 1fr !important;
+      gap: 28px !important;
+    }
+    /* Hero CTA row: stack & full-width primary on mobile */
+    section .uc-btn.b-primary { width: 100%; justify-content: center; }
+    section .uc-btn.b-text { padding-left: 0 !important; }
+
+    /* Artifact card padding tighter so it doesn't overflow */
+    section [style*="border-radius: 5px"][style*="padding: 28px"][style*="border: 1px solid"] {
+      padding: 18px !important;
+    }
+
+    /* H2s smaller on mobile */
+    section h2 { font-size: clamp(28px, 7vw, 40px) !important; line-height: 1.05 !important; letter-spacing: -.02em !important; }
+
+    /* FAQ accordion items have larger tap target */
+    section [style*="border-bottom: 1px solid var(--uc-black)"] button { padding: 18px 0 !important; }
+
+    /* Footer — single column, cleaner spacing */
+    footer { padding: 36px 20px 24px !important; }
+  }
+
+  /* ===== Mobile sticky bottom CTA bar (≤640px only) =====
+     Always-visible conversion path while scrolling the landing page.
+     Two-button layout: outline "Book a call" + primary "Start the Blueprint".
+     Pinned to viewport bottom respecting iPhone safe-area inset. */
+  .m-cta-bar { display: none; }
+  @media (max-width: 640px) {
+    body { padding-bottom: 78px; }
+    .m-cta-bar {
+      display: flex;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+      gap: 10px;
+      z-index: 60;
+      background: rgba(255,255,255,0.96);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border-top: 1px solid var(--line-1);
+      box-shadow: 0 -6px 24px rgba(10,10,10,0.05);
+    }
+    .m-cta-bar a {
+      flex: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 14px 14px;
+      border-radius: 5px;
+      font-family: var(--font-sans);
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      line-height: 1;
+      border: 1px solid;
+      transition: background .15s var(--ease-out), color .15s var(--ease-out);
+      min-height: 44px;
+    }
+    .m-cta-bar a.outline { background: #fff; color: var(--uc-black); border-color: var(--line-1); }
+    .m-cta-bar a.primary { background: var(--uc-brand); color: #fff; border-color: var(--uc-brand); }
+    .m-cta-bar a span { transition: transform .15s var(--ease-out); display: inline-block; }
+    .m-cta-bar a:active span { transform: translateX(2px); }
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<!-- Mobile-only sticky bottom CTA bar (display:none above 640px) -->
+<nav class="m-cta-bar" aria-label="Quick actions">
+  <a href="/call" class="outline">Book a call</a>
+  <a href="/quiz" class="primary">Start the Blueprint <span>→</span></a>
+</nav>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="components/Header.jsx"></script>
+<script type="text/babel" src="components/Hero.jsx"></script>
+<script type="text/babel" src="components/TrustStrip.jsx"></script>
+<script type="text/babel" src="components/Problem.jsx"></script>
+<script type="text/babel" src="components/Shift.jsx"></script>
+<script type="text/babel" src="components/Offer.jsx"></script>
+<script type="text/babel" src="components/MathSection.jsx"></script>
+<script type="text/babel" src="components/SocialProof.jsx"></script>
+<script type="text/babel" src="components/FitProcess.jsx"></script>
+<script type="text/babel" src="components/Closing.jsx"></script>
+
+<script type="text/babel">
+function App(){
+  React.useEffect(()=>{
+    const els = document.querySelectorAll('[data-reveal]');
+    els.forEach(el=>el.classList.add('reveal'));
+    const io = new IntersectionObserver((entries)=>{
+      entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
+    },{threshold:0.12});
+    els.forEach(el=>io.observe(el));
+    return ()=>io.disconnect();
+  },[]);
+  return (
+    <div data-screen-label="Blueprint Landing">
+      <Header/>
+      <Hero/>
+      <TrustStrip/>
+      <Problem/>
+      <Shift/>
+      <Offer/>
+      <MathSection/>
+      <SocialProof/>
+      <FitProcess/>
+      <Guarantee/>
+      <FAQ/>
+      <Founder/>
+      <FinalCTA/>
+      <Footer/>
+    </div>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>
