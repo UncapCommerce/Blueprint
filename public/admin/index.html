@@ -1,0 +1,128 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="robots" content="noindex,nofollow"/>
+<title>Charge — Blueprint admin</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png"/>
+<link rel="stylesheet" href="/colors_and_type.css"/>
+<style>
+  html,body{margin:0;background:var(--bg-1);color:var(--fg-1);font-family:var(--font-sans);-webkit-font-smoothing:antialiased}
+  *{box-sizing:border-box}
+  ::selection{background:var(--uc-signal);color:var(--uc-black)}
+  main{max-width:520px;margin:0 auto;padding:64px 24px 96px}
+  h1{font-family:var(--font-display);font-weight:700;font-size:32px;letter-spacing:-.02em;margin:0 0 8px}
+  .lead{font-size:15px;color:var(--fg-2);margin:0 0 32px;line-height:1.5}
+  form{display:flex;flex-direction:column;gap:14px;background:#fff;border:1px solid var(--line-1);border-radius:5px;padding:24px;box-shadow:0 4px 16px rgba(10,10,10,0.05)}
+  label{display:flex;flex-direction:column;gap:6px;font-size:13px;font-weight:600;color:var(--fg-2)}
+  input{font:inherit;font-size:15px;padding:12px 14px;border:1px solid var(--line-1);border-radius:5px;color:var(--fg-1);background:#fff;outline:none;transition:border-color .15s var(--ease-out)}
+  input:focus{border-color:var(--uc-black)}
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+  button{font:inherit;font-size:15px;font-weight:600;padding:14px 22px;border-radius:5px;border:none;cursor:pointer;background:var(--uc-black);color:#fff;transition:background .15s var(--ease-out)}
+  button:hover:not(:disabled){background:#222}
+  button:disabled{opacity:.5;cursor:default}
+  .out{margin-top:18px;padding:14px 16px;border-radius:5px;font-size:14px;line-height:1.5;white-space:pre-wrap;word-break:break-word}
+  .ok{background:#e8f6ec;color:#1f6f3b;border:1px solid #c5e7d2}
+  .err{background:#fbeaea;color:#9a2424;border:1px solid #f0c4c4}
+  .hint{font-size:12px;color:var(--fg-3);margin-top:4px;font-weight:400}
+  .grid-amount{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:center}
+  .grid-amount .prefix{font-family:var(--font-mono);font-size:13px;color:var(--fg-3);background:var(--bg-1);padding:12px 14px;border:1px solid var(--line-1);border-radius:5px}
+</style>
+</head>
+<body>
+<main>
+  <h1>Charge a saved card</h1>
+  <p class="lead">After the fit call confirms scope, paste the Stripe customer ID and click Charge. Default amount is $7,500.</p>
+
+  <form id="f">
+    <label>
+      Admin token
+      <input id="token" type="password" autocomplete="off" placeholder="Bearer token from the Worker secret" required/>
+      <span class="hint">Stored only in your browser tab. Not sent anywhere except this Worker.</span>
+    </label>
+
+    <label>
+      Stripe customer ID
+      <input id="customer" type="text" autocomplete="off" placeholder="cus_…" required pattern="cus_[A-Za-z0-9]+"/>
+    </label>
+
+    <div class="row">
+      <label>
+        Amount (USD)
+        <input id="amount" type="number" inputmode="decimal" min="1" step="0.01" value="7500.00"/>
+      </label>
+      <label>
+        Description
+        <input id="description" type="text" value="Migration Blueprint"/>
+      </label>
+    </div>
+
+    <button id="go" type="submit">Charge</button>
+  </form>
+
+  <div id="out" class="out" hidden></div>
+</main>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  const out = $('out');
+
+  function show(kind, text) {
+    out.className = 'out ' + (kind === 'ok' ? 'ok' : 'err');
+    out.textContent = text;
+    out.hidden = false;
+  }
+
+  $('f').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    out.hidden = true;
+    $('go').disabled = true;
+    $('go').textContent = 'Charging…';
+
+    const token = $('token').value.trim();
+    const customerId = $('customer').value.trim();
+    const amountUsd = Number($('amount').value);
+    const description = $('description').value.trim();
+
+    if (!token || !customerId.startsWith('cus_') || !(amountUsd > 0)) {
+      show('err', 'Token, cus_… ID, and a positive amount are required.');
+      $('go').disabled = false;
+      $('go').textContent = 'Charge';
+      return;
+    }
+
+    try {
+      const resp = await fetch('/api/admin/charge', {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          'authorization': 'Bearer ' + token,
+        },
+        body: JSON.stringify({
+          customerId,
+          amountCents: Math.round(amountUsd * 100),
+          description,
+        }),
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok || !data.ok) {
+        show('err', data.error || ('Request failed (' + resp.status + ')'));
+      } else {
+        const dollars = (data.amount / 100).toFixed(2);
+        show('ok',
+          'Status: ' + data.status + '\n' +
+          'PaymentIntent: ' + data.paymentIntentId + '\n' +
+          'Charged: $' + dollars + ' to ' + customerId
+        );
+      }
+    } catch (err) {
+      show('err', err.message || 'Network error.');
+    } finally {
+      $('go').disabled = false;
+      $('go').textContent = 'Charge';
+    }
+  });
+</script>
+</body>
+</html>
