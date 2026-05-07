@@ -108,7 +108,7 @@ function BlueprintArtifact({isMobile}){
             {n:'01', t:'Ecommerce Optimization', p:'2 pp'},
             {n:'02', t:'Solution Architecture', p:'2 pp'},
             {n:'03', t:'Data Migration Taxonomy', p:'4 pp'},
-            {n:'04', t:'SEO Optimization Strategy', p:'3 pp'},
+            {n:'04', t:'SEO Preservation Roadmap', p:'3 pp'},
             {n:'05', t:'Tech Stack & 3d Party Apps', p:'1 table'},
             {n:'06', t:'Total Cost of Ownership', p:'1 report'},
             {n:'07', t:'ERP Integration Audit', p:'5 pp'},
