@@ -20,3 +20,7 @@ jobs:
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          # --keep-vars preserves plaintext Variables set in the Cloudflare
+          # dashboard (e.g. STRIPE_PUBLISHABLE_KEY) across deploys. Without
+          # this flag, every deploy strips any var not declared in wrangler.toml.
+          command: deploy --keep-vars
