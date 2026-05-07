@@ -138,7 +138,7 @@ function BlueprintArtifact({isMobile}){
 
         <div style={{marginTop: m ? 14 : 20,paddingTop:14,borderTop:'1px solid var(--uc-black)',display:'flex',justifyContent:'space-between',alignItems:'center',gap:8,flexWrap:'wrap'}}>
           <div style={{display:'flex',alignItems:'center',gap:10}}>
-            <span style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--fg-3)'}}>Delivered by</span>
+            <span style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--fg-3)'}}>Prepared by</span>
             <div style={{display:'flex',alignItems:'center'}}>
               {[
                 'https://i.pravatar.cc/80?img=12',
