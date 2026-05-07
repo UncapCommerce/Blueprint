@@ -195,6 +195,7 @@
       min-height: 44px;
     }
     .m-cta-bar a.primary { background: #495af3; color: #fff !important; border-color: #495af3; text-decoration: none; }
+    .m-cta-bar a.outline { background: #fff; color: var(--fg-1) !important; border-color: var(--uc-black); }
     .m-cta-bar a span { transition: transform .15s var(--ease-out); display: inline-block; }
     .m-cta-bar a:active span { transform: translateX(2px); }
   }
@@ -254,6 +255,7 @@ function App(){
       </div>
       {/* Mobile-only sticky bottom CTA bar — rendered post-mount only */}
       <nav className="m-cta-bar" aria-label="Quick actions">
+        <a href="/call" className="outline">Book a call</a>
         <a href="/quiz" className="primary">Start the Blueprint <span>→</span></a>
       </nav>
     </React.Fragment>
