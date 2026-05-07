@@ -157,48 +157,6 @@
     footer { padding: 36px 20px 24px !important; }
   }
 
-  /* ===== Mobile sticky bottom CTA bar (≤640px only) =====
-     Always-visible conversion path while scrolling the landing page.
-     Two-button layout: outline "Book a call" + primary "Start the Blueprint".
-     Pinned to viewport bottom respecting iPhone safe-area inset. */
-  .m-cta-bar { display: none; }
-  @media (max-width: 640px) {
-    body { padding-bottom: 78px; }
-    .m-cta-bar {
-      display: flex;
-      position: fixed;
-      bottom: 0; left: 0; right: 0;
-      padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
-      gap: 10px;
-      z-index: 60;
-      background: rgba(255,255,255,0.96);
-      backdrop-filter: blur(12px);
-      -webkit-backdrop-filter: blur(12px);
-      border-top: 1px solid var(--line-1);
-      box-shadow: 0 -6px 24px rgba(10,10,10,0.05);
-    }
-    .m-cta-bar a {
-      flex: 1;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      padding: 14px 14px;
-      border-radius: 5px;
-      font-family: var(--font-sans);
-      font-size: 14px;
-      font-weight: 600;
-      text-decoration: none;
-      line-height: 1;
-      border: 1px solid;
-      transition: background .15s var(--ease-out), color .15s var(--ease-out);
-      min-height: 44px;
-    }
-    .m-cta-bar a.primary { background: #495af3; color: #fff !important; border-color: #495af3; text-decoration: none; }
-    .m-cta-bar a.outline { background: #fff; color: var(--fg-1) !important; border-color: var(--uc-black); }
-    .m-cta-bar a span { transition: transform .15s var(--ease-out); display: inline-block; }
-    .m-cta-bar a:active span { transform: translateX(2px); }
-  }
 </style>
 </head>
 <body>
@@ -226,7 +184,6 @@
 
 <script type="text/babel">
 function App(){
-  const isMobile = window.useIsMobile ? window.useIsMobile() : false;
   React.useEffect(()=>{
     const els = document.querySelectorAll('[data-reveal]');
     els.forEach(el=>el.classList.add('reveal'));
@@ -254,13 +211,6 @@ function App(){
         <FinalCTA/>
         <Footer/>
       </div>
-      {/* Mobile-only sticky bottom CTA bar */}
-      {isMobile && (
-        <nav className="m-cta-bar" aria-label="Quick actions">
-          <a href="/call" className="outline">Book a call</a>
-          <a href="/quiz" className="primary">Start the Blueprint <span>→</span></a>
-        </nav>
-      )}
     </React.Fragment>
   );
 }
