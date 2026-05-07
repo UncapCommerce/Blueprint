@@ -115,7 +115,7 @@ function FinalCTA() {
         </p>
         <div style={{display:'flex',gap: isMobile ? 10 : 14,alignItems:'stretch',flexDirection: isMobile ? 'column' : 'row',flexWrap:'wrap',marginBottom:32}}>
           <a href="/quiz" className="uc-btn b-primary" style={isMobile ? {width:'100%',justifyContent:'center',padding:'16px 24px',fontSize:16} : {padding:'18px 28px',fontSize:16}}>Start the Blueprint <span>→</span></a>
-          <a href="/call" className="uc-btn b-outline" style={isMobile ? {width:'100%',justifyContent:'center',padding:'14px 24px',fontSize:15} : {padding:'18px 28px',fontSize:16}}>Not ready? Book a fit call <span>→</span></a>
+          <a href="/call" className="uc-btn b-text" style={isMobile ? {alignSelf:'center',padding:'10px 8px'} : null}>Not ready? Book a fit call <span>→</span></a>
         </div>
         <div style={{display:'grid',gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',gap: isMobile ? 18 : 32,paddingTop: isMobile ? 24 : 32,borderTop:'1px solid var(--line-1)'}}>
           {[
