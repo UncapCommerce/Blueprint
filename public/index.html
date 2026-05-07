@@ -226,6 +226,7 @@
 
 <script type="text/babel">
 function App(){
+  const isMobile = window.useIsMobile ? window.useIsMobile() : false;
   React.useEffect(()=>{
     const els = document.querySelectorAll('[data-reveal]');
     els.forEach(el=>el.classList.add('reveal'));
@@ -253,11 +254,13 @@ function App(){
         <FinalCTA/>
         <Footer/>
       </div>
-      {/* Mobile-only sticky bottom CTA bar — rendered post-mount only */}
-      <nav className="m-cta-bar" aria-label="Quick actions">
-        <a href="/call" className="outline">Book a call</a>
-        <a href="/quiz" className="primary">Start the Blueprint <span>→</span></a>
-      </nav>
+      {/* Mobile-only sticky bottom CTA bar */}
+      {isMobile && (
+        <nav className="m-cta-bar" aria-label="Quick actions">
+          <a href="/call" className="outline">Book a call</a>
+          <a href="/quiz" className="primary">Start the Blueprint <span>→</span></a>
+        </nav>
+      )}
     </React.Fragment>
   );
 }
