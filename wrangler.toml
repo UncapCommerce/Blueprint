@@ -15,11 +15,16 @@ binding = "ASSETS"
 not_found_handling = "single-page-application"
 
 [vars]
-# Where fit-call form submissions are emailed.
+# Where fit-call form submissions and card-on-file notifications are emailed.
 NOTIFY_EMAIL = "hay@uncap.com"
 # From-address shown to recipient. Must be on a domain you've verified in Resend
 # (or use Resend's default "onboarding@resend.dev" for testing).
 EMAIL_FROM = "Blueprint Fit Call <onboarding@resend.dev>"
+# Stripe publishable key — public, safe to commit. Replace with the live key
+# (pk_live_…) before going to production. The secret key is set via
+# `wrangler secret put STRIPE_SECRET_KEY`, NOT here.
+STRIPE_PUBLISHABLE_KEY = "pk_test_REPLACE_ME"
 
-# Secrets required (set with: wrangler secret put RESEND_API_KEY):
-#   RESEND_API_KEY — from https://resend.com/api-keys
+# Secrets required (set with: wrangler secret put <NAME>):
+#   RESEND_API_KEY     — from https://resend.com/api-keys
+#   STRIPE_SECRET_KEY  — from https://dashboard.stripe.com/apikeys (sk_test_… first)
