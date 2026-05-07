@@ -137,7 +137,34 @@ function BlueprintArtifact({isMobile}){
         </div>
 
         <div style={{marginTop: m ? 14 : 20,paddingTop:14,borderTop:'1px solid var(--uc-black)',display:'flex',justifyContent:'space-between',alignItems:'center',gap:8,flexWrap:'wrap'}}>
-          <span style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--fg-3)'}}>Status: Delivered · Wk 4</span>
+          <div style={{display:'flex',alignItems:'center',gap:10}}>
+            <span style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--fg-3)'}}>Delivered by</span>
+            <div style={{display:'flex',alignItems:'center'}}>
+              {[
+                'https://i.pravatar.cc/80?img=12',
+                'https://i.pravatar.cc/80?img=44',
+                'https://i.pravatar.cc/80?img=14',
+                'https://i.pravatar.cc/80?img=9',
+              ].map((src, i) => (
+                <img
+                  key={src}
+                  src={src}
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  style={{
+                    width: m ? 22 : 26,
+                    height: m ? 22 : 26,
+                    borderRadius:999,
+                    objectFit:'cover',
+                    border:'2px solid #fff',
+                    marginLeft: i === 0 ? 0 : -8,
+                    display:'block',
+                  }}
+                />
+              ))}
+            </div>
+          </div>
           <span style={{display:'inline-flex',alignItems:'center',gap:6,padding:'4px 10px',background:'var(--uc-signal)',borderRadius:3,fontSize:11,fontWeight:700,letterSpacing:'.06em',textTransform:'uppercase'}}>$7,500 fixed</span>
         </div>
       </div>
