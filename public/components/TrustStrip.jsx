@@ -64,7 +64,7 @@ function TrustStrip() {
             {track.map((logo, i)=>(
               <div key={i} title={logo.name} style={{
                 flexShrink:0,
-                height: isMobile ? 44 : 64,
+                height: isMobile ? 56 : 64,
                 display:'flex',alignItems:'center',justifyContent:'center',
                 opacity:.78,
                 transition:'opacity .25s var(--ease-out)',
@@ -77,7 +77,7 @@ function TrustStrip() {
                   loading="lazy"
                   decoding="async"
                   style={{
-                    height: isMobile ? 44 : 64,width:'auto',display:'block',
+                    height: isMobile ? 56 : 64,width:'auto',display:'block',
                     filter: logo.invert ? 'invert(1)' : 'none',
                   }}
                 />
