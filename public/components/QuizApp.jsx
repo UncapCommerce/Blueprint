@@ -217,6 +217,7 @@ function QuizApp(){
                 options={PLATFORM_OPTIONS.map(o=>({value:o,label:o}))}
                 selected={answers.platform}
                 onChoose={(v)=>choose('platform', v)}
+                template="1fr 1fr"
               />
             </Step>
           )}
@@ -336,13 +337,13 @@ function Step({eyebrow, title, sub, children}){
 }
 
 /* ------- Option grid (radio-style cards) ------- */
-function OptionGrid({options, selected, onChoose, columns=2, size='md'}){
+function OptionGrid({options, selected, onChoose, columns=2, size='md', template}){
   const padY = size==='lg' ? 22 : 18;
   const fontSize = size==='lg' ? 18 : 16;
   return (
     <div style={{
       display:'grid',
-      gridTemplateColumns:`repeat(${columns}, 1fr)`,
+      gridTemplateColumns: template || `repeat(${columns}, 1fr)`,
       gap:12,
     }}>
       {options.map(opt=>{
