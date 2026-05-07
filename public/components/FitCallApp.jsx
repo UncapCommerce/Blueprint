@@ -30,13 +30,13 @@ const PLATFORM_OPTIONS = [
   'None — first ecommerce site',
   'Magento / Adobe Commerce',
   'BigCommerce',
-  'Salesforce Commerce Cloud',
   'WooCommerce',
+  'NetSuite SuiteCommerce',
   'Optimizely Commerce',
+  'Salesforce Commerce Cloud',
   'SAP Commerce Cloud',
   'commercetools',
   'VTEX',
-  'NetSuite SuiteCommerce',
   'Custom-built',
   'Other',
 ];
@@ -50,9 +50,10 @@ const REVENUE_OPTIONS = [
 ];
 
 const MODEL_OPTIONS = [
-  {id:'b2b',    label:'B2B',    sub:'Manufacturer, distributor, suppliers, wholesalers'},
-  {id:'retail', label:'Retail', sub:'Brick-and-mortar, POS, in-store'},
-  {id:'dtc',    label:'DTC',    sub:'Direct-to-consumer ecommerce'},
+  {id:'b2b',     label:'B2B',     sub:'Manufacturer, distributor, suppliers, wholesalers'},
+  {id:'b2c',     label:'B2C',     sub:'Direct-to-consumer ecommerce'},
+  {id:'retail',  label:'Retail',  sub:'Brick-and-mortar, POS, in-store'},
+  {id:'unified', label:'Unified', sub:'Mix of B2B, B2C, and retail in one storefront'},
 ];
 
 const STEPS = ['erp', 'edition', 'platform', 'revenue', 'model'];
@@ -63,7 +64,7 @@ function FitCallApp(){
   const [step, setStep] = React.useState(0);
   const [answers, setAnswers] = React.useState({
     erp: null, edition: null, platform: null, revenue: null,
-    model: [],            // multi-select — array of model ids
+    model: null,
   });
   const [otherErp, setOtherErp] = React.useState('');
   const [submitted, setSubmitted] = React.useState(false);
@@ -75,14 +76,6 @@ function FitCallApp(){
   const advance = () => setStep(s => s + 1);
   const back = () => setStep(s => Math.max(0, s - 1));
   const choose = (key, value) => { set(key, value); setTimeout(advance, 220); };
-  // Multi-select toggle for the model step
-  const toggle = (key, value) => {
-    setAnswers(prev => {
-      const cur = Array.isArray(prev[key]) ? prev[key] : [];
-      const next = cur.includes(value) ? cur.filter(x=>x!==value) : [...cur, value];
-      return {...prev, [key]: next};
-    });
-  };
 
   return (
     <div data-screen-label="Blueprint Fit Call" style={{
@@ -111,7 +104,7 @@ function FitCallApp(){
             <Step
               eyebrow="Step 1 of 5"
               title="What ERP do you run on?"
-              sub="We'll tailor the call around your system of record."
+              sub="We'll tailor the migration plan around your system of record."
             >
               <OptionGrid
                 options={ERP_OPTIONS.map(o=>({value:o.id,label:o.label}))}
@@ -151,7 +144,7 @@ function FitCallApp(){
             <Step
               eyebrow="Step 3 of 5"
               title="What ecommerce platform are you on today?"
-              sub="Where you're migrating from shapes the entire conversation."
+              sub="Where you're migrating from shapes the entire data plan."
             >
               <OptionGrid
                 options={PLATFORM_OPTIONS.map(o=>({value:o,label:o}))}
@@ -165,7 +158,7 @@ function FitCallApp(){
             <Step
               eyebrow="Step 4 of 5"
               title="What's your annual online revenue?"
-              sub="Helps us calibrate scale before the call."
+              sub="Helps us calibrate scale: catalog, traffic, B2B accounts."
             >
               <OptionGrid
                 options={REVENUE_OPTIONS.map(o=>({value:o,label:o}))}
@@ -181,25 +174,13 @@ function FitCallApp(){
             <Step
               eyebrow="Step 5 of 5"
               title="Which best describes your model?"
-              sub="Select all that apply."
             >
-              <MultiOptionGrid
+              <OptionGrid
                 options={MODEL_OPTIONS.map(o=>({value:o.id,label:o.label,sub:o.sub}))}
-                selected={answers.model || []}
-                onToggle={(v)=>toggle('model', v)}
+                selected={answers.model}
+                onChoose={(v)=>choose('model', v)}
+                columns={1}
               />
-              <button
-                onClick={advance}
-                disabled={!answers.model || answers.model.length === 0}
-                className="uc-btn b-primary"
-                style={{
-                  marginTop:24,
-                  opacity: (answers.model && answers.model.length > 0) ? 1 : .4,
-                  cursor: (answers.model && answers.model.length > 0) ? 'pointer' : 'default',
-                  padding:'14px 22px',fontSize:15,
-                }}>
-                Continue <span>→</span>
-              </button>
             </Step>
           )}
 
@@ -345,54 +326,6 @@ function OptionGrid({options, selected, onChoose, columns=2, size='md'}){
   );
 }
 
-/* ------- Multi-select option grid (checkbox style — used for model step) ------- */
-function MultiOptionGrid({options, selected, onToggle}){
-  return (
-    <div style={{display:'grid',gridTemplateColumns:'1fr',gap:12}}>
-      {options.map(opt=>{
-        const isSel = (selected || []).includes(opt.value);
-        return (
-          <button
-            key={opt.value}
-            onClick={()=>onToggle(opt.value)}
-            style={{
-              cursor:'pointer',textAlign:'left',
-              background: isSel ? 'var(--uc-black)' : '#fff',
-              color: isSel ? '#fff' : 'var(--fg-1)',
-              border:'1px solid', borderColor: isSel ? 'var(--uc-black)' : 'var(--line-1)',
-              borderRadius:5,
-              padding:'22px 20px',
-              fontFamily:'var(--font-sans)',fontSize:18,fontWeight:500,
-              display:'flex',alignItems:'center',justifyContent:'space-between',gap:14,
-              transition:'all .18s var(--ease-out)',
-              boxShadow: isSel ? '0 4px 12px rgba(10,10,10,0.12)' : '0 1px 2px rgba(10,10,10,0.03)',
-            }}
-            onMouseEnter={e=>{ if (!isSel) { e.currentTarget.style.borderColor = 'var(--uc-black)'; e.currentTarget.style.transform = 'translateY(-1px)'; } }}
-            onMouseLeave={e=>{ if (!isSel) { e.currentTarget.style.borderColor = 'var(--line-1)'; e.currentTarget.style.transform = 'translateY(0)'; } }}>
-            <span style={{display:'flex',flexDirection:'column',gap:3}}>
-              <span>{opt.label}</span>
-              {opt.sub && <span style={{fontSize:13,fontWeight:400,opacity:.7}}>{opt.sub}</span>}
-            </span>
-            <span style={{
-              width:22,height:22,borderRadius:4,
-              border:'1.5px solid', borderColor: isSel ? '#fff' : 'var(--line-1)',
-              background: isSel ? '#fff' : 'transparent',
-              display:'inline-flex',alignItems:'center',justifyContent:'center',
-              flexShrink:0,
-            }}>
-              {isSel && (
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <path d="M2.5 6.2L4.8 8.5L9.5 3.5" stroke="var(--uc-black)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                </svg>
-              )}
-            </span>
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
 /* ------- Free-text step (used for "Other" ERP) ------- */
 function FreeTextStep({placeholder, value, onChange, onSubmit}){
   return (
@@ -460,9 +393,7 @@ function BookingForm({answers, otherErp, onSuccess}){
     const erpLabel = answers.erp === 'other'
       ? (otherErp || 'Other')
       : (ERP_OPTIONS.find(o=>o.id===answers.erp)?.label || '');
-    const modelLabel = Array.isArray(answers.model) && answers.model.length
-      ? answers.model.map(id => MODEL_OPTIONS.find(o=>o.id===id)?.label || id).join(', ')
-      : (MODEL_OPTIONS.find(o=>o.id===answers.model)?.label || answers.model || '');
+    const modelLabel = MODEL_OPTIONS.find(o=>o.id===answers.model)?.label || answers.model || '';
 
     try {
       const resp = await fetch('/api/call', {
