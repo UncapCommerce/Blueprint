@@ -4,7 +4,7 @@ function Offer() {
   const items = [
     {t:'Ecommerce Optimization', d:'Optimization strategies for performance, retention, and conversion. KPI framework, growth levers, and a roadmap that ties site decisions to revenue outcomes.', icon:'arch'},
     {t:'Data Migration Taxonomy', d:'Products, customers, orders, history. Field-level mappings. Cleanup rules. Test cutover protocol.', icon:'data'},
-    {t:'SEO Optimisation Autonomy', d:'Focus on SEO preservation and optimization for go-live. URL inventory, redirect map, canonical plan, ranking-protection runbook.', icon:'seo'},
+    {t:'SEO Preservation Roadmap', d:'Focus on SEO preservation and optimization for go-live. URL inventory, redirect map, canonical plan, ranking-protection runbook.', icon:'seo'},
     {t:'Apps & Custom Functionality', d:'Every app, every webhook, every custom function. What survives. What gets replaced. What gets killed.', icon:'apps'},
     {t:'ERP Integration', d:'End-to-end ERP systems mapping. Data flows. Identity. Auth. Sync strategy. Every box accounted for.', icon:'price'},
     {t:'UX & Flow Prototyping', d:'Customer journey workflows and user experience designs showing exactly how your site will look and behave on Shopify.', icon:'prototype'},
