@@ -67,7 +67,7 @@ function SocialProof() {
         {/* Header */}
         <div style={{display:'grid',gridTemplateColumns: isMobile ? '1fr' : '1.2fr 1fr',gap: isMobile ? 24 : 64,alignItems: isMobile ? 'start' : 'end',marginBottom: isMobile ? 32 : 56}}>
           <div>
-            <div className="uc-eyebrow" style={{marginBottom: isMobile ? 12 : 18}}>Social proof</div>
+            <div className="uc-eyebrow" style={{marginBottom: isMobile ? 12 : 18}}>Testimonials</div>
             <h2 style={{
               fontFamily:'var(--font-display)',fontWeight:700,
               fontSize: isMobile ? 'clamp(28px, 7.6vw, 40px)' : 'clamp(40px,4.4vw,68px)',
