@@ -30,7 +30,7 @@ function Hero() {
             <div style={{display:'flex',gap: isMobile ? 10 : 24,alignItems: isMobile ? 'flex-start' : 'center',marginTop: isMobile ? 24 : 36,flexDirection: isMobile ? 'column' : 'row',flexWrap:'wrap'}}>
               <div style={{display:'flex',alignItems:'center',gap:10}}>
                 <CheckDot/>
-                <span style={{fontSize:13,color:'var(--fg-2)',fontWeight:500}}>3 workshops. 4 week delivery.</span>
+                <span style={{fontSize:13,color:'var(--fg-2)',fontWeight:500}}>3 deep dives. 4 week delivery.</span>
               </div>
               <div style={{display:'flex',alignItems:'center',gap:10}}>
                 <CheckDot/>
