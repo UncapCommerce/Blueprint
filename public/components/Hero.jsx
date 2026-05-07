@@ -105,7 +105,7 @@ function BlueprintArtifact({isMobile}){
         {/* TOC list */}
         <div style={{display:'flex',flexDirection:'column'}}>
           {[
-            {n:'01', t:'Ecommerce Optimization', p:'2 pp'},
+            {n:'01', t:'Ecommerce Optimization', p:'3 pp'},
             {n:'02', t:'Solution Architecture', p:'2 pp'},
             {n:'03', t:'Data Migration Taxonomy', p:'4 pp'},
             {n:'04', t:'SEO Preservation Roadmap', p:'3 pp'},
