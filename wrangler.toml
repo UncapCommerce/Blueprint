@@ -5,11 +5,6 @@ account_id = "0ff8ba3297e0672ce4b1b53f66496300"
 workers_dev = false
 preview_urls = false
 
-# Preserve plaintext Variables that are set in the Cloudflare dashboard but
-# not declared here. Without this, `wrangler deploy` strips them on every
-# deploy. Secrets are always preserved regardless.
-keep_vars = true
-
 routes = [
   { pattern = "blueprint.uncap.com", custom_domain = true }
 ]
@@ -34,5 +29,7 @@ EMAIL_FROM = "Blueprint Fit Call <onboarding@resend.dev>"
 #   STRIPE_PUBLISHABLE_KEY  (Variable)  — pk_test_… / pk_live_…  (public, plaintext)
 #   RESEND_API_KEY          (Secret)    — from https://resend.com/api-keys
 #
-# Wrangler does not touch secrets or dashboard-only variables on deploy, so
-# once they're set there they persist across every deploy from this repo.
+# Secrets always persist across deploys. Plaintext Variables only persist
+# because the GitHub Actions workflow runs `wrangler deploy --keep-vars`
+# (see .github/workflows/deploy.yml). Without that flag, Wrangler strips
+# any var not declared in this file on every deploy.
