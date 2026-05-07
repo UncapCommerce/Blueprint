@@ -91,7 +91,7 @@ function BlueprintArtifact({isMobile}){
               fontSize: m ? 16 : 20,color:'var(--fg-2)',
               whiteSpace: m ? 'normal' : 'nowrap',
             }}>
-              Acme Supply &amp; Co.
+              Acme Supply, Inc
             </div>
           </div>
           <img
