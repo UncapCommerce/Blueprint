@@ -9,7 +9,7 @@ function FitProcess() {
   const notFit = [
     'You\'re shopping for the cheapest quote',
     'You\'re under $5M in revenue',
-    'You haven\'t decided to migrate yet',
+    'You are not the decision maker',
   ];
   const weeks = [
     {n:'Week 1', t:'Discovery', d:'Deep audit of your stack, data, and goals. We talk to every system owner. Nothing is taken at face value.'},
