@@ -5,6 +5,11 @@ account_id = "0ff8ba3297e0672ce4b1b53f66496300"
 workers_dev = false
 preview_urls = false
 
+# Preserve plaintext Variables that are set in the Cloudflare dashboard but
+# not declared here. Without this, `wrangler deploy` strips them on every
+# deploy. Secrets are always preserved regardless.
+keep_vars = true
+
 routes = [
   { pattern = "blueprint.uncap.com", custom_domain = true }
 ]
