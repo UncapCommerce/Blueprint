@@ -3,7 +3,7 @@ function FitProcess() {
   const isMobile = window.useIsMobile ? window.useIsMobile() : false;
   const fit = [
     'You\'re $5M+ in revenue',
-    'Migrating in the next 6 months',
+    'Migrating within the next 6 months',
     'You want to make the decision once, correctly',
   ];
   const notFit = [
