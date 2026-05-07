@@ -75,7 +75,7 @@ const MODEL_OPTIONS = [
 //        ~13-digit number.
 // ============================================================================
 const SHOP_DOMAIN = 'my.uncap.com';
-const BLUEPRINT_VARIANT_ID = '50141909352738';   // product 8910400913698 ("Blueprint", $7,000)
+const BLUEPRINT_VARIANT_ID = '50141909352738';   // product 8910400913698 ("Blueprint", $7,500)
 
 // Builds a Shopify cart-permalink URL that adds the Blueprint variant and
 // jumps to checkout, with the user's quiz answers attached as cart attributes.
@@ -601,7 +601,7 @@ function Confirm({answers, otherErp}){
           }}
         >
           <Lock/>
-          Place Order · $7,000
+          Place Order · $7,500
           <span>→</span>
         </a>
       </div>

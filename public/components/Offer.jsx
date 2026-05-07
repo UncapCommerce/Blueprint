@@ -1,4 +1,4 @@
-// Offer.jsx — What $7K actually gets you (responsive)
+// Offer.jsx — What $7.5K actually gets you (responsive)
 function Offer() {
   const isMobile = window.useIsMobile ? window.useIsMobile() : false;
   const items = [
@@ -18,7 +18,7 @@ function Offer() {
           <div>
             <div className="uc-eyebrow" style={{marginBottom: isMobile ? 12 : 18}}>The offer</div>
             <h2 style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize: isMobile ? 'clamp(30px, 8vw, 44px)' : 'clamp(40px,4.6vw,76px)',lineHeight: isMobile ? 1.05 : 1.0,letterSpacing:'-.035em',color:'var(--fg-1)',margin:'0 0 14px'}}>
-              {isMobile ? 'What $7K actually gets you.' : <React.Fragment>What $7K actually<br/>gets you.</React.Fragment>}
+              {isMobile ? 'What $7.5K actually gets you.' : <React.Fragment>What $7.5K actually<br/>gets you.</React.Fragment>}
             </h2>
             <p style={{fontFamily:'var(--font-serif)',fontStyle:'italic',fontWeight:500,fontSize: isMobile ? 'clamp(17px, 4.6vw, 22px)' : 'clamp(22px,2vw,30px)',lineHeight:1.3,color:'var(--fg-2)',margin:0,letterSpacing:'-.01em'}}>
               Full consultation. Solution deep-dive. A complete migration playbook — not a slide deck.
@@ -27,7 +27,7 @@ function Offer() {
           <div style={{display:'flex',flexDirection:'column',gap:14,padding: isMobile ? '20px 22px' : '24px 28px',background:'var(--uc-cream)',border:'1px solid var(--uc-black)',borderRadius:5}}>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',gap:10,flexWrap:'wrap'}}>
               <span style={{fontSize:13,color:'var(--fg-3)',fontWeight:500,letterSpacing:'.04em',textTransform:'uppercase'}}>Fixed price</span>
-              <span style={{fontFamily:'var(--font-display)',fontWeight:800,fontSize: isMobile ? 38 : 48,letterSpacing:'-.04em',color:'var(--fg-1)',lineHeight:1}}>$7,000</span>
+              <span style={{fontFamily:'var(--font-display)',fontWeight:800,fontSize: isMobile ? 38 : 48,letterSpacing:'-.04em',color:'var(--fg-1)',lineHeight:1}}>$7,500</span>
             </div>
             <div style={{height:1,background:'var(--line-1)'}}/>
             <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline'}}>
