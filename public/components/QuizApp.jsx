@@ -617,7 +617,7 @@ function Confirm({answers, otherErp}){
           <Lock/> Secure Shopify Checkout
         </span>
         <span style={{display:'inline-flex',alignItems:'center',gap:8}}>
-          <CheckSm/> Refund if it doesn't give you clarity
+          <CheckSm/> $0 risk. Full refund if not a fit.
         </span>
         <span style={{display:'inline-flex',alignItems:'center',gap:8}}>
           <CheckSm/> Credited toward implementation
