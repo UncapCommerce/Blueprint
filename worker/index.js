@@ -15,6 +15,9 @@ export default {
     if (url.pathname === '/api/checkout/setup-complete' && request.method === 'POST') {
       return handleSetupComplete(request, env);
     }
+    if (url.pathname === '/api/admin/charge' && request.method === 'POST') {
+      return handleAdminCharge(request, env);
+    }
 
     // Static assets (HTML, CSS, JSX, fonts, images) are served by the
     // ASSETS binding configured in wrangler.toml.
@@ -379,5 +382,71 @@ async function handleSetupComplete(request, env) {
     return json(200, { ok: true, customerId: customer.id });
   } catch (err) {
     return json(502, { ok: false, error: err.message || 'Could not finalize SetupIntent' });
+  }
+}
+
+// ----------------------------------------------------------------------------
+// POST /api/admin/charge
+// One-click charge of the saved card after the fit call. Token-gated.
+// Auth: Authorization: Bearer <ADMIN_TOKEN>
+// Body: { customerId, amountCents?: 750000, description?: 'Migration Blueprint' }
+// Returns: { ok: true, paymentIntentId, status, amount }
+// ----------------------------------------------------------------------------
+async function handleAdminCharge(request, env) {
+  if (!env.ADMIN_TOKEN) {
+    return json(500, { ok: false, error: 'ADMIN_TOKEN is not configured.' });
+  }
+  const auth = request.headers.get('authorization') || '';
+  const expected = `Bearer ${env.ADMIN_TOKEN}`;
+  if (auth !== expected) {
+    return json(401, { ok: false, error: 'Unauthorized.' });
+  }
+
+  let body;
+  try { body = await request.json(); }
+  catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+
+  const customerId = (body.customerId || '').toString().trim();
+  if (!customerId.startsWith('cus_')) {
+    return json(400, { ok: false, error: 'Invalid customerId (must start with cus_).' });
+  }
+
+  const amount = Number.isFinite(body.amountCents) && body.amountCents > 0
+    ? Math.round(body.amountCents)
+    : 750000; // $7,500 default
+  const description = (body.description || 'Migration Blueprint').toString().slice(0, 200);
+
+  try {
+    // Resolve a payment method to charge: prefer the customer's saved cards.
+    const pmList = await stripeFetch(env, `payment_methods`, {
+      method: 'GET',
+      query: `customer=${encodeURIComponent(customerId)}&type=card&limit=1`,
+    });
+    const pm = pmList.data && pmList.data[0];
+    if (!pm) {
+      return json(409, { ok: false, error: 'No card on file for that customer.' });
+    }
+
+    const intent = await stripeFetch(env, 'payment_intents', {
+      body: stripeForm({
+        amount,
+        currency: 'usd',
+        customer: customerId,
+        payment_method: pm.id,
+        off_session: 'true',
+        confirm: 'true',
+        description,
+        metadata: { source: 'blueprint-admin' },
+      }),
+    });
+
+    return json(200, {
+      ok: true,
+      paymentIntentId: intent.id,
+      status: intent.status,
+      amount: intent.amount,
+    });
+  } catch (err) {
+    return json(502, { ok: false, error: err.message || 'Could not create PaymentIntent' });
   }
 }
