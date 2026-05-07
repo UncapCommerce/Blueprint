@@ -29,13 +29,13 @@ const PLATFORM_OPTIONS = [
   'None — first ecommerce site',
   'Magento / Adobe Commerce',
   'BigCommerce',
+  'NetSuite SuiteCommerce',
   'Salesforce Commerce Cloud',
   'WooCommerce',
   'Optimizely Commerce',
   'SAP Commerce Cloud',
   'commercetools',
   'VTEX',
-  'NetSuite SuiteCommerce',
   'Custom-built',
   'Other',
 ];
@@ -217,7 +217,6 @@ function QuizApp(){
                 options={PLATFORM_OPTIONS.map(o=>({value:o,label:o}))}
                 selected={answers.platform}
                 onChoose={(v)=>choose('platform', v)}
-                template="1fr 1fr"
               />
             </Step>
           )}
@@ -337,13 +336,13 @@ function Step({eyebrow, title, sub, children}){
 }
 
 /* ------- Option grid (radio-style cards) ------- */
-function OptionGrid({options, selected, onChoose, columns=2, size='md', template}){
+function OptionGrid({options, selected, onChoose, columns=2, size='md'}){
   const padY = size==='lg' ? 22 : 18;
   const fontSize = size==='lg' ? 18 : 16;
   return (
     <div style={{
       display:'grid',
-      gridTemplateColumns: template || `repeat(${columns}, 1fr)`,
+      gridTemplateColumns:`repeat(${columns}, 1fr)`,
       gap:12,
     }}>
       {options.map(opt=>{
