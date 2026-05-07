@@ -91,7 +91,7 @@ function Header() {
             fontSize: isMobile ? 13 : 13,
             whiteSpace:'nowrap',
           }}>
-            {isMobile ? 'Start Blueprint' : 'Start the Blueprint'} <span>→</span>
+            Start the Blueprint <span>→</span>
           </a>
         </div>
       </div>
