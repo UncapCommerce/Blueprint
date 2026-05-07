@@ -49,10 +49,10 @@ const REVENUE_OPTIONS = [
 ];
 
 const MODEL_OPTIONS = [
-  {id:'b2b',     label:'B2B'},
-  {id:'b2c',     label:'B2C'},
-  {id:'retail',  label:'Retail'},
-  {id:'unified', label:'Unified'},
+  {id:'b2b',     label:'B2B',     sub:'Manufacturer, distributor, suppliers, wholesalers'},
+  {id:'b2c',     label:'B2C',     sub:'Direct-to-consumer ecommerce'},
+  {id:'retail',  label:'Retail',  sub:'Brick-and-mortar, POS, in-store'},
+  {id:'unified', label:'Unified', sub:'Mix of B2B, B2C, and retail in one storefront'},
 ];
 
 // ============================================================================
@@ -243,9 +243,10 @@ function QuizApp(){
               title="Which best describes your model?"
             >
               <OptionGrid
-                options={MODEL_OPTIONS.map(o=>({value:o.id,label:o.label}))}
+                options={MODEL_OPTIONS.map(o=>({value:o.id,label:o.label,sub:o.sub}))}
                 selected={answers.model}
                 onChoose={(v)=>choose('model', v)}
+                columns={1}
               />
             </Step>
           )}
