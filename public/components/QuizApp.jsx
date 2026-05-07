@@ -55,63 +55,6 @@ const MODEL_OPTIONS = [
   {id:'unified', label:'Unified', sub:'Mix of B2B, B2C, and retail in one storefront'},
 ];
 
-// ============================================================================
-// SHOPIFY CHECKOUT WIRING
-// ----------------------------------------------------------------------------
-// Replace these two constants with your real Shopify shop and Blueprint variant.
-//
-// SHOP_DOMAIN:
-//   Either your *.myshopify.com domain (e.g. 'uncap.myshopify.com') or your
-//   primary storefront domain if it serves Shopify directly (e.g. 'shop.uncap.com').
-//   Don't use the dashboard domain (admin.shopify.com / checkout.uncap.com).
-//
-// BLUEPRINT_VARIANT_ID:
-//   The numeric variant ID of the Blueprint product (NOT the product ID).
-//   To find it:
-//     1. Shopify admin → Products → "Migration Blueprint" → click the variant.
-//     2. The URL ends in `/variants/123456789012` — copy the trailing number.
-//     OR
-//     1. Open the product page on your live store.
-//     2. View source, search for `"id":` inside the variants JSON, copy the
-//        ~13-digit number.
-// ============================================================================
-const SHOP_DOMAIN = 'my.uncap.com';
-const BLUEPRINT_VARIANT_ID = '50141909352738';   // product 8910400913698 ("Blueprint", $7,500)
-
-// Builds a Shopify cart-permalink URL that adds the Blueprint variant and
-// jumps to checkout, with the user's quiz answers attached as cart attributes.
-// Cart attributes appear on the order in Shopify admin under "Additional
-// details", so your team can see who answered what.
-//
-// Format: https://{shop}/cart/{variant_id}:{qty}?attributes[Key]=Value&...
-// On modern Shopify stores this 302-redirects straight to the Shop Pay /
-// universal checkout (skipping the /cart page). The legacy `/checkout`
-// suffix path is no longer needed — and in fact 404s on newer themes.
-// Docs: https://help.shopify.com/manual/online-store/themes/customizing/permalinks
-function buildCheckoutUrl(answers, otherErp){
-  if (!SHOP_DOMAIN || !BLUEPRINT_VARIANT_ID) {
-    // Not yet configured — keep the placeholder so QA / preview still works.
-    return 'https://checkout.uncap.com/blueprint?variant=blueprint-7k';
-  }
-  const erpLabel = answers.erp === 'other'
-    ? (otherErp || 'Other')
-    : (ERP_OPTIONS.find(o=>o.id===answers.erp)?.label || '');
-  const modelLabel = MODEL_OPTIONS.find(o=>o.id===answers.model)?.label || answers.model || '';
-  const attrs = {
-    'ERP':              erpLabel,
-    'ERP Edition':      answers.edition || '',
-    'Current Platform': answers.platform || '',
-    'Annual Revenue':   answers.revenue || '',
-    'Model':            modelLabel,
-    'Source':           'blueprint-quiz',
-  };
-  const query = Object.entries(attrs)
-    .filter(([,v]) => !!v)
-    .map(([k,v]) => `attributes[${encodeURIComponent(k)}]=${encodeURIComponent(v)}`)
-    .join('&');
-  return `https://${SHOP_DOMAIN}/cart/${BLUEPRINT_VARIANT_ID}:1${query ? '?' + query : ''}`;
-}
-
 function QuizApp(){
   const [step, setStep] = React.useState(0);
   const [answers, setAnswers] = React.useState({
@@ -496,42 +439,7 @@ function Confirm({answers, otherErp}){
         ))}
       </div>
 
-      {/* Dark card — scarcity copy + Place Order. Side-by-side on desktop,
-          text-above-button stacked on mobile. */}
-      <div style={{
-        background:'var(--uc-black)',color:'#fff',borderRadius:5,
-        padding: isMobile ? '22px 22px' : 28, marginBottom:14,
-        display:'flex',
-        flexDirection: isMobile ? 'column' : 'row',
-        gap: isMobile ? 18 : 24,
-        alignItems: isMobile ? 'stretch' : 'center',
-        justifyContent:'space-between',
-      }}>
-        <div style={{
-          fontFamily:'var(--font-display)',fontWeight:500,
-          fontSize: isMobile ? 14 : 'clamp(13px, 1.2vw, 15px)',
-          lineHeight:1.4,letterSpacing:'-.005em',
-          textAlign: isMobile ? 'center' : 'left',
-        }}>
-          We take on 8 Blueprints per quarter.<br/>
-          <strong style={{fontWeight:700}}>Lock yours in.</strong>
-        </div>
-        <a
-          href={buildCheckoutUrl(answers, otherErp)}
-          className="uc-btn b-signal"
-          style={{
-            padding: isMobile ? '16px 20px' : '18px 24px',
-            fontSize:16,fontWeight:600,gap:10,
-            width: isMobile ? '100%' : 'auto',
-            justifyContent:'center',
-            whiteSpace: isMobile ? 'normal' : 'nowrap',
-          }}
-        >
-          <Lock/>
-          Place Order · $7,500
-          <span>→</span>
-        </a>
-      </div>
+      <CardOnFile answers={answers} otherErp={otherErp} isMobile={isMobile}/>
       <div style={{
         fontSize:12,fontWeight:600,letterSpacing:'.12em',textTransform:'uppercase',
         color:'var(--fg-3)',textAlign:'center',marginBottom:24,
@@ -541,7 +449,7 @@ function Confirm({answers, otherErp}){
 
       <div style={{display:'flex',gap:24,flexWrap:'wrap',fontSize:13,color:'var(--fg-3)'}}>
         <span style={{display:'inline-flex',alignItems:'center',gap:8}}>
-          <Lock/> Secure Shopify Checkout
+          <Lock/> Secure Stripe payment
         </span>
         <span style={{display:'inline-flex',alignItems:'center',gap:8}}>
           <CheckSm/> $0 risk. Full refund if not a fit.
@@ -555,6 +463,175 @@ function Confirm({answers, otherErp}){
         Not ready? <a href="/call" style={{color:'var(--fg-1)',fontWeight:500}}>Book a 25-min fit call</a> instead.
       </div>
     </div>
+  );
+}
+
+/* ------- Stripe SetupIntent + Payment Element (card on file, $0 today) ------- */
+function CardOnFile({answers, otherErp, isMobile}){
+  // Phases: loading → ready → submitting → success | error
+  const [phase, setPhase] = React.useState('loading');
+  const [error, setError] = React.useState('');
+  const [intentId, setIntentId] = React.useState('');
+  const [stripeRefs, setStripeRefs] = React.useState(null);
+  const paymentRef = React.useRef(null);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const resp = await fetch('/api/checkout/setup-intent', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ answers, otherErp }),
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok || !data.ok) throw new Error(data.error || `Setup failed (${resp.status})`);
+        if (cancelled) return;
+        if (typeof window.Stripe !== 'function') {
+          throw new Error('Stripe.js failed to load. Refresh the page or try again later.');
+        }
+        setIntentId(data.intentId);
+        const stripe = window.Stripe(data.publishableKey);
+        const elements = stripe.elements({
+          clientSecret: data.clientSecret,
+          appearance: {
+            theme: 'flat',
+            variables: {
+              fontFamily: 'system-ui, -apple-system, "Segoe UI", Inter, Helvetica, Arial, sans-serif',
+              fontSizeBase: '15px',
+              colorPrimary: '#0a0a0a',
+              colorText: '#0a0a0a',
+              colorDanger: '#c0392b',
+              borderRadius: '5px',
+              spacingUnit: '4px',
+            },
+            rules: {
+              '.Input': { border: '1px solid #e6e6e6', boxShadow: 'none' },
+              '.Input:focus': { border: '1px solid #0a0a0a' },
+              '.Label': { fontWeight: '600', color: '#3d3d3d' },
+            },
+          },
+        });
+        const paymentElement = elements.create('payment', { layout: 'tabs' });
+        paymentElement.mount(paymentRef.current);
+        setStripeRefs({ stripe, elements });
+        setPhase('ready');
+      } catch (err) {
+        if (cancelled) return;
+        setError(err.message || 'Could not initialize payment.');
+        setPhase('error');
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    if (!stripeRefs || phase === 'submitting') return;
+    setPhase('submitting');
+    setError('');
+    const { stripe, elements } = stripeRefs;
+    const { error: confirmErr, setupIntent } = await stripe.confirmSetup({
+      elements,
+      redirect: 'if_required',
+    });
+    if (confirmErr) {
+      setError(confirmErr.message || 'Could not save card.');
+      setPhase('ready');
+      return;
+    }
+    try {
+      const resp = await fetch('/api/checkout/setup-complete', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ intentId: (setupIntent && setupIntent.id) || intentId }),
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok || !data.ok) throw new Error(data.error || `Save failed (${resp.status})`);
+      setPhase('success');
+    } catch (err) {
+      setError(err.message || 'Card saved, but we could not finalize. Email denis@uncap.com.');
+      setPhase('ready');
+    }
+  };
+
+  if (phase === 'success') {
+    return (
+      <div style={{
+        background:'var(--uc-black)',color:'#fff',borderRadius:5,
+        padding: isMobile ? '28px 22px' : 36, marginBottom:14,
+        textAlign:'center',
+      }}>
+        <div style={{display:'inline-flex',alignItems:'center',justifyContent:'center',width:48,height:48,borderRadius:999,background:'var(--uc-signal)',marginBottom:18,color:'var(--uc-black)'}}>
+          <svg width="22" height="22" viewBox="0 0 14 14" fill="none">
+            <path d="M2.5 7.5L5.5 10L11.5 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </div>
+        <div style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize:22,letterSpacing:'-.02em',marginBottom:8}}>
+          Card on file. $0 charged today.
+        </div>
+        <div style={{fontSize:14,color:'var(--uc-stone-300)',maxWidth:420,margin:'0 auto',lineHeight:1.5}}>
+          We'll be in touch within one business day to schedule your fit call. After it confirms scope, we'll charge the saved card and start the Blueprint.
+        </div>
+      </div>
+    );
+  }
+
+  const buttonDisabled = phase !== 'ready';
+  return (
+    <form onSubmit={onSubmit} style={{
+      background:'var(--uc-black)',color:'#fff',borderRadius:5,
+      padding: isMobile ? '22px 22px' : 28, marginBottom:14,
+      display:'flex',flexDirection:'column',gap:18,
+    }}>
+      <div style={{
+        fontFamily:'var(--font-display)',fontWeight:500,
+        fontSize: isMobile ? 14 : 'clamp(13px, 1.2vw, 15px)',
+        lineHeight:1.4,letterSpacing:'-.005em',
+        textAlign: isMobile ? 'center' : 'left',
+      }}>
+        We take on 8 Blueprints per quarter.{' '}
+        <strong style={{fontWeight:700}}>Lock yours in. $0 today.</strong>
+      </div>
+
+      <div style={{background:'#fff',color:'var(--fg-1)',borderRadius:5,padding:16,minHeight:120}}>
+        {phase === 'loading' && (
+          <div style={{fontSize:13,color:'var(--fg-3)'}}>Loading secure payment form…</div>
+        )}
+        {phase === 'error' && !stripeRefs && (
+          <div style={{fontSize:13,color:'#c0392b'}}>{error}</div>
+        )}
+        <div ref={paymentRef}/>
+      </div>
+
+      {error && phase !== 'loading' && stripeRefs && (
+        <div style={{fontSize:13,color:'#ffd9d4'}}>{error}</div>
+      )}
+
+      <button
+        type="submit"
+        className="uc-btn b-signal"
+        disabled={buttonDisabled}
+        style={{
+          padding: isMobile ? '16px 20px' : '18px 24px',
+          fontSize:16,fontWeight:600,gap:10,
+          width:'100%',
+          justifyContent:'center',
+          whiteSpace: isMobile ? 'normal' : 'nowrap',
+          opacity: buttonDisabled ? .55 : 1,
+          cursor: buttonDisabled ? 'default' : 'pointer',
+          border:'none',
+        }}
+      >
+        <Lock/>
+        {phase === 'submitting' ? 'Saving card…' : 'Reserve your slot · $0 today'}
+        <span>→</span>
+      </button>
+
+      <div style={{fontSize:12,color:'var(--uc-stone-300)',textAlign:'center',lineHeight:1.45}}>
+        $0 today. Card kept on file. Charged after we confirm fit on the intro call.
+      </div>
+    </form>
   );
 }
 

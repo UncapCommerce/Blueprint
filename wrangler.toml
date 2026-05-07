@@ -15,11 +15,19 @@ binding = "ASSETS"
 not_found_handling = "single-page-application"
 
 [vars]
-# Where fit-call form submissions are emailed.
+# Where fit-call form submissions and card-on-file notifications are emailed.
 NOTIFY_EMAIL = "hay@uncap.com"
 # From-address shown to recipient. Must be on a domain you've verified in Resend
 # (or use Resend's default "onboarding@resend.dev" for testing).
 EMAIL_FROM = "Blueprint Fit Call <onboarding@resend.dev>"
 
-# Secrets required (set with: wrangler secret put RESEND_API_KEY):
-#   RESEND_API_KEY — from https://resend.com/api-keys
+# Stripe and Resend credentials are configured in the Cloudflare dashboard:
+#   Workers & Pages → uncap-blueprint → Settings → "Variables and Secrets"
+#
+# Required:
+#   STRIPE_SECRET_KEY       (Secret)    — sk_test_… / sk_live_…
+#   STRIPE_PUBLISHABLE_KEY  (Variable)  — pk_test_… / pk_live_…  (public, plaintext)
+#   RESEND_API_KEY          (Secret)    — from https://resend.com/api-keys
+#
+# Wrangler does not touch secrets or dashboard-only variables on deploy, so
+# once they're set there they persist across every deploy from this repo.
