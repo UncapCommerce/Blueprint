@@ -49,12 +49,14 @@
     main h1 + p { font-size: 16px !important; margin-bottom: 24px !important; }
 
     /* OptionGrid — collapse 2-col to 1-col so option cards are full width */
-    main [style*="grid-template-columns: repeat(2, 1fr)"] {
+    main [style*="grid-template-columns:repeat(2, 1fr)"] {,
+  main [style*="grid-template-columns: repeat(2, 1fr)"] {
       grid-template-columns: 1fr !important;
     }
 
     /* OptionGrid card — bigger tap target, allow the label to wrap */
-    main [style*="grid-template-columns: 1fr"] > button {
+    main [style*="grid-template-columns:1fr"] > button {,
+  main [style*="grid-template-columns: 1fr"] > button {
       padding: 18px 18px !important;
       font-size: 16px !important;
     }
@@ -65,27 +67,33 @@
 
     /* ----- Confirmation step (Place Order screen) ----- */
     /* Recap card — stack label/value rather than 180px-1fr two-col */
-    main [style*="grid-template-columns: 180px 1fr"] {
+    main [style*="grid-template-columns:180px 1fr"] {,
+  main [style*="grid-template-columns: 180px 1fr"] {
       grid-template-columns: 1fr !important;
       gap: 4px !important;
       padding-top: 12px !important;
       padding-bottom: 12px !important;
     }
-    main [style*="grid-template-columns: 180px 1fr"] span:first-child { font-size: 10px !important; }
-    main [style*="grid-template-columns: 180px 1fr"] span:last-child { font-size: 15px !important; }
+    main [style*="grid-template-columns:180px 1fr"] span:first-child { font-size: 10px !important; },
+  main [style*="grid-template-columns: 180px 1fr"] span:first-child { font-size: 10px !important; }
+    main [style*="grid-template-columns:180px 1fr"] span:last-child { font-size: 15px !important; },
+  main [style*="grid-template-columns: 180px 1fr"] span:last-child { font-size: 15px !important; }
 
     /* Price + Place Order card — stack price above button, button full width */
-    main [style*="grid-template-columns: 1fr auto"] {
+    main [style*="grid-template-columns:1fr auto"] {,
+  main [style*="grid-template-columns: 1fr auto"] {
       grid-template-columns: 1fr !important;
       gap: 18px !important;
     }
-    main [style*="grid-template-columns: 1fr auto"] a {
+    main [style*="grid-template-columns:1fr auto"] a {,
+  main [style*="grid-template-columns: 1fr auto"] a {
       width: 100% !important;
       justify-content: center !important;
     }
 
     /* Trust row below Place Order — smaller, centered */
-    main [style*="font-size: 13px"][style*="color: var(--fg-3)"] { gap: 16px !important; }
+    main [style*="font-size:13px"][style*="color:var(--fg-3)"] { gap: 16px !important; },
+  main [style*="font-size: 13px"][style*="color: var(--fg-3)"] { gap: 16px !important; }
   }
 </style>
 </head>
@@ -96,6 +104,7 @@
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
+<script type="text/babel" src="/components/_hooks.jsx"></script>
 <script type="text/babel" src="/components/QuizApp.jsx"></script>
 
 <script type="text/babel">

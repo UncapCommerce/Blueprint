@@ -1,6 +1,6 @@
-// SocialProof.jsx — Mosaic wall of customer reviews
-// Mixed tile sizes, varied visual treatments — feels alive, not gridded.
+// SocialProof.jsx — Mosaic wall of customer reviews (responsive)
 function SocialProof() {
+  const isMobile = window.useIsMobile ? window.useIsMobile() : false;
   // Each review has a "size" controlling its grid span, and a "tone" controlling
   // its visual treatment (cream, dark, signal-yellow accent, quote-only, stat-led).
   const reviews = [
@@ -57,7 +57,7 @@ function SocialProof() {
   return (
     <section id="proof" style={{
       background:'#fff',
-      padding:'120px 32px',
+      padding: isMobile ? '64px 20px' : '120px 32px',
       borderTop:'1px solid var(--line-1)',
       scrollMarginTop:80,
       position:'relative',
@@ -65,39 +65,41 @@ function SocialProof() {
     }}>
       <div style={{maxWidth:1280,margin:'0 auto',position:'relative',zIndex:1}}>
         {/* Header */}
-        <div style={{display:'grid',gridTemplateColumns:'1.2fr 1fr',gap:64,alignItems:'end',marginBottom:56}}>
+        <div style={{display:'grid',gridTemplateColumns: isMobile ? '1fr' : '1.2fr 1fr',gap: isMobile ? 24 : 64,alignItems: isMobile ? 'start' : 'end',marginBottom: isMobile ? 32 : 56}}>
           <div>
-            <div className="uc-eyebrow" style={{marginBottom:18}}>Social proof</div>
+            <div className="uc-eyebrow" style={{marginBottom: isMobile ? 12 : 18}}>Social proof</div>
             <h2 style={{
               fontFamily:'var(--font-display)',fontWeight:700,
-              fontSize:'clamp(40px,4.4vw,68px)',lineHeight:1.02,letterSpacing:'-.03em',
+              fontSize: isMobile ? 'clamp(28px, 7.6vw, 40px)' : 'clamp(40px,4.4vw,68px)',
+              lineHeight:1.05,letterSpacing:'-.03em',
               color:'var(--fg-1)',margin:'0 0 14px',textWrap:'balance',
             }}>
               Brands that stopped guessing.
             </h2>
             <p style={{
               fontFamily:'var(--font-serif)',fontStyle:'italic',
-              fontSize:'clamp(20px,1.8vw,26px)',lineHeight:1.3,
+              fontSize: isMobile ? 'clamp(17px, 4.6vw, 22px)' : 'clamp(20px,1.8vw,26px)',
+              lineHeight:1.35,
               color:'var(--fg-2)',margin:0,letterSpacing:'-.01em',
             }}>
-              Operators. Founders. CTOs. Same pattern, every time.
+              Executives. Operators. Founders. Same pattern, every time.
             </p>
           </div>
-          <div style={{display:'flex',gap:24,justifyContent:'flex-end',alignItems:'baseline',flexWrap:'wrap'}}>
-            <Pill n="50+" l="migrations led"/>
-            <Pill n="$0" l="overruns, ever"/>
-            <Pill n="4.9★" l="post-launch CSAT"/>
+          <div style={{display:'flex',gap: isMobile ? 16 : 24,justifyContent: isMobile ? 'flex-start' : 'flex-end',alignItems:'baseline',flexWrap:'wrap'}}>
+            <Pill n="380+" l="Migrations Completed"/>
+            <Pill n="13 yrs" l="Shopify Experts"/>
+            <Pill n="4.9★" l="Reviews CSAT"/>
           </div>
         </div>
 
-        {/* 3-column mosaic with varied card heights (CSS columns = true masonry) */}
+        {/* 3-column mosaic with varied card heights — collapses to 1-column on mobile */}
         <div style={{
-          columnCount:3,
+          columnCount: isMobile ? 1 : 3,
           columnGap:16,
         }}>
           {reviews.map((r, i)=>(
             <div key={i} style={{breakInside:'avoid',WebkitColumnBreakInside:'avoid',pageBreakInside:'avoid',marginBottom:16}}>
-              <ReviewTile review={r} index={i}/>
+              <ReviewTile review={r} index={i} isMobile={isMobile}/>
             </div>
           ))}
         </div>
@@ -106,7 +108,9 @@ function SocialProof() {
   );
 }
 
-function spanFor(size){
+function spanFor(size, isMobile){
+  // On mobile, all tiles auto-size to content — no minHeight padding to fight.
+  if (isMobile) return {};
   // In column layout, "size" controls minHeight to vary card heights instead of grid spans
   if (size === 'tall')  return {minHeight:380};
   if (size === 'wide')  return {minHeight:240};
@@ -114,8 +118,8 @@ function spanFor(size){
   return {minHeight:200};
 }
 
-function ReviewTile({review, index}){
-  const span = spanFor(review.size);
+function ReviewTile({review, index, isMobile}){
+  const span = spanFor(review.size, isMobile);
   const tone = review.tone;
 
   // Tone presets

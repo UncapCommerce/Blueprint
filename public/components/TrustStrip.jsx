@@ -1,5 +1,6 @@
 // TrustStrip.jsx — Infinite horizontal marquee of customer logos
 function TrustStrip() {
+  const isMobile = window.useIsMobile ? window.useIsMobile() : false;
   // 6 black-on-light + 2 white-on-dark logos. We render on a dark background
   // and invert the black ones so all read as light marks on dark.
   // On a light background: invert the white-on-dark logos so they render dark.
@@ -24,15 +25,19 @@ function TrustStrip() {
     <section style={{
       background:'#fff',
       color:'var(--fg-1)',
-      padding:'56px 0',
+      padding: isMobile ? '32px 0 36px' : '56px 0',
       borderTop:'1px solid var(--line-1)',
       borderBottom:'1px solid var(--line-1)',
       position:'relative',
       overflow:'hidden',
     }}>
       <div style={{
-        maxWidth:1280,margin:'0 auto',padding:'0 32px',
-        display:'flex',alignItems:'center',gap:48,
+        maxWidth:1280,margin:'0 auto',
+        padding: isMobile ? '0 20px' : '0 32px',
+        display:'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        alignItems: isMobile ? 'stretch' : 'center',
+        gap: isMobile ? 18 : 48,
       }}>
         <div style={{
           flexShrink:0,
@@ -41,6 +46,7 @@ function TrustStrip() {
           textTransform:'uppercase',
           color:'var(--fg-3)',
           display:'flex',alignItems:'center',gap:10,
+          justifyContent: isMobile ? 'center' : 'flex-start',
         }}>
           <span style={{width:6,height:6,borderRadius:999,background:'var(--uc-black)'}}/>
           Trusted by
@@ -50,14 +56,15 @@ function TrustStrip() {
           flex:1,
           position:'relative',
           overflow:'hidden',
+          minWidth:0,
           maskImage:'linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent)',
           WebkitMaskImage:'linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent)',
         }}>
-          <div className="ts-track" style={{display:'flex',alignItems:'center',gap:80,width:'max-content'}}>
+          <div className="ts-track" style={{display:'flex',alignItems:'center',gap: isMobile ? 48 : 80,width:'max-content'}}>
             {track.map((logo, i)=>(
               <div key={i} title={logo.name} style={{
                 flexShrink:0,
-                height:64,
+                height: isMobile ? 44 : 64,
                 display:'flex',alignItems:'center',justifyContent:'center',
                 opacity:.78,
                 transition:'opacity .25s var(--ease-out)',
@@ -70,7 +77,7 @@ function TrustStrip() {
                   loading="lazy"
                   decoding="async"
                   style={{
-                    height:64,width:'auto',display:'block',
+                    height: isMobile ? 44 : 64,width:'auto',display:'block',
                     filter: logo.invert ? 'invert(1)' : 'none',
                   }}
                 />

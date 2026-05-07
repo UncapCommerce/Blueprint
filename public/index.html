@@ -37,29 +37,42 @@
   @media (max-width: 960px) {
     section[id], section { padding-left: 24px !important; padding-right: 24px !important; }
     /* Collapse all 2-column and 3-column grids inside sections to single column */
-    section [style*="grid-template-columns: 1fr 1.1fr"],
-    section [style*="grid-template-columns: 1fr 1.2fr"],
-    section [style*="grid-template-columns: 1.1fr 1fr"],
-    section [style*="grid-template-columns: 1.2fr 1fr"],
-    section [style*="grid-template-columns: 1.6fr 1fr"],
-    section [style*="grid-template-columns: 1fr 1.6fr"],
-    section [style*="grid-template-columns: 1fr 1fr"],
-    section [style*="grid-template-columns: repeat(3, 1fr)"],
-    section [style*="grid-template-columns: 2fr 1fr 1fr 1fr"],
-    footer [style*="grid-template-columns: 2fr 1fr 1fr 1fr"] {
+    section [style*="grid-template-columns:1fr 1.1fr"],,
+  section [style*="grid-template-columns: 1fr 1.1fr"],
+    section [style*="grid-template-columns:1fr 1.2fr"],,
+  section [style*="grid-template-columns: 1fr 1.2fr"],
+    section [style*="grid-template-columns:1.1fr 1fr"],,
+  section [style*="grid-template-columns: 1.1fr 1fr"],
+    section [style*="grid-template-columns:1.2fr 1fr"],,
+  section [style*="grid-template-columns: 1.2fr 1fr"],
+    section [style*="grid-template-columns:1.6fr 1fr"],,
+  section [style*="grid-template-columns: 1.6fr 1fr"],
+    section [style*="grid-template-columns:1fr 1.6fr"],,
+  section [style*="grid-template-columns: 1fr 1.6fr"],
+    section [style*="grid-template-columns:1fr 1fr"],,
+  section [style*="grid-template-columns: 1fr 1fr"],
+    section [style*="grid-template-columns:repeat(3, 1fr)"],,
+  section [style*="grid-template-columns: repeat(3, 1fr)"],
+    section [style*="grid-template-columns:2fr 1fr 1fr 1fr"],,
+  section [style*="grid-template-columns: 2fr 1fr 1fr 1fr"],
+    footer [style*="grid-template-columns:2fr 1fr 1fr 1fr"] {,
+  footer [style*="grid-template-columns: 2fr 1fr 1fr 1fr"] {
       grid-template-columns: 1fr !important;
       gap: 32px !important;
     }
     /* 4-col card grids → 2 columns */
-    section [style*="grid-template-columns: repeat(4, 1fr)"] {
+    section [style*="grid-template-columns:repeat(4, 1fr)"] {,
+  section [style*="grid-template-columns: repeat(4, 1fr)"] {
       grid-template-columns: repeat(2, 1fr) !important;
     }
     /* Mosaic columns → 2 cols */
-    section [style*="column-count: 3"] { column-count: 2 !important; }
+    section [style*="column-count:3"] { column-count: 2 !important; },
+  section [style*="column-count: 3"] { column-count: 2 !important; }
 
-    /* Header — hide nav links + secondary CTA */
+    /* Header — hide nav links + secondary "Book a fit call" link, keep only the primary CTA */
     header nav { display: none !important; }
-    header a[href="#book"]:not(.uc-btn) { display: none !important; }
+    header a[href="#book"]:not(.uc-btn),
+    header a[href="/call"]:not(.uc-btn) { display: none !important; }
 
     /* Smaller section padding top/bottom */
     section[id="problem"], section[id="offer"], section[id="proof"],
@@ -71,15 +84,20 @@
   /* Mobile: ≤640px — single column everything, smaller type */
   @media (max-width: 640px) {
     section, footer { padding-left: 20px !important; padding-right: 20px !important; }
-    section [style*="grid-template-columns: repeat(2, 1fr)"],
-    section [style*="grid-template-columns: repeat(4, 1fr)"] {
+    section [style*="grid-template-columns:repeat(2, 1fr)"],,
+  section [style*="grid-template-columns: repeat(2, 1fr)"],
+    section [style*="grid-template-columns:repeat(4, 1fr)"] {,
+  section [style*="grid-template-columns: repeat(4, 1fr)"] {
       grid-template-columns: 1fr !important;
     }
-    section [style*="column-count: 2"] { column-count: 1 !important; }
-    section [style*="column-count: 3"] { column-count: 1 !important; }
+    section [style*="column-count:2"] { column-count: 1 !important; },
+  section [style*="column-count: 2"] { column-count: 1 !important; }
+    section [style*="column-count:3"] { column-count: 1 !important; },
+  section [style*="column-count: 3"] { column-count: 1 !important; }
 
     /* Trust strip — stack label above marquee */
-    section [style*="grid-template-columns: auto 1fr"] {
+    section [style*="grid-template-columns:auto 1fr"] {,
+  section [style*="grid-template-columns: auto 1fr"] {
       grid-template-columns: 1fr !important;
       gap: 16px !important;
     }
@@ -91,8 +109,10 @@
     .case-file { transform: none !important; }
 
     /* Hero stats / inline rows — wrap */
-    [style*="display: flex"][style*="gap: 24px"],
-    [style*="display: flex"][style*="gap: 32px"] { flex-wrap: wrap !important; }
+    [style*="display:flex"][style*="gap:24px"],,
+  [style*="display: flex"][style*="gap: 24px"],
+    [style*="display:flex"][style*="gap:32px"] { flex-wrap: wrap !important; },
+  [style*="display: flex"][style*="gap: 32px"] { flex-wrap: wrap !important; }
 
     /* ===== Performance: skip the 600KB+ decorative bg vectors on mobile.
        They're hidden visually anyway in narrow viewports — and modern
@@ -102,14 +122,16 @@
 
     /* ===== Hero — tighter on mobile so the right column (artifact card)
        lines up below the headline without wasted white space. ===== */
-    section [style*="padding: 72px 32px 96px"] {
+    section [style*="padding:72px 32px 96px"] {,
+  section [style*="padding: 72px 32px 96px"] {
       padding: 36px 20px 56px !important;
     }
     section h1[style*="clamp(48px, 5.6vw, 88px)"] {
       font-size: clamp(32px, 9vw, 44px) !important;
       line-height: 1.05 !important;
     }
-    section [style*="grid-template-columns: 1.35fr 1fr"] {
+    section [style*="grid-template-columns:1.35fr 1fr"] {,
+  section [style*="grid-template-columns: 1.35fr 1fr"] {
       grid-template-columns: 1fr !important;
       gap: 28px !important;
     }
@@ -118,7 +140,8 @@
     section .uc-btn.b-text { padding-left: 0 !important; }
 
     /* Artifact card padding tighter so it doesn't overflow */
-    section [style*="border-radius: 5px"][style*="padding: 28px"][style*="border: 1px solid"] {
+    section [style*="border-radius:5px"][style*="padding:28px"][style*="border:1px solid"] {,
+  section [style*="border-radius: 5px"][style*="padding: 28px"][style*="border: 1px solid"] {
       padding: 18px !important;
     }
 
@@ -126,7 +149,8 @@
     section h2 { font-size: clamp(28px, 7vw, 40px) !important; line-height: 1.05 !important; letter-spacing: -.02em !important; }
 
     /* FAQ accordion items have larger tap target */
-    section [style*="border-bottom: 1px solid var(--uc-black)"] button { padding: 18px 0 !important; }
+    section [style*="border-bottom:1px solid var(--uc-black)"] button { padding: 18px 0 !important; },
+  section [style*="border-bottom: 1px solid var(--uc-black)"] button { padding: 18px 0 !important; }
 
     /* Footer — single column, cleaner spacing */
     footer { padding: 36px 20px 24px !important; }
@@ -169,8 +193,7 @@
       transition: background .15s var(--ease-out), color .15s var(--ease-out);
       min-height: 44px;
     }
-    .m-cta-bar a.outline { background: #fff; color: var(--uc-black); border-color: var(--line-1); }
-    .m-cta-bar a.primary { background: var(--uc-brand); color: #fff; border-color: var(--uc-brand); }
+    .m-cta-bar a.primary { background: #495af3; color: #fff !important; border-color: #495af3; text-decoration: none; }
     .m-cta-bar a span { transition: transform .15s var(--ease-out); display: inline-block; }
     .m-cta-bar a:active span { transform: translateX(2px); }
   }
@@ -179,16 +202,15 @@
 <body>
 <div id="root"></div>
 
-<!-- Mobile-only sticky bottom CTA bar (display:none above 640px) -->
-<nav class="m-cta-bar" aria-label="Quick actions">
-  <a href="/call" class="outline">Book a call</a>
-  <a href="/quiz" class="primary">Start the Blueprint <span>→</span></a>
-</nav>
+<!-- The mobile-only sticky bottom CTA bar is rendered by App below
+     (inside React's tree) so it only appears after the app mounts —
+     prevents a flash of an unstyled link during JSX compile. -->
 
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
+<script type="text/babel" src="components/_hooks.jsx"></script>
 <script type="text/babel" src="components/Header.jsx"></script>
 <script type="text/babel" src="components/Hero.jsx"></script>
 <script type="text/babel" src="components/TrustStrip.jsx"></script>
@@ -212,22 +234,28 @@ function App(){
     return ()=>io.disconnect();
   },[]);
   return (
-    <div data-screen-label="Blueprint Landing">
-      <Header/>
-      <Hero/>
-      <TrustStrip/>
-      <Problem/>
-      <Shift/>
-      <Offer/>
-      <MathSection/>
-      <SocialProof/>
-      <FitProcess/>
-      <Guarantee/>
-      <FAQ/>
-      <Founder/>
-      <FinalCTA/>
-      <Footer/>
-    </div>
+    <React.Fragment>
+      <div data-screen-label="Blueprint Landing">
+        <Header/>
+        <Hero/>
+        <TrustStrip/>
+        <Problem/>
+        <Shift/>
+        <Offer/>
+        <MathSection/>
+        <SocialProof/>
+        <FitProcess/>
+        <Guarantee/>
+        <FAQ/>
+        <Founder/>
+        <FinalCTA/>
+        <Footer/>
+      </div>
+      {/* Mobile-only sticky bottom CTA bar — rendered post-mount only */}
+      <nav className="m-cta-bar" aria-label="Quick actions">
+        <a href="/quiz" className="primary">Start the Blueprint <span>→</span></a>
+      </nav>
+    </React.Fragment>
   );
 }
 ReactDOM.createRoot(document.getElementById('root')).render(<App/>);

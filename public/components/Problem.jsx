@@ -2,6 +2,7 @@
 // Visual concept: incident dossier. Each failure mode is a "case file" —
 // stacked, rotated, stamped, with a redaction bar over what you "didn't know".
 function Problem() {
+  const isMobile = window.useIsMobile ? window.useIsMobile() : false;
   const items = [
     {
       n:'01',
@@ -44,7 +45,7 @@ function Problem() {
   return (
     <section id="problem" style={{
       background:'var(--uc-cream)',
-      padding:'140px 32px 160px',
+      padding: isMobile ? '64px 20px 72px' : '140px 32px 160px',
       position:'relative',
       overflow:'hidden',
       scrollMarginTop:80,
@@ -62,59 +63,62 @@ function Problem() {
       <div style={{maxWidth:1280,margin:'0 auto',position:'relative',zIndex:1}}>
 
         {/* Header — file folder tab metaphor */}
-        <div style={{maxWidth:920,marginBottom:72,position:'relative'}}>
+        <div style={{maxWidth:920,marginBottom: isMobile ? 36 : 72,position:'relative'}}>
           <div style={{
             display:'inline-flex',alignItems:'center',gap:10,
             padding:'6px 14px',
             background:'var(--uc-black)',color:'#fff',
             borderRadius:'5px 5px 0 0',
-            fontFamily:'var(--font-mono)',fontSize:11,fontWeight:600,letterSpacing:'.12em',
+            fontFamily:'var(--font-mono)',fontSize: isMobile ? 10 : 11,fontWeight:600,letterSpacing:'.12em',
             position:'relative',top:1,
           }}>
             <span style={{width:6,height:6,borderRadius:999,background:'var(--uc-signal)',animation:'pulseDot 2s var(--ease-out) infinite'}}/>
-            CASE FILE · MIGRATION POSTMORTEMS
+            {isMobile ? 'POSTMORTEMS' : 'CASE FILE · MIGRATION POSTMORTEMS'}
           </div>
-          <div style={{height:2,background:'var(--uc-black)',marginBottom:24}}/>
+          <div style={{height:2,background:'var(--uc-black)',marginBottom: isMobile ? 18 : 24}}/>
 
-          <div className="uc-eyebrow" style={{marginBottom:14}}>The problem</div>
+          <div className="uc-eyebrow" style={{marginBottom: isMobile ? 10 : 14}}>The problem</div>
           <h2 style={{
             fontFamily:'var(--font-display)',fontWeight:700,
-            fontSize:'clamp(40px,4.4vw,68px)',lineHeight:1.02,letterSpacing:'-.03em',
-            color:'var(--fg-1)',margin:'0 0 16px',textWrap:'balance',
+            fontSize: isMobile ? 'clamp(28px, 7.6vw, 40px)' : 'clamp(40px,4.4vw,68px)',
+            lineHeight:1.05,letterSpacing:'-.03em',
+            color:'var(--fg-1)',margin:'0 0 14px',textWrap:'balance',
           }}>
             Migrations don't fail because of Shopify.
           </h2>
           <p style={{
             fontFamily:'var(--font-serif)',fontStyle:'italic',fontWeight:500,
-            fontSize:'clamp(26px,2.8vw,40px)',lineHeight:1.12,
-            color:'var(--fg-2)',margin:'0 0 28px',letterSpacing:'-.015em',textWrap:'balance',
+            fontSize: isMobile ? 'clamp(18px, 5vw, 26px)' : 'clamp(26px,2.8vw,40px)',
+            lineHeight:1.18,
+            color:'var(--fg-2)',margin:'0 0 22px',letterSpacing:'-.015em',textWrap:'balance',
           }}>
             They fail because of what you didn't know before you signed.
           </p>
-          <p style={{fontSize:17,lineHeight:1.6,color:'var(--fg-2)',margin:0,maxWidth:640}}>
+          <p style={{fontSize: isMobile ? 15 : 17,lineHeight:1.6,color:'var(--fg-2)',margin:0,maxWidth:640}}>
             Every brand we've ever rescued from a stalled migration shared the same first mistake: they bought an estimate when they needed a strategy.
           </p>
         </div>
 
-        {/* The 4 case files — staggered, rotated dossier cards */}
+        {/* The 4 case files — staggered, rotated dossier cards (no rotation on mobile) */}
         <div style={{
           display:'grid',
-          gridTemplateColumns:'repeat(4, 1fr)',
-          gap:24,
+          gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)',
+          gap: isMobile ? 28 : 24,
           position:'relative',
-          paddingTop:20,
+          paddingTop: isMobile ? 14 : 20,
         }}>
           {items.map((item,i)=>(
-            <CaseFile key={item.n} item={item} index={i}/>
+            <CaseFile key={item.n} item={item} index={i} isMobile={isMobile}/>
           ))}
         </div>
 
         {/* Closing line — handwritten / underlined */}
-        <div style={{marginTop:88,textAlign:'center',position:'relative'}}>
+        <div style={{marginTop: isMobile ? 56 : 88,textAlign:'center',position:'relative'}}>
           <p style={{
             display:'inline-block',
             fontFamily:'var(--font-display)',fontWeight:600,
-            fontSize:'clamp(22px,2vw,30px)',lineHeight:1.2,letterSpacing:'-.02em',
+            fontSize: isMobile ? 'clamp(17px, 4.6vw, 22px)' : 'clamp(22px,2vw,30px)',
+            lineHeight:1.25,letterSpacing:'-.02em',
             color:'var(--fg-1)',margin:0,
             position:'relative',
           }}>
@@ -155,12 +159,12 @@ function Problem() {
   );
 }
 
-function CaseFile({item, index}){
+function CaseFile({item, index, isMobile}){
   const isOdd = index % 2 === 1;
   return (
     <div className="case-file" style={{
       position:'relative',
-      transform:`rotate(${item.rot}deg) translateY(${isOdd ? 16 : 0}px)`,
+      transform: isMobile ? 'none' : `rotate(${item.rot}deg) translateY(${isOdd ? 16 : 0}px)`,
       transformOrigin:'center top',
     }}>
       {/* Tape / clip at top */}
@@ -177,10 +181,10 @@ function CaseFile({item, index}){
         background:'#FCFAF3',
         border:'1px solid var(--uc-black)',
         borderRadius:5,
-        padding:'24px 22px 22px',
+        padding: isMobile ? '24px 20px 22px' : '24px 22px 22px',
         boxShadow:'0 6px 14px rgba(10,10,10,0.07), 0 1px 2px rgba(10,10,10,0.05)',
         position:'relative',
-        minHeight:340,
+        minHeight: isMobile ? 'auto' : 340,
         display:'flex',flexDirection:'column',
         // Faint horizontal rule lines like a notepad
         backgroundImage:`

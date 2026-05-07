@@ -49,9 +49,9 @@ const REVENUE_OPTIONS = [
 ];
 
 const MODEL_OPTIONS = [
-  {id:'b2b',  label:'B2B',  sub:'Wholesale, distribution, dealer networks'},
-  {id:'dtc',  label:'DTC',  sub:'Direct-to-consumer'},
-  {id:'both', label:'Both', sub:'Unified commerce'},
+  {id:'b2b',    label:'B2B',    sub:'Manufacturer, distributor, suppliers, wholesalers'},
+  {id:'retail', label:'Retail', sub:'Brick-and-mortar, POS, in-store'},
+  {id:'dtc',    label:'DTC',    sub:'Direct-to-consumer ecommerce'},
 ];
 
 // ============================================================================
@@ -95,8 +95,9 @@ function buildCheckoutUrl(answers, otherErp){
   const erpLabel = answers.erp === 'other'
     ? (otherErp || 'Other')
     : (ERP_OPTIONS.find(o=>o.id===answers.erp)?.label || '');
-  const modelLabel = MODEL_OPTIONS.find(o=>o.id===answers.model)?.label
-    || answers.model || '';
+  const modelLabel = Array.isArray(answers.model)
+    ? answers.model.map(id => MODEL_OPTIONS.find(o=>o.id===id)?.label || id).join(', ')
+    : (MODEL_OPTIONS.find(o=>o.id===answers.model)?.label || answers.model || '');
   const attrs = {
     'ERP':              erpLabel,
     'ERP Edition':      answers.edition || '',
@@ -119,7 +120,7 @@ function QuizApp(){
     edition: null,
     platform: null,
     revenue: null,
-    model: null,
+    model: [],            // multi-select — array of model ids
   });
   const [otherErp, setOtherErp] = React.useState('');
 
@@ -139,6 +140,15 @@ function QuizApp(){
   const choose = (key, value) => {
     set(key, value);
     setTimeout(advance, 220);
+  };
+
+  // Multi-select toggle (used for the model step)
+  const toggle = (key, value) => {
+    setAnswers(prev => {
+      const cur = Array.isArray(prev[key]) ? prev[key] : [];
+      const next = cur.includes(value) ? cur.filter(x=>x!==value) : [...cur, value];
+      return {...prev, [key]: next};
+    });
   };
 
   return (
@@ -241,15 +251,25 @@ function QuizApp(){
             <Step
               eyebrow="Step 5 of 5"
               title="Which best describes your model?"
-              sub=""
+              sub="Select all that apply."
             >
-              <OptionGrid
+              <MultiOptionGrid
                 options={MODEL_OPTIONS.map(o=>({value:o.id,label:o.label,sub:o.sub}))}
-                selected={answers.model}
-                onChoose={(v)=>choose('model', v)}
-                columns={1}
-                size="lg"
+                selected={answers.model || []}
+                onToggle={(v)=>toggle('model', v)}
               />
+              <button
+                onClick={advance}
+                disabled={!answers.model || answers.model.length === 0}
+                className="uc-btn b-primary"
+                style={{
+                  marginTop:24,
+                  opacity: (answers.model && answers.model.length > 0) ? 1 : .4,
+                  cursor: (answers.model && answers.model.length > 0) ? 'pointer' : 'default',
+                  padding:'14px 22px',fontSize:15,
+                }}>
+                Continue <span>→</span>
+              </button>
             </Step>
           )}
 
@@ -396,6 +416,55 @@ function OptionGrid({options, selected, onChoose, columns=2, size='md'}){
   );
 }
 
+/* ------- Multi-select option grid (checkbox style — used for model step) ------- */
+function MultiOptionGrid({options, selected, onToggle}){
+  return (
+    <div style={{display:'grid',gridTemplateColumns:'1fr',gap:12}}>
+      {options.map(opt=>{
+        const isSel = (selected || []).includes(opt.value);
+        return (
+          <button
+            key={opt.value}
+            onClick={()=>onToggle(opt.value)}
+            style={{
+              cursor:'pointer',textAlign:'left',
+              background: isSel ? 'var(--uc-black)' : '#fff',
+              color: isSel ? '#fff' : 'var(--fg-1)',
+              border:'1px solid', borderColor: isSel ? 'var(--uc-black)' : 'var(--line-1)',
+              borderRadius:5,
+              padding:'22px 20px',
+              fontFamily:'var(--font-sans)',fontSize:18,fontWeight:500,
+              display:'flex',alignItems:'center',justifyContent:'space-between',gap:14,
+              transition:'all .18s var(--ease-out)',
+              boxShadow: isSel ? '0 4px 12px rgba(10,10,10,0.12)' : '0 1px 2px rgba(10,10,10,0.03)',
+            }}
+            onMouseEnter={e=>{ if (!isSel) { e.currentTarget.style.borderColor = 'var(--uc-black)'; e.currentTarget.style.transform = 'translateY(-1px)'; } }}
+            onMouseLeave={e=>{ if (!isSel) { e.currentTarget.style.borderColor = 'var(--line-1)'; e.currentTarget.style.transform = 'translateY(0)'; } }}>
+            <span style={{display:'flex',flexDirection:'column',gap:3}}>
+              <span>{opt.label}</span>
+              {opt.sub && <span style={{fontSize:13,fontWeight:400,opacity:.7}}>{opt.sub}</span>}
+            </span>
+            {/* Square checkbox visual */}
+            <span style={{
+              width:22,height:22,borderRadius:4,
+              border:'1.5px solid', borderColor: isSel ? '#fff' : 'var(--line-1)',
+              background: isSel ? '#fff' : 'transparent',
+              display:'inline-flex',alignItems:'center',justifyContent:'center',
+              flexShrink:0,
+            }}>
+              {isSel && (
+                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <path d="M2.5 6.2L4.8 8.5L9.5 3.5" stroke="var(--uc-black)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              )}
+            </span>
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
 /* ------- Free-text step (used for "Other" ERP) ------- */
 function FreeTextStep({placeholder, value, onChange, onSubmit}){
   return (
@@ -441,13 +510,16 @@ function editionTitle(erpId){
 
 /* ------- Confirmation screen ------- */
 function Confirm({answers, otherErp}){
+  const isMobile = window.useIsMobile ? window.useIsMobile() : false;
   const erpName = answers.erp === 'other'
     ? (otherErp || 'Other')
     : (ERP_OPTIONS.find(o=>o.id===answers.erp)?.label || '—');
   const editionName = answers.edition || '—';
   const platformName = answers.platform || '—';
   const revenueName = answers.revenue || '—';
-  const modelName = MODEL_OPTIONS.find(o=>o.id===answers.model)?.label || answers.model || '—';
+  const modelName = Array.isArray(answers.model) && answers.model.length
+    ? answers.model.map(id => MODEL_OPTIONS.find(o=>o.id===id)?.label || id).join(' · ')
+    : (MODEL_OPTIONS.find(o=>o.id===answers.model)?.label || answers.model || '—');
 
   const rows = [
     {l:'ERP',                      v:erpName},
@@ -497,25 +569,47 @@ function Confirm({answers, otherErp}){
         ))}
       </div>
 
-      {/* Price + checkout */}
+      {/* Dark card — scarcity copy + Place Order. Side-by-side on desktop,
+          text-above-button stacked on mobile. */}
       <div style={{
         background:'var(--uc-black)',color:'#fff',borderRadius:5,
-        padding:28,marginBottom:24,
-        display:'grid',gridTemplateColumns:'1fr auto',gap:24,alignItems:'center',
+        padding: isMobile ? '22px 22px' : 28, marginBottom:14,
+        display:'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? 18 : 24,
+        alignItems: isMobile ? 'stretch' : 'center',
+        justifyContent:'space-between',
       }}>
-        <div>
-          <div style={{fontSize:12,fontWeight:600,letterSpacing:'.12em',textTransform:'uppercase',color:'var(--uc-stone-500)',marginBottom:6}}>Migration Blueprint · 4 weeks · yours to keep</div>
-          <div style={{fontFamily:'var(--font-display)',fontWeight:800,fontSize:48,letterSpacing:'-.04em',lineHeight:1}}>$7,000</div>
+        <div style={{
+          fontFamily:'var(--font-display)',fontWeight:500,
+          fontSize: isMobile ? 14 : 'clamp(13px, 1.2vw, 15px)',
+          lineHeight:1.4,letterSpacing:'-.005em',
+          textAlign: isMobile ? 'center' : 'left',
+        }}>
+          We take on 8 Blueprints per quarter.<br/>
+          <strong style={{fontWeight:700}}>Lock yours in.</strong>
         </div>
         <a
           href={buildCheckoutUrl(answers, otherErp)}
           className="uc-btn b-signal"
-          style={{padding:'18px 26px',fontSize:16,fontWeight:600,whiteSpace:'nowrap',gap:10}}
+          style={{
+            padding: isMobile ? '16px 20px' : '18px 24px',
+            fontSize:16,fontWeight:600,gap:10,
+            width: isMobile ? '100%' : 'auto',
+            justifyContent:'center',
+            whiteSpace: isMobile ? 'normal' : 'nowrap',
+          }}
         >
           <Lock/>
-          Place Order
+          Place Order · $7,000
           <span>→</span>
         </a>
+      </div>
+      <div style={{
+        fontSize:12,fontWeight:600,letterSpacing:'.12em',textTransform:'uppercase',
+        color:'var(--fg-3)',textAlign:'center',marginBottom:24,
+      }}>
+        Migration Blueprint · 4 weeks · yours to keep
       </div>
 
       <div style={{display:'flex',gap:24,flexWrap:'wrap',fontSize:13,color:'var(--fg-3)'}}>
