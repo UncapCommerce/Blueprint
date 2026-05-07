@@ -40,7 +40,7 @@ function Header() {
         backdropFilter:'blur(14px)',WebkitBackdropFilter:'blur(14px)',
         border:'1px solid var(--line-1)',
         borderRadius:5,
-        padding: isMobile ? '8px 8px 8px 12px' : '12px 16px 12px 20px',
+        padding: isMobile ? '10px 10px 10px 14px' : '12px 16px 12px 20px',
         display:'flex',alignItems:'center',justifyContent:'space-between',
         gap: isMobile ? 8 : 24,
         boxShadow:'var(--shadow-1)',
@@ -52,12 +52,12 @@ function Header() {
           <img
             src="assets/uncap-logo-black.svg"
             alt="uncap"
-            style={{height: isMobile ? 18 : 22, width:'auto', display:'block'}}
+            style={{height: isMobile ? 22 : 22, width:'auto', display:'block'}}
           />
-          <span style={{height: isMobile ? 13 : 16, width:1, background:'var(--line-1)', flexShrink:0}}/>
+          <span style={{height: isMobile ? 16 : 16, width:1, background:'var(--line-1)', flexShrink:0}}/>
           <span style={{
             fontFamily:'var(--font-display)',fontWeight:600,
-            fontSize: isMobile ? 12 : 14,
+            fontSize: isMobile ? 14 : 14,
             letterSpacing:'-.01em',color:'var(--fg-1)',whiteSpace:'nowrap',
           }}>Blueprint</span>
         </a>
@@ -87,8 +87,8 @@ function Header() {
             <a href="/call" style={{fontSize:13,fontWeight:500,color:'var(--fg-2)',textDecoration:'none',padding:'8px 4px',whiteSpace:'nowrap'}}>Book a fit call</a>
           )}
           <a href="/quiz" className="uc-btn b-primary" style={{
-            padding: isMobile ? '8px 12px' : '10px 16px',
-            fontSize: isMobile ? 12 : 13,
+            padding: isMobile ? '10px 14px' : '10px 16px',
+            fontSize: isMobile ? 13 : 13,
             whiteSpace:'nowrap',
           }}>
             {isMobile ? 'Start Blueprint' : 'Start the Blueprint'} <span>→</span>
