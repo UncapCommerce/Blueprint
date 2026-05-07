@@ -9,6 +9,7 @@ function SocialProof() {
       quote:'The Blueprint surfaced three integration risks our previous partner hadn\'t even mentioned. We saved a year.',
       attr:'Denise Foley',
       role:'EVP E-Commerce, ULE Group',
+      photo:'https://i.pravatar.cc/120?img=44',
       stat:{n:'6×', l:'Online sales after launch'},
     },
     {
@@ -16,6 +17,7 @@ function SocialProof() {
       quote:'The fixed-cost estimate alone was worth ten times what we paid. We never would\'ve known what we didn\'t know.',
       attr:'Mark Iverson',
       role:'COO, Northwoods Mfg.',
+      photo:'https://i.pravatar.cc/120?img=12',
       stat:{n:'$295K', l:'saved vs. the wrong quote'},
     },
     {
@@ -23,12 +25,14 @@ function SocialProof() {
       quote:'We hired the Blueprint as a second opinion. It became the entire project plan.',
       attr:'Priya Shah',
       role:'Head of DTC, Atlas Hardware',
+      photo:'https://i.pravatar.cc/120?img=5',
     },
     {
       tone:'white', size:'small',
       quote:'Senior people, every meeting. No bait-and-switch to juniors after kickoff.',
       attr:'Tom Reilly',
       role:'CTO, Welding Store',
+      photo:'https://i.pravatar.cc/120?img=14',
     },
     {
       tone:'stat', size:'small',
@@ -40,6 +44,7 @@ function SocialProof() {
       quote:'Three weeks in we had a working prototype on real Shopify, not a Figma file. That alone changed how every internal stakeholder talked about the project.',
       attr:'Lena Kowalski',
       role:'VP Digital, Sign Warehouse',
+      photo:'https://i.pravatar.cc/120?img=9',
     },
     {
       tone:'dark', size:'small',
@@ -51,6 +56,7 @@ function SocialProof() {
       quote:'Every assumption documented, every risk owned, every dollar accounted for before we wrote a line of code.',
       attr:'Jordan Marsh',
       role:'Director of Engineering, Uneeda',
+      photo:'https://i.pravatar.cc/120?img=15',
     },
   ];
 
@@ -193,7 +199,7 @@ function ReviewTile({review, index, isMobile}){
             </div>
           )}
           <div style={{display:'flex',alignItems:'center',gap:12}}>
-            <Avatar name={review.attr} dark={tone==='dark'}/>
+            <Avatar name={review.attr} src={review.photo} dark={tone==='dark'}/>
             <div>
               <div style={{fontSize:14,fontWeight:600,color:p.fg,lineHeight:1.2}}>{review.attr}</div>
               <div style={{fontSize:12,color:p.meta,lineHeight:1.3,marginTop:2}}>{review.role}</div>
@@ -231,7 +237,7 @@ function ReviewTile({review, index, isMobile}){
           </div>
         )}
         <div style={{display:'flex',alignItems:'center',gap:12,paddingTop:review.stat?0:6,borderTop:review.stat?'none':`1px solid ${tone==='dark'?'#2B2B2B':'rgba(10,10,10,0.08)'}`,marginTop:review.stat?0:6}}>
-          <Avatar name={review.attr} dark={tone==='dark'}/>
+          <Avatar name={review.attr} src={review.photo} dark={tone==='dark'}/>
           <div>
             <div style={{fontSize:14,fontWeight:600,color:p.fg,lineHeight:1.2}}>{review.attr}</div>
             <div style={{fontSize:12,color:p.meta,lineHeight:1.3,marginTop:2}}>{review.role}</div>
@@ -257,7 +263,7 @@ function ReviewTile({review, index, isMobile}){
         }}>"{review.quote}"</p>
       </div>
       <div style={{display:'flex',alignItems:'center',gap:10}}>
-        <Avatar name={review.attr} dark={tone==='dark'} small/>
+        <Avatar name={review.attr} src={review.photo} dark={tone==='dark'} small/>
         <div>
           <div style={{fontSize:13,fontWeight:600,color:p.fg,lineHeight:1.2}}>{review.attr}</div>
           <div style={{fontSize:11,color:p.meta,lineHeight:1.3,marginTop:2}}>{review.role}</div>
@@ -280,20 +286,34 @@ function Stars({color='var(--uc-black)', small=false}){
   );
 }
 
-function Avatar({name, dark=false, small=false}){
-  // Initials avatar
-  const initials = name.split(' ').slice(0,2).map(p=>p[0]).join('').toUpperCase();
+function Avatar({name, src, dark=false, small=false}){
   const size = small ? 28 : 36;
   const fontSize = small ? 11 : 13;
+  const baseStyle = {
+    width:size,height:size,borderRadius:999,
+    flexShrink:0,
+    border: dark ? '1px solid #3a3a3a' : '1px solid rgba(10,10,10,0.1)',
+    overflow:'hidden',
+  };
+  if (src) {
+    return (
+      <img
+        src={src}
+        alt={name}
+        loading="lazy"
+        decoding="async"
+        style={{...baseStyle, objectFit:'cover', display:'block'}}
+      />
+    );
+  }
+  const initials = name.split(' ').slice(0,2).map(p=>p[0]).join('').toUpperCase();
   return (
     <div style={{
-      width:size,height:size,borderRadius:999,
+      ...baseStyle,
       background: dark ? '#2B2B2B' : 'var(--uc-stone-200)',
       color: dark ? '#fff' : 'var(--uc-black)',
       display:'inline-flex',alignItems:'center',justifyContent:'center',
       fontFamily:'var(--font-display)',fontWeight:700,fontSize,letterSpacing:'.02em',
-      flexShrink:0,
-      border: dark ? '1px solid #3a3a3a' : '1px solid rgba(10,10,10,0.1)',
     }}>{initials}</div>
   );
 }
