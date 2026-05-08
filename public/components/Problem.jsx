@@ -7,10 +7,10 @@ function Problem() {
     {
       n:'01',
       tag:'SCOPE',
-      t:'Scope creeps. Costs double.',
-      d:'The original SOW was a guess. Six months in, the change orders are bigger than the original quote.',
-      redact:'change orders are bigger than the original quote',
-      stamp:'OVERRUN',
+      t:'Scope creeps. Six months late and still not launched.',
+      d:'The original SOW was a guess. Every milestone slips a quarter, and nobody can tell you what\'s actually blocking launch.',
+      redact:'nobody can tell you what\'s actually blocking launch',
+      stamp:'OVERDUE',
       rot:-2.2,
     },
     {
