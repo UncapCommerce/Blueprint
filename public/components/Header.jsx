@@ -83,7 +83,7 @@ function Header() {
 
         {/* Right cluster — primary CTA */}
         <div style={{display:'flex',alignItems:'center',flexShrink:0}}>
-          <a href="/quiz" className="uc-btn b-primary" style={{
+          <a href="/build" className="uc-btn b-primary" style={{
             padding: isMobile ? '10px 14px' : '10px 16px',
             fontSize: isMobile ? 13 : 13,
             whiteSpace:'nowrap',
