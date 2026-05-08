@@ -9,10 +9,21 @@ function Hero() {
         </div>
       )}
       <div style={{maxWidth:1280,margin:'0 auto',position:'relative',zIndex:1}}>
-        {/* Tag chip */}
-        <div style={{display:'inline-flex',alignItems:'center',gap: isMobile ? 8 : 10,padding: isMobile ? '5px 12px 5px 6px' : '6px 14px 6px 8px',border:'1px solid var(--uc-black)',borderRadius:5,background:'#fff',marginBottom: isMobile ? 20 : 32,maxWidth:'100%'}}>
+        {/* Tag chip — full-width banner on mobile so the line never wraps */}
+        {/* awkwardly inside a content-sized chip; inline on desktop.        */}
+        <div style={{
+          display: isMobile ? 'flex' : 'inline-flex',
+          alignItems:'center',
+          gap: isMobile ? 8 : 10,
+          padding: isMobile ? '8px 12px' : '6px 14px 6px 8px',
+          border:'1px solid var(--uc-black)', borderRadius:5, background:'#fff',
+          marginBottom: isMobile ? 20 : 32,
+          width: isMobile ? '100%' : 'auto',
+          maxWidth: '100%',
+          justifyContent: isMobile ? 'center' : 'flex-start',
+        }}>
           <span style={{display:'inline-flex',alignItems:'center',gap:6,padding:'3px 8px',background:'var(--uc-signal)',borderRadius:3,fontSize:11,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',flexShrink:0}}>New</span>
-          <span style={{fontSize: isMobile ? 12 : 13,fontWeight:500,color:'var(--fg-1)',whiteSpace:'normal',lineHeight:1.3}}>Built for operators who've been burned before.</span>
+          <span style={{fontSize: isMobile ? 12 : 13,fontWeight:500,color:'var(--fg-1)',whiteSpace:'normal',lineHeight:1.3,textAlign: isMobile ? 'center' : 'left'}}>Built for operators who've been burned before.</span>
         </div>
 
         <div style={{display:'grid',gridTemplateColumns: isMobile ? '1fr' : '1.35fr 1fr',gap: isMobile ? 28 : 80,alignItems: isMobile ? 'start' : 'end'}}>
@@ -25,7 +36,6 @@ function Hero() {
             </p>
             <div style={{display:'flex',gap: isMobile ? 10 : 14,alignItems: isMobile ? 'stretch' : 'center',flexDirection: isMobile ? 'column' : 'row',flexWrap:'wrap'}}>
               <a href="/quiz" className="uc-btn b-primary" style={isMobile ? {width:'100%',justifyContent:'center',padding:'16px 22px',fontSize:16} : null}>Start the Blueprint <span>→</span></a>
-              <a href="/call" className="uc-btn b-text" style={isMobile ? {alignSelf:'center',padding:'10px 8px'} : null}>Not ready? Book a fit call <span>→</span></a>
             </div>
             <div style={{display:'flex',gap: isMobile ? 10 : 24,alignItems: isMobile ? 'flex-start' : 'center',marginTop: isMobile ? 24 : 36,flexDirection: isMobile ? 'column' : 'row',flexWrap:'wrap'}}>
               <div style={{display:'flex',alignItems:'center',gap:10}}>

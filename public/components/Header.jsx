@@ -81,11 +81,8 @@ function Header() {
           </nav>
         )}
 
-        {/* Right cluster — primary CTA always; secondary "Book a fit call" desktop-only */}
-        <div style={{display:'flex',alignItems:'center',gap: isMobile ? 0 : 10,flexShrink:0}}>
-          {!isMobile && (
-            <a href="/call" style={{fontSize:13,fontWeight:500,color:'var(--fg-2)',textDecoration:'none',padding:'8px 4px',whiteSpace:'nowrap'}}>Book a fit call</a>
-          )}
+        {/* Right cluster — primary CTA */}
+        <div style={{display:'flex',alignItems:'center',flexShrink:0}}>
           <a href="/quiz" className="uc-btn b-primary" style={{
             padding: isMobile ? '10px 14px' : '10px 16px',
             fontSize: isMobile ? 13 : 13,

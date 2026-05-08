@@ -70,10 +70,9 @@
     section [style*="column-count:3"] { column-count: 2 !important; },
   section [style*="column-count: 3"] { column-count: 2 !important; }
 
-    /* Header — hide nav links + secondary "Book a fit call" link, keep only the primary CTA */
+    /* Header — hide nav links, keep only the primary CTA */
     header nav { display: none !important; }
-    header a[href="#book"]:not(.uc-btn),
-    header a[href="/call"]:not(.uc-btn) { display: none !important; }
+    header a[href="#book"]:not(.uc-btn) { display: none !important; }
 
     /* Smaller section padding top/bottom */
     section[id="problem"], section[id="offer"], section[id="proof"],
