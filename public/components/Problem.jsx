@@ -33,11 +33,11 @@ function Problem() {
     },
     {
       n:'04',
-      tag:'PARTNER',
-      t:'The agency disappears after kickoff.',
-      d:'You signed with a partner. You\'re working with three offshore contractors and a Slack channel that\'s been quiet for a week.',
-      redact:'a Slack channel that\'s been quiet for a week',
-      stamp:'GHOSTED',
+      tag:'TCO',
+      t:'Cost of ownership goes through the roof.',
+      d:'App subscriptions stack up, custom code rots, and the hot-fix retainer becomes permanent. Year two costs more than the migration itself.',
+      redact:'costs more than the migration itself',
+      stamp:'TCO 2X',
       rot:2.0,
     },
   ];
