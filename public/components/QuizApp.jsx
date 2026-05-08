@@ -263,24 +263,6 @@ function QuizApp(){
           {step === 5 && (
             <Step
               eyebrow="Step 6 of 8"
-              title="What's your name?"
-              sub="So we know who to address on the kickoff call."
-            >
-              <FreeTextStep
-                placeholder="Full name"
-                autoComplete="name"
-                value={contact.name}
-                onChange={(v)=>setContactField('name', v)}
-                onSubmit={()=>{
-                  if (contact.name.trim()) advance();
-                }}
-              />
-            </Step>
-          )}
-
-          {step === 6 && (
-            <Step
-              eyebrow="Step 7 of 8"
               title="What's your work email?"
               sub="We'll send the Blueprint kickoff details here."
             >
@@ -297,6 +279,24 @@ function QuizApp(){
                   advance();
                 }}
                 error={emailError}
+              />
+            </Step>
+          )}
+
+          {step === 6 && (
+            <Step
+              eyebrow="Step 7 of 8"
+              title="What's your name?"
+              sub="So we know who to address on the kickoff call."
+            >
+              <FreeTextStep
+                placeholder="Full name"
+                autoComplete="name"
+                value={contact.name}
+                onChange={(v)=>setContactField('name', v)}
+                onSubmit={()=>{
+                  if (contact.name.trim()) advance();
+                }}
               />
             </Step>
           )}
@@ -528,14 +528,14 @@ function recapRows(answers, otherErp, otherPlatform, contact){
     : (answers.platform || '—');
   const modelName = MODEL_OPTIONS.find(o=>o.id===answers.model)?.label || answers.model || '—';
   return [
+    {l:'Name',                  v:contact?.name    || '—'},
+    {l:'Company',               v:contact?.company || '—'},
+    {l:'Email',                 v:contact?.email   || '—'},
     {l:'ERP',                   v:erpName},
     {l:'Edition',               v:answers.edition || '—'},
     {l:'Current platform',      v:platformName},
     {l:'Annual online revenue', v:answers.revenue || '—'},
     {l:'Model',                 v:modelName},
-    {l:'Name',                  v:contact?.name    || '—'},
-    {l:'Email',                 v:contact?.email   || '—'},
-    {l:'Company',               v:contact?.company || '—'},
   ];
 }
 
@@ -630,10 +630,12 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
   const [intentId, setIntentId] = React.useState('');
   const [stripeRefs, setStripeRefs] = React.useState(null);
   // Whether the Express Checkout Element actually has a wallet to show
-  // (Apple Pay / Google Pay / Link). Drives whether we render the buttons
-  // or a "no quick payment available on this device" fallback.
+  // (Apple Pay / Google Pay / Link). Drives whether we render the express
+  // row above the card form. The card form is always rendered as a
+  // fallback so visitors without a wallet still have a way to pay.
   const [expressAvailable, setExpressAvailable] = React.useState(false);
   const expressRef = React.useRef(null);
+  const paymentRef = React.useRef(null);
   // Always-fresh reference to the confirm flow so handlers attached during
   // the one-time mount effect can still call the latest closure (which
   // captures up-to-date contact details + state setters).
@@ -672,6 +674,10 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
         const stripe = window.Stripe(data.publishableKey);
         const elements = stripe.elements({
           clientSecret: data.clientSecret,
+          // Show Stripe's own skeleton inside the Payment Element iframe
+          // before fields are interactive — gives a consistent visual
+          // while we keep our placeholder over it until `ready` fires.
+          loader: 'always',
           appearance: {
             theme: 'flat',
             variables: {
@@ -683,13 +689,17 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
               borderRadius: '5px',
               spacingUnit: '4px',
             },
+            rules: {
+              '.Input': { border: '1px solid #e6e6e6', boxShadow: 'none' },
+              '.Input:focus': { border: '1px solid #0a0a0a' },
+              '.Label': { fontWeight: '600', color: '#3d3d3d' },
+            },
           },
         });
 
-        // Express Checkout (Apple Pay / Google Pay / Link) is the sole
-        // payment surface. Renders only the wallets the visitor's browser
-        // advertises; if none are available we show a fallback message
-        // pointing them at the fit-call form.
+        // Express Checkout (Apple Pay / Google Pay / Link). Renders only
+        // the wallets the visitor's browser advertises; the card form
+        // below is the universal fallback when none are available.
         const expressElement = elements.create('expressCheckout', {
           paymentMethodOrder: ['applePay', 'googlePay', 'link'],
           buttonHeight: 48,
@@ -700,7 +710,6 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
             ? Object.values(availablePaymentMethods).some(Boolean)
             : false;
           setExpressAvailable(any);
-          setPhase('ready');
         });
         expressElement.on('click', (event) => {
           // SetupIntent flow: no line items / shipping needed. Email is
@@ -713,6 +722,20 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
           if (finalizeRef.current) await finalizeRef.current();
         });
         expressElement.mount(expressRef.current);
+
+        // Card Payment Element — universal fallback. Uses our own
+        // contact fields (collected on the quiz steps) for billing
+        // details via confirmParams instead of Stripe's built-ins.
+        const paymentElement = elements.create('payment', {
+          layout: 'tabs',
+          fields: { billingDetails: { name:'never', email:'never', phone:'never', address:'never' } },
+        });
+        paymentElement.on('ready', () => {
+          if (cancelled) return;
+          setPhase('ready');
+        });
+        paymentElement.mount(paymentRef.current);
+
         setStripeRefs({ stripe, elements });
       } catch (err) {
         if (cancelled) return;
@@ -795,8 +818,15 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
   //   'ready'       → either express buttons (if expressAvailable) or
   //                    a "no quick payment available" fallback message
   //   'submitting'  → user has tapped a wallet button and confirm is in flight
+  const buttonDisabled = phase !== 'ready';
+  const onSubmit = (e) => {
+    e.preventDefault();
+    finalize();
+  };
+  const expressVisible = phase === 'ready' && expressAvailable;
+
   return (
-    <div style={{
+    <form onSubmit={onSubmit} style={{
       background:'var(--uc-black)',color:'#fff',borderRadius:5,
       padding: isMobile ? '20px 14px' : 28, marginBottom:14,
       display:'flex',flexDirection:'column',gap:18,
@@ -811,43 +841,47 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
         <strong style={{fontWeight:700}}>Lock yours in. $0 today.</strong>
       </div>
 
-      {/* Wrapper reserves height while we wait on Stripe's `ready` event so */}
-      {/* the page doesn't reflow when the wallet buttons paint.            */}
+      {/* Express Checkout (Apple Pay / Google Pay / Link). Mounted always */}
+      {/* so Stripe can decide availability; container is hidden until we   */}
+      {/* know wallets are present.                                         */}
+      <div style={{display: expressVisible ? 'block' : 'none'}}>
+        <div style={{
+          background:'#fff', color:'var(--fg-1)', borderRadius:5,
+          padding: isMobile ? 12 : 14,
+        }}>
+          <div ref={expressRef}/>
+        </div>
+        <div style={{
+          display:'flex', alignItems:'center', gap:12, marginTop:14,
+          fontSize:11, fontWeight:600, letterSpacing:'.12em',
+          textTransform:'uppercase', color:'rgba(255,255,255,0.55)',
+        }}>
+          <div style={{flex:1, height:1, background:'rgba(255,255,255,0.2)'}}/>
+          <span>Or pay with card</span>
+          <div style={{flex:1, height:1, background:'rgba(255,255,255,0.2)'}}/>
+        </div>
+      </div>
+
+      {/* Card Payment Element — universal fallback; always rendered. */}
       <div style={{
         position:'relative',
         background:'#fff',color:'var(--fg-1)',borderRadius:5,
-        padding: isMobile ? 14 : 18,
-        minHeight: 96,
+        padding: isMobile ? 12 : 16,
+        minHeight: isMobile ? 360 : 280,
       }}>
-        <div ref={expressRef} style={{
-          opacity: phase === 'ready' && expressAvailable ? 1 : 0,
-          transition: 'opacity 160ms var(--ease-out)',
-          pointerEvents: phase === 'submitting' ? 'none' : 'auto',
-        }}/>
-        {phase !== 'submitting' && !(phase === 'ready' && expressAvailable) && (
+        <div ref={paymentRef}/>
+        {phase !== 'ready' && phase !== 'submitting' && (
           <div style={{
             position:'absolute', inset:0,
             background:'#fff', borderRadius:5,
             display:'flex', alignItems:'center', justifyContent:'center',
-            padding: isMobile ? 14 : 18,
+            padding: isMobile ? 12 : 16,
             fontSize:13, lineHeight:1.5, textAlign:'center',
             color: phase === 'error' && !stripeRefs ? '#c0392b' : 'var(--fg-3)',
           }}>
             {phase === 'error' && !stripeRefs
               ? error
-              : phase === 'ready' && !expressAvailable
-                ? "Quick payment isn't available on this device. Open this page in Safari or Chrome — Apple Pay, Google Pay, and Link will appear here."
-                : 'Preparing secure checkout…'}
-          </div>
-        )}
-        {phase === 'submitting' && (
-          <div style={{
-            position:'absolute', inset:0,
-            background:'rgba(255,255,255,0.85)', borderRadius:5,
-            display:'flex', alignItems:'center', justifyContent:'center',
-            fontSize:13, color:'var(--fg-2)', fontWeight:500,
-          }}>
-            Saving card…
+              : 'Preparing secure payment form…'}
           </div>
         )}
       </div>
@@ -856,11 +890,30 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
         <div style={{fontSize:13,color:'#ffd9d4'}}>{error}</div>
       )}
 
-      <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,fontSize:12,color:'var(--uc-stone-300)',lineHeight:1.45}}>
+      <button
+        type="submit"
+        className="uc-btn b-signal"
+        disabled={buttonDisabled}
+        style={{
+          padding: isMobile ? '16px 20px' : '18px 24px',
+          fontSize:16,fontWeight:600,gap:10,
+          width:'100%',
+          justifyContent:'center',
+          whiteSpace: isMobile ? 'normal' : 'nowrap',
+          opacity: buttonDisabled ? .55 : 1,
+          cursor: buttonDisabled ? 'default' : 'pointer',
+          border:'none',
+        }}
+      >
         <Lock/>
+        {phase === 'submitting' ? 'Saving card…' : 'Reserve your slot · $0 today'}
+        <span>→</span>
+      </button>
+
+      <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,fontSize:12,color:'var(--uc-stone-300)',lineHeight:1.45}}>
         $0 today. Card kept on file. Charged after we confirm fit on the intro call.
       </div>
-    </div>
+    </form>
   );
 }
 
