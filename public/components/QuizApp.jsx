@@ -608,7 +608,10 @@ function CardOnFile({answers, otherErp, isMobile}){
         position:'relative',
         background:'#fff',color:'var(--fg-1)',borderRadius:5,
         padding: isMobile ? 12 : 16,
-        minHeight: 260,
+        // Reserve enough height for the Payment Element so the wrapper
+        // doesn't grow when Stripe paints. On mobile the tabs layout
+        // stacks expiry/CVC vertically, which is much taller than desktop.
+        minHeight: isMobile ? 360 : 280,
       }}>
         <div style={{
           position:'absolute', inset:0,
