@@ -1,5 +1,5 @@
 /* ============================================================
-   UNCAP DESIGN SYSTEM — colors & type tokens
+   UNCAP DESIGN SYSTEM: colors & type tokens
    Sourced from uncap.com (Webflow site, Shopify Platinum partner brand)
    ============================================================ */
 
@@ -13,7 +13,7 @@
 */
 @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500;600&display=swap');
 
-/* Inter 18pt — body / UI */
+/* Inter 18pt: body / UI */
 @font-face { font-family:"Inter"; font-weight:100; font-style:normal;  src:url("./fonts/Inter_18pt-Thin.ttf") format("truetype"); font-display:swap }
 @font-face { font-family:"Inter"; font-weight:100; font-style:italic;  src:url("./fonts/Inter_18pt-ThinItalic.ttf") format("truetype"); font-display:swap }
 @font-face { font-family:"Inter"; font-weight:200; font-style:normal;  src:url("./fonts/Inter_18pt-ExtraLight.ttf") format("truetype"); font-display:swap }
@@ -33,7 +33,7 @@
 @font-face { font-family:"Inter"; font-weight:900; font-style:normal;  src:url("./fonts/Inter_18pt-Black.ttf") format("truetype"); font-display:swap }
 @font-face { font-family:"Inter"; font-weight:900; font-style:italic;  src:url("./fonts/Inter_18pt-BlackItalic.ttf") format("truetype"); font-display:swap }
 
-/* Inter 24pt — H1/H2 headlines */
+/* Inter 24pt: H1/H2 headlines */
 @font-face { font-family:"Inter Display"; font-weight:400; font-style:normal; src:url("./fonts/Inter_24pt-Regular.ttf") format("truetype"); font-display:swap }
 @font-face { font-family:"Inter Display"; font-weight:400; font-style:italic; src:url("./fonts/Inter_24pt-Italic.ttf") format("truetype"); font-display:swap }
 @font-face { font-family:"Inter Display"; font-weight:500; font-style:normal; src:url("./fonts/Inter_24pt-Medium.ttf") format("truetype"); font-display:swap }
@@ -47,7 +47,7 @@
 @font-face { font-family:"Inter Display"; font-weight:900; font-style:normal; src:url("./fonts/Inter_24pt-Black.ttf") format("truetype"); font-display:swap }
 @font-face { font-family:"Inter Display"; font-weight:900; font-style:italic; src:url("./fonts/Inter_24pt-BlackItalic.ttf") format("truetype"); font-display:swap }
 
-/* Inter 28pt — hero-scale display */
+/* Inter 28pt: hero-scale display */
 @font-face { font-family:"Inter Hero"; font-weight:400; font-style:normal; src:url("./fonts/Inter_28pt-Regular.ttf") format("truetype"); font-display:swap }
 @font-face { font-family:"Inter Hero"; font-weight:500; font-style:normal; src:url("./fonts/Inter_28pt-Medium.ttf") format("truetype"); font-display:swap }
 @font-face { font-family:"Inter Hero"; font-weight:600; font-style:normal; src:url("./fonts/Inter_28pt-SemiBold.ttf") format("truetype"); font-display:swap }
@@ -57,7 +57,7 @@
 
 :root {
   /* ---------- PALETTE ---------- */
-  /* Core neutrals — Uncap's site is overwhelmingly black/white/cream */
+  /* Core neutrals: Uncap's site is overwhelmingly black/white/cream */
   --uc-black:        #0A0A0A;   /* near-black, used on headings, buttons, footer */
   --uc-ink:          #1A1A1A;   /* body text */
   --uc-graphite:     #2B2B2B;   /* secondary surfaces */
@@ -70,12 +70,12 @@
   --uc-bone:         #F8F6F0;   /* lighter cream */
   --uc-paper:        #FFFFFF;   /* pure white cards */
 
-  /* Accent — Uncap is restrained; the only consistent accent is a
+  /* Accent: Uncap is restrained; the only consistent accent is a
      warm signal-yellow used on small badges + a Shopify-partner green.
      The ⛯ icon mark itself is monochromatic. */
   --uc-brand:        #495af3;   /* primary CTA blue */
   --uc-brand-hover:  #3647d8;   /* darker on hover */
-  --uc-signal:       #E8FF52;   /* electric lime — used sparingly */
+  --uc-signal:       #E8FF52;   /* electric lime: used sparingly */
   --uc-signal-soft:  #F4FBC6;   /* tint */
   --uc-shopify:      #5A8A3A;   /* Shopify partner badge green */
 
@@ -100,8 +100,8 @@
 
   /* ---------- TYPE FAMILIES ---------- */
   --font-sans:    "Inter", -apple-system, "Helvetica Neue", Arial, sans-serif;
-  --font-display: "Inter Display", "Inter", -apple-system, sans-serif;       /* H1/H2 — 24pt optical size */
-  --font-hero:    "Inter Hero", "Inter Display", "Inter", -apple-system, sans-serif;  /* hero-scale — 28pt optical size */
+  --font-display: "Inter Display", "Inter", -apple-system, sans-serif;       /* H1/H2: 24pt optical size */
+  --font-hero:    "Inter Hero", "Inter Display", "Inter", -apple-system, sans-serif;  /* hero-scale: 28pt optical size */
   --font-serif:   "Fraunces", "Boska", Georgia, serif;        /* substitute for Boska */
   --font-mono:    "JetBrains Mono", ui-monospace, "SF Mono", Menlo, monospace;
 
@@ -146,7 +146,7 @@
   /* Two values only. 5px on every button, card, input, box. 0 for full-bleed / dividers. */
   --radius:    5px;
   --radius-0:  0px;
-  /* Legacy aliases — all map to --radius so older components stay 5px */
+  /* Legacy aliases: all map to --radius so older components stay 5px */
   --r-0:   0px;
   --r-sm:  5px;
   --r-md:  5px;
@@ -155,7 +155,7 @@
   --r-pill: 5px;
 
   /* ---------- ELEVATION ---------- */
-  /* The brand is flat — shadows are subtle, used on floating chips. */
+  /* The brand is flat: shadows are subtle, used on floating chips. */
   --shadow-0: none;
   --shadow-1: 0 1px 2px rgba(10,10,10,0.04), 0 1px 1px rgba(10,10,10,0.03);
   --shadow-2: 0 4px 16px rgba(10,10,10,0.06), 0 1px 2px rgba(10,10,10,0.04);

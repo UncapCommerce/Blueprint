@@ -11,7 +11,7 @@
   gtag('js', new Date());
   gtag('config', 'G-3P6Y3163D9');
 </script>
-<title>Start the Blueprint — Uncap</title>
+<title>Start the Blueprint · Uncap</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png"/>
 <link rel="apple-touch-icon" href="/favicon-32.png"/>
 <link rel="stylesheet" href="/colors_and_type.css"/>
@@ -40,15 +40,15 @@
      Targets the inline styles produced by QuizApp.jsx; uses !important
      to override React's element-level styles. */
   @media (max-width: 640px) {
-    /* Header — tighter padding, smaller logo, less intrusive Back button */
+    /* Header: tighter padding, smaller logo, less intrusive Back button */
     header > div { padding: 10px 16px 14px !important; gap: 10px !important; }
     header img[alt="Uncap"] { height: 18px !important; }
     header > div > button { left: 12px !important; padding: 6px 8px !important; font-size: 12px !important; }
 
-    /* Main step container — less side padding, less bottom (no fixed bar here) */
+    /* Main step container: less side padding, less bottom (no fixed bar here) */
     main { padding: 24px 18px 56px !important; }
 
-    /* Step typography — smaller display headline */
+    /* Step typography: smaller display headline */
     main h1 {
       font-size: clamp(26px, 7.6vw, 34px) !important;
       line-height: 1.08 !important;
@@ -57,25 +57,25 @@
     }
     main h1 + p { font-size: 16px !important; margin-bottom: 24px !important; }
 
-    /* OptionGrid — collapse 2-col to 1-col so option cards are full width */
+    /* OptionGrid: collapse 2-col to 1-col so option cards are full width */
     main [style*="grid-template-columns:repeat(2, 1fr)"] {,
   main [style*="grid-template-columns: repeat(2, 1fr)"] {
       grid-template-columns: 1fr !important;
     }
 
-    /* OptionGrid card — bigger tap target, allow the label to wrap */
+    /* OptionGrid card: bigger tap target, allow the label to wrap */
     main [style*="grid-template-columns:1fr"] > button {,
   main [style*="grid-template-columns: 1fr"] > button {
       padding: 18px 18px !important;
       font-size: 16px !important;
     }
 
-    /* Free-text "Other ERP" input — 16px to prevent iOS zoom-on-focus */
+    /* Free-text "Other ERP" input: 16px to prevent iOS zoom-on-focus */
     main input[type="text"] { font-size: 16px !important; padding: 16px 18px !important; }
     main input[type="text"] + button { width: 100% !important; justify-content: center !important; }
 
     /* ----- Confirmation step (Place Order screen) ----- */
-    /* Recap card — stack label/value rather than 180px-1fr two-col */
+    /* Recap card: stack label/value rather than 180px-1fr two-col */
     main [style*="grid-template-columns:180px 1fr"] {,
   main [style*="grid-template-columns: 180px 1fr"] {
       grid-template-columns: 1fr !important;
@@ -88,7 +88,7 @@
     main [style*="grid-template-columns:180px 1fr"] span:last-child { font-size: 15px !important; },
   main [style*="grid-template-columns: 180px 1fr"] span:last-child { font-size: 15px !important; }
 
-    /* Price + Place Order card — stack price above button, button full width */
+    /* Price + Place Order card: stack price above button, button full width */
     main [style*="grid-template-columns:1fr auto"] {,
   main [style*="grid-template-columns: 1fr auto"] {
       grid-template-columns: 1fr !important;
@@ -100,7 +100,7 @@
       justify-content: center !important;
     }
 
-    /* Trust row below Place Order — smaller, centered */
+    /* Trust row below Place Order: smaller, centered */
     main [style*="font-size:13px"][style*="color:var(--fg-3)"] { gap: 16px !important; },
   main [style*="font-size: 13px"][style*="color: var(--fg-3)"] { gap: 16px !important; }
   }

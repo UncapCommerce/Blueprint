@@ -1,4 +1,4 @@
-// Shift.jsx — Free estimate is the trap (compare table) (responsive)
+// Shift.jsx: Free estimate is the trap (compare table) (responsive)
 function Shift() {
   const isMobile = window.useIsMobile ? window.useIsMobile() : false;
   const left = [
@@ -33,7 +33,7 @@ function Shift() {
             The "free estimate" is the trap.
           </h2>
           <p style={{fontFamily:'var(--font-serif)',fontStyle:'italic',fontWeight:400,fontSize: isMobile ? 'clamp(17px, 4.6vw, 22px)' : 'clamp(22px,2vw,30px)',lineHeight:1.35,color:'var(--uc-stone-300)',margin:0,letterSpacing:'-.01em'}}>
-            We charge for the part everyone else skips — the part that decides whether your migration works.
+            We charge for the part everyone else skips: the part that decides whether your migration works.
           </p>
         </div>
 

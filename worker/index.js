@@ -45,7 +45,7 @@ const escapeHtml = (s) =>
 // Builds a row of `<tr>` for the notification HTML emails.
 const tableRow = (label, value) =>
   `<tr><td style="padding:6px 12px 6px 0;color:#6b6b6b;font-weight:500;vertical-align:top;white-space:nowrap;">${escapeHtml(label)}</td>` +
-  `<td style="padding:6px 0;color:#0a0a0a;">${escapeHtml(value || '—').replace(/\n/g, '<br>')}</td></tr>`;
+  `<td style="padding:6px 0;color:#0a0a0a;">${escapeHtml(value || '').replace(/\n/g, '<br>')}</td></tr>`;
 
 // Stripe REST is x-www-form-urlencoded, with `metadata[key]=value` repeated.
 function stripeForm(params) {
@@ -91,7 +91,7 @@ async function stripeFetch(env, path, { method = 'POST', body, query } = {}) {
 
 async function sendNotificationEmail(env, { subject, html, text, replyTo }) {
   if (!env.RESEND_API_KEY) {
-    // Don't fail the whole request just because email is unconfigured —
+    // Don't fail the whole request just because email is unconfigured ,
     // the customer-facing operation already succeeded.
     return { ok: false, error: 'RESEND_API_KEY not set' };
   }
@@ -160,7 +160,7 @@ async function handleSetupIntent(request, env) {
       body: stripeForm({
         usage: 'off_session',
         // Pull whichever payment methods are enabled in the Stripe
-        // dashboard. allow_redirects=never keeps the flow embedded —
+        // dashboard. allow_redirects=never keeps the flow embedded ,
         // we surface only Apple Pay, Google Pay, and Link via the
         // Express Checkout Element, all of which complete in-page.
         // (Amazon Pay would require a return_url + redirect handling.)
@@ -226,7 +226,7 @@ async function handleSetupComplete(request, env) {
     const md = intent.metadata || {};
 
     // Create or upsert the Customer. Without a stored ID per browser, the
-    // simplest safe path is to always create a fresh one — Stripe customer
+    // simplest safe path is to always create a fresh one: Stripe customer
     // dedupe is a manual cleanup task in the dashboard.
     const customer = await stripeFetch(env, 'customers', {
       body: stripeForm({
@@ -249,7 +249,7 @@ async function handleSetupComplete(request, env) {
 
     // Notify Uncap. Failures here are non-fatal for the customer.
     const card = pm.card || {};
-    const subject = `New card on file — ${name || email || customer.id}${company ? ` · ${company}` : ''}`;
+    const subject = `New card on file: ${name || email || customer.id}${company ? ` · ${company}` : ''}`;
     const customerUrl = `https://dashboard.stripe.com/customers/${customer.id}`;
     const html = `<!doctype html>
 <html><body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Helvetica,Arial,sans-serif;color:#0a0a0a;line-height:1.5;">
@@ -264,7 +264,7 @@ async function handleSetupComplete(request, env) {
       ${tableRow('Company', company)}
       ${tableRow('Phone', phone)}
       ${tableRow('Stripe customer', customer.id)}
-      ${tableRow('Card', card.brand ? `${card.brand.toUpperCase()} ···· ${card.last4} (exp ${card.exp_month}/${card.exp_year})` : '—')}
+      ${tableRow('Card', card.brand ? `${card.brand.toUpperCase()} ···· ${card.last4} (exp ${card.exp_month}/${card.exp_year})` : '')}
     </table>
 
     <h3 style="margin:24px 0 8px;font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#3d3d3d;">Quiz answers</h3>
@@ -286,20 +286,20 @@ async function handleSetupComplete(request, env) {
     const text =
       `New Blueprint card on file\n` +
       `\n` +
-      `Name:    ${name || '—'}\n` +
-      `Email:   ${email || '—'}\n` +
-      `Company: ${company || '—'}\n` +
-      `Phone:   ${phone || '—'}\n` +
+      `Name:    ${name || ''}\n` +
+      `Email:   ${email || ''}\n` +
+      `Company: ${company || ''}\n` +
+      `Phone:   ${phone || ''}\n` +
       `Stripe:  ${customer.id}\n` +
-      `Card:    ${card.brand ? `${card.brand.toUpperCase()} ···· ${card.last4} (exp ${card.exp_month}/${card.exp_year})` : '—'}\n` +
+      `Card:    ${card.brand ? `${card.brand.toUpperCase()} ···· ${card.last4} (exp ${card.exp_month}/${card.exp_year})` : ''}\n` +
       `\n` +
       `Quiz answers\n` +
       `------------\n` +
-      `ERP:              ${md.erp || '—'}\n` +
-      `Edition:          ${md.edition || '—'}\n` +
-      `Current platform: ${md.platform || '—'}\n` +
-      `Annual revenue:   ${md.revenue || '—'}\n` +
-      `Model:            ${md.model || '—'}\n` +
+      `ERP:              ${md.erp || ''}\n` +
+      `Edition:          ${md.edition || ''}\n` +
+      `Current platform: ${md.platform || ''}\n` +
+      `Annual revenue:   ${md.revenue || ''}\n` +
+      `Model:            ${md.model || ''}\n` +
       (md.other_erp ? `ERP (other):      ${md.other_erp}\n` : '') +
       `\n` +
       `Open in Stripe: ${customerUrl}\n`;
@@ -313,11 +313,11 @@ async function handleSetupComplete(request, env) {
 }
 
 // ----------------------------------------------------------------------------
-// /api/build/session — resumable /build quiz sessions backed by Workers KV.
+// /api/build/session: resumable /build quiz sessions backed by Workers KV.
 //
 // The client generates a 32-char hex session id on first visit, pushes it
 // into the URL as `?s=<id>`, and POSTs progress here on every state change.
-// Anyone with the URL can resume — that's the point. State is small JSON
+// Anyone with the URL can resume: that's the point. State is small JSON
 // (current step + answers + contact). No card data ever lands in KV; that
 // stays with Stripe via the SetupIntent.
 //

@@ -4,7 +4,7 @@ function Guarantee() {
   return (
     <section style={{background:'#fff',padding: isMobile ? '64px 20px' : '120px 32px'}}>
       <div style={{maxWidth:1080,margin:'0 auto',position:'relative'}}>
-        {/* Stamp — absolute on desktop, inline above headline on mobile so it never overlaps */}
+        {/* Stamp: absolute on desktop, inline above headline on mobile so it never overlaps */}
         <div style={isMobile ? {
           width:108,height:108,border:'1px solid var(--uc-black)',borderRadius:999,
           display:'flex',alignItems:'center',justifyContent:'center',transform:'rotate(-6deg)',
@@ -37,8 +37,8 @@ function FAQ() {
   const items = [
     {q:'Why charge for what others give away?', a:'Because free estimates aren\'t strategy. They\'re sales calls in disguise. Doing the work properly takes 4 weeks of senior time. We\'d rather charge for it and do it right than dress it up as "discovery" and bake the cost into a 14-month build.'},
     {q:'What if I want you to implement?', a:'Great. The Blueprint cost is credited 1:1 toward implementation. Your $7.5K becomes a $7.5K discount on the build.'},
-    {q:'What if I don\'t want you to implement?', a:'Also great. You walk with everything you need to brief any agency — or your in-house team. The architecture, the prototype, the data plan, the risk register, the fixed-cost estimate. All yours. No NDA chokeholds, no IP traps.'},
-    {q:'How is this different from a discovery phase?', a:'Discovery phases lock you in. Most are scoped to justify the build the agency already wants to sell you. The Blueprint is scoped to give you the truth — even if the truth is "don\'t migrate yet" or "hire someone else."'},
+    {q:'What if I don\'t want you to implement?', a:'Also great. You walk with everything you need to brief any agency or your in-house team. The architecture, the prototype, the data plan, the risk register, the fixed-cost estimate. All yours. No NDA chokeholds, no IP traps.'},
+    {q:'How is this different from a discovery phase?', a:'Discovery phases lock you in. Most are scoped to justify the build the agency already wants to sell you. The Blueprint is scoped to give you the truth, even if the truth is "don\'t migrate yet" or "hire someone else."'},
     {q:'What happens on the 25-min call?', a:'We diagnose your situation, tell you honestly if you\'re a fit, and answer anything. No pitch deck. No slick spin. No B.S. If you\'re not a fit, we\'ll tell you who is.'},
     {q:'Who actually does the work?', a:'Senior architects who\'ve done this hundreds of times. Not junior consultants and not offshore contractors. The people on your kickoff call are the people writing your Blueprint.'},
   ];
@@ -89,7 +89,7 @@ function Founder() {
           <p style={{fontFamily:'var(--font-serif)',fontStyle:'italic',fontSize: isMobile ? 'clamp(17px, 4.6vw, 22px)' : 'clamp(22px,2vw,28px)',lineHeight:1.4,color:'var(--uc-stone-300)',margin: isMobile ? '0 0 18px' : '0 0 28px',letterSpacing:'-.01em'}}>
             The Blueprint is the brief I wish every founder had before they signed anything.
           </p>
-          <div style={{fontSize: isMobile ? 13 : 14,fontWeight:500,color:'var(--uc-stone-500)',lineHeight:1.5}}>— Denis Dyli, Founder, Uncap · Building on Shopify since 2013 · 380+ projects launched</div>
+          <div style={{fontSize: isMobile ? 13 : 14,fontWeight:500,color:'var(--uc-stone-500)',lineHeight:1.5}}>, Denis Dyli, Founder, Uncap · Building on Shopify since 2013 · 380+ projects launched</div>
         </div>
       </div>
     </section>
@@ -111,7 +111,7 @@ function FinalCTA() {
           Ready to see the whole map?
         </h2>
         <p style={{fontFamily:'var(--font-serif)',fontStyle:'italic',fontSize: isMobile ? 'clamp(18px, 4.8vw, 24px)' : 'clamp(24px,2.4vw,36px)',lineHeight:1.3,color:'var(--fg-2)',margin: isMobile ? '0 0 28px' : '0 0 48px',maxWidth:760,letterSpacing:'-.01em'}}>
-          Eight 5-minute questions. Save a card on file with $0 today — we charge only after the kickoff confirms scope.
+          Eight 5-minute questions. Save a card on file with $0 today. We charge only after the kickoff confirms scope.
         </p>
         <div style={{display:'flex',gap: isMobile ? 10 : 14,alignItems:'stretch',flexDirection: isMobile ? 'column' : 'row',flexWrap:'wrap',marginBottom:32}}>
           <a href="/build" className="uc-btn b-primary" style={isMobile ? {width:'100%',justifyContent:'center',padding:'16px 24px',fontSize:16} : {padding:'18px 28px',fontSize:16}}>Start the Blueprint <span>→</span></a>
@@ -157,7 +157,7 @@ function Footer() {
         ))}
       </div>
       <div style={{maxWidth:1280,margin: isMobile ? '28px auto 0' : '40px auto 0',paddingTop:20,borderTop:'1px solid #2B2B2B',display:'flex',justifyContent:'space-between',fontSize:12,color:'var(--uc-stone-500)',flexWrap:'wrap',gap:8}}>
-        <div>2026 © Uncap, Inc — All rights reserved.</div>
+        <div>2026 © Uncap, Inc. All rights reserved.</div>
         <div>Shopify Platinum Partner</div>
       </div>
     </footer>

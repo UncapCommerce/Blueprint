@@ -1,5 +1,5 @@
-// Problem.jsx — "Migrations don't fail because of Shopify"
-// Visual concept: incident dossier. Each failure mode is a "case file" —
+// Problem.jsx: "Migrations don't fail because of Shopify"
+// Visual concept: incident dossier. Each failure mode is a "case file" ,
 // stacked, rotated, stamped, with a redaction bar over what you "didn't know".
 function Problem() {
   const isMobile = window.useIsMobile ? window.useIsMobile() : false;
@@ -26,7 +26,7 @@ function Problem() {
       n:'03',
       tag:'INTEGRATIONS',
       t:'Integrations break in ways nobody warned you about.',
-      d:'ERP, 3PL, tax, payments, custom pricing logic — half of it doesn\'t survive cutover.',
+      d:'ERP, 3PL, tax, payments, custom pricing logic: half of it doesn\'t survive cutover.',
       redact:'half of it doesn\'t survive cutover',
       stamp:'DATA LOSS',
       rot:-1.4,
@@ -50,7 +50,7 @@ function Problem() {
       overflow:'hidden',
       scrollMarginTop:80,
     }}>
-      {/* Subtle dotted-grid background — evidence-board feel */}
+      {/* Subtle dotted-grid background: evidence-board feel */}
       <div aria-hidden="true" style={{
         position:'absolute',inset:0,
         backgroundImage:'radial-gradient(circle, rgba(10,10,10,0.07) 1px, transparent 1px)',
@@ -62,7 +62,7 @@ function Problem() {
 
       <div style={{maxWidth:1280,margin:'0 auto',position:'relative',zIndex:1}}>
 
-        {/* Header — file folder tab metaphor */}
+        {/* Header: file folder tab metaphor */}
         <div style={{maxWidth:920,marginBottom: isMobile ? 36 : 72,position:'relative'}}>
           <div style={{
             display:'inline-flex',alignItems:'center',gap:10,
@@ -99,7 +99,7 @@ function Problem() {
           </p>
         </div>
 
-        {/* The 4 case files — staggered, rotated dossier cards (no rotation on mobile) */}
+        {/* The 4 case files: staggered, rotated dossier cards (no rotation on mobile) */}
         <div style={{
           display:'grid',
           gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)',
@@ -112,7 +112,7 @@ function Problem() {
           ))}
         </div>
 
-        {/* Closing line — handwritten / underlined */}
+        {/* Closing line: handwritten / underlined */}
         <div style={{marginTop: isMobile ? 56 : 88,textAlign:'center',position:'relative'}}>
           <p style={{
             display:'inline-block',
@@ -236,7 +236,7 @@ function CaseFile({item, index, isMobile}){
           whiteSpace:'nowrap',
         }}>{item.stamp}</div>
 
-        {/* Punch holes on left edge — folder feel */}
+        {/* Punch holes on left edge: folder feel */}
         <div aria-hidden="true" style={{
           position:'absolute',left:-1,top:60,bottom:60,
           width:8,

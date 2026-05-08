@@ -1,4 +1,4 @@
-// Hero.jsx — Above-the-fold conversion module (responsive)
+// Hero.jsx: Above-the-fold conversion module (responsive)
 function Hero() {
   const isMobile = window.useIsMobile ? window.useIsMobile() : false;
   return (
@@ -9,7 +9,7 @@ function Hero() {
         </div>
       )}
       <div style={{maxWidth:1280,margin:'0 auto',position:'relative',zIndex:1}}>
-        {/* Tag chip — full-width banner on mobile so the line never wraps */}
+        {/* Tag chip: full-width banner on mobile so the line never wraps */}
         {/* awkwardly inside a content-sized chip; inline on desktop.        */}
         <div style={{
           display: isMobile ? 'flex' : 'inline-flex',
@@ -32,7 +32,7 @@ function Hero() {
               Stop gambling six figures on a Shopify migration you can't see coming.
             </h1>
             <p style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:500,fontSize: isMobile ? 'clamp(16px, 4.4vw, 19px)' : 'clamp(22px, 2vw, 28px)',lineHeight:1.35,letterSpacing:'-.015em',color:'var(--fg-2)',margin: isMobile ? '0 0 24px' : '0 0 40px',maxWidth:640}}>
-              Everything you need to migrate to Shopify — without the guesswork. $7.5K flat. Yours to keep.
+              Everything you need to migrate to Shopify. Without the guesswork. $7.5K flat. Yours to keep.
             </p>
             <div style={{display:'flex',gap: isMobile ? 10 : 14,alignItems: isMobile ? 'stretch' : 'center',flexDirection: isMobile ? 'column' : 'row',flexWrap:'wrap'}}>
               <a href="/build" className="uc-btn b-primary" style={isMobile ? {width:'100%',justifyContent:'center',padding:'16px 22px',fontSize:16} : null}>Start the Blueprint <span>→</span></a>
@@ -53,7 +53,7 @@ function Hero() {
             </div>
           </div>
 
-          {/* Right column — the artifact card */}
+          {/* Right column: the artifact card */}
           <BlueprintArtifact isMobile={isMobile}/>
         </div>
       </div>
@@ -73,7 +73,7 @@ function BlueprintArtifact({isMobile}){
   const m = !!isMobile;
   return (
     <div style={{position:'relative',perspective:1200,marginTop: m ? 4 : 0,marginRight: m ? 0 : 14}}>
-      {/* Stacked paper effect — drop on mobile (right offset would clip viewport) */}
+      {/* Stacked paper effect: drop on mobile (right offset would clip viewport) */}
       {!m && (
         <React.Fragment>
           <div style={{position:'absolute',top:14,left:14,right:-14,bottom:-14,background:'#fff',border:'1px solid var(--uc-black)',borderRadius:5,opacity:.4}}/>
