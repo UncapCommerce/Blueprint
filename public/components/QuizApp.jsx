@@ -663,7 +663,7 @@ function Confirmation({answers, otherErp, otherPlatform, contact, setupPromiseRe
         fontSize:'clamp(20px,1.8vw,26px)',lineHeight:1.35,
         color:'var(--fg-2)',margin:'0 0 36px',maxWidth:560,letterSpacing:'-.01em',
       }}>
-        $0 today. Card on file. We charge only after the introductory fit call confirms scope.
+        $0 today. Pay only after we both agree it's a fit.
       </p>
 
       <RecapCard rows={recapRows(answers, otherErp, otherPlatform, contact)}/>
