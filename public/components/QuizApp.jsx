@@ -55,6 +55,12 @@ const MODEL_OPTIONS = [
   {id:'unified', label:'Unified', sub:'Mix of B2B, B2C, and retail in one storefront'},
 ];
 
+function makeSessionId(){
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
+}
+
 function QuizApp(){
   const [step, setStep] = React.useState(0);
   const [answers, setAnswers] = React.useState({
@@ -73,10 +79,84 @@ function QuizApp(){
   const [contact, setContact] = React.useState({ name:'', email:'', company:'' });
   const [emailError, setEmailError] = React.useState('');
 
+  // Resumable-session plumbing. Every visit to /build either reuses an
+  // existing `?s=<id>` (and rehydrates from Workers KV) or generates a new
+  // one and replaces the URL non-destructively. State changes are saved
+  // back to KV on a 400ms debounce. `sessionRestored` gates the first save
+  // so we don't overwrite a real session with default empties before we've
+  // had a chance to fetch.
+  const sessionIdRef = React.useRef(null);
+  const [sessionRestored, setSessionRestored] = React.useState(false);
+
   // 8 input steps, then a single confirmation step at index === STEPS.length.
   const STEPS = ['erp', 'edition', 'platform', 'revenue', 'model', 'name', 'email', 'company'];
   const isConfirm = step >= STEPS.length;
   const totalProgress = STEPS.length;
+
+  // Mount-once: read/create the session id and rehydrate state from KV.
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const params = new URLSearchParams(window.location.search);
+      const existing = (params.get('s') || '').toLowerCase();
+      const validId = /^[0-9a-f]{16,64}$/.test(existing);
+
+      if (validId) {
+        sessionIdRef.current = existing;
+        try {
+          const resp = await fetch(`/api/build/session?id=${encodeURIComponent(existing)}`);
+          if (!cancelled && resp.ok) {
+            const data = await resp.json().catch(() => ({}));
+            const s = data && data.ok && data.state;
+            if (s) {
+              if (Number.isFinite(s.step)) {
+                setStep(Math.max(0, Math.min(STEPS.length, s.step)));
+              }
+              if (s.answers) setAnswers(prev => ({...prev, ...s.answers}));
+              if (typeof s.otherErp === 'string') setOtherErp(s.otherErp);
+              if (typeof s.otherPlatform === 'string') setOtherPlatform(s.otherPlatform);
+              if (s.contact) setContact(prev => ({...prev, ...s.contact}));
+            }
+          }
+        } catch {}
+      } else {
+        const id = makeSessionId();
+        sessionIdRef.current = id;
+        const newUrl = `${window.location.pathname}?s=${id}${window.location.hash}`;
+        window.history.replaceState({}, '', newUrl);
+      }
+      if (!cancelled) setSessionRestored(true);
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Debounced save on every meaningful state change.
+  React.useEffect(() => {
+    if (!sessionRestored || !sessionIdRef.current) return;
+    const t = setTimeout(() => {
+      fetch('/api/build/session', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          id: sessionIdRef.current,
+          state: { step, answers, otherErp, otherPlatform, contact },
+        }),
+      }).catch(() => {});
+    }, 400);
+    return () => clearTimeout(t);
+  }, [sessionRestored, step, answers, otherErp, otherPlatform, contact]);
+
+  // Called from CardOnFile when the Stripe confirm succeeds — drop the
+  // session record and strip `?s=` from the URL so a refresh after success
+  // doesn't try to rehydrate a deleted record.
+  const onSessionComplete = React.useCallback(() => {
+    const id = sessionIdRef.current;
+    if (id) {
+      fetch(`/api/build/session?id=${encodeURIComponent(id)}`, { method: 'DELETE' }).catch(() => {});
+      sessionIdRef.current = null;
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
 
   const set = (key, value) => {
     setAnswers(prev => ({...prev, [key]: value}));
@@ -326,6 +406,7 @@ function QuizApp(){
               otherPlatform={otherPlatform}
               contact={contact}
               setupPromiseRef={setupPromiseRef}
+              onSessionComplete={onSessionComplete}
             />
           )}
         </div>
@@ -562,7 +643,7 @@ function RecapCard({rows}){
 }
 
 /* ------- Final step: scoped recap + Express Checkout ------- */
-function Confirmation({answers, otherErp, otherPlatform, contact, setupPromiseRef}){
+function Confirmation({answers, otherErp, otherPlatform, contact, setupPromiseRef, onSessionComplete}){
   const isMobile = window.useIsMobile ? window.useIsMobile() : false;
   return (
     <div style={{animation:'quizFadeIn 480ms var(--ease-out) both'}}>
@@ -594,6 +675,7 @@ function Confirmation({answers, otherErp, otherPlatform, contact, setupPromiseRe
         contact={contact}
         isMobile={isMobile}
         setupPromiseRef={setupPromiseRef}
+        onSessionComplete={onSessionComplete}
       />
 
       <div style={{
@@ -623,7 +705,7 @@ function Confirmation({answers, otherErp, otherPlatform, contact, setupPromiseRe
 // Name/email are forwarded to Stripe at confirm time as PaymentMethod
 // billing_details; company is sent to setup-complete and stored as Stripe
 // customer metadata + surfaced in the notify email.
-function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupPromiseRef}){
+function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupPromiseRef, onSessionComplete}){
   // Phases: loading → ready → submitting → success | error
   const [phase, setPhase] = React.useState('loading');
   const [error, setError] = React.useState('');
@@ -760,6 +842,7 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
       const data = await resp.json().catch(() => ({}));
       if (!resp.ok || !data.ok) throw new Error(data.error || `Save failed (${resp.status})`);
       setPhase('success');
+      if (onSessionComplete) onSessionComplete();
     } catch (err) {
       setError(err.message || 'Card saved, but we could not finalize. Email denis@uncap.com.');
       setPhase('ready');
