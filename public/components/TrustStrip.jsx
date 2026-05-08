@@ -1,4 +1,4 @@
-// TrustStrip.jsx — Infinite horizontal marquee of customer logos
+// TrustStrip.jsx: Infinite horizontal marquee of customer logos
 function TrustStrip() {
   const isMobile = window.useIsMobile ? window.useIsMobile() : false;
   // 6 black-on-light + 2 white-on-dark logos. We render on a dark background

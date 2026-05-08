@@ -1,4 +1,4 @@
-// SocialProof.jsx — Mosaic wall of customer reviews (responsive)
+// SocialProof.jsx: Mosaic wall of customer reviews (responsive)
 function SocialProof() {
   const isMobile = window.useIsMobile ? window.useIsMobile() : false;
   // Each review has a "size" controlling its grid span, and a "tone" controlling
@@ -98,7 +98,7 @@ function SocialProof() {
           </div>
         </div>
 
-        {/* 3-column mosaic with varied card heights — collapses to 1-column on mobile */}
+        {/* 3-column mosaic with varied card heights: collapses to 1-column on mobile */}
         <div style={{
           columnCount: isMobile ? 1 : 3,
           columnGap:16,
@@ -115,7 +115,7 @@ function SocialProof() {
 }
 
 function spanFor(size, isMobile){
-  // On mobile, all tiles auto-size to content — no minHeight padding to fight.
+  // On mobile, all tiles auto-size to content: no minHeight padding to fight.
   if (isMobile) return {};
   // In column layout, "size" controls minHeight to vary card heights instead of grid spans
   if (size === 'tall')  return {minHeight:380};
@@ -156,12 +156,12 @@ function ReviewTile({review, index, isMobile}){
           }}>{review.stat.n}</div>
           <div style={{fontSize:13,lineHeight:1.4,color:p.sub,maxWidth:200}}>{review.stat.l}</div>
         </div>
-        <div style={{fontSize:12,fontWeight:600,color:p.meta,letterSpacing:'.04em',textTransform:'uppercase'}}>— {review.attr}</div>
+        <div style={{fontSize:12,fontWeight:600,color:p.meta,letterSpacing:'.04em',textTransform:'uppercase'}}>, {review.attr}</div>
       </article>
     );
   }
 
-  // "Tall" tile (featured) — quote + stat ribbon at bottom
+  // "Tall" tile (featured): quote + stat ribbon at bottom
   if (review.size === 'tall') {
     return (
       <article style={{
@@ -247,7 +247,7 @@ function ReviewTile({review, index, isMobile}){
     );
   }
 
-  // Small tile — compact quote
+  // Small tile: compact quote
   return (
     <article style={{
       ...span,

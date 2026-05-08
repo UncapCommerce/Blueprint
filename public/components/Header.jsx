@@ -1,4 +1,4 @@
-// Header.jsx — Sticky cream header with section-scroll nav
+// Header.jsx: Sticky cream header with section-scroll nav
 function Header() {
   const isMobile = window.useIsMobile ? window.useIsMobile() : false;
   const [active, setActive] = React.useState('');
@@ -62,7 +62,7 @@ function Header() {
           }}>Blueprint</span>
         </a>
 
-        {/* Section nav — desktop only */}
+        {/* Section nav: desktop only */}
         {!isMobile && (
           <nav style={{display:'flex',gap:2,alignItems:'center'}}>
             {links.map(({id,t})=>{
@@ -81,7 +81,7 @@ function Header() {
           </nav>
         )}
 
-        {/* Right cluster — primary CTA */}
+        {/* Right cluster: primary CTA */}
         <div style={{display:'flex',alignItems:'center',flexShrink:0}}>
           <a href="/build" className="uc-btn b-primary" style={{
             padding: isMobile ? '10px 14px' : '10px 16px',

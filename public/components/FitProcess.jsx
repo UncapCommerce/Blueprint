@@ -1,4 +1,4 @@
-// FitProcess.jsx — Who it's for + Process timeline (responsive)
+// FitProcess.jsx: Who it's for + Process timeline (responsive)
 function FitProcess() {
   const isMobile = window.useIsMobile ? window.useIsMobile() : false;
   const fit = [
@@ -14,7 +14,7 @@ function FitProcess() {
   const weeks = [
     {n:'Week 1', t:'Discovery & Research',     d:'Deep audit of your stack, data, and goals. We talk to every system owner. Nothing taken at face value.'},
     {n:'Week 2', t:'Deep Dive Workshops',      d:'Live sessions with your team. Ops, marketing, eng, leadership. Every assumption tested, every decision documented.'},
-    {n:'Week 3', t:'Architecture & Prototyping', d:'We design your migration end-to-end and ship a working prototype. Data, integrations, rendering, identity, SEO — every layer specified.'},
+    {n:'Week 3', t:'Architecture & Prototyping', d:'We design your migration end-to-end and ship a working prototype. Data, integrations, rendering, identity, SEO: every layer specified.'},
     {n:'Week 4', t:'Delivery & Founder Briefing', d:'Full Blueprint and prototype handed over 1:1 with the founder. Fixed-cost implementation estimate. Risk register. You own it.'},
   ];
   return (

@@ -1,4 +1,4 @@
-// QuizApp.jsx — Pharmacy-style full-page intake quiz
+// QuizApp.jsx: Pharmacy-style full-page intake quiz
 // 5 questions + confirmation. One question per screen. Auto-advance on select.
 
 const ERP_OPTIONS = [
@@ -26,7 +26,7 @@ const ERP_EDITIONS = {
 };
 
 const PLATFORM_OPTIONS = [
-  'None — first ecommerce site',
+  'None (first ecommerce site)',
   'Magento / Adobe Commerce',
   'BigCommerce',
   'WooCommerce',
@@ -146,7 +146,7 @@ function QuizApp(){
     return () => clearTimeout(t);
   }, [sessionRestored, step, answers, otherErp, otherPlatform, contact]);
 
-  // Called from CardOnFile when the Stripe confirm succeeds — drop the
+  // Called from CardOnFile when the Stripe confirm succeeds: drop the
   // session record and strip `?s=` from the URL so a refresh after success
   // doesn't try to rehydrate a deleted record.
   const onSessionComplete = React.useCallback(() => {
@@ -192,7 +192,7 @@ function QuizApp(){
   const advance = () => setStep(s => s + 1);
   const back = () => {
     // Invalidate the pre-fetched SetupIntent only when back-nav lands the
-    // user back inside the quiz answer-choosing range (steps 0–4) — the
+    // user back inside the quiz answer-choosing range (steps 0–4): the
     // SetupIntent metadata is built from those answers, so they need to
     // refire if the user can change them. Bouncing within contact /
     // confirmation steps preserves the pre-fetch.
@@ -426,7 +426,7 @@ function QuizHeader({step, total, onBack, isConfirm}){
       borderBottom:'1px solid var(--line-1)',
     }}>
       <div style={{maxWidth:1280,margin:'0 auto',padding:'14px 24px 16px',position:'relative',display:'flex',flexDirection:'column',alignItems:'center',gap:12}}>
-        {/* Back button — absolute top-left so it doesn't disrupt centering */}
+        {/* Back button: absolute top-left so it doesn't disrupt centering */}
         {step > 0 && (
           <button onClick={onBack} style={{
             position:'absolute',left:24,top:'50%',transform:'translateY(-50%)',
@@ -603,19 +603,19 @@ function editionTitle(erpId){
 function recapRows(answers, otherErp, otherPlatform, contact){
   const erpName = answers.erp === 'other'
     ? (otherErp || 'Other')
-    : (ERP_OPTIONS.find(o=>o.id===answers.erp)?.label || '—');
+    : (ERP_OPTIONS.find(o=>o.id===answers.erp)?.label || '');
   const platformName = answers.platform === 'Other'
     ? (otherPlatform || 'Other')
-    : (answers.platform || '—');
-  const modelName = MODEL_OPTIONS.find(o=>o.id===answers.model)?.label || answers.model || '—';
+    : (answers.platform || '');
+  const modelName = MODEL_OPTIONS.find(o=>o.id===answers.model)?.label || answers.model || '';
   return [
-    {l:'Name',                  v:contact?.name    || '—'},
-    {l:'Company',               v:contact?.company || '—'},
-    {l:'Email',                 v:contact?.email   || '—'},
+    {l:'Name',                  v:contact?.name    || ''},
+    {l:'Company',               v:contact?.company || ''},
+    {l:'Email',                 v:contact?.email   || ''},
     {l:'ERP',                   v:erpName},
-    {l:'Edition',               v:answers.edition || '—'},
+    {l:'Edition',               v:answers.edition || ''},
     {l:'Current platform',      v:platformName},
-    {l:'Annual online revenue', v:answers.revenue || '—'},
+    {l:'Annual online revenue', v:answers.revenue || ''},
     {l:'Model',                 v:modelName},
   ];
 }
@@ -751,7 +751,7 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
         const elements = stripe.elements({
           clientSecret: data.clientSecret,
           // Show Stripe's own skeleton inside the Payment Element iframe
-          // before fields are interactive — gives a consistent visual
+          // before fields are interactive: gives a consistent visual
           // while we keep our placeholder over it until `ready` fires.
           loader: 'always',
           appearance: {
@@ -796,7 +796,7 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
     return () => { cancelled = true; };
   }, []);
 
-  // Confirm flow — runs stripe.confirmSetup() with our collected billing
+  // Confirm flow: runs stripe.confirmSetup() with our collected billing
   // details, then finalises on the worker via /api/checkout/setup-complete.
   const finalize = async () => {
     if (!stripeRefs || phase === 'submitting') return;
@@ -927,7 +927,7 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
         }}
       >
         <Lock/>
-        {phase === 'submitting' ? 'Saving card…' : 'Reserve your spot — $0 today'}
+        {phase === 'submitting' ? 'Saving card…' : 'Reserve your spot · $0 today'}
       </button>
 
       <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,fontSize:12,color:'var(--uc-stone-300)',lineHeight:1.45}}>

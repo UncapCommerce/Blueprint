@@ -1,4 +1,4 @@
-// Math.jsx — $7.5K to see the whole map (responsive)
+// Math.jsx: $7.5K to see the whole map (responsive)
 function MathSection() {
   const isMobile = window.useIsMobile ? window.useIsMobile() : false;
   return (

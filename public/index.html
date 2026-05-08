@@ -12,7 +12,7 @@
   gtag('js', new Date());
   gtag('config', 'G-3P6Y3163D9');
 </script>
-<title>The Blueprint — Uncap</title>
+<title>The Blueprint · Uncap</title>
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png"/>
 <link rel="apple-touch-icon" href="/favicon-32.png"/>
 <link rel="stylesheet" href="colors_and_type.css"/>
@@ -42,7 +42,7 @@
 
   /* ============== MOBILE / TABLET RESPONSIVE ============== */
 
-  /* Tablet: ≤960px — collapse 2-col grids, shrink padding */
+  /* Tablet: ≤960px: collapse 2-col grids, shrink padding */
   @media (max-width: 960px) {
     section[id], section { padding-left: 24px !important; padding-right: 24px !important; }
     /* Collapse all 2-column and 3-column grids inside sections to single column */
@@ -78,7 +78,7 @@
     section [style*="column-count:3"] { column-count: 2 !important; },
   section [style*="column-count: 3"] { column-count: 2 !important; }
 
-    /* Header — hide nav links, keep only the primary CTA */
+    /* Header: hide nav links, keep only the primary CTA */
     header nav { display: none !important; }
     header a[href="#book"]:not(.uc-btn) { display: none !important; }
 
@@ -89,7 +89,7 @@
     }
   }
 
-  /* Mobile: ≤640px — single column everything, smaller type */
+  /* Mobile: ≤640px: single column everything, smaller type */
   @media (max-width: 640px) {
     section, footer { padding-left: 20px !important; padding-right: 20px !important; }
     section [style*="grid-template-columns:repeat(2, 1fr)"],,
@@ -103,32 +103,32 @@
     section [style*="column-count:3"] { column-count: 1 !important; },
   section [style*="column-count: 3"] { column-count: 1 !important; }
 
-    /* Trust strip — stack label above marquee */
+    /* Trust strip: stack label above marquee */
     section [style*="grid-template-columns:auto 1fr"] {,
   section [style*="grid-template-columns: auto 1fr"] {
       grid-template-columns: 1fr !important;
       gap: 16px !important;
     }
 
-    /* Buttons — bigger tap target, allow wrap, never block */
+    /* Buttons: bigger tap target, allow wrap, never block */
     .uc-btn { font-size: 14px !important; padding: 14px 20px !important; min-height: 44px; }
 
     /* Hide rotation on case files (Problem section) */
     .case-file { transform: none !important; }
 
-    /* Hero stats / inline rows — wrap */
+    /* Hero stats / inline rows: wrap */
     [style*="display:flex"][style*="gap:24px"],,
   [style*="display: flex"][style*="gap: 24px"],
     [style*="display:flex"][style*="gap:32px"] { flex-wrap: wrap !important; },
   [style*="display: flex"][style*="gap: 32px"] { flex-wrap: wrap !important; }
 
     /* ===== Performance: skip the 600KB+ decorative bg vectors on mobile.
-       They're hidden visually anyway in narrow viewports — and modern
+       They're hidden visually anyway in narrow viewports: and modern
        browsers will *not* fetch images on display:none parents in many
        cases, so this saves ~2MB on first paint. ===== */
     section img[src*="bg-vector-"] { display: none !important; }
 
-    /* ===== Hero — tighter on mobile so the right column (artifact card)
+    /* ===== Hero: tighter on mobile so the right column (artifact card)
        lines up below the headline without wasted white space. ===== */
     section [style*="padding:72px 32px 96px"] {,
   section [style*="padding: 72px 32px 96px"] {
@@ -160,7 +160,7 @@
     section [style*="border-bottom:1px solid var(--uc-black)"] button { padding: 18px 0 !important; },
   section [style*="border-bottom: 1px solid var(--uc-black)"] button { padding: 18px 0 !important; }
 
-    /* Footer — single column, cleaner spacing */
+    /* Footer: single column, cleaner spacing */
     footer { padding: 36px 20px 24px !important; }
   }
 
@@ -170,7 +170,7 @@
 <div id="root"></div>
 
 <!-- The mobile-only sticky bottom CTA bar is rendered by App below
-     (inside React's tree) so it only appears after the app mounts —
+     (inside React's tree) so it only appears after the app mounts ,
      prevents a flash of an unstyled link during JSX compile. -->
 
 <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>

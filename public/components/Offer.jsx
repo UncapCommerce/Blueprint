@@ -1,4 +1,4 @@
-// Offer.jsx — What $7.5K actually gets you (responsive)
+// Offer.jsx: What $7.5K actually gets you (responsive)
 function Offer() {
   const isMobile = window.useIsMobile ? window.useIsMobile() : false;
   const items = [
@@ -21,7 +21,7 @@ function Offer() {
               {isMobile ? 'What $7.5K actually gets you.' : <React.Fragment>What $7.5K actually<br/>gets you.</React.Fragment>}
             </h2>
             <p style={{fontFamily:'var(--font-serif)',fontStyle:'italic',fontWeight:500,fontSize: isMobile ? 'clamp(17px, 4.6vw, 22px)' : 'clamp(22px,2vw,30px)',lineHeight:1.3,color:'var(--fg-2)',margin:0,letterSpacing:'-.01em'}}>
-              Full consultation. Solution deep-dive. A complete migration playbook — not a slide deck.
+              Full consultation. Solution deep-dive. A complete migration playbook, not a slide deck.
             </p>
           </div>
           <div style={{display:'flex',flexDirection:'column',gap:14,padding: isMobile ? '20px 22px' : '24px 28px',background:'var(--uc-cream)',border:'1px solid var(--uc-black)',borderRadius:5}}>
@@ -69,7 +69,7 @@ function Offer() {
 
         <div style={{marginTop: isMobile ? 24 : 32,display:'flex',gap: isMobile ? 12 : 14,alignItems: isMobile ? 'stretch' : 'center',flexDirection: isMobile ? 'column' : 'row',flexWrap:'wrap'}}>
           <a href="/build" className="uc-btn b-primary" style={isMobile ? {width:'100%',justifyContent:'center',padding:'16px 24px',fontSize:16} : null}>Start the Blueprint <span>→</span></a>
-          <span style={{fontSize:13,color:'var(--fg-3)',textAlign: isMobile ? 'center' : 'left'}}>Delivered in 4 weeks. Yours to keep — with us, or without.</span>
+          <span style={{fontSize:13,color:'var(--fg-3)',textAlign: isMobile ? 'center' : 'left'}}>Delivered in 4 weeks. Yours to keep, with us or without.</span>
         </div>
       </div>
     </section>
