@@ -111,11 +111,10 @@ function FinalCTA() {
           Ready to see the whole map?
         </h2>
         <p style={{fontFamily:'var(--font-serif)',fontStyle:'italic',fontSize: isMobile ? 'clamp(18px, 4.8vw, 24px)' : 'clamp(24px,2.4vw,36px)',lineHeight:1.3,color:'var(--fg-2)',margin: isMobile ? '0 0 28px' : '0 0 48px',maxWidth:760,letterSpacing:'-.01em'}}>
-          Book a 25-min call. We'll tell you if the Blueprint is right for you. If it's not, we'll tell you that too.
+          Eight 5-minute questions. Save a card on file with $0 today — we charge only after the kickoff confirms scope.
         </p>
         <div style={{display:'flex',gap: isMobile ? 10 : 14,alignItems:'stretch',flexDirection: isMobile ? 'column' : 'row',flexWrap:'wrap',marginBottom:32}}>
           <a href="/quiz" className="uc-btn b-primary" style={isMobile ? {width:'100%',justifyContent:'center',padding:'16px 24px',fontSize:16} : {padding:'18px 28px',fontSize:16}}>Start the Blueprint <span>→</span></a>
-          <a href="/call" className="uc-btn b-text" style={isMobile ? {alignSelf:'center',padding:'10px 8px'} : null}>Not ready? Book a fit call <span>→</span></a>
         </div>
         <div style={{display:'grid',gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',gap: isMobile ? 18 : 32,paddingTop: isMobile ? 24 : 32,borderTop:'1px solid var(--line-1)'}}>
           {[

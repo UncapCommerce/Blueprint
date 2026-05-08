@@ -6,9 +6,6 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
-    if (url.pathname === '/api/call' && request.method === 'POST') {
-      return handleFitCall(request, env);
-    }
     if (url.pathname === '/api/checkout/setup-intent' && request.method === 'POST') {
       return handleSetupIntent(request, env);
     }
@@ -112,8 +109,8 @@ async function sendNotificationEmail(env, { subject, html, text, replyTo }) {
   return { ok: true, id: result.id || null };
 }
 
-// Pulls the standard quiz answers off a request body. Used by both the fit-call
-// notifier and the Stripe Customer metadata.
+// Pulls the standard quiz answers off a request body. Used to populate
+// Stripe customer metadata + the post-card-on-file notification email.
 function readAnswers(body) {
   const a = body.answers || {};
   return {
@@ -123,92 +120,6 @@ function readAnswers(body) {
     revenue:  (a.revenue  || '').toString().trim(),
     model:    (a.model    || '').toString().trim(),
   };
-}
-
-// ----------------------------------------------------------------------------
-// POST /api/call
-// Receives JSON: { fullName, email, phone, company, notes, answers }
-// Emails the configured NOTIFY_EMAIL via Resend.
-// ----------------------------------------------------------------------------
-async function handleFitCall(request, env) {
-  let data;
-  try { data = await request.json(); }
-  catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
-
-  const fullName = (data.fullName || '').toString().trim();
-  const email    = (data.email    || '').toString().trim();
-  const phone    = (data.phone    || '').toString().trim();
-  const company  = (data.company  || '').toString().trim();
-  const notes    = (data.notes    || '').toString().trim();
-  const answers  = readAnswers(data);
-
-  if (!fullName || !email) {
-    return json(400, { ok: false, error: 'Full name and email are required.' });
-  }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return json(400, { ok: false, error: 'Invalid email address.' });
-  }
-  // Tiny honeypot: any unexpected `website` field signals a bot.
-  if (data.website) {
-    return json(200, { ok: true });
-  }
-
-  const subject = `Fit call request — ${fullName}${company ? ` (${company})` : ''}`;
-
-  const html = `<!doctype html>
-<html><body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Helvetica,Arial,sans-serif;color:#0a0a0a;line-height:1.5;">
-  <div style="max-width:560px;margin:0 auto;padding:24px;">
-    <h2 style="margin:0 0 4px;font-size:20px;font-weight:700;">New Blueprint fit call request</h2>
-    <div style="font-size:13px;color:#6b6b6b;margin-bottom:20px;">Submitted via blueprint.uncap.com/call</div>
-
-    <h3 style="margin:24px 0 8px;font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#3d3d3d;">Contact</h3>
-    <table cellpadding="0" cellspacing="0" style="font-size:14px;">
-      ${tableRow('Name', fullName)}
-      ${tableRow('Email', email)}
-      ${tableRow('Phone', phone)}
-      ${tableRow('Company', company)}
-    </table>
-
-    ${notes ? `
-    <h3 style="margin:24px 0 8px;font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#3d3d3d;">Notes</h3>
-    <div style="font-size:14px;background:#fafaf7;padding:14px;border-radius:5px;border:1px solid #e6e6e6;">${escapeHtml(notes).replace(/\n/g, '<br>')}</div>
-    ` : ''}
-
-    <h3 style="margin:24px 0 8px;font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#3d3d3d;">Quiz answers</h3>
-    <table cellpadding="0" cellspacing="0" style="font-size:14px;">
-      ${tableRow('ERP', answers.erp)}
-      ${tableRow('Edition', answers.edition)}
-      ${tableRow('Current platform', answers.platform)}
-      ${tableRow('Annual revenue', answers.revenue)}
-      ${tableRow('Model', answers.model)}
-    </table>
-
-    <div style="margin-top:32px;padding-top:16px;border-top:1px solid #e6e6e6;font-size:12px;color:#9a9a9a;">
-      Reply to this email to respond directly to ${escapeHtml(fullName)} at ${escapeHtml(email)}.
-    </div>
-  </div>
-</body></html>`;
-
-  const text =
-    `New Blueprint fit call request\n` +
-    `\n` +
-    `Name:    ${fullName}\n` +
-    `Email:   ${email}\n` +
-    `Phone:   ${phone || '—'}\n` +
-    `Company: ${company || '—'}\n` +
-    (notes ? `\nNotes:\n${notes}\n` : '') +
-    `\n` +
-    `Quiz answers\n` +
-    `------------\n` +
-    `ERP:              ${answers.erp || '—'}\n` +
-    `Edition:          ${answers.edition || '—'}\n` +
-    `Current platform: ${answers.platform || '—'}\n` +
-    `Annual revenue:   ${answers.revenue || '—'}\n` +
-    `Model:            ${answers.model || '—'}\n`;
-
-  const sent = await sendNotificationEmail(env, { subject, html, text, replyTo: email });
-  if (!sent.ok) return json(502, { ok: false, error: sent.error });
-  return json(200, { ok: true, id: sent.id });
 }
 
 // ----------------------------------------------------------------------------

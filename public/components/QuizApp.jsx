@@ -65,37 +65,43 @@ function QuizApp(){
     model: null,
   });
   const [otherErp, setOtherErp] = React.useState('');
-  // Contact details collected on the Application step (step 5), forwarded to
-  // the Reservation step (step 6) where Stripe attaches them to the
-  // PaymentMethod at confirm time. Lifted here so values survive back-nav
-  // between the two confirmation sub-steps.
-  const [contact, setContact] = React.useState({ name:'', email:'', company:'', phone:'' });
+  const [otherPlatform, setOtherPlatform] = React.useState('');
+  // Contact details collected as quiz steps (5–7). Lifted to QuizApp so
+  // values survive back-nav and feed the recap on the final step. Forwarded
+  // to Stripe at confirm time as PaymentMethod billing_details (name/email)
+  // + sent to /api/checkout/setup-complete (company).
+  const [contact, setContact] = React.useState({ name:'', email:'', company:'' });
+  const [emailError, setEmailError] = React.useState('');
 
-  // Quiz steps (5) + two confirmation sub-steps:
-  //   step === STEPS.length     → Application (recap + contact form)
-  //   step === STEPS.length + 1 → Reservation (Stripe card-on-file form)
-  const STEPS = ['erp', 'edition', 'platform', 'revenue', 'model'];
+  // 8 input steps, then a single confirmation step at index === STEPS.length.
+  const STEPS = ['erp', 'edition', 'platform', 'revenue', 'model', 'name', 'email', 'company'];
   const isConfirm = step >= STEPS.length;
-  const isApplication = step === STEPS.length;
-  const isReservation = step === STEPS.length + 1;
   const totalProgress = STEPS.length;
 
   const set = (key, value) => {
     setAnswers(prev => ({...prev, [key]: value}));
   };
 
-  // Pre-fetch the SetupIntent the instant we have all five answers, so the
-  // Stripe form is already ready by the time the user reaches the
-  // Reservation step. Discarded only when back-navigating into the quiz so
-  // bouncing between Application and Reservation doesn't refetch.
+  // Pre-fetch the SetupIntent the instant we have all five quiz answers, so
+  // the Stripe form is already ready by the time the user finishes the
+  // contact steps and lands on the confirmation page.
   const setupPromiseRef = React.useRef(null);
-  const startSetupIntent = (fullAnswers, fullOtherErp) => {
+  const startSetupIntent = (fullAnswers, fullOtherErp, fullOtherPlatform) => {
     if (setupPromiseRef.current) return;
+    // If the user picked "Other" for platform, swap the literal "Other" for
+    // the typed name so it lands cleanly in Stripe customer metadata + the
+    // notification email.
+    const merged = {
+      ...fullAnswers,
+      platform: fullAnswers.platform === 'Other' && fullOtherPlatform
+        ? fullOtherPlatform
+        : fullAnswers.platform,
+    };
     setupPromiseRef.current = (async () => {
       const resp = await fetch('/api/checkout/setup-intent', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ answers: fullAnswers, otherErp: fullOtherErp }),
+        body: JSON.stringify({ answers: merged, otherErp: fullOtherErp }),
       });
       const data = await resp.json().catch(() => ({}));
       if (!resp.ok || !data.ok) throw new Error(data.error || `Setup failed (${resp.status})`);
@@ -105,12 +111,17 @@ function QuizApp(){
 
   const advance = () => setStep(s => s + 1);
   const back = () => {
-    // Only invalidate the pre-fetched SetupIntent when crossing back from
-    // Application (step 5) into the quiz — quiz answers can change. Going
-    // from Reservation (step 6) → Application (step 5) keeps the intent.
-    if (step === STEPS.length) setupPromiseRef.current = null;
-    setStep(s => Math.max(0, s - 1));
+    // Invalidate the pre-fetched SetupIntent only when back-nav lands the
+    // user back inside the quiz answer-choosing range (steps 0–4) — the
+    // SetupIntent metadata is built from those answers, so they need to
+    // refire if the user can change them. Bouncing within contact /
+    // confirmation steps preserves the pre-fetch.
+    const next = Math.max(0, step - 1);
+    if (next < 5) setupPromiseRef.current = null;
+    setStep(next);
   };
+
+  const setContactField = (key, value) => setContact(prev => ({...prev, [key]: value}));
 
   // Auto-advance helper for radio steps
   const choose = (key, value) => {
@@ -143,7 +154,7 @@ function QuizApp(){
         <div style={{width:'100%',maxWidth:680}}>
           {step === 0 && (
             <Step
-              eyebrow="Step 1 of 5"
+              eyebrow="Step 1 of 8"
               title="What ERP do you run on?"
               sub="We'll tailor the migration plan around your system of record."
             >
@@ -157,7 +168,7 @@ function QuizApp(){
 
           {step === 1 && (
             <Step
-              eyebrow="Step 2 of 5"
+              eyebrow="Step 2 of 8"
               title={editionTitle(answers.erp)}
               sub="Different editions integrate very differently with Shopify."
             >
@@ -186,21 +197,39 @@ function QuizApp(){
 
           {step === 2 && (
             <Step
-              eyebrow="Step 3 of 5"
+              eyebrow="Step 3 of 8"
               title="What ecommerce platform are you on today?"
               sub="Where you're migrating from shapes the entire data plan."
             >
-              <OptionGrid
-                options={PLATFORM_OPTIONS.map(o=>({value:o,label:o}))}
-                selected={answers.platform}
-                onChoose={(v)=>choose('platform', v)}
-              />
+              {answers.platform === 'Other' ? (
+                <FreeTextStep
+                  placeholder="Type your platform name…"
+                  value={otherPlatform}
+                  onChange={setOtherPlatform}
+                  onSubmit={()=>{
+                    if (otherPlatform.trim()) advance();
+                  }}
+                />
+              ) : (
+                <OptionGrid
+                  options={PLATFORM_OPTIONS.map(o=>({value:o,label:o}))}
+                  selected={answers.platform}
+                  onChoose={(v)=>{
+                    if (v === 'Other') {
+                      // Mark as Other; stay on step 2 to collect the typed name.
+                      set('platform', v);
+                    } else {
+                      choose('platform', v);
+                    }
+                  }}
+                />
+              )}
             </Step>
           )}
 
           {step === 3 && (
             <Step
-              eyebrow="Step 4 of 5"
+              eyebrow="Step 4 of 8"
               title="What's your annual online revenue?"
               sub="Helps us calibrate scale: catalog, traffic, B2B accounts."
             >
@@ -216,14 +245,14 @@ function QuizApp(){
 
           {step === 4 && (
             <Step
-              eyebrow="Step 5 of 5"
+              eyebrow="Step 5 of 8"
               title="Which best describes your model?"
             >
               <OptionGrid
                 options={MODEL_OPTIONS.map(o=>({value:o.id,label:o.label,sub:o.sub}))}
                 selected={answers.model}
                 onChoose={(v)=>{
-                  startSetupIntent({...answers, model: v}, otherErp);
+                  startSetupIntent({...answers, model: v}, otherErp, otherPlatform);
                   choose('model', v);
                 }}
                 columns={1}
@@ -231,20 +260,70 @@ function QuizApp(){
             </Step>
           )}
 
-          {isApplication && (
-            <Application
-              answers={answers}
-              otherErp={otherErp}
-              contact={contact}
-              setContact={setContact}
-              onComplete={advance}
-            />
+          {step === 5 && (
+            <Step
+              eyebrow="Step 6 of 8"
+              title="What's your name?"
+              sub="So we know who to address on the kickoff call."
+            >
+              <FreeTextStep
+                placeholder="Full name"
+                autoComplete="name"
+                value={contact.name}
+                onChange={(v)=>setContactField('name', v)}
+                onSubmit={()=>{
+                  if (contact.name.trim()) advance();
+                }}
+              />
+            </Step>
           )}
 
-          {isReservation && (
-            <Reservation
+          {step === 6 && (
+            <Step
+              eyebrow="Step 7 of 8"
+              title="What's your work email?"
+              sub="We'll send the Blueprint kickoff details here."
+            >
+              <FreeTextStep
+                type="email"
+                placeholder="you@company.com"
+                autoComplete="email"
+                value={contact.email}
+                onChange={(v)=>{ if (emailError) setEmailError(''); setContactField('email', v); }}
+                onSubmit={()=>{
+                  const v = contact.email.trim();
+                  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v)) { setEmailError('Enter a valid email'); return; }
+                  setContactField('email', v);
+                  advance();
+                }}
+                error={emailError}
+              />
+            </Step>
+          )}
+
+          {step === 7 && (
+            <Step
+              eyebrow="Step 8 of 8"
+              title="What company are you with?"
+              sub="Surfaced in the Blueprint and on the kickoff invite."
+            >
+              <FreeTextStep
+                placeholder="Company name"
+                autoComplete="organization"
+                value={contact.company}
+                onChange={(v)=>setContactField('company', v)}
+                onSubmit={()=>{
+                  if (contact.company.trim()) advance();
+                }}
+              />
+            </Step>
+          )}
+
+          {isConfirm && (
+            <Confirmation
               answers={answers}
               otherErp={otherErp}
+              otherPlatform={otherPlatform}
               contact={contact}
               setupPromiseRef={setupPromiseRef}
             />
@@ -389,35 +468,42 @@ function OptionGrid({options, selected, onChoose, columns=2, size='md'}){
   );
 }
 
-/* ------- Free-text step (used for "Other" ERP) ------- */
-function FreeTextStep({placeholder, value, onChange, onSubmit}){
+/* ------- Free-text step (used for "Other" ERP and the contact steps) ------- */
+function FreeTextStep({placeholder, value, onChange, onSubmit, type='text', autoComplete, error}){
+  const errored = !!error;
   return (
-    <div style={{display:'flex',flexDirection:'column',gap:16}}>
+    <div style={{display:'flex',flexDirection:'column',gap:12}}>
       <input
-        type="text"
+        type={type}
+        autoComplete={autoComplete}
         value={value}
         onChange={e=>onChange(e.target.value)}
         onKeyDown={e=>{ if(e.key==='Enter') onSubmit(); }}
         placeholder={placeholder}
         autoFocus
+        aria-invalid={errored ? 'true' : 'false'}
         style={{
           width:'100%',
           padding:'18px 20px',
           fontSize:18,fontFamily:'var(--font-sans)',fontWeight:500,
           color:'var(--fg-1)',
           background:'#fff',
-          border:'1px solid var(--line-1)',borderRadius:5,
+          border:`1px solid ${errored ? '#c0392b' : 'var(--line-1)'}`,
+          borderRadius:5,
           outline:'none',
           transition:'border-color .15s var(--ease-out)',
         }}
-        onFocus={e=>e.currentTarget.style.borderColor='var(--uc-black)'}
-        onBlur={e=>e.currentTarget.style.borderColor='var(--line-1)'}
+        onFocus={e=>{ if (!errored) e.currentTarget.style.borderColor='var(--uc-black)'; }}
+        onBlur={e=>{ if (!errored) e.currentTarget.style.borderColor='var(--line-1)'; }}
       />
+      {errored && (
+        <div style={{fontSize:13,color:'#c0392b',fontWeight:500}}>{error}</div>
+      )}
       <button
         onClick={onSubmit}
         disabled={!value.trim()}
         className="uc-btn b-primary"
-        style={{alignSelf:'flex-start',opacity:value.trim()?1:.4,cursor:value.trim()?'pointer':'default'}}>
+        style={{alignSelf:'flex-start',marginTop:4,opacity:value.trim()?1:.4,cursor:value.trim()?'pointer':'default'}}>
         Continue <span>→</span>
       </button>
     </div>
@@ -432,18 +518,24 @@ function editionTitle(erpId){
   return `Which edition of ${erp.label}?`;
 }
 
-/* ------- Recap card (shared by Application + Reservation) ------- */
-function recapRows(answers, otherErp){
+/* ------- Recap card ------- */
+function recapRows(answers, otherErp, otherPlatform, contact){
   const erpName = answers.erp === 'other'
     ? (otherErp || 'Other')
     : (ERP_OPTIONS.find(o=>o.id===answers.erp)?.label || '—');
+  const platformName = answers.platform === 'Other'
+    ? (otherPlatform || 'Other')
+    : (answers.platform || '—');
   const modelName = MODEL_OPTIONS.find(o=>o.id===answers.model)?.label || answers.model || '—';
   return [
     {l:'ERP',                   v:erpName},
     {l:'Edition',               v:answers.edition || '—'},
-    {l:'Current platform',      v:answers.platform || '—'},
+    {l:'Current platform',      v:platformName},
     {l:'Annual online revenue', v:answers.revenue || '—'},
     {l:'Model',                 v:modelName},
+    {l:'Name',                  v:contact?.name    || '—'},
+    {l:'Email',                 v:contact?.email   || '—'},
+    {l:'Company',               v:contact?.company || '—'},
   ];
 }
 
@@ -469,58 +561,14 @@ function RecapCard({rows}){
   );
 }
 
-/* ------- Step 5: Application (recap + contact form) ------- */
-function Application({answers, otherErp, contact, setContact, onComplete}){
+/* ------- Final step: scoped recap + Express Checkout ------- */
+function Confirmation({answers, otherErp, otherPlatform, contact, setupPromiseRef}){
   const isMobile = window.useIsMobile ? window.useIsMobile() : false;
-  const [submitAttempted, setSubmitAttempted] = React.useState(false);
-
-  const errs = {};
-  if (!contact.name.trim())    errs.name    = 'Required';
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email.trim())) errs.email = 'Enter a valid email';
-  if (!contact.company.trim()) errs.company = 'Required';
-  if (!contact.phone.trim())   errs.phone   = 'Required';
-  const contactValid = Object.keys(errs).length === 0;
-
-  const onSubmit = (e) => {
-    e.preventDefault();
-    setSubmitAttempted(true);
-    if (!contactValid) return;
-    onComplete();
-  };
-
-  const field = (key, label, type, autocomplete) => {
-    const showError = submitAttempted && errs[key];
-    return (
-      <label style={{display:'flex',flexDirection:'column',gap:6,minWidth:0}}>
-        <span style={{fontSize:11,fontWeight:600,letterSpacing:'.1em',textTransform:'uppercase',color:'var(--fg-3)',fontFamily:'var(--font-mono)'}}>{label}</span>
-        <input
-          type={type}
-          autoComplete={autocomplete}
-          value={contact[key]}
-          onChange={(e)=>setContact(prev=>({...prev, [key]: e.target.value}))}
-          aria-invalid={showError ? 'true' : 'false'}
-          style={{
-            font:'inherit', fontSize:15,
-            padding:'12px 14px',
-            border: `1px solid ${showError ? '#c0392b' : 'var(--line-1)'}`,
-            borderRadius:5,
-            background:'#fff',color:'var(--fg-1)',
-            outline:'none',
-            width:'100%', minHeight:44,
-          }}
-        />
-        {showError && (
-          <span style={{fontSize:12,color:'#c0392b',fontWeight:500}}>{errs[key]}</span>
-        )}
-      </label>
-    );
-  };
-
   return (
     <div style={{animation:'quizFadeIn 480ms var(--ease-out) both'}}>
       <div style={{display:'inline-flex',alignItems:'center',gap:10,padding:'6px 14px',background:'var(--uc-signal)',borderRadius:999,marginBottom:24}}>
         <span style={{width:8,height:8,borderRadius:999,background:'var(--uc-black)'}}/>
-        <span style={{fontFamily:'var(--font-mono)',fontSize:11,fontWeight:700,letterSpacing:'.12em',color:'var(--uc-black)'}}>YOUR APPLICATION</span>
+        <span style={{fontFamily:'var(--font-mono)',fontSize:11,fontWeight:700,letterSpacing:'.12em',color:'var(--uc-black)'}}>READY TO RESERVE</span>
       </div>
       <h1 style={{
         fontFamily:'var(--font-display)',fontWeight:700,
@@ -534,76 +582,15 @@ function Application({answers, otherErp, contact, setContact, onComplete}){
         fontSize:'clamp(20px,1.8vw,26px)',lineHeight:1.35,
         color:'var(--fg-2)',margin:'0 0 36px',maxWidth:560,letterSpacing:'-.01em',
       }}>
-        A few details so we can reach you, then one last step to lock it in.
+        $0 today. Card on file. We charge only after the introductory fit call confirms scope.
       </p>
 
-      <RecapCard rows={recapRows(answers, otherErp)}/>
-
-      <form onSubmit={onSubmit} style={{display:'flex',flexDirection:'column',gap:20,marginBottom:14}}>
-        <div style={{
-          background:'#fff', border:'1px solid var(--line-1)', borderRadius:5,
-          padding: isMobile ? 16 : 24,
-          display:'grid',
-          gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-          gap: 16,
-        }}>
-          {field('name',    'Name',    'text',  'name')}
-          {field('email',   'Email',   'email', 'email')}
-          {field('company', 'Company', 'text',  'organization')}
-          {field('phone',   'Phone',   'tel',   'tel')}
-        </div>
-
-        <button
-          type="submit"
-          className="uc-btn b-primary"
-          style={{
-            padding: isMobile ? '16px 20px' : '18px 24px',
-            fontSize:16,fontWeight:600,gap:10,
-            width:'100%',
-            justifyContent:'center',
-            whiteSpace: isMobile ? 'normal' : 'nowrap',
-            border:'none',
-          }}
-        >
-          Complete the application
-          <span>→</span>
-        </button>
-      </form>
-
-      <div style={{marginTop:48,paddingTop:24,borderTop:'1px solid var(--line-1)',fontSize:13,color:'var(--fg-3)'}}>
-        Not ready? <a href="/call" style={{color:'var(--fg-1)',fontWeight:500}}>Book a 25-min fit call</a> instead.
-      </div>
-    </div>
-  );
-}
-
-/* ------- Step 6: Reservation (Stripe card-on-file form) ------- */
-function Reservation({answers, otherErp, contact, setupPromiseRef}){
-  const isMobile = window.useIsMobile ? window.useIsMobile() : false;
-  return (
-    <div style={{animation:'quizFadeIn 480ms var(--ease-out) both'}}>
-      <div style={{display:'inline-flex',alignItems:'center',gap:10,padding:'6px 14px',background:'var(--uc-signal)',borderRadius:999,marginBottom:24}}>
-        <span style={{width:8,height:8,borderRadius:999,background:'var(--uc-black)'}}/>
-        <span style={{fontFamily:'var(--font-mono)',fontSize:11,fontWeight:700,letterSpacing:'.12em',color:'var(--uc-black)'}}>RESERVE YOUR SLOT</span>
-      </div>
-      <h1 style={{
-        fontFamily:'var(--font-display)',fontWeight:700,
-        fontSize:'clamp(36px,4vw,56px)',lineHeight:1.02,letterSpacing:'-.03em',
-        color:'var(--fg-1)',margin:'0 0 14px',textWrap:'balance',
-      }}>
-        $0 today. Card on file.
-      </h1>
-      <p style={{
-        fontFamily:'var(--font-serif)',fontStyle:'italic',
-        fontSize:'clamp(20px,1.8vw,26px)',lineHeight:1.35,
-        color:'var(--fg-2)',margin:'0 0 36px',maxWidth:560,letterSpacing:'-.01em',
-      }}>
-        We charge only after the introductory fit call confirms scope. Full refund if it isn't a match.
-      </p>
+      <RecapCard rows={recapRows(answers, otherErp, otherPlatform, contact)}/>
 
       <CardOnFile
         answers={answers}
         otherErp={otherErp}
+        otherPlatform={otherPlatform}
         contact={contact}
         isMobile={isMobile}
         setupPromiseRef={setupPromiseRef}
@@ -627,21 +614,16 @@ function Reservation({answers, otherErp, contact, setupPromiseRef}){
           <CheckSm/> Credited toward implementation
         </span>
       </div>
-
-      <div style={{marginTop:48,paddingTop:24,borderTop:'1px solid var(--line-1)',fontSize:13,color:'var(--fg-3)'}}>
-        Not ready? <a href="/call" style={{color:'var(--fg-1)',fontWeight:500}}>Book a 25-min fit call</a> instead.
-      </div>
     </div>
   );
 }
 
 /* ------- Stripe SetupIntent + Payment Element (card on file, $0 today) ------- */
-// `contact` is collected on the prior Application step and passed in via
-// props. Name/email/phone are forwarded to Stripe at confirm time (we hide
-// Stripe's own collectors via `fields.billingDetails: 'never'`); company is
-// sent to setup-complete and stored as Stripe customer metadata + surfaced
-// in the notify email.
-function CardOnFile({answers, otherErp, contact, isMobile, setupPromiseRef}){
+// `contact` is collected on the contact quiz steps and passed in via props.
+// Name/email are forwarded to Stripe at confirm time as PaymentMethod
+// billing_details; company is sent to setup-complete and stored as Stripe
+// customer metadata + surfaced in the notify email.
+function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupPromiseRef}){
   // Phases: loading → ready → submitting → success | error
   const [phase, setPhase] = React.useState('loading');
   const [error, setError] = React.useState('');
@@ -667,10 +649,16 @@ function CardOnFile({answers, otherErp, contact, isMobile, setupPromiseRef}){
         const data = setupPromiseRef && setupPromiseRef.current
           ? await setupPromiseRef.current
           : await (async () => {
+              const merged = {
+                ...answers,
+                platform: answers.platform === 'Other' && otherPlatform
+                  ? otherPlatform
+                  : answers.platform,
+              };
               const resp = await fetch('/api/checkout/setup-intent', {
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
-                body: JSON.stringify({ answers, otherErp }),
+                body: JSON.stringify({ answers: merged, otherErp }),
               });
               const r = await resp.json().catch(() => ({}));
               if (!resp.ok || !r.ok) throw new Error(r.error || `Setup failed (${resp.status})`);
@@ -715,9 +703,9 @@ function CardOnFile({answers, otherErp, contact, isMobile, setupPromiseRef}){
           setPhase('ready');
         });
         expressElement.on('click', (event) => {
-          // SetupIntent flow: no line items / shipping needed. Email and
-          // phone are already known from the Application step, so don't
-          // ask the wallet sheet to collect them again.
+          // SetupIntent flow: no line items / shipping needed. Email is
+          // already known from the contact quiz steps, so don't ask the
+          // wallet sheet to collect it again.
           event.resolve({ emailRequired: false, phoneNumberRequired: false });
         });
         expressElement.on('confirm', async () => {
@@ -750,7 +738,6 @@ function CardOnFile({answers, otherErp, contact, isMobile, setupPromiseRef}){
           billing_details: {
             name:  contact.name.trim(),
             email: contact.email.trim(),
-            phone: contact.phone.trim(),
           },
         },
       },
@@ -849,7 +836,7 @@ function CardOnFile({answers, otherErp, contact, isMobile, setupPromiseRef}){
             {phase === 'error' && !stripeRefs
               ? error
               : phase === 'ready' && !expressAvailable
-                ? <span>Quick payment isn't available on this device. <a href="/call" style={{color:'var(--fg-1)',fontWeight:600}}>Book a 25-min fit call</a> and we'll send a card-save link.</span>
+                ? "Quick payment isn't available on this device. Open this page in Safari or Chrome — Apple Pay, Google Pay, and Link will appear here."
                 : 'Preparing secure checkout…'}
           </div>
         )}
