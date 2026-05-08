@@ -77,7 +77,10 @@ function Founder() {
       <div style={{maxWidth:1080,margin:'0 auto',display:'grid',gridTemplateColumns: isMobile ? '1fr' : '1fr 1.6fr',gap: isMobile ? 28 : 64,alignItems:'center'}}>
         <div>
           <div style={{aspectRatio:'4/5',background:'#1A1A1A',border:'1px solid #2B2B2B',borderRadius:5,position:'relative',overflow:'hidden',maxWidth: isMobile ? 320 : 'none',margin: isMobile ? '0 auto' : 0}}>
-            <img src="assets/denis-dyli-uncap.png" alt="Denis Dyli, Founder of Uncap" style={{width:'100%',height:'100%',objectFit:'cover',objectPosition:'center top',display:'block'}} loading="lazy" decoding="async"/>
+            <picture>
+              <source srcSet="assets/denis-dyli-uncap.webp" type="image/webp"/>
+              <img src="assets/denis-dyli-uncap.png" alt="Denis Dyli, Founder of Uncap" width="1100" height="1768" style={{width:'100%',height:'100%',objectFit:'cover',objectPosition:'center top',display:'block'}} loading="lazy" decoding="async"/>
+            </picture>
             <div style={{position:'absolute',bottom:16,left:16,padding:'4px 10px',background:'var(--uc-signal)',borderRadius:3,fontSize:11,fontWeight:700,letterSpacing:'.06em',textTransform:'uppercase',color:'var(--uc-black)'}}>Denis Dyli · Founder</div>
           </div>
         </div>
