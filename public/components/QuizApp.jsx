@@ -513,9 +513,15 @@ function CardOnFile({answers, otherErp, isMobile}){
           },
         });
         const paymentElement = elements.create('payment', { layout: 'tabs' });
+        // Wait for the iframe to be visually ready before crossfading the
+        // loader out — otherwise we get a flick where the loader vanishes
+        // and the user stares at empty space until the iframe paints.
+        paymentElement.on('ready', () => {
+          if (cancelled) return;
+          setPhase('ready');
+        });
         paymentElement.mount(paymentRef.current);
         setStripeRefs({ stripe, elements });
-        setPhase('ready');
       } catch (err) {
         if (cancelled) return;
         setError(err.message || 'Could not initialize payment.');
@@ -581,7 +587,7 @@ function CardOnFile({answers, otherErp, isMobile}){
   return (
     <form onSubmit={onSubmit} style={{
       background:'var(--uc-black)',color:'#fff',borderRadius:5,
-      padding: isMobile ? '22px 22px' : 28, marginBottom:14,
+      padding: isMobile ? '20px 14px' : 28, marginBottom:14,
       display:'flex',flexDirection:'column',gap:18,
     }}>
       <div style={{
@@ -594,14 +600,34 @@ function CardOnFile({answers, otherErp, isMobile}){
         <strong style={{fontWeight:700}}>Lock yours in. $0 today.</strong>
       </div>
 
-      <div style={{background:'#fff',color:'var(--fg-1)',borderRadius:5,padding:16,minHeight:120}}>
-        {phase === 'loading' && (
-          <div style={{fontSize:13,color:'var(--fg-3)'}}>Loading secure payment form…</div>
-        )}
-        {phase === 'error' && !stripeRefs && (
-          <div style={{fontSize:13,color:'#c0392b'}}>{error}</div>
-        )}
-        <div ref={paymentRef}/>
+      {/* Reserve the height the Payment Element will occupy so the loader → */}
+      {/* element handoff doesn't reflow the page. Loader sits absolutely on */}
+      {/* top of the (initially empty) Stripe mount point and crossfades out */}
+      {/* once Stripe fires its `ready` event. */}
+      <div style={{
+        position:'relative',
+        background:'#fff',color:'var(--fg-1)',borderRadius:5,
+        padding: isMobile ? 12 : 16,
+        minHeight: 260,
+      }}>
+        <div style={{
+          position:'absolute', inset:0,
+          display:'flex', alignItems:'center', justifyContent:'center',
+          padding: isMobile ? 12 : 16,
+          fontSize:13, lineHeight:1.5, textAlign:'center',
+          color: phase === 'error' && !stripeRefs ? '#c0392b' : 'var(--fg-3)',
+          opacity: phase === 'ready' || phase === 'submitting' ? 0 : 1,
+          pointerEvents: phase === 'ready' || phase === 'submitting' ? 'none' : 'auto',
+          transition: 'opacity 200ms var(--ease-out)',
+        }}>
+          {phase === 'error' && !stripeRefs
+            ? error
+            : 'Loading secure payment form…'}
+        </div>
+        <div ref={paymentRef} style={{
+          opacity: phase === 'ready' || phase === 'submitting' ? 1 : 0,
+          transition: 'opacity 200ms var(--ease-out)',
+        }}/>
       </div>
 
       {error && phase !== 'loading' && stripeRefs && (
