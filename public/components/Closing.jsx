@@ -114,7 +114,7 @@ function FinalCTA() {
           Eight 5-minute questions. Save a card on file with $0 today — we charge only after the kickoff confirms scope.
         </p>
         <div style={{display:'flex',gap: isMobile ? 10 : 14,alignItems:'stretch',flexDirection: isMobile ? 'column' : 'row',flexWrap:'wrap',marginBottom:32}}>
-          <a href="/quiz" className="uc-btn b-primary" style={isMobile ? {width:'100%',justifyContent:'center',padding:'16px 24px',fontSize:16} : {padding:'18px 28px',fontSize:16}}>Start the Blueprint <span>→</span></a>
+          <a href="/build" className="uc-btn b-primary" style={isMobile ? {width:'100%',justifyContent:'center',padding:'16px 24px',fontSize:16} : {padding:'18px 28px',fontSize:16}}>Start the Blueprint <span>→</span></a>
         </div>
         <div style={{display:'grid',gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',gap: isMobile ? 18 : 32,paddingTop: isMobile ? 24 : 32,borderTop:'1px solid var(--line-1)'}}>
           {[

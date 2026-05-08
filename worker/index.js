@@ -145,7 +145,7 @@ async function handleSetupIntent(request, env) {
     platform:  answers.platform,
     revenue:   answers.revenue,
     model:     answers.model,
-    source:    'blueprint-quiz',
+    source:    'blueprint-build',
   };
   if (otherErp) metadata.other_erp = otherErp;
 

@@ -130,7 +130,7 @@ function QuizApp(){
   };
 
   return (
-    <div data-screen-label="Blueprint Quiz" style={{
+    <div data-screen-label="Blueprint Build" style={{
       minHeight:'100vh',
       background:'var(--uc-cream)',
       color:'var(--fg-1)',

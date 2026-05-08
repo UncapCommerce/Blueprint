@@ -35,7 +35,7 @@ function Hero() {
               Everything you need to migrate to Shopify — without the guesswork. $7.5K flat. Yours to keep.
             </p>
             <div style={{display:'flex',gap: isMobile ? 10 : 14,alignItems: isMobile ? 'stretch' : 'center',flexDirection: isMobile ? 'column' : 'row',flexWrap:'wrap'}}>
-              <a href="/quiz" className="uc-btn b-primary" style={isMobile ? {width:'100%',justifyContent:'center',padding:'16px 22px',fontSize:16} : null}>Start the Blueprint <span>→</span></a>
+              <a href="/build" className="uc-btn b-primary" style={isMobile ? {width:'100%',justifyContent:'center',padding:'16px 22px',fontSize:16} : null}>Start the Blueprint <span>→</span></a>
             </div>
             <div style={{display:'flex',gap: isMobile ? 10 : 24,alignItems: isMobile ? 'flex-start' : 'center',marginTop: isMobile ? 24 : 36,flexDirection: isMobile ? 'column' : 'row',flexWrap:'wrap'}}>
               <div style={{display:'flex',alignItems:'center',gap:10}}>

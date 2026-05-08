@@ -68,7 +68,7 @@ function Offer() {
         </div>
 
         <div style={{marginTop: isMobile ? 24 : 32,display:'flex',gap: isMobile ? 12 : 14,alignItems: isMobile ? 'stretch' : 'center',flexDirection: isMobile ? 'column' : 'row',flexWrap:'wrap'}}>
-          <a href="/quiz" className="uc-btn b-primary" style={isMobile ? {width:'100%',justifyContent:'center',padding:'16px 24px',fontSize:16} : null}>Start the Blueprint <span>→</span></a>
+          <a href="/build" className="uc-btn b-primary" style={isMobile ? {width:'100%',justifyContent:'center',padding:'16px 24px',fontSize:16} : null}>Start the Blueprint <span>→</span></a>
           <span style={{fontSize:13,color:'var(--fg-3)',textAlign: isMobile ? 'center' : 'left'}}>Delivered in 4 weeks. Yours to keep — with us, or without.</span>
         </div>
       </div>
