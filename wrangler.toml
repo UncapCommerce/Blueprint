@@ -28,6 +28,9 @@ EMAIL_FROM = "Blueprint Fit Call <onboarding@resend.dev>"
 #   STRIPE_SECRET_KEY       (Secret)    — sk_test_… / sk_live_…
 #   STRIPE_PUBLISHABLE_KEY  (Variable)  — pk_test_… / pk_live_…  (public, plaintext)
 #   RESEND_API_KEY          (Secret)    — from https://resend.com/api-keys
+#   ADMIN_TOKEN             (Secret)    — long random string gating
+#                                         /api/admin/charge and the /admin
+#                                         charge-the-saved-card UI
 #
 # Secrets always persist across deploys. Plaintext Variables only persist
 # because the GitHub Actions workflow runs `wrangler deploy --keep-vars`
