@@ -500,6 +500,19 @@ function CardOnFile({answers, otherErp, isMobile, setupPromiseRef}){
   const [stripeRefs, setStripeRefs] = React.useState(null);
   const paymentRef = React.useRef(null);
 
+  // Contact details collected above the Stripe element. Name/email/phone are
+  // forwarded to Stripe at confirm time (we hide Stripe's own collectors via
+  // `fields.billingDetails: 'never'`); company is sent to setup-complete and
+  // stored as Stripe customer metadata + surfaced in the notify email.
+  const [contact, setContact] = React.useState({ name:'', email:'', company:'', phone:'' });
+  const [submitAttempted, setSubmitAttempted] = React.useState(false);
+  const errs = {};
+  if (!contact.name.trim())    errs.name    = 'Required';
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.email.trim())) errs.email = 'Enter a valid email';
+  if (!contact.company.trim()) errs.company = 'Required';
+  if (!contact.phone.trim())   errs.phone   = 'Required';
+  const contactValid = Object.keys(errs).length === 0;
+
   React.useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -549,7 +562,13 @@ function CardOnFile({answers, otherErp, isMobile, setupPromiseRef}){
             },
           },
         });
-        const paymentElement = elements.create('payment', { layout: 'tabs' });
+        const paymentElement = elements.create('payment', {
+          layout: 'tabs',
+          // Hide Stripe's built-in billing collectors — we collect name,
+          // email, phone, and company in our own UI above the iframe and
+          // hand them to Stripe via confirmParams at confirm time.
+          fields: { billingDetails: { name:'never', email:'never', phone:'never', address:'never' } },
+        });
         // Only flip to 'ready' (which uncovers the iframe) once Stripe
         // says fields are interactive — that way the placeholder hides on
         // a fully-rendered form, not on a half-painted iframe.
@@ -571,11 +590,22 @@ function CardOnFile({answers, otherErp, isMobile, setupPromiseRef}){
   const onSubmit = async (e) => {
     e.preventDefault();
     if (!stripeRefs || phase === 'submitting') return;
+    setSubmitAttempted(true);
+    if (!contactValid) return;
     setPhase('submitting');
     setError('');
     const { stripe, elements } = stripeRefs;
     const { error: confirmErr, setupIntent } = await stripe.confirmSetup({
       elements,
+      confirmParams: {
+        payment_method_data: {
+          billing_details: {
+            name:  contact.name.trim(),
+            email: contact.email.trim(),
+            phone: contact.phone.trim(),
+          },
+        },
+      },
       redirect: 'if_required',
     });
     if (confirmErr) {
@@ -587,7 +617,10 @@ function CardOnFile({answers, otherErp, isMobile, setupPromiseRef}){
       const resp = await fetch('/api/checkout/setup-complete', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ intentId: (setupIntent && setupIntent.id) || intentId }),
+        body: JSON.stringify({
+          intentId: (setupIntent && setupIntent.id) || intentId,
+          company: contact.company.trim(),
+        }),
       });
       const data = await resp.json().catch(() => ({}));
       if (!resp.ok || !data.ok) throw new Error(data.error || `Save failed (${resp.status})`);
@@ -621,6 +654,34 @@ function CardOnFile({answers, otherErp, isMobile, setupPromiseRef}){
   }
 
   const buttonDisabled = phase !== 'ready';
+  const field = (key, label, type, autocomplete) => {
+    const showError = submitAttempted && errs[key];
+    return (
+      <label style={{display:'flex',flexDirection:'column',gap:6,minWidth:0}}>
+        <span style={{fontSize:11,fontWeight:600,letterSpacing:'.1em',textTransform:'uppercase',color:'var(--fg-3)',fontFamily:'var(--font-mono)'}}>{label}</span>
+        <input
+          type={type}
+          autoComplete={autocomplete}
+          value={contact[key]}
+          onChange={(e)=>setContact(prev=>({...prev, [key]: e.target.value}))}
+          aria-invalid={showError ? 'true' : 'false'}
+          style={{
+            font:'inherit', fontSize:15,
+            padding:'12px 14px',
+            border: `1px solid ${showError ? '#c0392b' : 'var(--line-1)'}`,
+            borderRadius:5,
+            background:'#fff',color:'var(--fg-1)',
+            outline:'none',
+            width:'100%', minHeight:44,
+          }}
+        />
+        {showError && (
+          <span style={{fontSize:12,color:'#c0392b',fontWeight:500}}>{errs[key]}</span>
+        )}
+      </label>
+    );
+  };
+
   return (
     <form onSubmit={onSubmit} style={{
       background:'var(--uc-black)',color:'#fff',borderRadius:5,
@@ -635,6 +696,23 @@ function CardOnFile({answers, otherErp, isMobile, setupPromiseRef}){
       }}>
         We take on 8 Blueprints per quarter.{' '}
         <strong style={{fontWeight:700}}>Lock yours in. $0 today.</strong>
+      </div>
+
+      {/* Contact details. Name/email/phone are forwarded to Stripe at confirm */}
+      {/* time via confirmParams.payment_method_data.billing_details; company   */}
+      {/* is sent to /api/checkout/setup-complete and stored as customer       */}
+      {/* metadata + shown in the notification email.                          */}
+      <div style={{
+        background:'#fff', color:'var(--fg-1)', borderRadius:5,
+        padding: isMobile ? 12 : 16,
+        display:'grid',
+        gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+        gap: 12,
+      }}>
+        {field('name',    'Name',    'text',  'name')}
+        {field('email',   'Email',   'email', 'email')}
+        {field('company', 'Company', 'text',  'organization')}
+        {field('phone',   'Phone',   'tel',   'tel')}
       </div>
 
       {/* The Stripe iframe is mounted as soon as we have a clientSecret and */}

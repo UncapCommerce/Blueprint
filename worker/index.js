@@ -260,9 +260,10 @@ async function handleSetupIntent(request, env) {
 // ----------------------------------------------------------------------------
 // POST /api/checkout/setup-complete
 // After client-side stripe.confirmSetup() succeeds, we look up the intent,
-// create a Customer (with the email Stripe collected on the PaymentElement),
-// attach the PaymentMethod, link the SetupIntent, and notify Uncap.
-// Body: { intentId }
+// create a Customer (with billing details forwarded by the client + the
+// `company` we collected in our own UI), attach the PaymentMethod, link the
+// SetupIntent, and notify Uncap.
+// Body: { intentId, company }
 // ----------------------------------------------------------------------------
 async function handleSetupComplete(request, env) {
   let body;
@@ -273,6 +274,7 @@ async function handleSetupComplete(request, env) {
   if (!intentId.startsWith('seti_')) {
     return json(400, { ok: false, error: 'Invalid SetupIntent id.' });
   }
+  const company = (body.company || '').toString().trim();
 
   try {
     // Pull the intent + expanded payment_method so we can read billing details.
@@ -305,7 +307,7 @@ async function handleSetupComplete(request, env) {
         email: email || undefined,
         name:  name  || undefined,
         phone: phone || undefined,
-        metadata: md,
+        metadata: { ...md, ...(company ? { company } : {}) },
       }),
     });
 
@@ -321,7 +323,7 @@ async function handleSetupComplete(request, env) {
 
     // Notify Uncap. Failures here are non-fatal for the customer.
     const card = pm.card || {};
-    const subject = `New card on file — ${name || email || customer.id}`;
+    const subject = `New card on file — ${name || email || customer.id}${company ? ` · ${company}` : ''}`;
     const customerUrl = `https://dashboard.stripe.com/customers/${customer.id}`;
     const html = `<!doctype html>
 <html><body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Helvetica,Arial,sans-serif;color:#0a0a0a;line-height:1.5;">
@@ -333,6 +335,7 @@ async function handleSetupComplete(request, env) {
     <table cellpadding="0" cellspacing="0" style="font-size:14px;">
       ${tableRow('Name', name)}
       ${tableRow('Email', email)}
+      ${tableRow('Company', company)}
       ${tableRow('Phone', phone)}
       ${tableRow('Stripe customer', customer.id)}
       ${tableRow('Card', card.brand ? `${card.brand.toUpperCase()} ···· ${card.last4} (exp ${card.exp_month}/${card.exp_year})` : '—')}
@@ -359,6 +362,7 @@ async function handleSetupComplete(request, env) {
       `\n` +
       `Name:    ${name || '—'}\n` +
       `Email:   ${email || '—'}\n` +
+      `Company: ${company || '—'}\n` +
       `Phone:   ${phone || '—'}\n` +
       `Stripe:  ${customer.id}\n` +
       `Card:    ${card.brand ? `${card.brand.toUpperCase()} ···· ${card.last4} (exp ${card.exp_month}/${card.exp_year})` : '—'}\n` +
