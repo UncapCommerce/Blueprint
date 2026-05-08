@@ -647,7 +647,15 @@ function CardOnFile({answers, otherErp, contact, isMobile, setupPromiseRef}){
   const [error, setError] = React.useState('');
   const [intentId, setIntentId] = React.useState('');
   const [stripeRefs, setStripeRefs] = React.useState(null);
-  const paymentRef = React.useRef(null);
+  // Whether the Express Checkout Element actually has a wallet to show
+  // (Apple Pay / Google Pay / Link). Drives whether we render the buttons
+  // or a "no quick payment available on this device" fallback.
+  const [expressAvailable, setExpressAvailable] = React.useState(false);
+  const expressRef = React.useRef(null);
+  // Always-fresh reference to the confirm flow so handlers attached during
+  // the one-time mount effect can still call the latest closure (which
+  // captures up-to-date contact details + state setters).
+  const finalizeRef = React.useRef(null);
 
   React.useEffect(() => {
     let cancelled = false;
@@ -676,10 +684,6 @@ function CardOnFile({answers, otherErp, contact, isMobile, setupPromiseRef}){
         const stripe = window.Stripe(data.publishableKey);
         const elements = stripe.elements({
           clientSecret: data.clientSecret,
-          // Always show Stripe's own skeleton inside the iframe before
-          // fields appear — gives a consistent visual while we keep our
-          // own placeholder covering the iframe until `ready` fires.
-          loader: 'always',
           appearance: {
             theme: 'flat',
             variables: {
@@ -691,28 +695,36 @@ function CardOnFile({answers, otherErp, contact, isMobile, setupPromiseRef}){
               borderRadius: '5px',
               spacingUnit: '4px',
             },
-            rules: {
-              '.Input': { border: '1px solid #e6e6e6', boxShadow: 'none' },
-              '.Input:focus': { border: '1px solid #0a0a0a' },
-              '.Label': { fontWeight: '600', color: '#3d3d3d' },
-            },
           },
         });
-        const paymentElement = elements.create('payment', {
-          layout: 'tabs',
-          // Hide Stripe's built-in billing collectors — we collect name,
-          // email, phone, and company in our own UI above the iframe and
-          // hand them to Stripe via confirmParams at confirm time.
-          fields: { billingDetails: { name:'never', email:'never', phone:'never', address:'never' } },
+
+        // Express Checkout (Apple Pay / Google Pay / Link) is the sole
+        // payment surface. Renders only the wallets the visitor's browser
+        // advertises; if none are available we show a fallback message
+        // pointing them at the fit-call form.
+        const expressElement = elements.create('expressCheckout', {
+          paymentMethodOrder: ['applePay', 'googlePay', 'link'],
+          buttonHeight: 48,
         });
-        // Only flip to 'ready' (which uncovers the iframe) once Stripe
-        // says fields are interactive — that way the placeholder hides on
-        // a fully-rendered form, not on a half-painted iframe.
-        paymentElement.on('ready', () => {
+        expressElement.on('ready', ({ availablePaymentMethods }) => {
           if (cancelled) return;
+          const any = availablePaymentMethods
+            ? Object.values(availablePaymentMethods).some(Boolean)
+            : false;
+          setExpressAvailable(any);
           setPhase('ready');
         });
-        paymentElement.mount(paymentRef.current);
+        expressElement.on('click', (event) => {
+          // SetupIntent flow: no line items / shipping needed. Email and
+          // phone are already known from the Application step, so don't
+          // ask the wallet sheet to collect them again.
+          event.resolve({ emailRequired: false, phoneNumberRequired: false });
+        });
+        expressElement.on('confirm', async () => {
+          if (cancelled) return;
+          if (finalizeRef.current) await finalizeRef.current();
+        });
+        expressElement.mount(expressRef.current);
         setStripeRefs({ stripe, elements });
       } catch (err) {
         if (cancelled) return;
@@ -723,8 +735,10 @@ function CardOnFile({answers, otherErp, contact, isMobile, setupPromiseRef}){
     return () => { cancelled = true; };
   }, []);
 
-  const onSubmit = async (e) => {
-    e.preventDefault();
+  // Shared confirm flow — called by both the card-form submit and the
+  // Express Checkout Element's `confirm` event. Pulls stripe/elements from
+  // state since by the time it runs, mounting has long completed.
+  const finalize = async () => {
     if (!stripeRefs || phase === 'submitting') return;
     setPhase('submitting');
     setError('');
@@ -764,6 +778,7 @@ function CardOnFile({answers, otherErp, contact, isMobile, setupPromiseRef}){
       setPhase('ready');
     }
   };
+  finalizeRef.current = finalize;
 
   if (phase === 'success') {
     return (
@@ -787,9 +802,14 @@ function CardOnFile({answers, otherErp, contact, isMobile, setupPromiseRef}){
     );
   }
 
-  const buttonDisabled = phase !== 'ready';
+  // The Express Checkout Element drives the whole flow — there is no manual
+  // submit. Phases:
+  //   'loading'     → placeholder shown (waiting on SetupIntent + express ready)
+  //   'ready'       → either express buttons (if expressAvailable) or
+  //                    a "no quick payment available" fallback message
+  //   'submitting'  → user has tapped a wallet button and confirm is in flight
   return (
-    <form onSubmit={onSubmit} style={{
+    <div style={{
       background:'var(--uc-black)',color:'#fff',borderRadius:5,
       padding: isMobile ? '20px 14px' : 28, marginBottom:14,
       display:'flex',flexDirection:'column',gap:18,
@@ -804,66 +824,56 @@ function CardOnFile({answers, otherErp, contact, isMobile, setupPromiseRef}){
         <strong style={{fontWeight:700}}>Lock yours in. $0 today.</strong>
       </div>
 
-      {/* The Stripe iframe is mounted as soon as we have a clientSecret and */}
-      {/* immediately starts painting its own skeleton (loader: 'always').   */}
-      {/* While that's happening we keep an opaque white cover on top so the */}
-      {/* user never sees Stripe's iframe in a half-painted state. The cover */}
-      {/* is removed instantly once Stripe's `ready` event fires, revealing  */}
-      {/* fully-rendered fields — no crossfade, no flick.                    */}
+      {/* Wrapper reserves height while we wait on Stripe's `ready` event so */}
+      {/* the page doesn't reflow when the wallet buttons paint.            */}
       <div style={{
         position:'relative',
         background:'#fff',color:'var(--fg-1)',borderRadius:5,
-        padding: isMobile ? 12 : 16,
-        // Reserve enough height for the Payment Element so the wrapper
-        // doesn't grow when Stripe paints. On mobile the tabs layout
-        // stacks expiry/CVC vertically, which is much taller than desktop.
-        minHeight: isMobile ? 360 : 280,
+        padding: isMobile ? 14 : 18,
+        minHeight: 96,
       }}>
-        <div ref={paymentRef}/>
-        {phase !== 'ready' && phase !== 'submitting' && (
+        <div ref={expressRef} style={{
+          opacity: phase === 'ready' && expressAvailable ? 1 : 0,
+          transition: 'opacity 160ms var(--ease-out)',
+          pointerEvents: phase === 'submitting' ? 'none' : 'auto',
+        }}/>
+        {phase !== 'submitting' && !(phase === 'ready' && expressAvailable) && (
           <div style={{
             position:'absolute', inset:0,
             background:'#fff', borderRadius:5,
             display:'flex', alignItems:'center', justifyContent:'center',
-            padding: isMobile ? 12 : 16,
+            padding: isMobile ? 14 : 18,
             fontSize:13, lineHeight:1.5, textAlign:'center',
             color: phase === 'error' && !stripeRefs ? '#c0392b' : 'var(--fg-3)',
           }}>
             {phase === 'error' && !stripeRefs
               ? error
-              : 'Preparing secure payment form…'}
+              : phase === 'ready' && !expressAvailable
+                ? <span>Quick payment isn't available on this device. <a href="/call" style={{color:'var(--fg-1)',fontWeight:600}}>Book a 25-min fit call</a> and we'll send a card-save link.</span>
+                : 'Preparing secure checkout…'}
+          </div>
+        )}
+        {phase === 'submitting' && (
+          <div style={{
+            position:'absolute', inset:0,
+            background:'rgba(255,255,255,0.85)', borderRadius:5,
+            display:'flex', alignItems:'center', justifyContent:'center',
+            fontSize:13, color:'var(--fg-2)', fontWeight:500,
+          }}>
+            Saving card…
           </div>
         )}
       </div>
 
-      {error && phase !== 'loading' && stripeRefs && (
+      {error && stripeRefs && (
         <div style={{fontSize:13,color:'#ffd9d4'}}>{error}</div>
       )}
 
-      <button
-        type="submit"
-        className="uc-btn b-signal"
-        disabled={buttonDisabled}
-        style={{
-          padding: isMobile ? '16px 20px' : '18px 24px',
-          fontSize:16,fontWeight:600,gap:10,
-          width:'100%',
-          justifyContent:'center',
-          whiteSpace: isMobile ? 'normal' : 'nowrap',
-          opacity: buttonDisabled ? .55 : 1,
-          cursor: buttonDisabled ? 'default' : 'pointer',
-          border:'none',
-        }}
-      >
+      <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,fontSize:12,color:'var(--uc-stone-300)',lineHeight:1.45}}>
         <Lock/>
-        {phase === 'submitting' ? 'Saving card…' : 'Reserve your slot · $0 today'}
-        <span>→</span>
-      </button>
-
-      <div style={{fontSize:12,color:'var(--uc-stone-300)',textAlign:'center',lineHeight:1.45}}>
         $0 today. Card kept on file. Charged after we confirm fit on the intro call.
       </div>
-    </form>
+    </div>
   );
 }
 
