@@ -642,7 +642,7 @@ function RecapCard({rows}){
   );
 }
 
-/* ------- Final step: scoped recap + Express Checkout ------- */
+/* ------- Final step: scoped recap + Stripe checkout ------- */
 function Confirmation({answers, otherErp, otherPlatform, contact, setupPromiseRef, onSessionComplete}){
   const isMobile = window.useIsMobile ? window.useIsMobile() : false;
   return (
@@ -711,12 +711,6 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
   const [error, setError] = React.useState('');
   const [intentId, setIntentId] = React.useState('');
   const [stripeRefs, setStripeRefs] = React.useState(null);
-  // Whether the Express Checkout Element actually has a wallet to show
-  // (Apple Pay / Google Pay / Link). When true, render the buttons + an
-  // "Or pay with card" divider above the card form. When false, just the
-  // card form.
-  const [expressAvailable, setExpressAvailable] = React.useState(false);
-  const expressRef = React.useRef(null);
   const paymentRef = React.useRef(null);
   // Always-fresh reference to the confirm flow so handlers attached during
   // the one-time mount effect can still call the latest closure (which
@@ -779,41 +773,13 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
           },
         });
 
-        // Express Checkout (Apple Pay / Google Pay / Link). Renders only
-        // the wallets the visitor's browser advertises; the card form
-        // below is the universal fallback when none are available.
-        const expressElement = elements.create('expressCheckout', {
-          paymentMethodOrder: ['applePay', 'googlePay', 'link'],
-          buttonHeight: 48,
-        });
-        expressElement.on('ready', ({ availablePaymentMethods }) => {
-          if (cancelled) return;
-          const any = availablePaymentMethods
-            ? Object.values(availablePaymentMethods).some(Boolean)
-            : false;
-          setExpressAvailable(any);
-        });
-        expressElement.on('click', (event) => {
-          // SetupIntent flow: no line items / shipping needed. Email is
-          // already known from the contact quiz steps, so don't ask the
-          // wallet sheet to collect it again.
-          event.resolve({ emailRequired: false, phoneNumberRequired: false });
-        });
-        expressElement.on('confirm', async () => {
-          if (cancelled) return;
-          if (finalizeRef.current) await finalizeRef.current();
-        });
-        expressElement.mount(expressRef.current);
-
-        // Card Payment Element — universal fallback. Uses our own contact
-        // fields (collected on the quiz steps) for billing details via
-        // confirmParams instead of Stripe's built-ins.
+        // Card Payment Element. Uses our own contact fields (collected
+        // on the quiz steps) for billing details via confirmParams
+        // instead of Stripe's built-ins.
         const paymentElement = elements.create('payment', {
           layout: 'tabs',
           fields: { billingDetails: { name:'never', email:'never', phone:'never', address:'never' } },
         });
-        // Phase is gated on the Payment Element's `ready` since it's the
-        // surface every visitor sees regardless of wallet availability.
         paymentElement.on('ready', () => {
           if (cancelled) return;
           setPhase('ready');
@@ -830,9 +796,8 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
     return () => { cancelled = true; };
   }, []);
 
-  // Shared confirm flow — called by both the card-form submit and the
-  // Express Checkout Element's `confirm` event. Pulls stripe/elements from
-  // state since by the time it runs, mounting has long completed.
+  // Confirm flow — runs stripe.confirmSetup() with our collected billing
+  // details, then finalises on the worker via /api/checkout/setup-complete.
   const finalize = async () => {
     if (!stripeRefs || phase === 'submitting') return;
     setPhase('submitting');
@@ -902,7 +867,6 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
     e.preventDefault();
     finalize();
   };
-  const expressVisible = phase === 'ready' && expressAvailable;
 
   return (
     <form onSubmit={onSubmit} style={{
@@ -920,27 +884,6 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
         <strong style={{fontWeight:700}}>Lock yours in. $0 today.</strong>
       </div>
 
-      {/* Express Checkout — mounted always so Stripe can determine */}
-      {/* availability; container is hidden until we know wallets exist.   */}
-      <div style={{display: expressVisible ? 'block' : 'none'}}>
-        <div style={{
-          background:'#fff', color:'var(--fg-1)', borderRadius:5,
-          padding: isMobile ? 12 : 14,
-        }}>
-          <div ref={expressRef}/>
-        </div>
-        <div style={{
-          display:'flex', alignItems:'center', gap:12, marginTop:14,
-          fontSize:11, fontWeight:600, letterSpacing:'.12em',
-          textTransform:'uppercase', color:'rgba(255,255,255,0.55)',
-        }}>
-          <div style={{flex:1, height:1, background:'rgba(255,255,255,0.2)'}}/>
-          <span>Or pay with card</span>
-          <div style={{flex:1, height:1, background:'rgba(255,255,255,0.2)'}}/>
-        </div>
-      </div>
-
-      {/* Card Payment Element — universal fallback; always rendered. */}
       <div style={{
         position:'relative',
         background:'#fff',color:'var(--fg-1)',borderRadius:5,
