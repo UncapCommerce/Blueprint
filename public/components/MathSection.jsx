@@ -1,4 +1,4 @@
-// Math.jsx: $7.5K to see the whole map (responsive)
+// Math.jsx: $7K to see the whole map (responsive)
 function MathSection() {
   const isMobile = window.useIsMobile ? window.useIsMobile() : false;
   return (
@@ -8,7 +8,7 @@ function MathSection() {
           <div>
             <div className="uc-eyebrow" style={{marginBottom: isMobile ? 12 : 18}}>The math</div>
             <h2 style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize: isMobile ? 'clamp(28px, 7.6vw, 40px)' : 'clamp(40px,4.4vw,72px)',lineHeight:1.05,letterSpacing:'-.03em',color:'var(--fg-1)',margin:'0 0 14px'}}>
-              $7.5K to see the whole map.
+              $7K to see the whole map.
             </h2>
             <p style={{fontFamily:'var(--font-serif)',fontStyle:'italic',fontSize: isMobile ? 'clamp(17px, 4.6vw, 22px)' : 'clamp(22px,2vw,30px)',lineHeight:1.35,color:'var(--fg-2)',margin:0,letterSpacing:'-.01em'}}>
               It pays for itself the moment it stops you from hiring the wrong partner.
@@ -19,7 +19,7 @@ function MathSection() {
           <div style={{display:'flex',flexDirection:'column',gap: isMobile ? 22 : 18}}>
             <Bar label="A bad migration" sub="Wasted spend, lost revenue, lost months" amount="$120K – $250K" widthPct={100} dark isMobile={isMobile}/>
             <Bar label="One week of an agency retainer" sub="Industry standard, $300–$500/hr × 40h" amount="$12K – $20K" widthPct={20} stripe isMobile={isMobile}/>
-            <Bar label="The Blueprint" sub="Fixed. Locked. Yours to keep." amount="$7,500" widthPct={7} signal isMobile={isMobile}/>
+            <Bar label="The Blueprint" sub="Fixed. Locked. Yours to keep." amount="$7,000" widthPct={7} signal isMobile={isMobile}/>
           </div>
         </div>
       </div>

@@ -30,7 +30,7 @@ function Shift() {
         <div style={{maxWidth:880,marginBottom: isMobile ? 32 : 64}}>
           <div className="uc-eyebrow" style={{color:'var(--uc-stone-500)',marginBottom: isMobile ? 12 : 18}}>The shift</div>
           <h2 style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize: isMobile ? 'clamp(28px, 7.6vw, 40px)' : 'clamp(40px,4.4vw,72px)',lineHeight:1.05,letterSpacing:'-.03em',margin:'0 0 12px',color:'#fff'}}>
-            The "free estimate" is the trap.
+            The "free estimate" is the real real trap.
           </h2>
           <p style={{fontFamily:'var(--font-serif)',fontStyle:'italic',fontWeight:400,fontSize: isMobile ? 'clamp(17px, 4.6vw, 22px)' : 'clamp(22px,2vw,30px)',lineHeight:1.35,color:'var(--uc-stone-300)',margin:0,letterSpacing:'-.01em'}}>
             We charge for the part everyone else skips: the part that decides whether your migration works.
