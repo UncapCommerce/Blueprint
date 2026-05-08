@@ -12,6 +12,15 @@ export default {
     if (url.pathname === '/api/checkout/setup-complete' && request.method === 'POST') {
       return handleSetupComplete(request, env);
     }
+    if (url.pathname === '/api/build/session' && request.method === 'GET') {
+      return handleSessionGet(request, env);
+    }
+    if (url.pathname === '/api/build/session' && request.method === 'POST') {
+      return handleSessionSave(request, env);
+    }
+    if (url.pathname === '/api/build/session' && request.method === 'DELETE') {
+      return handleSessionDelete(request, env);
+    }
 
     // Static assets (HTML, CSS, JSX, fonts, images) are served by the
     // ASSETS binding configured in wrangler.toml.
@@ -301,4 +310,70 @@ async function handleSetupComplete(request, env) {
   } catch (err) {
     return json(502, { ok: false, error: err.message || 'Could not finalize SetupIntent' });
   }
+}
+
+// ----------------------------------------------------------------------------
+// /api/build/session — resumable /build quiz sessions backed by Workers KV.
+//
+// The client generates a 32-char hex session id on first visit, pushes it
+// into the URL as `?s=<id>`, and POSTs progress here on every state change.
+// Anyone with the URL can resume — that's the point. State is small JSON
+// (current step + answers + contact). No card data ever lands in KV; that
+// stays with Stripe via the SetupIntent.
+//
+// Sessions auto-expire after 30 days (KV TTL).
+// ----------------------------------------------------------------------------
+const SESSION_TTL_SECONDS = 60 * 60 * 24 * 30;
+const SESSION_ID_RE = /^[0-9a-f]{16,64}$/;
+const MAX_SESSION_BYTES = 8 * 1024; // sanity cap on submitted state
+
+function noKv() {
+  return json(503, { ok: false, error: 'Session storage is not configured (BUILD_SESSIONS KV binding missing).' });
+}
+
+async function handleSessionGet(request, env) {
+  if (!env.BUILD_SESSIONS) return noKv();
+  const id = (new URL(request.url).searchParams.get('id') || '').toLowerCase();
+  if (!SESSION_ID_RE.test(id)) {
+    return json(400, { ok: false, error: 'Invalid session id.' });
+  }
+  const raw = await env.BUILD_SESSIONS.get(id);
+  if (!raw) return json(404, { ok: false, error: 'Session not found.' });
+  try {
+    return json(200, { ok: true, state: JSON.parse(raw) });
+  } catch {
+    return json(502, { ok: false, error: 'Session payload is corrupt.' });
+  }
+}
+
+async function handleSessionSave(request, env) {
+  if (!env.BUILD_SESSIONS) return noKv();
+  let body;
+  try { body = await request.json(); }
+  catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+
+  const id = (body.id || '').toString().toLowerCase();
+  if (!SESSION_ID_RE.test(id)) {
+    return json(400, { ok: false, error: 'Invalid session id.' });
+  }
+  const state = body.state;
+  if (!state || typeof state !== 'object') {
+    return json(400, { ok: false, error: 'Missing state.' });
+  }
+  const payload = JSON.stringify(state);
+  if (payload.length > MAX_SESSION_BYTES) {
+    return json(413, { ok: false, error: 'Session payload too large.' });
+  }
+  await env.BUILD_SESSIONS.put(id, payload, { expirationTtl: SESSION_TTL_SECONDS });
+  return json(200, { ok: true });
+}
+
+async function handleSessionDelete(request, env) {
+  if (!env.BUILD_SESSIONS) return noKv();
+  const id = (new URL(request.url).searchParams.get('id') || '').toLowerCase();
+  if (!SESSION_ID_RE.test(id)) {
+    return json(400, { ok: false, error: 'Invalid session id.' });
+  }
+  await env.BUILD_SESSIONS.delete(id);
+  return json(200, { ok: true });
 }

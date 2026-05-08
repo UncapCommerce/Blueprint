@@ -14,6 +14,12 @@ directory = "./public"
 binding = "ASSETS"
 not_found_handling = "single-page-application"
 
+# Persists in-progress /build quiz sessions so visitors can resume from a
+# `?s=<id>` URL after closing the tab. Created via the Cloudflare API.
+[[kv_namespaces]]
+binding = "BUILD_SESSIONS"
+id = "fefd368a592342a4a2682f286e70c906"
+
 [vars]
 # Where fit-call form submissions and card-on-file notifications are emailed.
 NOTIFY_EMAIL = "hay@uncap.com"
