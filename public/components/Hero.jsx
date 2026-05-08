@@ -32,7 +32,7 @@ function Hero() {
               Stop gambling six figures on a Shopify migration you can't see coming.
             </h1>
             <p style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:500,fontSize: isMobile ? 'clamp(16px, 4.4vw, 19px)' : 'clamp(22px, 2vw, 28px)',lineHeight:1.35,letterSpacing:'-.015em',color:'var(--fg-2)',margin: isMobile ? '0 0 24px' : '0 0 40px',maxWidth:640}}>
-              <span style={{background:'var(--uc-shopify)',color:'#fff',padding:'0 .15em',boxDecorationBreak:'clone',WebkitBoxDecorationBreak:'clone'}}>Everything you need to migrate to Shopify.</span> Without the guesswork. $7K flat. Yours to keep.
+              Everything you need to migrate to Shopify. Without the guesswork. $7K flat. Yours to keep.
             </p>
             <div style={{display:'flex',gap: isMobile ? 10 : 14,alignItems: isMobile ? 'stretch' : 'center',flexDirection: isMobile ? 'column' : 'row',flexWrap:'wrap'}}>
               <a href="/build" className="uc-btn b-primary" style={isMobile ? {width:'100%',justifyContent:'center',padding:'16px 22px',fontSize:16} : null}>Start the Blueprint <span>→</span></a>
