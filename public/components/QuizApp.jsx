@@ -75,8 +75,30 @@ function QuizApp(){
     setAnswers(prev => ({...prev, [key]: value}));
   };
 
+  // Pre-fetch the SetupIntent the instant we have all five answers, so the
+  // Stripe form is already ready by the time the confirm page finishes its
+  // 480ms fade-in. Discarded on back-navigation so the customer record on
+  // Stripe always reflects the answers the user actually submits.
+  const setupPromiseRef = React.useRef(null);
+  const startSetupIntent = (fullAnswers, fullOtherErp) => {
+    if (setupPromiseRef.current) return;
+    setupPromiseRef.current = (async () => {
+      const resp = await fetch('/api/checkout/setup-intent', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ answers: fullAnswers, otherErp: fullOtherErp }),
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok || !data.ok) throw new Error(data.error || `Setup failed (${resp.status})`);
+      return data;
+    })();
+  };
+
   const advance = () => setStep(s => s + 1);
-  const back = () => setStep(s => Math.max(0, s - 1));
+  const back = () => {
+    setupPromiseRef.current = null;
+    setStep(s => Math.max(0, s - 1));
+  };
 
   // Auto-advance helper for radio steps
   const choose = (key, value) => {
@@ -188,14 +210,17 @@ function QuizApp(){
               <OptionGrid
                 options={MODEL_OPTIONS.map(o=>({value:o.id,label:o.label,sub:o.sub}))}
                 selected={answers.model}
-                onChoose={(v)=>choose('model', v)}
+                onChoose={(v)=>{
+                  startSetupIntent({...answers, model: v}, otherErp);
+                  choose('model', v);
+                }}
                 columns={1}
               />
             </Step>
           )}
 
           {isConfirm && (
-            <Confirm answers={answers} otherErp={otherErp}/>
+            <Confirm answers={answers} otherErp={otherErp} setupPromiseRef={setupPromiseRef}/>
           )}
         </div>
       </main>
@@ -381,7 +406,7 @@ function editionTitle(erpId){
 }
 
 /* ------- Confirmation screen ------- */
-function Confirm({answers, otherErp}){
+function Confirm({answers, otherErp, setupPromiseRef}){
   const isMobile = window.useIsMobile ? window.useIsMobile() : false;
   const erpName = answers.erp === 'other'
     ? (otherErp || 'Other')
@@ -439,7 +464,7 @@ function Confirm({answers, otherErp}){
         ))}
       </div>
 
-      <CardOnFile answers={answers} otherErp={otherErp} isMobile={isMobile}/>
+      <CardOnFile answers={answers} otherErp={otherErp} isMobile={isMobile} setupPromiseRef={setupPromiseRef}/>
       <div style={{
         fontSize:12,fontWeight:600,letterSpacing:'.12em',textTransform:'uppercase',
         color:'var(--fg-3)',textAlign:'center',marginBottom:24,
@@ -467,7 +492,7 @@ function Confirm({answers, otherErp}){
 }
 
 /* ------- Stripe SetupIntent + Payment Element (card on file, $0 today) ------- */
-function CardOnFile({answers, otherErp, isMobile}){
+function CardOnFile({answers, otherErp, isMobile, setupPromiseRef}){
   // Phases: loading → ready → submitting → success | error
   const [phase, setPhase] = React.useState('loading');
   const [error, setError] = React.useState('');
@@ -479,13 +504,21 @@ function CardOnFile({answers, otherErp, isMobile}){
     let cancelled = false;
     (async () => {
       try {
-        const resp = await fetch('/api/checkout/setup-intent', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ answers, otherErp }),
-        });
-        const data = await resp.json().catch(() => ({}));
-        if (!resp.ok || !data.ok) throw new Error(data.error || `Setup failed (${resp.status})`);
+        // Use the SetupIntent that was pre-fetched at step 4 click if it
+        // exists; otherwise (e.g. hot-reload landing straight on confirm)
+        // fetch on demand.
+        const data = setupPromiseRef && setupPromiseRef.current
+          ? await setupPromiseRef.current
+          : await (async () => {
+              const resp = await fetch('/api/checkout/setup-intent', {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({ answers, otherErp }),
+              });
+              const r = await resp.json().catch(() => ({}));
+              if (!resp.ok || !r.ok) throw new Error(r.error || `Setup failed (${resp.status})`);
+              return r;
+            })();
         if (cancelled) return;
         if (typeof window.Stripe !== 'function') {
           throw new Error('Stripe.js failed to load. Refresh the page or try again later.');
@@ -494,6 +527,10 @@ function CardOnFile({answers, otherErp, isMobile}){
         const stripe = window.Stripe(data.publishableKey);
         const elements = stripe.elements({
           clientSecret: data.clientSecret,
+          // Always show Stripe's own skeleton inside the iframe before
+          // fields appear — gives a consistent visual while we keep our
+          // own placeholder covering the iframe until `ready` fires.
+          loader: 'always',
           appearance: {
             theme: 'flat',
             variables: {
@@ -513,9 +550,9 @@ function CardOnFile({answers, otherErp, isMobile}){
           },
         });
         const paymentElement = elements.create('payment', { layout: 'tabs' });
-        // Wait for the iframe to be visually ready before crossfading the
-        // loader out — otherwise we get a flick where the loader vanishes
-        // and the user stares at empty space until the iframe paints.
+        // Only flip to 'ready' (which uncovers the iframe) once Stripe
+        // says fields are interactive — that way the placeholder hides on
+        // a fully-rendered form, not on a half-painted iframe.
         paymentElement.on('ready', () => {
           if (cancelled) return;
           setPhase('ready');
@@ -600,10 +637,12 @@ function CardOnFile({answers, otherErp, isMobile}){
         <strong style={{fontWeight:700}}>Lock yours in. $0 today.</strong>
       </div>
 
-      {/* Reserve the height the Payment Element will occupy so the loader → */}
-      {/* element handoff doesn't reflow the page. Loader sits absolutely on */}
-      {/* top of the (initially empty) Stripe mount point and crossfades out */}
-      {/* once Stripe fires its `ready` event. */}
+      {/* The Stripe iframe is mounted as soon as we have a clientSecret and */}
+      {/* immediately starts painting its own skeleton (loader: 'always').   */}
+      {/* While that's happening we keep an opaque white cover on top so the */}
+      {/* user never sees Stripe's iframe in a half-painted state. The cover */}
+      {/* is removed instantly once Stripe's `ready` event fires, revealing  */}
+      {/* fully-rendered fields — no crossfade, no flick.                    */}
       <div style={{
         position:'relative',
         background:'#fff',color:'var(--fg-1)',borderRadius:5,
@@ -613,24 +652,21 @@ function CardOnFile({answers, otherErp, isMobile}){
         // stacks expiry/CVC vertically, which is much taller than desktop.
         minHeight: isMobile ? 360 : 280,
       }}>
-        <div style={{
-          position:'absolute', inset:0,
-          display:'flex', alignItems:'center', justifyContent:'center',
-          padding: isMobile ? 12 : 16,
-          fontSize:13, lineHeight:1.5, textAlign:'center',
-          color: phase === 'error' && !stripeRefs ? '#c0392b' : 'var(--fg-3)',
-          opacity: phase === 'ready' || phase === 'submitting' ? 0 : 1,
-          pointerEvents: phase === 'ready' || phase === 'submitting' ? 'none' : 'auto',
-          transition: 'opacity 200ms var(--ease-out)',
-        }}>
-          {phase === 'error' && !stripeRefs
-            ? error
-            : 'Loading secure payment form…'}
-        </div>
-        <div ref={paymentRef} style={{
-          opacity: phase === 'ready' || phase === 'submitting' ? 1 : 0,
-          transition: 'opacity 200ms var(--ease-out)',
-        }}/>
+        <div ref={paymentRef}/>
+        {phase !== 'ready' && phase !== 'submitting' && (
+          <div style={{
+            position:'absolute', inset:0,
+            background:'#fff', borderRadius:5,
+            display:'flex', alignItems:'center', justifyContent:'center',
+            padding: isMobile ? 12 : 16,
+            fontSize:13, lineHeight:1.5, textAlign:'center',
+            color: phase === 'error' && !stripeRefs ? '#c0392b' : 'var(--fg-3)',
+          }}>
+            {phase === 'error' && !stripeRefs
+              ? error
+              : 'Preparing secure payment form…'}
+          </div>
+        )}
       </div>
 
       {error && phase !== 'loading' && stripeRefs && (
