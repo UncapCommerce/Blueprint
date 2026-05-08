@@ -150,7 +150,13 @@ async function handleSetupIntent(request, env) {
     const intent = await stripeFetch(env, 'setup_intents', {
       body: stripeForm({
         usage: 'off_session',
-        'payment_method_types[]': 'card',
+        // Pull whichever payment methods are enabled in the Stripe
+        // dashboard. allow_redirects=never keeps the flow embedded —
+        // we surface only Apple Pay, Google Pay, and Link via the
+        // Express Checkout Element, all of which complete in-page.
+        // (Amazon Pay would require a return_url + redirect handling.)
+        'automatic_payment_methods[enabled]':         'true',
+        'automatic_payment_methods[allow_redirects]': 'never',
         metadata,
       }),
     });
