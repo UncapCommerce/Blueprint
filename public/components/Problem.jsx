@@ -34,7 +34,7 @@ function Problem() {
     {
       n:'04',
       tag:'TCO',
-      t:'Cost of ownership goes through the roof.',
+      t:'TCO over the roof. You start bleeding money.',
       d:'App subscriptions stack up, custom code rots, and the hot-fix retainer becomes permanent. Year two costs more than the migration itself.',
       redact:'costs more than the migration itself',
       stamp:'TCO 2X',
