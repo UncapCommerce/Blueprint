@@ -36,7 +36,7 @@ function FAQ() {
   const isMobile = window.useIsMobile ? window.useIsMobile() : false;
   const items = [
     {q:'Why charge for what others give away?', a:'Because free estimates aren\'t strategy. They\'re sales calls in disguise. Doing the work properly takes 4 weeks of senior time. We\'d rather charge for it and do it right than dress it up as "discovery" and bake the cost into a 14-month build.'},
-    {q:'What if I want you to implement?', a:'Great. The Blueprint cost is credited 1:1 toward implementation. Your $7.5K becomes a $7.5K discount on the build.'},
+    {q:'What if I want you to implement?', a:'Great. The Blueprint cost is credited 1:1 toward implementation. Your $7K becomes a $7K discount on the build.'},
     {q:'What if I don\'t want you to implement?', a:'Also great. You walk with everything you need to brief any agency or your in-house team. The architecture, the prototype, the data plan, the risk register, the fixed-cost estimate. All yours. No NDA chokeholds, no IP traps.'},
     {q:'How is this different from a discovery phase?', a:'Discovery phases lock you in. Most are scoped to justify the build the agency already wants to sell you. The Blueprint is scoped to give you the truth, even if the truth is "don\'t migrate yet" or "hire someone else."'},
     {q:'What happens on the 25-min call?', a:'We diagnose your situation, tell you honestly if you\'re a fit, and answer anything. No pitch deck. No slick spin. No B.S. If you\'re not a fit, we\'ll tell you who is.'},
@@ -119,7 +119,7 @@ function FinalCTA() {
         <div style={{display:'grid',gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',gap: isMobile ? 18 : 32,paddingTop: isMobile ? 24 : 32,borderTop:'1px solid var(--line-1)'}}>
           {[
             {n:'4 weeks', l:'Delivery'},
-            {n:'$7,500', l:'Fixed price'},
+            {n:'$7,000', l:'Fixed price'},
             {n:'100%', l:'Refund guarantee'},
             {n:'Yours', l:'To keep'},
           ].map(s=>(
