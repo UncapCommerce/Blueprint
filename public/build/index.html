@@ -3,6 +3,28 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Start the Blueprint · Uncap</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png"/>
+<link rel="apple-touch-icon" href="/favicon-32.png"/>
+
+<!-- Critical-path third-party origins. Stripe.js is required for Express
+     Checkout on this quiz, so warm the connection early. -->
+<link rel="preconnect" href="https://js.stripe.com" crossorigin/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+
+<link rel="preload" as="font" type="font/woff2" href="/fonts/Inter_18pt-Regular.woff2" crossorigin/>
+<link rel="preload" as="font" type="font/woff2" href="/fonts/Inter_24pt-ExtraBold.woff2" crossorigin/>
+
+<link rel="stylesheet" href="/colors_and_type.css"/>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500;600&display=swap"/>
+
+<!-- Stripe.js is render-blocking only when we hit the payment step; defer
+     it so it doesn't compete with React/Babel during initial paint. The
+     quiz mounts first, the Express Checkout Element loads on the last
+     step where Stripe will already be cached. -->
+<script src="https://js.stripe.com/v3/" defer></script>
+
 <!-- Google tag (gtag.js) -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-3P6Y3163D9"></script>
 <script>
@@ -11,11 +33,6 @@
   gtag('js', new Date());
   gtag('config', 'G-3P6Y3163D9');
 </script>
-<title>Start the Blueprint · Uncap</title>
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png"/>
-<link rel="apple-touch-icon" href="/favicon-32.png"/>
-<link rel="stylesheet" href="/colors_and_type.css"/>
-<script src="https://js.stripe.com/v3/"></script>
 <style>
   html,body{margin:0;background:var(--bg-1);color:var(--fg-1);font-family:var(--font-sans);-webkit-font-smoothing:antialiased}
   *{box-sizing:border-box}
@@ -109,9 +126,11 @@
 <body>
 <div id="root"></div>
 
-<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<!-- Vendored under /vendor/ — same-origin so the worker's cache headers
+     apply, and we drop the third-party RTT to unpkg. -->
+<script src="/vendor/react.production.min.js"></script>
+<script src="/vendor/react-dom.production.min.js"></script>
+<script src="/vendor/babel.min.js"></script>
 
 <script type="text/babel" src="/components/_hooks.jsx"></script>
 <script type="text/babel" src="/components/QuizApp.jsx"></script>

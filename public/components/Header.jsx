@@ -52,6 +52,9 @@ function Header() {
           <img
             src="assets/uncap-logo-black.svg"
             alt="uncap"
+            width="84" height="22"
+            fetchpriority="high"
+            decoding="async"
             style={{height: isMobile ? 22 : 22, width:'auto', display:'block'}}
           />
           <span style={{height: isMobile ? 16 : 16, width:1, background:'var(--line-1)', flexShrink:0}}/>

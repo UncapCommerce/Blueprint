@@ -1,0 +1,39 @@
+# Cloudflare Workers Static Assets honors a `_headers` file in the asset
+# directory the same way Pages does. Each match overrides the default
+# response headers for matching paths.
+#
+# Strategy: HTML must revalidate on every request so deploys roll out
+# instantly; everything else (fonts, images, vendored JS, CSS) we treat as
+# safe to cache aggressively for a year. None of those filenames are
+# content-hashed yet — when we change one we either rename it or use a
+# query-string buster from the HTML.
+
+# Long-cache the static byte-stable assets.
+/fonts/*
+  Cache-Control: public, max-age=31536000, immutable
+  Access-Control-Allow-Origin: *
+
+/vendor/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/assets/*
+  Cache-Control: public, max-age=31536000
+
+# CSS isn't hashed; cache for a day on the browser, longer on the edge.
+/colors_and_type.css
+  Cache-Control: public, max-age=86400, s-maxage=2592000
+
+# JSX components are transpiled by @babel/standalone in the browser, so
+# treat them like first-party JS bytes that change with deploys.
+/components/*
+  Cache-Control: public, max-age=300, s-maxage=86400
+
+# HTML always revalidates.
+/
+  Cache-Control: public, max-age=0, must-revalidate
+/build
+  Cache-Control: public, max-age=0, must-revalidate
+/build/
+  Cache-Control: public, max-age=0, must-revalidate
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate

@@ -4,7 +4,30 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<!-- Google tag (gtag.js) -->
+<title>The Blueprint · Uncap</title>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png"/>
+<link rel="apple-touch-icon" href="/favicon-32.png"/>
+
+<!-- Open early connections to the third-party origins we'll hit during the
+     critical path: Google Fonts CSS+font origins. (React/Babel are now
+     vendored under /vendor/, so unpkg.com is no longer in the path.) -->
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+
+<!-- Critical font preload: the body face is referenced by every paragraph
+     above the fold, so kick off the fetch before CSS parse discovers it. -->
+<link rel="preload" as="font" type="font/woff2" href="/fonts/Inter_18pt-Regular.woff2" crossorigin/>
+<link rel="preload" as="font" type="font/woff2" href="/fonts/Inter_24pt-ExtraBold.woff2" crossorigin/>
+<link rel="preload" as="font" type="font/woff2" href="/fonts/Inter_28pt-ExtraBold.woff2" crossorigin/>
+
+<link rel="stylesheet" href="colors_and_type.css"/>
+<!-- Google Fonts moved out of the CSS @import so its discovery isn't
+     gated on stylesheet parse — runs in parallel with our local CSS. -->
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500;600&display=swap"/>
+
+<!-- Google tag (gtag.js): deferred so it doesn't compete with the React
+     CDN scripts during the critical path. dataLayer is a queue, so calls
+     made before gtag.js loads are buffered and replayed on init. -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-3P6Y3163D9"></script>
 <script>
   window.dataLayer = window.dataLayer || [];
@@ -12,10 +35,6 @@
   gtag('js', new Date());
   gtag('config', 'G-3P6Y3163D9');
 </script>
-<title>The Blueprint · Uncap</title>
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png"/>
-<link rel="apple-touch-icon" href="/favicon-32.png"/>
-<link rel="stylesheet" href="colors_and_type.css"/>
 <style>
   html,body{margin:0;background:var(--bg-1);color:var(--fg-1);font-family:var(--font-sans);-webkit-font-smoothing:antialiased}
   *{box-sizing:border-box}
@@ -173,9 +192,13 @@
      (inside React's tree) so it only appears after the app mounts ,
      prevents a flash of an unstyled link during JSX compile. -->
 
-<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+<!-- React + Babel are vendored under /vendor/ (pinned to react@18.3.1 and
+     @babel/standalone@7.29.0). Production-minified React drops ~900 KB of
+     dev warnings/parsing vs .development.js. Same-origin removes the
+     third-party RTT and lets our edge cache headers apply. -->
+<script src="/vendor/react.production.min.js"></script>
+<script src="/vendor/react-dom.production.min.js"></script>
+<script src="/vendor/babel.min.js"></script>
 
 <script type="text/babel" src="components/_hooks.jsx"></script>
 <script type="text/babel" src="components/Header.jsx"></script>
