@@ -37,16 +37,16 @@ function Hero() {
             <div style={{display:'flex',gap: isMobile ? 10 : 14,alignItems: isMobile ? 'stretch' : 'center',flexDirection: isMobile ? 'column' : 'row',flexWrap:'wrap'}}>
               <a href="/build" className="uc-btn b-primary" style={isMobile ? {width:'100%',justifyContent:'center',padding:'16px 22px',fontSize:16} : null}>Start the Blueprint <span>→</span></a>
             </div>
-            <div style={{display:'flex',gap: isMobile ? 10 : 20,alignItems: isMobile ? 'flex-start' : 'center',marginTop: isMobile ? 24 : 36,flexDirection: isMobile ? 'column' : 'row',flexWrap: isMobile ? 'wrap' : 'nowrap'}}>
-              <div style={{display:'flex',alignItems:'center',gap:10}}>
+            <div style={{display:'flex',gap: isMobile ? 10 : 16,alignItems: isMobile ? 'flex-start' : 'center',marginTop: isMobile ? 24 : 36,flexDirection: isMobile ? 'column' : 'row',flexWrap: isMobile ? 'wrap' : 'nowrap'}}>
+              <div style={{display:'flex',alignItems:'center',gap:8}}>
                 <CheckDot/>
                 <span style={{fontSize:13,color:'var(--fg-2)',fontWeight:500,whiteSpace:'nowrap'}}>3 deep dives. 4-week delivery.</span>
               </div>
-              <div style={{display:'flex',alignItems:'center',gap:10}}>
+              <div style={{display:'flex',alignItems:'center',gap:8}}>
                 <CheckDot/>
                 <span style={{fontSize:13,color:'var(--fg-2)',fontWeight:500,whiteSpace:'nowrap'}}>$0 risk. Full refund if not a fit.</span>
               </div>
-              <div style={{display:'flex',alignItems:'center',gap:10}}>
+              <div style={{display:'flex',alignItems:'center',gap:8}}>
                 <CheckDot/>
                 <span style={{fontSize:13,color:'var(--fg-2)',fontWeight:500,whiteSpace:'nowrap'}}>Credited toward implementation</span>
               </div>
