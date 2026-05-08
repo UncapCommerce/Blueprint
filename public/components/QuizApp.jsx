@@ -927,12 +927,11 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
         }}
       >
         <Lock/>
-        {phase === 'submitting' ? 'Saving card…' : 'Reserve your slot · $0 today'}
-        <span>→</span>
+        {phase === 'submitting' ? 'Saving card…' : 'Reserve your spot — $0 today'}
       </button>
 
       <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,fontSize:12,color:'var(--uc-stone-300)',lineHeight:1.45}}>
-        $0 today. Card kept on file. Charged after we confirm fit on the intro call.
+        $0 today. Card kept on file. Charged after we confirm fit on the discovery call.
       </div>
     </form>
   );
