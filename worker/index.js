@@ -7,10 +7,10 @@ export default {
     const url = new URL(request.url);
 
     if (url.pathname === '/api/checkout/setup-intent' && request.method === 'POST') {
-      return handleSetupIntent(request, env);
+      return handlePaymentIntent(request, env);
     }
     if (url.pathname === '/api/checkout/setup-complete' && request.method === 'POST') {
-      return handleSetupComplete(request, env);
+      return handlePaymentComplete(request, env);
     }
     if (url.pathname === '/api/build/session' && request.method === 'GET') {
       return handleSessionGet(request, env);
@@ -133,11 +133,16 @@ function readAnswers(body) {
 
 // ----------------------------------------------------------------------------
 // POST /api/checkout/setup-intent
-// Creates a Stripe SetupIntent that captures a card without charging.
+// Creates a Stripe PaymentIntent for the $500 reservation fee. The card is
+// saved (setup_future_usage=off_session) so the implementation rebill can
+// reuse it later. Refunds are issued manually from the Stripe dashboard.
 // Body: { answers, otherErp }
 // Returns: { ok: true, clientSecret, intentId }
 // ----------------------------------------------------------------------------
-async function handleSetupIntent(request, env) {
+const RESERVATION_AMOUNT_CENTS = 50000;
+const RESERVATION_CURRENCY     = 'usd';
+
+async function handlePaymentIntent(request, env) {
   let body;
   try { body = await request.json(); }
   catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
@@ -156,9 +161,12 @@ async function handleSetupIntent(request, env) {
   if (otherErp) metadata.other_erp = otherErp;
 
   try {
-    const intent = await stripeFetch(env, 'setup_intents', {
+    const intent = await stripeFetch(env, 'payment_intents', {
       body: stripeForm({
-        usage: 'off_session',
+        amount:               RESERVATION_AMOUNT_CENTS,
+        currency:             RESERVATION_CURRENCY,
+        setup_future_usage:   'off_session',
+        description:          'Blueprint reservation fee (fully refundable)',
         // Pull whichever payment methods are enabled in the Stripe
         // dashboard's default Payment Method Configuration.
         // allow_redirects=never keeps the flow embedded; Apple Pay /
@@ -179,43 +187,43 @@ async function handleSetupIntent(request, env) {
       publishableKey: env.STRIPE_PUBLISHABLE_KEY,
     });
   } catch (err) {
-    return json(502, { ok: false, error: err.message || 'Could not create SetupIntent' });
+    return json(502, { ok: false, error: err.message || 'Could not create PaymentIntent' });
   }
 }
 
 // ----------------------------------------------------------------------------
 // POST /api/checkout/setup-complete
-// After client-side stripe.confirmSetup() succeeds, we look up the intent,
-// create a Customer (with billing details forwarded by the client + the
-// `company` we collected in our own UI), attach the PaymentMethod, link the
-// SetupIntent, and notify Uncap.
+// After client-side stripe.confirmPayment() succeeds, we look up the
+// PaymentIntent, create a Customer (with billing details forwarded by the
+// client + the `company` we collected in our own UI), attach the saved
+// PaymentMethod, link the PaymentIntent, and notify Uncap.
 // Body: { intentId, company }
 // ----------------------------------------------------------------------------
-async function handleSetupComplete(request, env) {
+async function handlePaymentComplete(request, env) {
   let body;
   try { body = await request.json(); }
   catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
 
   const intentId = (body.intentId || '').toString().trim();
-  if (!intentId.startsWith('seti_')) {
-    return json(400, { ok: false, error: 'Invalid SetupIntent id.' });
+  if (!intentId.startsWith('pi_')) {
+    return json(400, { ok: false, error: 'Invalid PaymentIntent id.' });
   }
   const company = (body.company || '').toString().trim();
 
   try {
     // Pull the intent + expanded payment_method so we can read billing details.
-    const intent = await stripeFetch(env, `setup_intents/${encodeURIComponent(intentId)}`, {
+    const intent = await stripeFetch(env, `payment_intents/${encodeURIComponent(intentId)}`, {
       method: 'GET',
       query: 'expand[]=payment_method',
     });
 
     if (intent.status !== 'succeeded') {
-      return json(409, { ok: false, error: `SetupIntent is not in a succeeded state (status=${intent.status}).` });
+      return json(409, { ok: false, error: `PaymentIntent is not in a succeeded state (status=${intent.status}).` });
     }
 
     const pm = intent.payment_method;
     if (!pm || typeof pm === 'string') {
-      return json(502, { ok: false, error: 'PaymentMethod is missing on the SetupIntent.' });
+      return json(502, { ok: false, error: 'PaymentMethod is missing on the PaymentIntent.' });
     }
 
     const billing = pm.billing_details || {};
@@ -237,25 +245,28 @@ async function handleSetupComplete(request, env) {
       }),
     });
 
-    // Attach the PaymentMethod to the new Customer.
+    // Attach the PaymentMethod to the new Customer so it's reusable for the
+    // implementation rebill (or refund-and-rebill cycles) later.
     await stripeFetch(env, `payment_methods/${encodeURIComponent(pm.id)}/attach`, {
       body: stripeForm({ customer: customer.id }),
     });
 
-    // Link the SetupIntent to the Customer for clearer dashboard view.
-    await stripeFetch(env, `setup_intents/${encodeURIComponent(intent.id)}`, {
+    // Link the PaymentIntent to the Customer for clearer dashboard view.
+    await stripeFetch(env, `payment_intents/${encodeURIComponent(intent.id)}`, {
       body: stripeForm({ customer: customer.id }),
     });
 
     // Notify Uncap. Failures here are non-fatal for the customer.
     const card = pm.card || {};
-    const subject = `New card on file: ${name || email || customer.id}${company ? ` · ${company}` : ''}`;
+    const amountCharged = `$${(intent.amount_received / 100).toFixed(0)}`;
+    const subject = `Blueprint reservation: ${name || email || customer.id}${company ? ` · ${company}` : ''}`;
     const customerUrl = `https://dashboard.stripe.com/customers/${customer.id}`;
+    const intentUrl = `https://dashboard.stripe.com/payments/${intent.id}`;
     const html = `<!doctype html>
 <html><body style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Helvetica,Arial,sans-serif;color:#0a0a0a;line-height:1.5;">
   <div style="max-width:560px;margin:0 auto;padding:24px;">
-    <h2 style="margin:0 0 4px;font-size:20px;font-weight:700;">New Blueprint card on file</h2>
-    <div style="font-size:13px;color:#6b6b6b;margin-bottom:20px;">$0 charged today. Stripe customer is ready for the post-fit-call charge.</div>
+    <h2 style="margin:0 0 4px;font-size:20px;font-weight:700;">New Blueprint reservation</h2>
+    <div style="font-size:13px;color:#6b6b6b;margin-bottom:20px;">${escapeHtml(amountCharged)} reservation fee charged. Refundable if the fit call rejects scope.</div>
 
     <h3 style="margin:24px 0 8px;font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#3d3d3d;">Customer</h3>
     <table cellpadding="0" cellspacing="0" style="font-size:14px;">
@@ -265,6 +276,7 @@ async function handleSetupComplete(request, env) {
       ${tableRow('Phone', phone)}
       ${tableRow('Stripe customer', customer.id)}
       ${tableRow('Card', card.brand ? `${card.brand.toUpperCase()} ···· ${card.last4} (exp ${card.exp_month}/${card.exp_year})` : '')}
+      ${tableRow('Charge', `${amountCharged} (PaymentIntent ${intent.id})`)}
     </table>
 
     <h3 style="margin:24px 0 8px;font-size:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:#3d3d3d;">Quiz answers</h3>
@@ -277,14 +289,16 @@ async function handleSetupComplete(request, env) {
       ${md.other_erp ? tableRow('ERP (other)', md.other_erp) : ''}
     </table>
 
-    <div style="margin-top:24px;">
-      <a href="${customerUrl}" style="display:inline-block;padding:10px 14px;background:#0a0a0a;color:#fff;text-decoration:none;border-radius:5px;font-size:13px;font-weight:600;">Open in Stripe →</a>
+    <div style="margin-top:24px;display:flex;gap:8px;flex-wrap:wrap;">
+      <a href="${customerUrl}" style="display:inline-block;padding:10px 14px;background:#0a0a0a;color:#fff;text-decoration:none;border-radius:5px;font-size:13px;font-weight:600;">Open customer →</a>
+      <a href="${intentUrl}" style="display:inline-block;padding:10px 14px;background:#fff;color:#0a0a0a;border:1px solid #0a0a0a;text-decoration:none;border-radius:5px;font-size:13px;font-weight:600;">Open payment →</a>
     </div>
   </div>
 </body></html>`;
 
     const text =
-      `New Blueprint card on file\n` +
+      `New Blueprint reservation\n` +
+      `${amountCharged} reservation fee charged (refundable if not a fit).\n` +
       `\n` +
       `Name:    ${name || ''}\n` +
       `Email:   ${email || ''}\n` +
@@ -292,6 +306,7 @@ async function handleSetupComplete(request, env) {
       `Phone:   ${phone || ''}\n` +
       `Stripe:  ${customer.id}\n` +
       `Card:    ${card.brand ? `${card.brand.toUpperCase()} ···· ${card.last4} (exp ${card.exp_month}/${card.exp_year})` : ''}\n` +
+      `Charge:  ${amountCharged} (${intent.id})\n` +
       `\n` +
       `Quiz answers\n` +
       `------------\n` +
@@ -302,13 +317,14 @@ async function handleSetupComplete(request, env) {
       `Model:            ${md.model || ''}\n` +
       (md.other_erp ? `ERP (other):      ${md.other_erp}\n` : '') +
       `\n` +
-      `Open in Stripe: ${customerUrl}\n`;
+      `Customer: ${customerUrl}\n` +
+      `Payment:  ${intentUrl}\n`;
 
     await sendNotificationEmail(env, { subject, html, text, replyTo: email || undefined });
 
     return json(200, { ok: true, customerId: customer.id });
   } catch (err) {
-    return json(502, { ok: false, error: err.message || 'Could not finalize SetupIntent' });
+    return json(502, { ok: false, error: err.message || 'Could not finalize PaymentIntent' });
   }
 }
 
@@ -319,7 +335,7 @@ async function handleSetupComplete(request, env) {
 // into the URL as `?s=<id>`, and POSTs progress here on every state change.
 // Anyone with the URL can resume: that's the point. State is small JSON
 // (current step + answers + contact). No card data ever lands in KV; that
-// stays with Stripe via the SetupIntent.
+// stays with Stripe via the PaymentIntent.
 //
 // Sessions auto-expire after 30 days (KV TTL).
 // ----------------------------------------------------------------------------
