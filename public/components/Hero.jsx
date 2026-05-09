@@ -44,7 +44,7 @@ function Hero() {
               </div>
               <div style={{display:'flex',alignItems:'center',gap:8}}>
                 <CheckDot/>
-                <span style={{fontSize:13,color:'var(--fg-2)',fontWeight:500,whiteSpace:'nowrap'}}>$0 risk. Full refund if not a fit.</span>
+                <span style={{fontSize:13,color:'var(--fg-2)',fontWeight:500,whiteSpace:'nowrap'}}>$500 fully refundable if not a fit.</span>
               </div>
               <div style={{display:'flex',alignItems:'center',gap:8}}>
                 <CheckDot/>

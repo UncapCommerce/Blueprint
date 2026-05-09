@@ -162,7 +162,7 @@ function QuizApp(){
     setAnswers(prev => ({...prev, [key]: value}));
   };
 
-  // Pre-fetch the SetupIntent the instant we have all five quiz answers, so
+  // Pre-fetch the PaymentIntent the instant we have all five quiz answers, so
   // the Stripe form is already ready by the time the user finishes the
   // contact steps and lands on the confirmation page.
   const setupPromiseRef = React.useRef(null);
@@ -191,9 +191,9 @@ function QuizApp(){
 
   const advance = () => setStep(s => s + 1);
   const back = () => {
-    // Invalidate the pre-fetched SetupIntent only when back-nav lands the
+    // Invalidate the pre-fetched PaymentIntent only when back-nav lands the
     // user back inside the quiz answer-choosing range (steps 0–4): the
-    // SetupIntent metadata is built from those answers, so they need to
+    // PaymentIntent metadata is built from those answers, so they need to
     // refire if the user can change them. Bouncing within contact /
     // confirmation steps preserves the pre-fetch.
     const next = Math.max(0, step - 1);
@@ -663,7 +663,7 @@ function Confirmation({answers, otherErp, otherPlatform, contact, setupPromiseRe
         fontSize:'clamp(20px,1.8vw,26px)',lineHeight:1.35,
         color:'var(--fg-2)',margin:'0 0 36px',maxWidth:560,letterSpacing:'-.01em',
       }}>
-        $0 today. Pay only after we both agree it's a fit.
+        $500 reservation fee. Fully refundable if we're not a fit.
       </p>
 
       <RecapCard rows={recapRows(answers, otherErp, otherPlatform, contact)}/>
@@ -690,7 +690,7 @@ function Confirmation({answers, otherErp, otherPlatform, contact, setupPromiseRe
           <Lock/> Secure Stripe payment
         </span>
         <span style={{display:'inline-flex',alignItems:'center',gap:8}}>
-          <CheckSm/> $0 risk. Full refund if not a fit.
+          <CheckSm/> $500 fully refundable if not a fit.
         </span>
         <span style={{display:'inline-flex',alignItems:'center',gap:8}}>
           <CheckSm/> Credited toward implementation
@@ -700,7 +700,7 @@ function Confirmation({answers, otherErp, otherPlatform, contact, setupPromiseRe
   );
 }
 
-/* ------- Stripe SetupIntent + Payment Element (card on file, $0 today) ------- */
+/* ------- Stripe PaymentIntent + Payment Element ($500 reservation fee) ------- */
 // `contact` is collected on the contact quiz steps and passed in via props.
 // Name/email are forwarded to Stripe at confirm time as PaymentMethod
 // billing_details; company is sent to setup-complete and stored as Stripe
@@ -721,7 +721,7 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
     let cancelled = false;
     (async () => {
       try {
-        // Use the SetupIntent that was pre-fetched at step 4 click if it
+        // Use the PaymentIntent that was pre-fetched at step 4 click if it
         // exists; otherwise (e.g. hot-reload landing straight on confirm)
         // fetch on demand.
         const data = setupPromiseRef && setupPromiseRef.current
@@ -803,7 +803,7 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
     setPhase('submitting');
     setError('');
     const { stripe, elements } = stripeRefs;
-    const { error: confirmErr, setupIntent } = await stripe.confirmSetup({
+    const { error: confirmErr, paymentIntent } = await stripe.confirmPayment({
       elements,
       confirmParams: {
         payment_method_data: {
@@ -816,7 +816,7 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
       redirect: 'if_required',
     });
     if (confirmErr) {
-      setError(confirmErr.message || 'Could not save card.');
+      setError(confirmErr.message || 'Could not process the reservation.');
       setPhase('ready');
       return;
     }
@@ -825,16 +825,16 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
-          intentId: (setupIntent && setupIntent.id) || intentId,
+          intentId: (paymentIntent && paymentIntent.id) || intentId,
           company: contact.company.trim(),
         }),
       });
       const data = await resp.json().catch(() => ({}));
-      if (!resp.ok || !data.ok) throw new Error(data.error || `Save failed (${resp.status})`);
+      if (!resp.ok || !data.ok) throw new Error(data.error || `Reservation failed (${resp.status})`);
       setPhase('success');
       if (onSessionComplete) onSessionComplete();
     } catch (err) {
-      setError(err.message || 'Card saved, but we could not finalize. Email denis@uncap.com.');
+      setError(err.message || 'Charge went through, but we could not finalize. Email denis@uncap.com.');
       setPhase('ready');
     }
   };
@@ -853,10 +853,10 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
           </svg>
         </div>
         <div style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize:22,letterSpacing:'-.02em',marginBottom:8}}>
-          Card on file. $0 charged today.
+          $500 reservation locked in.
         </div>
         <div style={{fontSize:14,color:'var(--uc-stone-300)',maxWidth:420,margin:'0 auto',lineHeight:1.5}}>
-          We'll be in touch within one business day to schedule your fit call. After it confirms scope, we'll charge the saved card and start the Blueprint.
+          We'll be in touch within one business day to schedule your fit call. If we're not a fit, we'll fully refund the $500. If we are, we'll start the Blueprint.
         </div>
       </div>
     );
@@ -880,8 +880,8 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
         lineHeight:1.4,letterSpacing:'-.005em',
         textAlign: isMobile ? 'center' : 'left',
       }}>
-        We take on 8 Blueprints per quarter.{' '}
-        <strong style={{fontWeight:700}}>Lock yours in. $0 today.</strong>
+        We take on 12 Blueprints per quarter.{' '}
+        <strong style={{fontWeight:700}}>Lock yours in. $500 fully refundable.</strong>
       </div>
 
       <div style={{
@@ -927,11 +927,11 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
         }}
       >
         <Lock/>
-        {phase === 'submitting' ? 'Saving card…' : 'Reserve your spot · $0 today'}
+        {phase === 'submitting' ? 'Processing reservation…' : 'Reserve your spot · $500 refundable'}
       </button>
 
       <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,fontSize:12,color:'var(--uc-stone-300)',lineHeight:1.45}}>
-        $0 today. Card kept on file. Charged after we confirm fit on the discovery call.
+        $500 reservation fee charged today. Fully refundable if we're not a fit on the discovery call.
       </div>
     </form>
   );
