@@ -5,11 +5,13 @@ function FitProcess() {
     'You\'re $5M+ in revenue',
     'Migrating within the next 6 months',
     'You want to make the decision once, correctly',
+    'You\'re a supplier, distributor, or manufacturer running unified commerce',
   ];
   const notFit = [
     'You\'re shopping for the cheapest quote',
     'You\'re under $5M in revenue',
     'You are not the decision maker',
+    'You\'re a purely DTC brand',
   ];
   const weeks = [
     {n:'Week 1', t:'Discovery & Research',     d:'Deep audit of your stack, data, and goals. We talk to every system owner. Nothing taken at face value.'},
