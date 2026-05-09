@@ -159,11 +159,12 @@ async function handleSetupIntent(request, env) {
     const intent = await stripeFetch(env, 'setup_intents', {
       body: stripeForm({
         usage: 'off_session',
-        // Pull whichever payment methods are enabled in the Stripe
-        // dashboard. allow_redirects=never keeps the flow embedded ,
-        // we surface only Apple Pay, Google Pay, and Link via the
-        // Express Checkout Element, all of which complete in-page.
-        // (Amazon Pay would require a return_url + redirect handling.)
+        // Use an explicit Payment Method Configuration so the surfaced
+        // methods are controlled here, not by whichever PMC happens to be
+        // the account default. allow_redirects=never keeps the flow embedded
+        // alongside Apple Pay / Google Pay / Link from the Express Checkout
+        // Element above. (Amazon Pay would need a return_url + redirect.)
+        'payment_method_configuration':               'pmc_1KRW9EDm3QhJszkTTfjUJM4x',
         'automatic_payment_methods[enabled]':         'true',
         'automatic_payment_methods[allow_redirects]': 'never',
         metadata,
