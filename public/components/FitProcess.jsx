@@ -5,7 +5,7 @@ function FitProcess() {
     'You\'re $5M+ in revenue',
     'Migrating within the next 6 months',
     'You want to make the decision once, correctly',
-    'You\'re a supplier, distributor, or manufacturer running unified commerce',
+    'You\'re a wholesaler, distributor, manufacturer or unified commerce supplier',
   ];
   const notFit = [
     'You\'re shopping for the cheapest quote',
