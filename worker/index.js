@@ -159,14 +159,12 @@ async function handleSetupIntent(request, env) {
     const intent = await stripeFetch(env, 'setup_intents', {
       body: stripeForm({
         usage: 'off_session',
-        // Use an explicit Payment Method Configuration so the surfaced
-        // methods are controlled here, not by whichever PMC happens to be
-        // the account default. allow_redirects=never keeps the flow embedded
-        // alongside Apple Pay / Google Pay / Link from the Express Checkout
-        // Element above. (Amazon Pay would need a return_url + redirect.)
-        'payment_method_configuration':               'pmc_1KRW9EDm3QhJszkTTfjUJM4x',
-        'automatic_payment_methods[enabled]':         'true',
-        'automatic_payment_methods[allow_redirects]': 'never',
+        // Drive the surfaced payment methods entirely from this PMC.
+        // automatic_payment_methods is intentionally omitted: passing
+        // `enabled=true` alongside a configuration overrides it and falls
+        // back to the account default (where Pay by Bank lives). Redirect
+        // gating now belongs to the PMC's own settings in Stripe.
+        'payment_method_configuration': 'pmc_1KRW9EDm3QhJszkTTfjUJM4x',
         metadata,
       }),
     });
