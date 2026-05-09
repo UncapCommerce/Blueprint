@@ -163,7 +163,7 @@ async function handleSetupIntent(request, env) {
         // automatic_payment_methods[enabled]=true alongside a PMC; the PMC's
         // own toggles still decide which methods are eligible. allow_redirects
         // keeps the flow embedded so we don't need a return_url.
-        'payment_method_configuration':               'pmc_1RoNmQDm3QhJszkTy2sIXpCw',
+        'payment_method_configuration':               'pmc_1KRW9EDm3QhJszkTTfjUJM4x',
         'automatic_payment_methods[enabled]':         'true',
         'automatic_payment_methods[allow_redirects]': 'never',
         metadata,
