@@ -927,7 +927,7 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
         }}
       >
         <Lock/>
-        {phase === 'submitting' ? 'Processing reservation…' : 'Reserve your spot · $500 refundable'}
+        {phase === 'submitting' ? 'Processing reservation…' : 'Reserve your spot · $500'}
       </button>
 
       <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,fontSize:12,color:'var(--uc-stone-300)',lineHeight:1.45}}>
