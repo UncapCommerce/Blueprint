@@ -167,13 +167,12 @@ async function handlePaymentIntent(request, env) {
         currency:             RESERVATION_CURRENCY,
         setup_future_usage:   'off_session',
         description:          'Blueprint reservation fee (fully refundable)',
-        // Pull whichever payment methods are enabled in the Stripe
-        // dashboard's default Payment Method Configuration.
-        // allow_redirects=never keeps the flow embedded; Apple Pay /
-        // Google Pay / Link still surface above via the Express Checkout
-        // Element, all of which complete in-page.
-        'automatic_payment_methods[enabled]':         'true',
-        'automatic_payment_methods[allow_redirects]': 'never',
+        // Hard-pin the surfaced methods so the "Bank" tab (us_bank_account /
+        // pay_by_bank with Stripe's $5-back promo) cannot reappear via PMC
+        // defaults or dashboard toggles. Apple Pay / Google Pay still
+        // surface as wallet variants on top of `card`.
+        'payment_method_types[0]': 'card',
+        'payment_method_types[1]': 'link',
         metadata,
       }),
     });
