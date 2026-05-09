@@ -8,7 +8,7 @@ function FitProcess() {
     'You\'re a wholesaler, distributor, manufacturer or unified commerce supplier',
   ];
   const notFit = [
-    'You\'re shopping for the cheapest quote',
+    'You\'re shopping on price, not outcome',
     'You\'re under $5M in revenue',
     'You are not the decision maker',
     'You\'re a purely DTC brand',
