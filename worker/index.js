@@ -159,12 +159,13 @@ async function handleSetupIntent(request, env) {
     const intent = await stripeFetch(env, 'setup_intents', {
       body: stripeForm({
         usage: 'off_session',
-        // Hard-pin the surfaced methods so Pay by Bank can't reappear via
-        // PMC defaults or dashboard toggles. Apple Pay / Google Pay still
-        // surface above via the Express Checkout Element on the client;
-        // those run on top of the card payment_method_type.
-        'payment_method_types[0]': 'card',
-        'payment_method_types[1]': 'link',
+        // Drive the surfaced methods from this PMC. Stripe requires
+        // automatic_payment_methods[enabled]=true alongside a PMC; the PMC's
+        // own toggles still decide which methods are eligible. allow_redirects
+        // keeps the flow embedded so we don't need a return_url.
+        'payment_method_configuration':               'pmc_1RoNmQDm3QhJszkTy2sIXpCw',
+        'automatic_payment_methods[enabled]':         'true',
+        'automatic_payment_methods[allow_redirects]': 'never',
         metadata,
       }),
     });
