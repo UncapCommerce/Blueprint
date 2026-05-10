@@ -173,7 +173,7 @@ function ErpHighlight({children}){
 //   5. The whole group tilts ~1.6deg so the line never sits horizontal.
 function PlatformMarker({children}){
   return (
-    <span style={{position:'relative',display:'inline-block',whiteSpace:'nowrap',padding:'0 .14em'}}>
+    <span style={{position:'relative',display:'inline-block',whiteSpace:'nowrap'}}>
       <svg
         aria-hidden="true"
         viewBox="0 0 220 56"
