@@ -21,3 +21,18 @@ function useIsMobile() {
   return isMobile;
 }
 window.useIsMobile = useIsMobile;
+
+// Live URL hash, including the leading "#" (or "" when none). Used by CTAs
+// and the build header so deep-link context like /#netsuite-magento survives
+// when the user navigates between landing and the quiz.
+function useHash() {
+  const get = () => (typeof window !== 'undefined' ? window.location.hash || '' : '');
+  const [hash, setHash] = React.useState(get);
+  React.useEffect(() => {
+    const onHash = () => setHash(window.location.hash || '');
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+  return hash;
+}
+window.useHash = useHash;

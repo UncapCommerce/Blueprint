@@ -61,6 +61,43 @@ function makeSessionId(){
   return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
 }
 
+// Maps the URL-hash slugs that Hero.jsx uses for marketing deep links to the
+// answer values the quiz stores internally. ERP keeps its short id (the same
+// id the quiz uses), platforms map to the full label string.
+const BUILD_PLATFORM_LABEL_BY_HASH = {
+  magento:        'Magento / Adobe Commerce',
+  bigcommerce:    'BigCommerce',
+  woocommerce:    'WooCommerce',
+  netsuite:       'NetSuite SuiteCommerce',
+  optimizely:     'Optimizely Commerce',
+  salesforce:     'Salesforce Commerce Cloud',
+  sap:            'SAP Commerce Cloud',
+  commercetools:  'commercetools',
+  vtex:           'VTEX',
+  custom:         'Custom-built',
+};
+const BUILD_ERP_IDS = new Set([
+  'netsuite','msdyn','acumatica','epicor','sage','sap','infor','odoo',
+]);
+
+function parseBuildHash(raw){
+  const slug = (raw || '').replace(/^#/, '').toLowerCase();
+  if (!slug) return { erp: '', platform: '' };
+  const dash = slug.indexOf('-');
+  if (dash > 0) {
+    const erpKey = slug.slice(0, dash);
+    const platKey = slug.slice(dash + 1);
+    return {
+      erp:      BUILD_ERP_IDS.has(erpKey) ? erpKey : '',
+      platform: BUILD_PLATFORM_LABEL_BY_HASH[platKey] || '',
+    };
+  }
+  // Single segment: prefer ERP (matches Hero's interpretation of /#netsuite).
+  if (BUILD_ERP_IDS.has(slug)) return { erp: slug, platform: '' };
+  if (BUILD_PLATFORM_LABEL_BY_HASH[slug]) return { erp: '', platform: BUILD_PLATFORM_LABEL_BY_HASH[slug] };
+  return { erp: '', platform: '' };
+}
+
 function QuizApp(){
   const [step, setStep] = React.useState(0);
   const [answers, setAnswers] = React.useState({
@@ -129,6 +166,22 @@ function QuizApp(){
     })();
     return () => { cancelled = true; };
   }, []);
+
+  // Pre-fill ERP / platform from a #erp-platform deep-link hash so visitors
+  // who came in from a targeted landing page don't have to re-enter what
+  // they already signaled. Runs once after the session restore completes,
+  // and only fills fields the saved session left empty.
+  React.useEffect(() => {
+    if (!sessionRestored) return;
+    const { erp, platform } = parseBuildHash(window.location.hash);
+    if (!erp && !platform) return;
+    setAnswers(prev => {
+      const next = {...prev};
+      if (erp && !prev.erp) next.erp = erp;
+      if (platform && !prev.platform) next.platform = platform;
+      return next;
+    });
+  }, [sessionRestored]);
 
   // Debounced save on every meaningful state change.
   React.useEffect(() => {
@@ -418,6 +471,9 @@ function QuizApp(){
 /* ------- Header w/ progress ------- */
 function QuizHeader({step, total, onBack, isConfirm}){
   const pct = isConfirm ? 100 : Math.round((step / total) * 100);
+  // Preserve the deep-link hash (#netsuite-magento etc) when bouncing back
+  // to the landing page so context survives the round trip.
+  const hash = window.useHash ? window.useHash() : '';
   return (
     <header style={{
       position:'sticky',top:0,zIndex:10,
@@ -441,7 +497,7 @@ function QuizHeader({step, total, onBack, isConfirm}){
         )}
 
         {/* Centered brand */}
-        <a href="/" style={{display:'flex',alignItems:'center',gap:12,textDecoration:'none',color:'var(--fg-1)'}}>
+        <a href={`/${hash}`} style={{display:'flex',alignItems:'center',gap:12,textDecoration:'none',color:'var(--fg-1)'}}>
           <img src="/assets/uncap-logo-black.svg" style={{height:20}} alt="Uncap"/>
           <span style={{height:14,width:1,background:'var(--line-1)'}}/>
           <span style={{fontFamily:'var(--font-display)',fontWeight:600,fontSize:13,letterSpacing:'-.01em'}}>Blueprint</span>
