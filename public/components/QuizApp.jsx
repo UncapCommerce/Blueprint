@@ -98,28 +98,50 @@ function parseBuildHash(raw){
   return { erp: '', platform: '' };
 }
 
-// Pulls the option matching `target` to the top of the list while preserving
-// the rest of the order. `keyOf` extracts the comparable value from each item
-// so this works for both ERP_OPTIONS (objects keyed by id) and PLATFORM_OPTIONS
-// (plain strings).
-function reorderFirst(list, target, keyOf){
-  if (!target) return list;
-  const idx = list.findIndex(item => keyOf(item) === target);
-  if (idx <= 0) return list;
-  const next = list.slice();
-  const [hit] = next.splice(idx, 1);
-  next.unshift(hit);
-  return next;
+// 8 input steps, then a single confirmation step at index === STEPS.length.
+// Defined at module scope so the QuizApp useState initializer can compute the
+// initial step / bypass set synchronously before first paint.
+const STEPS = ['erp', 'edition', 'platform', 'revenue', 'model', 'name', 'email', 'company'];
+const STEP_INDEX = { erp: 0, edition: 1, platform: 2, revenue: 3, model: 4, name: 5, email: 6, company: 7 };
+
+// Steps to skip entirely when the URL hash already provides the answer. The
+// erp step is bypassed when the hash signals an ERP (we still need the edition
+// step because options depend on the erp id). The platform step is bypassed
+// when the hash signals a platform.
+function bypassFromHint(hint){
+  const set = new Set();
+  if (hint && hint.erp)      set.add(STEP_INDEX.erp);
+  if (hint && hint.platform) set.add(STEP_INDEX.platform);
+  return set;
+}
+function firstNonBypassed(bypassed){
+  for (let i = 0; i < STEPS.length; i++) {
+    if (!bypassed.has(i)) return i;
+  }
+  return 0;
 }
 
 function QuizApp(){
-  const [step, setStep] = React.useState(0);
+  // Hash-signaled hint resolved once on first render. ERP id (eg 'netsuite')
+  // and platform display label (eg 'Magento / Adobe Commerce') populate
+  // straight into the answers state so the bypass+recap reads them without
+  // any further plumbing.
+  const initialHint = React.useMemo(
+    () => parseBuildHash(typeof window !== 'undefined' ? window.location.hash : ''),
+    []
+  );
+  // Set of step indices to skip. Locked in on mount so the visible step count
+  // stays stable for the whole session even if the user navigates within
+  // fragment anchors later.
+  const [bypassed] = React.useState(() => bypassFromHint(initialHint));
+
+  const [step, setStep] = React.useState(() => firstNonBypassed(bypassFromHint(initialHint)));
   const [answers, setAnswers] = React.useState({
-    erp: null,
-    edition: null,
-    platform: null,
-    revenue: null,
-    model: null,
+    erp:      initialHint.erp      || null,
+    edition:  null,
+    platform: initialHint.platform || null,
+    revenue:  null,
+    model:    null,
   });
   const [otherErp, setOtherErp] = React.useState('');
   const [otherPlatform, setOtherPlatform] = React.useState('');
@@ -139,10 +161,19 @@ function QuizApp(){
   const sessionIdRef = React.useRef(null);
   const [sessionRestored, setSessionRestored] = React.useState(false);
 
-  // 8 input steps, then a single confirmation step at index === STEPS.length.
-  const STEPS = ['erp', 'edition', 'platform', 'revenue', 'model', 'name', 'email', 'company'];
   const isConfirm = step >= STEPS.length;
-  const totalProgress = STEPS.length;
+  const visibleTotal = STEPS.length - bypassed.size;
+  const visibleStepNumber = (rawIdx) => {
+    let n = 0;
+    for (let i = 0; i < STEPS.length; i++) {
+      if (bypassed.has(i)) continue;
+      n++;
+      if (i === rawIdx) return n;
+    }
+    return visibleTotal;
+  };
+  const stepLabel = (rawIdx) => `Step ${visibleStepNumber(rawIdx)} of ${visibleTotal}`;
+  const firstStep = firstNonBypassed(bypassed);
 
   // Mount-once: read/create the session id and rehydrate state from KV.
   React.useEffect(() => {
@@ -161,25 +192,19 @@ function QuizApp(){
             const s = data && data.ok && data.state;
             if (s) {
               if (Number.isFinite(s.step)) {
-                setStep(Math.max(0, Math.min(STEPS.length, s.step)));
+                // Clamp the resumed step away from any bypassed slot so we
+                // never land the user back on a step the hash skipped.
+                let resumed = Math.max(0, Math.min(STEPS.length, s.step));
+                while (resumed < STEPS.length && bypassed.has(resumed)) resumed++;
+                setStep(resumed);
               }
               if (s.answers) {
-                // Drop a saved erp/platform answer that exactly matches the
-                // URL-hash hint when the rest of the session is otherwise
-                // empty. Older builds auto-pre-filled these fields, so a
-                // returning visitor would see a black "selected" highlight on
-                // an option they never actually clicked. Real progress (any
-                // other answer, contact field, or step beyond 0) leaves the
-                // saved answers untouched.
-                const hint = parseBuildHash(typeof window !== 'undefined' ? window.location.hash : '');
-                const a = s.answers || {};
-                const c = s.contact || {};
-                const noProgress = !Number.isFinite(s.step) || s.step === 0;
-                const otherAnswersEmpty = !a.edition && !a.revenue && !a.model && !c.name && !c.email && !c.company;
-                if (noProgress && otherAnswersEmpty) {
-                  if (hint.erp      && a.erp      === hint.erp)      delete a.erp;
-                  if (hint.platform && a.platform === hint.platform) delete a.platform;
-                }
+                // Hash hints win for bypassed fields: a returning visitor on
+                // /#netsuite shouldn't have a previously-saved different ERP
+                // resurrected onto a step they're now skipping.
+                const a = {...s.answers};
+                if (bypassed.has(STEP_INDEX.erp))      delete a.erp;
+                if (bypassed.has(STEP_INDEX.platform)) delete a.platform;
                 setAnswers(prev => ({...prev, ...a}));
               }
               if (typeof s.otherErp === 'string') setOtherErp(s.otherErp);
@@ -198,16 +223,6 @@ function QuizApp(){
     })();
     return () => { cancelled = true; };
   }, []);
-
-  // The deep-link hash also reorders the ERP / platform option grids so the
-  // signaled choice surfaces first. Stored once on first render so reorder
-  // is stable across re-renders mid-quiz.
-  const buildHint = React.useMemo(
-    () => parseBuildHash(typeof window !== 'undefined' ? window.location.hash : ''),
-    []
-  );
-  const erpOptions      = React.useMemo(() => reorderFirst(ERP_OPTIONS,      buildHint.erp,      o => o.id), [buildHint.erp]);
-  const platformOptions = React.useMemo(() => reorderFirst(PLATFORM_OPTIONS, buildHint.platform, v => v),    [buildHint.platform]);
 
   // Debounced save on every meaningful state change.
   React.useEffect(() => {
@@ -268,16 +283,22 @@ function QuizApp(){
     })();
   };
 
-  const advance = () => setStep(s => s + 1);
+  const advance = () => setStep(s => {
+    let next = s + 1;
+    while (next < STEPS.length && bypassed.has(next)) next++;
+    return next;
+  });
   const back = () => {
     // Invalidate the pre-fetched PaymentIntent only when back-nav lands the
     // user back inside the quiz answer-choosing range (steps 0–4): the
     // PaymentIntent metadata is built from those answers, so they need to
     // refire if the user can change them. Bouncing within contact /
     // confirmation steps preserves the pre-fetch.
-    const next = Math.max(0, step - 1);
-    if (next < 5) setupPromiseRef.current = null;
-    setStep(next);
+    let prev = step - 1;
+    while (prev >= firstStep && bypassed.has(prev)) prev--;
+    if (prev < firstStep) return;
+    if (prev < 5) setupPromiseRef.current = null;
+    setStep(prev);
   };
 
   const setContactField = (key, value) => setContact(prev => ({...prev, [key]: value}));
@@ -297,9 +318,10 @@ function QuizApp(){
       display:'flex',flexDirection:'column',
     }}>
       <QuizHeader
-        step={step}
-        total={totalProgress}
+        currentNumber={isConfirm ? visibleTotal : visibleStepNumber(step)}
+        total={visibleTotal}
         onBack={back}
+        canGoBack={step > firstStep}
         isConfirm={isConfirm}
       />
 
@@ -313,12 +335,12 @@ function QuizApp(){
         <div style={{width:'100%',maxWidth:680}}>
           {step === 0 && (
             <Step
-              eyebrow="Step 1 of 8"
+              eyebrow={stepLabel(0)}
               title="What ERP do you run on?"
               sub="We'll tailor the migration plan around your system of record."
             >
               <OptionGrid
-                options={erpOptions.map(o=>({value:o.id,label:o.label}))}
+                options={ERP_OPTIONS.map(o=>({value:o.id,label:o.label}))}
                 selected={answers.erp}
                 onChoose={(v)=>choose('erp', v)}
               />
@@ -327,7 +349,7 @@ function QuizApp(){
 
           {step === 1 && (
             <Step
-              eyebrow="Step 2 of 8"
+              eyebrow={stepLabel(1)}
               title={editionTitle(answers.erp)}
               sub="Different editions integrate very differently with Shopify."
             >
@@ -356,7 +378,7 @@ function QuizApp(){
 
           {step === 2 && (
             <Step
-              eyebrow="Step 3 of 8"
+              eyebrow={stepLabel(2)}
               title="What ecommerce platform are you on today?"
               sub="Where you're migrating from shapes the entire data plan."
             >
@@ -371,7 +393,7 @@ function QuizApp(){
                 />
               ) : (
                 <OptionGrid
-                  options={platformOptions.map(o=>({value:o,label:o}))}
+                  options={PLATFORM_OPTIONS.map(o=>({value:o,label:o}))}
                   selected={answers.platform}
                   onChoose={(v)=>{
                     if (v === 'Other') {
@@ -388,7 +410,7 @@ function QuizApp(){
 
           {step === 3 && (
             <Step
-              eyebrow="Step 4 of 8"
+              eyebrow={stepLabel(3)}
               title="What's your annual online revenue?"
               sub="Helps us calibrate scale: catalog, traffic, B2B accounts."
             >
@@ -404,7 +426,7 @@ function QuizApp(){
 
           {step === 4 && (
             <Step
-              eyebrow="Step 5 of 8"
+              eyebrow={stepLabel(4)}
               title="Which best describes your model?"
             >
               <OptionGrid
@@ -421,7 +443,7 @@ function QuizApp(){
 
           {step === 5 && (
             <Step
-              eyebrow="Step 6 of 8"
+              eyebrow={stepLabel(5)}
               title="What's your work email?"
               sub="We'll send the Blueprint kickoff details here."
             >
@@ -444,7 +466,7 @@ function QuizApp(){
 
           {step === 6 && (
             <Step
-              eyebrow="Step 7 of 8"
+              eyebrow={stepLabel(6)}
               title="What's your name?"
               sub="So we know who to address on the kickoff call."
             >
@@ -462,7 +484,7 @@ function QuizApp(){
 
           {step === 7 && (
             <Step
-              eyebrow="Step 8 of 8"
+              eyebrow={stepLabel(7)}
               title="What company are you with?"
               sub="Surfaced in the Blueprint and on the kickoff invite."
             >
@@ -495,8 +517,10 @@ function QuizApp(){
 }
 
 /* ------- Header w/ progress ------- */
-function QuizHeader({step, total, onBack, isConfirm}){
-  const pct = isConfirm ? 100 : Math.round((step / total) * 100);
+function QuizHeader({currentNumber, total, onBack, canGoBack, isConfirm}){
+  // currentNumber is 1-based (e.g. 1 of 6); pct subtracts one so the first
+  // step renders an empty bar instead of jumping to 1/total filled.
+  const pct = isConfirm ? 100 : Math.round(((currentNumber - 1) / total) * 100);
   // Preserve the deep-link hash (#netsuite-magento etc) when bouncing back
   // to the landing page so context survives the round trip.
   const hash = window.useHash ? window.useHash() : '';
@@ -509,7 +533,7 @@ function QuizHeader({step, total, onBack, isConfirm}){
     }}>
       <div style={{maxWidth:1280,margin:'0 auto',padding:'14px 24px 16px',position:'relative',display:'flex',flexDirection:'column',alignItems:'center',gap:12}}>
         {/* Back button: absolute top-left so it doesn't disrupt centering */}
-        {step > 0 && (
+        {canGoBack && (
           <button onClick={onBack} style={{
             position:'absolute',left:24,top:'50%',transform:'translateY(-50%)',
             background:'transparent',border:'none',cursor:'pointer',
@@ -539,7 +563,7 @@ function QuizHeader({step, total, onBack, isConfirm}){
             }}/>
           </div>
           <span style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--fg-3)',letterSpacing:'.06em',whiteSpace:'nowrap'}}>
-            {isConfirm ? 'COMPLETE' : `${Math.min(step+1,total)} / ${total}`}
+            {isConfirm ? 'COMPLETE' : `${Math.min(currentNumber, total)} / ${total}`}
           </span>
         </div>
       </div>
