@@ -62,7 +62,7 @@ function Hero() {
     ? (<React.Fragment>Migrating from <PlatformMarker>{heroPlatform} to Shopify?</PlatformMarker> Stop gambling six figures on a migration you can't see coming.</React.Fragment>)
     : `Migrating to Shopify? Stop gambling six figures on a migration you can't see coming.`;
   const chipNode = heroErp
-    ? (<React.Fragment>For operators running <ErpHighlight>{heroErp}</ErpHighlight>.</React.Fragment>)
+    ? (<React.Fragment>For businesses with <ErpHighlight>{heroErp}</ErpHighlight> at the core.</React.Fragment>)
     : `Built for operators who've been burned before.`;
   return (
     <section style={{background:'var(--uc-cream)',padding: isMobile ? '32px 18px 56px' : '72px 32px 96px',position:'relative',overflow:'hidden'}}>
