@@ -59,7 +59,7 @@ function Hero() {
   }, []);
   const { erp: heroErp, platform: heroPlatform } = parseHeroHash(hash);
   const headlineNode = heroPlatform
-    ? (<React.Fragment>Migrating from <PlatformMarker>{heroPlatform}</PlatformMarker> to Shopify? Stop gambling six figures on a migration you can't see coming.</React.Fragment>)
+    ? (<React.Fragment>Migrating from <PlatformMarker>{heroPlatform} to Shopify</PlatformMarker>? Stop gambling six figures on a migration you can't see coming.</React.Fragment>)
     : `Migrating to Shopify? Stop gambling six figures on a migration you can't see coming.`;
   const chipNode = heroErp
     ? (<React.Fragment>For operators running <ErpHighlight>{heroErp}</ErpHighlight>.</React.Fragment>)
@@ -159,54 +159,66 @@ function ErpHighlight({children}){
   );
 }
 
-// Hand-marker highlight over the platform name in the H1. Built to read as a
-// real felt-tip pass: a wide round-capped stroke that overshoots the word on
-// both sides, layered with a darker pass on top to simulate the second brush
-// of a refilled marker, all warped by an feTurbulence displacement filter so
-// the edges have real ink-bleed irregularity instead of a flat curve. The
-// whole thing tilts ~1.5deg so it never reads as horizontal.
+// Hand-marker highlight over the platform name in the H1. Built to read like
+// real felt-tip ink on paper:
+//   1. The main shape is a single irregular path that overshoots the word and
+//      has a hand-pulled top/bottom edge (different curves on each side, with
+//      a tail that thins out on the right where the marker lifted).
+//   2. Fill is a horizontal stripe pattern, not a flat color, so you see the
+//      parallel "fiber tracks" a felt tip leaves in the direction of motion.
+//   3. An feTurbulence + feDisplacementMap filter warps every edge with real
+//      noise so nothing reads as a perfect curve.
+//   4. A second much thinner streak above the main body simulates the dry
+//      first contact stroke before ink fully flowed.
+//   5. The whole group tilts ~1.6deg so the line never sits horizontal.
 function PlatformMarker({children}){
   return (
-    <span style={{position:'relative',display:'inline-block',whiteSpace:'nowrap',padding:'0 .12em'}}>
+    <span style={{position:'relative',display:'inline-block',whiteSpace:'nowrap',padding:'0 .14em'}}>
       <svg
         aria-hidden="true"
-        viewBox="0 0 200 60"
+        viewBox="0 0 220 56"
         preserveAspectRatio="none"
-        style={{position:'absolute',left:'-0.18em',right:'-0.18em',top:'-0.04em',width:'calc(100% + 0.36em)',height:'calc(100% + 0.08em)',zIndex:0,pointerEvents:'none'}}
+        style={{position:'absolute',left:'-0.22em',right:'-0.22em',top:'-0.06em',width:'calc(100% + 0.44em)',height:'calc(100% + 0.12em)',zIndex:0,pointerEvents:'none'}}
       >
         <defs>
-          <filter id="uc-marker-rough" x="-6%" y="-30%" width="112%" height="160%">
-            <feTurbulence type="fractalNoise" baseFrequency="0.035 0.85" numOctaves="2" seed="9" result="n"/>
-            <feDisplacementMap in="SourceGraphic" in2="n" scale="5"/>
+          {/* Horizontal fiber streaks — what a real marker leaves on paper. */}
+          <pattern id="uc-marker-fibers" x="0" y="0" width="220" height="3" patternUnits="userSpaceOnUse">
+            <rect width="220" height="3" fill="var(--uc-signal)"/>
+            <rect x="0" y="0"   width="220" height="0.45" fill="rgba(255,255,255,0.18)"/>
+            <rect x="0" y="2.55" width="220" height="0.35" fill="rgba(0,0,0,0.05)"/>
+          </pattern>
+          {/* Edge roughening: real ink bleed never traces a smooth Bezier. */}
+          <filter id="uc-marker-edge" x="-5%" y="-25%" width="110%" height="150%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.045 0.75" numOctaves="2" seed="13" result="n"/>
+            <feDisplacementMap in="SourceGraphic" in2="n" scale="3.6"/>
           </filter>
         </defs>
-        <g filter="url(#uc-marker-rough)" transform="rotate(-1.4 100 30)">
-          {/* base sweep: wide, soft, slightly low — first pass of the marker */}
+        <g filter="url(#uc-marker-edge)" transform="rotate(-1.6 110 28)">
+          {/* dry first-contact streak — narrow, sits above the main body */}
           <path
-            d="M3 22 C 45 18, 95 30, 140 23 S 192 19, 198 24"
+            d="M9 13 C 60 11, 130 16, 200 12"
             stroke="var(--uc-signal)"
-            strokeWidth="42"
+            strokeWidth="3.5"
             strokeLinecap="round"
             fill="none"
-            opacity="0.55"
+            opacity="0.45"
           />
-          {/* return pass: tighter band, darker, where the felt re-soaked the line */}
+          {/* main body: irregular hand-pulled rectangle with a thinning right tail */}
           <path
-            d="M6 31 C 55 35, 110 27, 152 33 S 188 36, 195 31"
-            stroke="var(--uc-signal)"
-            strokeWidth="26"
-            strokeLinecap="round"
-            fill="none"
-            opacity="0.7"
+            d="M4 17
+               C 55 13, 105 19, 158 15
+               S 210 18, 217 21
+               L 213 41
+               C 188 47, 150 43, 110 45
+               S 35 46, 6 41
+               Z"
+            fill="url(#uc-marker-fibers)"
           />
-          {/* dry trailing edge: thin streak that breaks up the right side */}
+          {/* overlap pass on the left where the marker pressed harder at start */}
           <path
-            d="M150 18 C 165 21, 178 17, 192 22"
-            stroke="var(--uc-signal)"
-            strokeWidth="6"
-            strokeLinecap="round"
-            fill="none"
-            opacity="0.5"
+            d="M5 21 C 25 17, 55 24, 70 20 L 68 38 C 50 41, 22 39, 6 36 Z"
+            fill="var(--uc-signal)"
+            opacity="0.35"
           />
         </g>
       </svg>
