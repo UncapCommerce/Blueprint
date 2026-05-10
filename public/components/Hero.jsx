@@ -159,24 +159,56 @@ function ErpHighlight({children}){
   );
 }
 
-// Hand-marker highlight over the platform name in the H1. Same electric
-// lime as the NEW chip, semi-transparent so the text reads through. The SVG
-// is a roughly rectangular blob with wavy top/bottom edges so it looks
-// pulled by hand.
+// Hand-marker highlight over the platform name in the H1. Built to read as a
+// real felt-tip pass: a wide round-capped stroke that overshoots the word on
+// both sides, layered with a darker pass on top to simulate the second brush
+// of a refilled marker, all warped by an feTurbulence displacement filter so
+// the edges have real ink-bleed irregularity instead of a flat curve. The
+// whole thing tilts ~1.5deg so it never reads as horizontal.
 function PlatformMarker({children}){
   return (
-    <span style={{position:'relative',display:'inline-block',whiteSpace:'nowrap'}}>
+    <span style={{position:'relative',display:'inline-block',whiteSpace:'nowrap',padding:'0 .12em'}}>
       <svg
         aria-hidden="true"
         viewBox="0 0 200 60"
         preserveAspectRatio="none"
-        style={{position:'absolute',left:-8,right:-8,top:'4%',width:'calc(100% + 16px)',height:'92%',zIndex:0,pointerEvents:'none'}}
+        style={{position:'absolute',left:'-0.18em',right:'-0.18em',top:'-0.04em',width:'calc(100% + 0.36em)',height:'calc(100% + 0.08em)',zIndex:0,pointerEvents:'none'}}
       >
-        <path
-          d="M4 9 C 40 3, 80 14, 120 6 S 178 3, 196 10 L 195 51 C 162 56, 110 47, 68 53 S 8 55, 5 49 Z"
-          fill="var(--uc-signal)"
-          opacity="0.85"
-        />
+        <defs>
+          <filter id="uc-marker-rough" x="-6%" y="-30%" width="112%" height="160%">
+            <feTurbulence type="fractalNoise" baseFrequency="0.035 0.85" numOctaves="2" seed="9" result="n"/>
+            <feDisplacementMap in="SourceGraphic" in2="n" scale="5"/>
+          </filter>
+        </defs>
+        <g filter="url(#uc-marker-rough)" transform="rotate(-1.4 100 30)">
+          {/* base sweep: wide, soft, slightly low — first pass of the marker */}
+          <path
+            d="M3 22 C 45 18, 95 30, 140 23 S 192 19, 198 24"
+            stroke="var(--uc-signal)"
+            strokeWidth="42"
+            strokeLinecap="round"
+            fill="none"
+            opacity="0.55"
+          />
+          {/* return pass: tighter band, darker, where the felt re-soaked the line */}
+          <path
+            d="M6 31 C 55 35, 110 27, 152 33 S 188 36, 195 31"
+            stroke="var(--uc-signal)"
+            strokeWidth="26"
+            strokeLinecap="round"
+            fill="none"
+            opacity="0.7"
+          />
+          {/* dry trailing edge: thin streak that breaks up the right side */}
+          <path
+            d="M150 18 C 165 21, 178 17, 192 22"
+            stroke="var(--uc-signal)"
+            strokeWidth="6"
+            strokeLinecap="round"
+            fill="none"
+            opacity="0.5"
+          />
+        </g>
       </svg>
       <span style={{position:'relative',zIndex:1}}>{children}</span>
     </span>
