@@ -163,7 +163,25 @@ function QuizApp(){
               if (Number.isFinite(s.step)) {
                 setStep(Math.max(0, Math.min(STEPS.length, s.step)));
               }
-              if (s.answers) setAnswers(prev => ({...prev, ...s.answers}));
+              if (s.answers) {
+                // Drop a saved erp/platform answer that exactly matches the
+                // URL-hash hint when the rest of the session is otherwise
+                // empty. Older builds auto-pre-filled these fields, so a
+                // returning visitor would see a black "selected" highlight on
+                // an option they never actually clicked. Real progress (any
+                // other answer, contact field, or step beyond 0) leaves the
+                // saved answers untouched.
+                const hint = parseBuildHash(typeof window !== 'undefined' ? window.location.hash : '');
+                const a = s.answers || {};
+                const c = s.contact || {};
+                const noProgress = !Number.isFinite(s.step) || s.step === 0;
+                const otherAnswersEmpty = !a.edition && !a.revenue && !a.model && !c.name && !c.email && !c.company;
+                if (noProgress && otherAnswersEmpty) {
+                  if (hint.erp      && a.erp      === hint.erp)      delete a.erp;
+                  if (hint.platform && a.platform === hint.platform) delete a.platform;
+                }
+                setAnswers(prev => ({...prev, ...a}));
+              }
               if (typeof s.otherErp === 'string') setOtherErp(s.otherErp);
               if (typeof s.otherPlatform === 'string') setOtherPlatform(s.otherPlatform);
               if (s.contact) setContact(prev => ({...prev, ...s.contact}));
