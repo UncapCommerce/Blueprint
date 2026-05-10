@@ -133,59 +133,31 @@ function ErpHighlight({children}){
 //   4. A second much thinner streak above the main body simulates the dry
 //      first contact stroke before ink fully flowed.
 //   5. The whole group tilts ~1.6deg so the line never sits horizontal.
+// Hand-marker highlight rendered as a data-URI background so it wraps with
+// the text on narrow viewports (long platform names like "Salesforce Commerce
+// Cloud" used to overflow the H1 with the previous absolute-SVG approach).
+// The SVG shape itself is an irregular hand-drawn silhouette stretched to fit
+// each line via preserveAspectRatio=none; box-decoration-break:clone lets the
+// background paint per-line so wrapping never produces one giant blob.
+const PLATFORM_MARKER_SVG =
+  "%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 40' preserveAspectRatio='none'%3E" +
+  "%3Cpath d='M3 7 C 45 3 95 11 145 6 S 195 3 197 9 L 196 33 C 158 38 110 31 65 35 S 8 37 4 32 Z' fill='%23E8FF52'/%3E" +
+  "%3Cpath d='M6 11 C 60 8 130 14 192 10' stroke='%23E8FF52' stroke-width='2' stroke-linecap='round' fill='none' opacity='0.55'/%3E" +
+  "%3C/svg%3E";
+
 function PlatformMarker({children}){
   return (
-    <span style={{position:'relative',display:'inline-block',whiteSpace:'nowrap'}}>
-      <svg
-        aria-hidden="true"
-        viewBox="0 0 220 56"
-        preserveAspectRatio="none"
-        style={{position:'absolute',left:'-0.22em',right:'-0.22em',top:'-0.06em',width:'calc(100% + 0.44em)',height:'calc(100% + 0.12em)',zIndex:0,pointerEvents:'none'}}
-      >
-        <defs>
-          {/* Horizontal fiber streaks — what a real marker leaves on paper. */}
-          <pattern id="uc-marker-fibers" x="0" y="0" width="220" height="3" patternUnits="userSpaceOnUse">
-            <rect width="220" height="3" fill="var(--uc-signal)"/>
-            <rect x="0" y="0"   width="220" height="0.45" fill="rgba(255,255,255,0.18)"/>
-            <rect x="0" y="2.55" width="220" height="0.35" fill="rgba(0,0,0,0.05)"/>
-          </pattern>
-          {/* Edge roughening: real ink bleed never traces a smooth Bezier. */}
-          <filter id="uc-marker-edge" x="-5%" y="-25%" width="110%" height="150%">
-            <feTurbulence type="fractalNoise" baseFrequency="0.045 0.75" numOctaves="2" seed="13" result="n"/>
-            <feDisplacementMap in="SourceGraphic" in2="n" scale="3.6"/>
-          </filter>
-        </defs>
-        <g filter="url(#uc-marker-edge)" transform="rotate(-1.6 110 28)">
-          {/* dry first-contact streak — narrow, sits above the main body */}
-          <path
-            d="M9 13 C 60 11, 130 16, 200 12"
-            stroke="var(--uc-signal)"
-            strokeWidth="3.5"
-            strokeLinecap="round"
-            fill="none"
-            opacity="0.45"
-          />
-          {/* main body: irregular hand-pulled rectangle with a thinning right tail */}
-          <path
-            d="M4 17
-               C 55 13, 105 19, 158 15
-               S 210 18, 217 21
-               L 213 41
-               C 188 47, 150 43, 110 45
-               S 35 46, 6 41
-               Z"
-            fill="url(#uc-marker-fibers)"
-          />
-          {/* overlap pass on the left where the marker pressed harder at start */}
-          <path
-            d="M5 21 C 25 17, 55 24, 70 20 L 68 38 C 50 41, 22 39, 6 36 Z"
-            fill="var(--uc-signal)"
-            opacity="0.35"
-          />
-        </g>
-      </svg>
-      <span style={{position:'relative',zIndex:1}}>{children}</span>
-    </span>
+    <span style={{
+      backgroundImage: `url("data:image/svg+xml;utf8,${PLATFORM_MARKER_SVG}")`,
+      backgroundRepeat: 'no-repeat',
+      backgroundSize: '100% 100%',
+      WebkitBoxDecorationBreak: 'clone',
+      boxDecorationBreak: 'clone',
+      padding: '0 .12em',
+      // Allow wrapping on narrow viewports; box-decoration-break:clone repeats
+      // the marker on each line so the hand-drawn shape survives the wrap.
+      whiteSpace: 'normal',
+    }}>{children}</span>
   );
 }
 
