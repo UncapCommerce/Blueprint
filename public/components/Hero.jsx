@@ -159,9 +159,10 @@ function ErpHighlight({children}){
   );
 }
 
-// Hand-marker highlight over the platform name in the H1. Shopify-partner
-// green, semi-transparent so the text reads through. The SVG is a roughly
-// rectangular blob with wavy top/bottom edges so it looks pulled by hand.
+// Hand-marker highlight over the platform name in the H1. Same electric
+// lime as the NEW chip, semi-transparent so the text reads through. The SVG
+// is a roughly rectangular blob with wavy top/bottom edges so it looks
+// pulled by hand.
 function PlatformMarker({children}){
   return (
     <span style={{position:'relative',display:'inline-block',whiteSpace:'nowrap'}}>
@@ -173,8 +174,8 @@ function PlatformMarker({children}){
       >
         <path
           d="M4 9 C 40 3, 80 14, 120 6 S 178 3, 196 10 L 195 51 C 162 56, 110 47, 68 53 S 8 55, 5 49 Z"
-          fill="var(--uc-shopify)"
-          opacity="0.6"
+          fill="var(--uc-signal)"
+          opacity="0.85"
         />
       </svg>
       <span style={{position:'relative',zIndex:1}}>{children}</span>
