@@ -124,22 +124,32 @@ function Hero() {
   );
 }
 
-// Bold ERP name with a hand-drawn green underline beneath it. The SVG is a
-// gentle wobble that stretches to the text width via preserveAspectRatio=none.
+// Bold ERP name with a brushed signal-yellow underline beneath it. Two
+// overlapping strokes suggest brush texture: a wider, lighter base + a
+// crisper top pass. preserveAspectRatio=none stretches both to the ERP name.
 function ErpHighlight({children}){
   return (
-    <span style={{position:'relative',display:'inline-block',fontWeight:700,whiteSpace:'nowrap',paddingBottom:4}}>
+    <span style={{position:'relative',display:'inline-block',fontWeight:700,whiteSpace:'nowrap',paddingBottom:6}}>
       {children}
       <svg
         aria-hidden="true"
-        viewBox="0 0 120 8"
+        viewBox="0 0 120 12"
         preserveAspectRatio="none"
-        style={{position:'absolute',left:0,right:0,bottom:0,width:'100%',height:6,pointerEvents:'none',overflow:'visible'}}
+        style={{position:'absolute',left:-2,right:-2,bottom:-1,width:'calc(100% + 4px)',height:10,pointerEvents:'none',overflow:'visible'}}
       >
         <path
-          d="M2 5 C 22 1.5, 48 7.5, 68 4 S 104 1, 118 4.2"
-          stroke="var(--uc-shopify)"
-          strokeWidth="2"
+          d="M2 6.5 C 22 2, 48 10, 68 5.5 S 104 1.5, 118 6"
+          stroke="var(--uc-signal)"
+          strokeWidth="6"
+          fill="none"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          opacity="0.55"
+        />
+        <path
+          d="M3 6 C 22 2.8, 48 9.4, 68 5.6 S 104 2.2, 117 5.8"
+          stroke="var(--uc-signal)"
+          strokeWidth="3.5"
           fill="none"
           strokeLinecap="round"
           strokeLinejoin="round"
