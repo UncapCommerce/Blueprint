@@ -1,4 +1,11 @@
 // Hero.jsx: Above-the-fold conversion module (responsive)
+// URL hash drives two things independently:
+//   /#<platform>          → just the H1's "Migrating from X" lead-in
+//   /#<erp>               → just the chip's "For operators running X" line
+//   /#<erp>-<platform>    → both (chip + H1)
+// Slugs match the quiz's ERP_OPTIONS and PLATFORM_OPTIONS keys. When a single
+// segment matches both an ERP and a platform (eg. `netsuite`, `sap`), the ERP
+// interpretation wins because the chip is the higher-impact targeting.
 const HERO_PLATFORM_BY_HASH = {
   magento:        'Magento',
   bigcommerce:    'BigCommerce',
@@ -12,23 +19,51 @@ const HERO_PLATFORM_BY_HASH = {
   custom:         'a custom platform',
 };
 
+const HERO_ERP_BY_HASH = {
+  netsuite:   'NetSuite',
+  msdyn:      'Microsoft Dynamics',
+  acumatica:  'Acumatica',
+  epicor:     'Epicor',
+  sage:       'Sage',
+  sap:        'SAP',
+  infor:      'Infor',
+  odoo:       'Odoo',
+};
+
+function parseHeroHash(raw) {
+  const slug = (raw || '').replace(/^#/, '').toLowerCase();
+  if (!slug) return { erp: '', platform: '' };
+  const dash = slug.indexOf('-');
+  if (dash > 0) {
+    return {
+      erp:      HERO_ERP_BY_HASH[slug.slice(0, dash)] || '',
+      platform: HERO_PLATFORM_BY_HASH[slug.slice(dash + 1)] || '',
+    };
+  }
+  if (HERO_ERP_BY_HASH[slug])      return { erp: HERO_ERP_BY_HASH[slug], platform: '' };
+  if (HERO_PLATFORM_BY_HASH[slug]) return { erp: '', platform: HERO_PLATFORM_BY_HASH[slug] };
+  return { erp: '', platform: '' };
+}
+
 function Hero() {
   const isMobile = window.useIsMobile ? window.useIsMobile() : false;
   // Re-render on hash changes so deep links like /#magento update the H1
   // without a full reload (e.g. when a CTA links between #anchors).
   const [hash, setHash] = React.useState(() =>
-    (typeof window !== 'undefined' ? window.location.hash || '' : '')
-      .replace(/^#/, '').toLowerCase()
+    typeof window !== 'undefined' ? window.location.hash || '' : ''
   );
   React.useEffect(() => {
-    const onHash = () => setHash((window.location.hash || '').replace(/^#/, '').toLowerCase());
+    const onHash = () => setHash(window.location.hash || '');
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
-  const heroPlatform = HERO_PLATFORM_BY_HASH[hash] || '';
+  const { erp: heroErp, platform: heroPlatform } = parseHeroHash(hash);
   const headline = heroPlatform
     ? `Migrating from ${heroPlatform} to Shopify? Stop gambling six figures on a migration you can't see coming.`
     : `Migrating to Shopify? Stop gambling six figures on a migration you can't see coming.`;
+  const chipLine = heroErp
+    ? `For operators running ${heroErp}.`
+    : `Built for operators who've been burned before.`;
   return (
     <section style={{background:'var(--uc-cream)',padding: isMobile ? '32px 18px 56px' : '72px 32px 96px',position:'relative',overflow:'hidden'}}>
       {!isMobile && (
@@ -51,7 +86,7 @@ function Hero() {
           justifyContent: isMobile ? 'center' : 'flex-start',
         }}>
           <span style={{display:'inline-flex',alignItems:'center',gap:6,padding:'3px 8px',background:'var(--uc-signal)',borderRadius:3,fontSize:11,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',flexShrink:0}}>New</span>
-          <span style={{fontSize: isMobile ? 12 : 13,fontWeight:500,color:'var(--fg-1)',whiteSpace:'normal',lineHeight:1.3,textAlign: isMobile ? 'center' : 'left'}}>Built for operators who've been burned before.</span>
+          <span style={{fontSize: isMobile ? 12 : 13,fontWeight:500,color:'var(--fg-1)',whiteSpace:'normal',lineHeight:1.3,textAlign: isMobile ? 'center' : 'left'}}>{chipLine}</span>
         </div>
 
         <div style={{display:'grid',gridTemplateColumns: isMobile ? '1fr' : '1.35fr 1fr',gap: isMobile ? 28 : 80,alignItems: isMobile ? 'start' : 'end'}}>
