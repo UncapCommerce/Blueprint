@@ -59,7 +59,7 @@ function Hero() {
   }, []);
   const { erp: heroErp, platform: heroPlatform } = parseHeroHash(hash);
   const headlineNode = heroPlatform
-    ? (<React.Fragment>Migrating from <PlatformMarker>{heroPlatform} to Shopify</PlatformMarker>? Stop gambling six figures on a migration you can't see coming.</React.Fragment>)
+    ? (<React.Fragment>Migrating from <PlatformMarker>{heroPlatform} to Shopify?</PlatformMarker> Stop gambling six figures on a migration you can't see coming.</React.Fragment>)
     : `Migrating to Shopify? Stop gambling six figures on a migration you can't see coming.`;
   const chipNode = heroErp
     ? (<React.Fragment>For operators running <ErpHighlight>{heroErp}</ErpHighlight>.</React.Fragment>)
