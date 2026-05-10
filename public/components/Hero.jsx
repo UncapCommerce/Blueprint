@@ -58,8 +58,8 @@ function Hero() {
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
   const { erp: heroErp, platform: heroPlatform } = parseHeroHash(hash);
-  const headline = heroPlatform
-    ? `Migrating from ${heroPlatform} to Shopify? Stop gambling six figures on a migration you can't see coming.`
+  const headlineNode = heroPlatform
+    ? (<React.Fragment>Migrating from <PlatformMarker>{heroPlatform}</PlatformMarker> to Shopify? Stop gambling six figures on a migration you can't see coming.</React.Fragment>)
     : `Migrating to Shopify? Stop gambling six figures on a migration you can't see coming.`;
   const chipNode = heroErp
     ? (<React.Fragment>For operators running <ErpHighlight>{heroErp}</ErpHighlight>.</React.Fragment>)
@@ -92,7 +92,7 @@ function Hero() {
         <div style={{display:'grid',gridTemplateColumns: isMobile ? '1fr' : '1.35fr 1fr',gap: isMobile ? 28 : 80,alignItems: isMobile ? 'start' : 'end'}}>
           <div>
             <h1 style={{fontFamily:'var(--font-hero)',fontWeight:800,fontSize: isMobile ? 'clamp(30px, 8.5vw, 40px)' : 'clamp(48px, 5.6vw, 88px)',lineHeight: isMobile ? 1.05 : 1.0,letterSpacing:'-.035em',color:'var(--fg-1)',margin: isMobile ? '0 0 16px' : '0 0 28px',textWrap:'balance'}}>
-              {headline}
+              {headlineNode}
             </h1>
             <p style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:500,fontSize: isMobile ? 'clamp(16px, 4.4vw, 19px)' : 'clamp(22px, 2vw, 28px)',lineHeight:1.35,letterSpacing:'-.015em',color:'var(--fg-2)',margin: isMobile ? '0 0 24px' : '0 0 40px',maxWidth:640}}>
               Everything you need to migrate to Shopify. Without the guesswork. $7K flat. Yours to keep.
@@ -155,6 +155,29 @@ function ErpHighlight({children}){
           strokeLinejoin="round"
         />
       </svg>
+    </span>
+  );
+}
+
+// Hand-marker highlight over the platform name in the H1. Shopify-partner
+// green, semi-transparent so the text reads through. The SVG is a roughly
+// rectangular blob with wavy top/bottom edges so it looks pulled by hand.
+function PlatformMarker({children}){
+  return (
+    <span style={{position:'relative',display:'inline-block',whiteSpace:'nowrap'}}>
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 200 60"
+        preserveAspectRatio="none"
+        style={{position:'absolute',left:-8,right:-8,top:'4%',width:'calc(100% + 16px)',height:'92%',zIndex:0,pointerEvents:'none'}}
+      >
+        <path
+          d="M4 9 C 40 3, 80 14, 120 6 S 178 3, 196 10 L 195 51 C 162 56, 110 47, 68 53 S 8 55, 5 49 Z"
+          fill="var(--uc-shopify)"
+          opacity="0.6"
+        />
+      </svg>
+      <span style={{position:'relative',zIndex:1}}>{children}</span>
     </span>
   );
 }
