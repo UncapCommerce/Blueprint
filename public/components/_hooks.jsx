@@ -36,3 +36,45 @@ function useHash() {
   return hash;
 }
 window.useHash = useHash;
+
+// Hash → display-name maps. Shared between every landing-page component that
+// adapts copy based on the URL hash (Hero H1 + chip, Offer item, etc).
+window.HERO_PLATFORM_BY_HASH = {
+  magento:        'Magento',
+  bigcommerce:    'BigCommerce',
+  woocommerce:    'WooCommerce',
+  netsuite:       'NetSuite',
+  optimizely:     'Optimizely',
+  salesforce:     'Salesforce',
+  sap:            'SAP',
+  commercetools:  'commercetools',
+  vtex:           'VTEX',
+  custom:         'a custom platform',
+};
+window.HERO_ERP_BY_HASH = {
+  netsuite:   'NetSuite',
+  msdyn:      'Microsoft Dynamics',
+  acumatica:  'Acumatica',
+  epicor:     'Epicor',
+  sage:       'Sage',
+  sap:        'SAP',
+  infor:      'Infor',
+  odoo:       'Odoo',
+};
+// Splits "#erp-platform" / "#erp" / "#platform" into display names. ERP wins
+// for ambiguous bare slugs (netsuite, sap) since the chip is the higher-impact
+// targeting signal.
+window.parseHeroHash = function(raw){
+  const slug = (raw || '').replace(/^#/, '').toLowerCase();
+  if (!slug) return { erp: '', platform: '' };
+  const dash = slug.indexOf('-');
+  if (dash > 0) {
+    return {
+      erp:      window.HERO_ERP_BY_HASH[slug.slice(0, dash)] || '',
+      platform: window.HERO_PLATFORM_BY_HASH[slug.slice(dash + 1)] || '',
+    };
+  }
+  if (window.HERO_ERP_BY_HASH[slug])      return { erp: window.HERO_ERP_BY_HASH[slug], platform: '' };
+  if (window.HERO_PLATFORM_BY_HASH[slug]) return { erp: '', platform: window.HERO_PLATFORM_BY_HASH[slug] };
+  return { erp: '', platform: '' };
+};

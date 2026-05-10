@@ -1,50 +1,12 @@
 // Hero.jsx: Above-the-fold conversion module (responsive)
-// URL hash drives two things independently:
+// URL hash drives two things independently — see _hooks.jsx for the slug map
+// and parser:
 //   /#<platform>          → just the H1's "Migrating from X" lead-in
-//   /#<erp>               → just the chip's "For operators running X" line
+//   /#<erp>               → just the chip's "For businesses with X" line
 //   /#<erp>-<platform>    → both (chip + H1)
-// Slugs match the quiz's ERP_OPTIONS and PLATFORM_OPTIONS keys. When a single
-// segment matches both an ERP and a platform (eg. `netsuite`, `sap`), the ERP
-// interpretation wins because the chip is the higher-impact targeting.
-const HERO_PLATFORM_BY_HASH = {
-  magento:        'Magento',
-  bigcommerce:    'BigCommerce',
-  woocommerce:    'WooCommerce',
-  netsuite:       'NetSuite',
-  optimizely:     'Optimizely',
-  salesforce:     'Salesforce',
-  sap:            'SAP',
-  commercetools:  'commercetools',
-  vtex:           'VTEX',
-  custom:         'a custom platform',
-};
-
-const HERO_ERP_BY_HASH = {
-  netsuite:   'NetSuite',
-  msdyn:      'Microsoft Dynamics',
-  acumatica:  'Acumatica',
-  epicor:     'Epicor',
-  sage:       'Sage',
-  sap:        'SAP',
-  infor:      'Infor',
-  odoo:       'Odoo',
-};
-
-function parseHeroHash(raw) {
-  const slug = (raw || '').replace(/^#/, '').toLowerCase();
-  if (!slug) return { erp: '', platform: '' };
-  const dash = slug.indexOf('-');
-  if (dash > 0) {
-    return {
-      erp:      HERO_ERP_BY_HASH[slug.slice(0, dash)] || '',
-      platform: HERO_PLATFORM_BY_HASH[slug.slice(dash + 1)] || '',
-    };
-  }
-  if (HERO_ERP_BY_HASH[slug])      return { erp: HERO_ERP_BY_HASH[slug], platform: '' };
-  if (HERO_PLATFORM_BY_HASH[slug]) return { erp: '', platform: HERO_PLATFORM_BY_HASH[slug] };
-  return { erp: '', platform: '' };
-}
-
+// When a single segment matches both an ERP and a platform (eg. `netsuite`,
+// `sap`), the ERP interpretation wins because the chip is the higher-impact
+// targeting signal.
 function Hero() {
   const isMobile = window.useIsMobile ? window.useIsMobile() : false;
   // Re-render on hash changes so deep links like /#magento update the H1
@@ -57,7 +19,7 @@ function Hero() {
     window.addEventListener('hashchange', onHash);
     return () => window.removeEventListener('hashchange', onHash);
   }, []);
-  const { erp: heroErp, platform: heroPlatform } = parseHeroHash(hash);
+  const { erp: heroErp, platform: heroPlatform } = window.parseHeroHash(hash);
   const headlineNode = heroPlatform
     ? (<React.Fragment>Migrating from <PlatformMarker>{heroPlatform} to Shopify?</PlatformMarker> Stop gambling six figures on a migration you can't see coming.</React.Fragment>)
     : `Migrating to Shopify? Stop gambling six figures on a migration you can't see coming.`;
@@ -117,7 +79,7 @@ function Hero() {
           </div>
 
           {/* Right column: the artifact card */}
-          <BlueprintArtifact isMobile={isMobile}/>
+          <BlueprintArtifact isMobile={isMobile} heroErp={heroErp}/>
         </div>
       </div>
     </section>
@@ -235,7 +197,7 @@ function CheckDot(){
   );
 }
 
-function BlueprintArtifact({isMobile}){
+function BlueprintArtifact({isMobile, heroErp}){
   const m = !!isMobile;
   return (
     <div style={{position:'relative',perspective:1200,marginTop: m ? 4 : 0,marginRight: m ? 0 : 14}}>
@@ -287,7 +249,7 @@ function BlueprintArtifact({isMobile}){
             {n:'04', t:'SEO Preservation Roadmap', p:'3 pp'},
             {n:'05', t:'Tech Stack & 3d Party Apps', p:'1 table'},
             {n:'06', t:'Total Cost of Ownership', p:'1 report'},
-            {n:'07', t:'ERP Integration Audit', p:'5 pp'},
+            {n:'07', t:`${heroErp ? heroErp + ' ' : ''}ERP Integration Audit`, p:'5 pp'},
             {n:'08', t:'UX & Flow Prototyping', p:'5 screens'},
             {n:'09', t:'Stakeholders Workshop', p:'3 sessions'},
             {n:'10', t:'Replatforming Risk Assessment', p:'3 pp'},
