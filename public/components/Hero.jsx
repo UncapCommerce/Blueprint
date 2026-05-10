@@ -61,8 +61,8 @@ function Hero() {
   const headline = heroPlatform
     ? `Migrating from ${heroPlatform} to Shopify? Stop gambling six figures on a migration you can't see coming.`
     : `Migrating to Shopify? Stop gambling six figures on a migration you can't see coming.`;
-  const chipLine = heroErp
-    ? `For operators running ${heroErp}.`
+  const chipNode = heroErp
+    ? (<React.Fragment>For operators running <ErpHighlight>{heroErp}</ErpHighlight>.</React.Fragment>)
     : `Built for operators who've been burned before.`;
   return (
     <section style={{background:'var(--uc-cream)',padding: isMobile ? '32px 18px 56px' : '72px 32px 96px',position:'relative',overflow:'hidden'}}>
@@ -86,7 +86,7 @@ function Hero() {
           justifyContent: isMobile ? 'center' : 'flex-start',
         }}>
           <span style={{display:'inline-flex',alignItems:'center',gap:6,padding:'3px 8px',background:'var(--uc-signal)',borderRadius:3,fontSize:11,fontWeight:700,letterSpacing:'.08em',textTransform:'uppercase',flexShrink:0}}>New</span>
-          <span style={{fontSize: isMobile ? 12 : 13,fontWeight:500,color:'var(--fg-1)',whiteSpace:'normal',lineHeight:1.3,textAlign: isMobile ? 'center' : 'left'}}>{chipLine}</span>
+          <span style={{fontSize: isMobile ? 12 : 13,fontWeight:500,color:'var(--fg-1)',whiteSpace:'normal',lineHeight:1.3,textAlign: isMobile ? 'center' : 'left'}}>{chipNode}</span>
         </div>
 
         <div style={{display:'grid',gridTemplateColumns: isMobile ? '1fr' : '1.35fr 1fr',gap: isMobile ? 28 : 80,alignItems: isMobile ? 'start' : 'end'}}>
@@ -121,6 +121,31 @@ function Hero() {
         </div>
       </div>
     </section>
+  );
+}
+
+// Bold ERP name with a hand-drawn green underline beneath it. The SVG is a
+// gentle wobble that stretches to the text width via preserveAspectRatio=none.
+function ErpHighlight({children}){
+  return (
+    <span style={{position:'relative',display:'inline-block',fontWeight:700,whiteSpace:'nowrap',paddingBottom:4}}>
+      {children}
+      <svg
+        aria-hidden="true"
+        viewBox="0 0 120 8"
+        preserveAspectRatio="none"
+        style={{position:'absolute',left:0,right:0,bottom:0,width:'100%',height:6,pointerEvents:'none',overflow:'visible'}}
+      >
+        <path
+          d="M2 5 C 22 1.5, 48 7.5, 68 4 S 104 1, 118 4.2"
+          stroke="var(--uc-shopify)"
+          strokeWidth="2"
+          fill="none"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </span>
   );
 }
 
