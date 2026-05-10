@@ -1,6 +1,34 @@
 // Hero.jsx: Above-the-fold conversion module (responsive)
+const HERO_PLATFORM_BY_HASH = {
+  magento:        'Magento',
+  bigcommerce:    'BigCommerce',
+  woocommerce:    'WooCommerce',
+  netsuite:       'NetSuite',
+  optimizely:     'Optimizely',
+  salesforce:     'Salesforce',
+  sap:            'SAP',
+  commercetools:  'commercetools',
+  vtex:           'VTEX',
+  custom:         'a custom platform',
+};
+
 function Hero() {
   const isMobile = window.useIsMobile ? window.useIsMobile() : false;
+  // Re-render on hash changes so deep links like /#magento update the H1
+  // without a full reload (e.g. when a CTA links between #anchors).
+  const [hash, setHash] = React.useState(() =>
+    (typeof window !== 'undefined' ? window.location.hash || '' : '')
+      .replace(/^#/, '').toLowerCase()
+  );
+  React.useEffect(() => {
+    const onHash = () => setHash((window.location.hash || '').replace(/^#/, '').toLowerCase());
+    window.addEventListener('hashchange', onHash);
+    return () => window.removeEventListener('hashchange', onHash);
+  }, []);
+  const heroPlatform = HERO_PLATFORM_BY_HASH[hash] || '';
+  const headline = heroPlatform
+    ? `Migrating from ${heroPlatform} to Shopify? Stop gambling six figures on a migration you can't see coming.`
+    : `Migrating to Shopify? Stop gambling six figures on a migration you can't see coming.`;
   return (
     <section style={{background:'var(--uc-cream)',padding: isMobile ? '32px 18px 56px' : '72px 32px 96px',position:'relative',overflow:'hidden'}}>
       {!isMobile && (
@@ -29,7 +57,7 @@ function Hero() {
         <div style={{display:'grid',gridTemplateColumns: isMobile ? '1fr' : '1.35fr 1fr',gap: isMobile ? 28 : 80,alignItems: isMobile ? 'start' : 'end'}}>
           <div>
             <h1 style={{fontFamily:'var(--font-hero)',fontWeight:800,fontSize: isMobile ? 'clamp(30px, 8.5vw, 40px)' : 'clamp(48px, 5.6vw, 88px)',lineHeight: isMobile ? 1.05 : 1.0,letterSpacing:'-.035em',color:'var(--fg-1)',margin: isMobile ? '0 0 16px' : '0 0 28px',textWrap:'balance'}}>
-              Stop gambling six figures on a Shopify migration you can't see coming.
+              {headline}
             </h1>
             <p style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:500,fontSize: isMobile ? 'clamp(16px, 4.4vw, 19px)' : 'clamp(22px, 2vw, 28px)',lineHeight:1.35,letterSpacing:'-.015em',color:'var(--fg-2)',margin: isMobile ? '0 0 24px' : '0 0 40px',maxWidth:640}}>
               Everything you need to migrate to Shopify. Without the guesswork. $7K flat. Yours to keep.
