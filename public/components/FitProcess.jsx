@@ -1,9 +1,11 @@
 // FitProcess.jsx: Who it's for + Process timeline (responsive)
 function FitProcess() {
   const isMobile = window.useIsMobile ? window.useIsMobile() : false;
+  const hash = window.useHash ? window.useHash() : '';
+  const heroPlatform = window.parseHeroHash ? window.parseHeroHash(hash).platform : '';
   const fit = [
     'You\'re $5M+ in revenue',
-    'Migrating within the next 6 months',
+    `Migrating${heroPlatform ? ' from ' + heroPlatform : ''} within the next 6 months`,
     'You want to make the decision once, correctly',
     'You\'re a wholesaler, distributor, manufacturer or unified commerce supplier',
   ];
