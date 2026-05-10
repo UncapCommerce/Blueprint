@@ -1,6 +1,7 @@
 // Header.jsx: Sticky cream header with section-scroll nav
 function Header() {
   const isMobile = window.useIsMobile ? window.useIsMobile() : false;
+  const hash = window.useHash ? window.useHash() : '';
   const [active, setActive] = React.useState('');
   const links = [
     {id:'problem', t:'Problem'},
@@ -86,7 +87,7 @@ function Header() {
 
         {/* Right cluster: primary CTA */}
         <div style={{display:'flex',alignItems:'center',flexShrink:0}}>
-          <a href="/build" className="uc-btn b-primary" style={{
+          <a href={`/build${hash}`} className="uc-btn b-primary" style={{
             padding: isMobile ? '10px 14px' : '10px 16px',
             fontSize: isMobile ? 13 : 13,
             whiteSpace:'nowrap',
