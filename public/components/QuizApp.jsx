@@ -98,6 +98,20 @@ function parseBuildHash(raw){
   return { erp: '', platform: '' };
 }
 
+// Pulls the option matching `target` to the top of the list while preserving
+// the rest of the order. `keyOf` extracts the comparable value from each item
+// so this works for both ERP_OPTIONS (objects keyed by id) and PLATFORM_OPTIONS
+// (plain strings).
+function reorderFirst(list, target, keyOf){
+  if (!target) return list;
+  const idx = list.findIndex(item => keyOf(item) === target);
+  if (idx <= 0) return list;
+  const next = list.slice();
+  const [hit] = next.splice(idx, 1);
+  next.unshift(hit);
+  return next;
+}
+
 function QuizApp(){
   const [step, setStep] = React.useState(0);
   const [answers, setAnswers] = React.useState({
@@ -167,21 +181,15 @@ function QuizApp(){
     return () => { cancelled = true; };
   }, []);
 
-  // Pre-fill ERP / platform from a #erp-platform deep-link hash so visitors
-  // who came in from a targeted landing page don't have to re-enter what
-  // they already signaled. Runs once after the session restore completes,
-  // and only fills fields the saved session left empty.
-  React.useEffect(() => {
-    if (!sessionRestored) return;
-    const { erp, platform } = parseBuildHash(window.location.hash);
-    if (!erp && !platform) return;
-    setAnswers(prev => {
-      const next = {...prev};
-      if (erp && !prev.erp) next.erp = erp;
-      if (platform && !prev.platform) next.platform = platform;
-      return next;
-    });
-  }, [sessionRestored]);
+  // The deep-link hash also reorders the ERP / platform option grids so the
+  // signaled choice surfaces first. Stored once on first render so reorder
+  // is stable across re-renders mid-quiz.
+  const buildHint = React.useMemo(
+    () => parseBuildHash(typeof window !== 'undefined' ? window.location.hash : ''),
+    []
+  );
+  const erpOptions      = React.useMemo(() => reorderFirst(ERP_OPTIONS,      buildHint.erp,      o => o.id), [buildHint.erp]);
+  const platformOptions = React.useMemo(() => reorderFirst(PLATFORM_OPTIONS, buildHint.platform, v => v),    [buildHint.platform]);
 
   // Debounced save on every meaningful state change.
   React.useEffect(() => {
@@ -292,7 +300,7 @@ function QuizApp(){
               sub="We'll tailor the migration plan around your system of record."
             >
               <OptionGrid
-                options={ERP_OPTIONS.map(o=>({value:o.id,label:o.label}))}
+                options={erpOptions.map(o=>({value:o.id,label:o.label}))}
                 selected={answers.erp}
                 onChoose={(v)=>choose('erp', v)}
               />
@@ -345,7 +353,7 @@ function QuizApp(){
                 />
               ) : (
                 <OptionGrid
-                  options={PLATFORM_OPTIONS.map(o=>({value:o,label:o}))}
+                  options={platformOptions.map(o=>({value:o,label:o}))}
                   selected={answers.platform}
                   onChoose={(v)=>{
                     if (v === 'Other') {
