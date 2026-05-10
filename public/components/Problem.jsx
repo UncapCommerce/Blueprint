@@ -3,6 +3,8 @@
 // stacked, rotated, stamped, with a redaction bar over what you "didn't know".
 function Problem() {
   const isMobile = window.useIsMobile ? window.useIsMobile() : false;
+  const hash = window.useHash ? window.useHash() : '';
+  const heroPlatform = window.parseHeroHash ? window.parseHeroHash(hash).platform : '';
   const items = [
     {
       n:'01',
@@ -84,7 +86,7 @@ function Problem() {
             lineHeight:1.05,letterSpacing:'-.03em',
             color:'var(--fg-1)',margin:'0 0 14px',textWrap:'balance',
           }}>
-            Migrations don't fail because of Shopify.
+            {heroPlatform ? `Migrations from ${heroPlatform} don't fail because of Shopify.` : "Migrations don't fail because of Shopify."}
           </h2>
           <p style={{
             fontFamily:'var(--font-serif)',fontStyle:'italic',fontWeight:500,
