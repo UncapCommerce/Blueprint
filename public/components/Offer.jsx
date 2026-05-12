@@ -67,7 +67,7 @@ function Offer() {
           </figure>
         </div>
 
-        <div style={{display:'grid',gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)',gap:0,border:'1px solid var(--uc-black)',borderRadius:5,background:'#fff',overflow:'hidden'}}>
+        <div data-reveal-stagger style={{display:'grid',gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)',gap:0,border:'1px solid var(--uc-black)',borderRadius:5,background:'#fff',overflow:'hidden'}}>
           {items.map((item,i)=>{
             const col = i % 4;
             const row = Math.floor(i / 4);
