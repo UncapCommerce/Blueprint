@@ -55,7 +55,7 @@ function SocialProof() {
     },
     {
       tone:'dark', size:'small',
-      quote:'I cannot praise the Uncap team enough. They are hell of a team.',
+      quote:'I cannot praise the Uncap enough. They are hell of a team.',
       attr:'Andy Blechschmidt',
       role:'Jerico',
       photo:'https://i.pravatar.cc/120?img=11',
