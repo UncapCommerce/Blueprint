@@ -55,7 +55,7 @@ function Offer() {
               color:'var(--fg-1)',
               paddingTop: isMobile ? 18 : 22,
             }}>
-              45 accumulated years of operator experience went into curating this Blueprint.
+              45 accumulated years of operator experience went into crafting this Blueprint.
             </blockquote>
             <figcaption style={{display:'flex',alignItems:'center',gap:12}}>
               <span style={{
