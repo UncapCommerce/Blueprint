@@ -88,7 +88,7 @@ function FAQ() {
     {q:'What if I want you to implement?', a:'Great. The Blueprint cost is credited 1:1 toward implementation. Your $7K becomes a $7K discount on the build.'},
     {q:'What if I don\'t want you to implement?', a:'Also great. You walk with everything you need to brief any agency or your in-house team. The architecture, the prototype, the data plan, the risk register, the fixed-cost estimate. All yours. No NDA chokeholds, no IP traps.'},
     {q:'How is this different from a discovery phase?', a:'Discovery phases lock you in. Most are scoped to justify the build the agency already wants to sell you. The Blueprint is scoped to give you the truth, even if the truth is "don\'t migrate yet" or "hire someone else."'},
-    {q:'What happens on the 25-min call?', a:'We diagnose your situation, tell you honestly if you\'re a fit, and answer anything. No pitch deck. No slick spin. No B.S. If you\'re not a fit, we\'ll tell you who is.'},
+    {q:'What happens on the 25-min call?', a:'We diagnose your situation, tell you honestly if you\'re a fit, and answer anything. No pitch deck. No slick spin. No B.S. If you\'re not a fit, we will refund you in full.'},
     {q:'Who actually does the work?', a:'Senior architects who\'ve done this hundreds of times. Not junior consultants and not offshore contractors. The people on your kickoff call are the people writing your Blueprint.'},
   ];
   const [open,setOpen] = React.useState(0);
