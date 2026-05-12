@@ -285,3 +285,34 @@ code, .uc-code {
 @media (prefers-reduced-motion: reduce) {
   .uc-pulse { animation: none; }
 }
+
+/* Blueprint artifact (hero right column). Hovering the wrapper makes the top
+   card slide gently to the left while the two stacked sheets underneath fan
+   out to the right, like opening a deck of papers. */
+.uc-artifact-front,
+.uc-artifact-paper--mid,
+.uc-artifact-paper--back {
+  transition:
+    transform 480ms var(--ease-out),
+    opacity 480ms var(--ease-out);
+  will-change: transform;
+}
+.uc-artifact:hover .uc-artifact-front {
+  transform: translate(-12px, -2px);
+}
+.uc-artifact:hover .uc-artifact-paper--mid {
+  transform: translateX(10px);
+  opacity: 0.82;
+}
+.uc-artifact:hover .uc-artifact-paper--back {
+  transform: translateX(20px);
+  opacity: 0.55;
+}
+@media (prefers-reduced-motion: reduce) {
+  .uc-artifact-front,
+  .uc-artifact-paper--mid,
+  .uc-artifact-paper--back { transition: none; }
+  .uc-artifact:hover .uc-artifact-front,
+  .uc-artifact:hover .uc-artifact-paper--mid,
+  .uc-artifact:hover .uc-artifact-paper--back { transform: none; opacity: inherit; }
+}

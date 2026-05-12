@@ -172,15 +172,15 @@ function CheckDot(){
 function BlueprintArtifact({isMobile, heroErp}){
   const m = !!isMobile;
   return (
-    <div style={{position:'relative',perspective:1200,marginTop: m ? 4 : 0,marginRight: m ? 0 : 14}}>
+    <div className={m ? '' : 'uc-artifact'} style={{position:'relative',perspective:1200,marginTop: m ? 4 : 0,marginRight: m ? 0 : 14}}>
       {/* Stacked paper effect: drop on mobile (right offset would clip viewport) */}
       {!m && (
         <React.Fragment>
-          <div style={{position:'absolute',top:14,left:14,right:-14,bottom:-14,background:'#fff',border:'1px solid var(--uc-black)',borderRadius:5,opacity:.4}}/>
-          <div style={{position:'absolute',top:7,left:7,right:-7,bottom:-7,background:'#fff',border:'1px solid var(--uc-black)',borderRadius:5,opacity:.7}}/>
+          <div className="uc-artifact-paper uc-artifact-paper--back" style={{position:'absolute',top:14,left:14,right:-14,bottom:-14,background:'#fff',border:'1px solid var(--uc-black)',borderRadius:5,opacity:.4}}/>
+          <div className="uc-artifact-paper uc-artifact-paper--mid"  style={{position:'absolute',top:7,left:7,right:-7,bottom:-7,background:'#fff',border:'1px solid var(--uc-black)',borderRadius:5,opacity:.7}}/>
         </React.Fragment>
       )}
-      <div style={{position:'relative',background:'#fff',border:'1px solid var(--uc-black)',borderRadius:5,padding: m ? 18 : 28,boxShadow:'var(--shadow-3)'}}>
+      <div className={m ? '' : 'uc-artifact-front'} style={{position:'relative',background:'#fff',border:'1px solid var(--uc-black)',borderRadius:5,padding: m ? 18 : 28,boxShadow:'var(--shadow-3)'}}>
         <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom: m ? 14 : 20,paddingBottom: m ? 12 : 14,borderBottom:'1px solid var(--line-1)',gap:8}}>
           <div className="uc-eyebrow" style={{color:'var(--fg-1)',fontSize: m ? 11 : 13}}>Blueprint v6.0</div>
           <div style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--fg-3)'}}>uncap-blueprint.pdf</div>
