@@ -37,7 +37,6 @@ function SocialProof() {
     {
       tone:'stat', size:'small',
       stat:{n:'11 weeks', l:'from stalled mid-build to relaunch'},
-      attr:'Atlas Hardware',
       // Same tile carries the Pete Suter testimonial directly under the stat
       // copy, no extra box. The stat-tone renderer picks this up and stacks
       // it below the stat label.
@@ -250,7 +249,9 @@ function ReviewTile({review, index, isMobile}){
           }}>{review.stat.n}</div>
           <div style={{fontSize:13,lineHeight:1.4,color:p.sub,maxWidth:200}}>{review.stat.l}</div>
         </div>
-        <div style={{fontSize:12,fontWeight:600,color:p.meta,letterSpacing:'.04em',textTransform:'uppercase'}}>, {review.attr}</div>
+        {review.attr ? (
+          <div style={{fontSize:12,fontWeight:600,color:p.meta,letterSpacing:'.04em',textTransform:'uppercase'}}>{review.attr}</div>
+        ) : null}
         {review.followUpQuote ? (
           <div style={{
             marginTop:4,paddingTop:18,
