@@ -61,17 +61,19 @@ window.HERO_ERP_BY_HASH = {
   infor:      'Infor',
   odoo:       'Odoo',
 };
-// Splits "#erp-platform" / "#erp" / "#platform" into display names. ERP wins
-// for ambiguous bare slugs (netsuite, sap) since the chip is the higher-impact
-// targeting signal.
+// Splits "#erp<sep>platform" / "#erp" / "#platform" into display names. Any
+// of `-`, `+`, or `_` works as the separator so deep links read cleanly no
+// matter which convention is in use (eg /#netsuite-magento, /#netsuite+magento,
+// /#netsuite_magento). ERP wins for ambiguous bare slugs (netsuite, sap)
+// since the chip is the higher-impact targeting signal.
 window.parseHeroHash = function(raw){
   const slug = (raw || '').replace(/^#/, '').toLowerCase();
   if (!slug) return { erp: '', platform: '' };
-  const dash = slug.indexOf('-');
-  if (dash > 0) {
+  const match = slug.match(/^([a-z0-9]+)[-+_]([a-z0-9]+)$/);
+  if (match) {
     return {
-      erp:      window.HERO_ERP_BY_HASH[slug.slice(0, dash)] || '',
-      platform: window.HERO_PLATFORM_BY_HASH[slug.slice(dash + 1)] || '',
+      erp:      window.HERO_ERP_BY_HASH[match[1]] || '',
+      platform: window.HERO_PLATFORM_BY_HASH[match[2]] || '',
     };
   }
   if (window.HERO_ERP_BY_HASH[slug])      return { erp: window.HERO_ERP_BY_HASH[slug], platform: '' };

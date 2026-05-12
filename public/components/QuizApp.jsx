@@ -83,13 +83,11 @@ const BUILD_ERP_IDS = new Set([
 function parseBuildHash(raw){
   const slug = (raw || '').replace(/^#/, '').toLowerCase();
   if (!slug) return { erp: '', platform: '' };
-  const dash = slug.indexOf('-');
-  if (dash > 0) {
-    const erpKey = slug.slice(0, dash);
-    const platKey = slug.slice(dash + 1);
+  const match = slug.match(/^([a-z0-9]+)[-+_]([a-z0-9]+)$/);
+  if (match) {
     return {
-      erp:      BUILD_ERP_IDS.has(erpKey) ? erpKey : '',
-      platform: BUILD_PLATFORM_LABEL_BY_HASH[platKey] || '',
+      erp:      BUILD_ERP_IDS.has(match[1]) ? match[1] : '',
+      platform: BUILD_PLATFORM_LABEL_BY_HASH[match[2]] || '',
     };
   }
   // Single segment: prefer ERP (matches Hero's interpretation of /#netsuite).
