@@ -14,9 +14,9 @@ function SocialProof() {
     },
     {
       tone:'cream', size:'wide',
-      quote:'The fixed-cost estimate alone was worth ten times what we paid. We never would\'ve known what we didn\'t know.',
-      attr:'Mark Iverson',
-      role:'COO, Northwoods Mfg.',
+      quote:'The personal touch, and constant communication is what separates them from other companies with a 50+ person team where the attention to detail may be lost.',
+      attr:'Brandt DeVries',
+      role:'WeldingStore',
       photo:'https://i.pravatar.cc/120?img=12',
       stat:{n:'$295K', l:'saved vs. the wrong quote'},
     },
