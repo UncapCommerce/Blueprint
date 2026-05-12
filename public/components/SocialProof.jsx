@@ -38,14 +38,12 @@ function SocialProof() {
       tone:'stat', size:'small',
       stat:{n:'11 weeks', l:'from stalled mid-build to relaunch'},
       attr:'Atlas Hardware',
-    },
-    {
-      tone:'white', size:'small',
-      stickWithPrevious: true,
-      quote:'I’ve honestly never worked with a firm like them before; they’re absolutely outstanding.',
-      attr:'Pete Suter',
-      role:"Shirley's Gourmet Popcorn",
-      photo:'https://i.pravatar.cc/120?img=33',
+      // Same tile carries the Pete Suter testimonial directly under the stat
+      // copy, no extra box. The stat-tone renderer picks this up and stacks
+      // it below the stat label.
+      followUpQuote:'I’ve honestly never worked with a firm like them before; they’re absolutely outstanding.',
+      followUpAttr:'Pete Suter',
+      followUpRole:"Shirley's Gourmet Popcorn",
     },
     {
       tone:'white', size:'wide',
@@ -113,29 +111,11 @@ function SocialProof() {
           columnCount: isMobile ? 1 : 3,
           columnGap:16,
         }}>
-          {(() => {
-            // Render-time grouping: when a review carries stickWithPrevious,
-            // wrap it with its predecessor in a single break-inside-avoid
-            // container so the CSS column algorithm can't push them apart.
-            const out = [];
-            for (let i = 0; i < reviews.length; i++) {
-              const r = reviews[i];
-              const next = reviews[i + 1];
-              const groupNext = next && next.stickWithPrevious;
-              out.push(
-                <div key={i} style={{breakInside:'avoid',WebkitColumnBreakInside:'avoid',pageBreakInside:'avoid',marginBottom:16}}>
-                  <ReviewTile review={r} index={i} isMobile={isMobile}/>
-                  {groupNext ? (
-                    <div style={{marginTop:16}}>
-                      <ReviewTile review={next} index={i+1} isMobile={isMobile}/>
-                    </div>
-                  ) : null}
-                </div>
-              );
-              if (groupNext) i++; // skip the grouped item
-            }
-            return out;
-          })()}
+          {reviews.map((r, i)=>(
+            <div key={i} style={{breakInside:'avoid',WebkitColumnBreakInside:'avoid',pageBreakInside:'avoid',marginBottom:16}}>
+              <ReviewTile review={r} index={i} isMobile={isMobile}/>
+            </div>
+          ))}
         </div>
       </div>
     </section>
@@ -166,13 +146,15 @@ function ReviewTile({review, index, isMobile}){
   };
   const p = presets[tone] || presets.white;
 
-  // Stat-led tile: huge number, tiny attribution
+  // Stat-led tile: huge number, tiny attribution. If the review carries a
+  // followUpQuote, the same tile stacks that testimonial under the stat copy
+  // (separated by a hairline) — no second box.
   if (tone === 'stat') {
     return (
       <article style={{
         ...span,
         background:p.bg,color:p.fg,border:p.border,borderRadius:5,
-        padding:'28px 24px',display:'flex',flexDirection:'column',justifyContent:'space-between',
+        padding:'28px 24px',display:'flex',flexDirection:'column',justifyContent:'space-between',gap:20,
         position:'relative',
       }}>
         <div style={{fontFamily:'var(--font-mono)',fontSize:10,fontWeight:700,letterSpacing:'.14em',color:p.meta}}>OUTCOME</div>
@@ -185,6 +167,25 @@ function ReviewTile({review, index, isMobile}){
           <div style={{fontSize:13,lineHeight:1.4,color:p.sub,maxWidth:200}}>{review.stat.l}</div>
         </div>
         <div style={{fontSize:12,fontWeight:600,color:p.meta,letterSpacing:'.04em',textTransform:'uppercase'}}>, {review.attr}</div>
+        {review.followUpQuote ? (
+          <div style={{
+            marginTop:4,paddingTop:18,
+            borderTop:'1px dashed rgba(10,10,10,0.18)',
+            display:'flex',flexDirection:'column',gap:10,
+          }}>
+            <p style={{
+              fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:500,
+              fontSize:14,lineHeight:1.4,letterSpacing:'-.01em',
+              color:p.fg,margin:0,
+            }}>“{review.followUpQuote}”</p>
+            <div style={{display:'flex',flexDirection:'column',lineHeight:1.25}}>
+              <span style={{fontSize:12,fontWeight:600,color:p.fg}}>{review.followUpAttr}</span>
+              {review.followUpRole ? (
+                <span style={{fontSize:11,color:p.meta,fontWeight:500}}>{review.followUpRole}</span>
+              ) : null}
+            </div>
+          </div>
+        ) : null}
       </article>
     );
   }
