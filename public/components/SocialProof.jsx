@@ -6,7 +6,7 @@ function SocialProof() {
   const reviews = [
     {
       tone:'dark', size:'tall',
-      quote:'The team communicated consistently and efficiently, and internal stakeholders were particularly impressed with the service Uncaps\' vast technical expertise.',
+      quote:'The team communicated consistently and efficiently, and internal stakeholders were particularly impressed with the Uncaps\' vast technical expertise.',
       attr:'Todd Arey',
       role:'E3 Spark Plugs',
       photo:'https://i.pravatar.cc/120?img=44',
