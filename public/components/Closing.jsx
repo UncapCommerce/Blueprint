@@ -1,10 +1,12 @@
 // Guarantee.jsx + FAQ.jsx + Founder.jsx + FinalCTA.jsx + Footer.jsx (responsive)
 
-// 11-point starburst polygon vertices, computed once at module load. 11 (a
-// prime) breaks rotational symmetry so the continuous spin reads clearly.
+// 19-point starburst polygon vertices, computed once at module load. 19 (a
+// prime) breaks rotational symmetry so the continuous spin reads clearly,
+// and more points than the previous 11 give the badge a denser, stamp-like
+// scalloped silhouette.
 const UC_STAMP_STARBURST = (() => {
-  const cx = 100, cy = 100, outerR = 96, innerR = 78;
-  const numPoints = 11;
+  const cx = 100, cy = 100, outerR = 97, innerR = 84;
+  const numPoints = 19;
   const totalVerts = numPoints * 2;
   const pts = [];
   for (let i = 0; i < totalVerts; i++) {

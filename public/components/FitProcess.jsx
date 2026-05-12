@@ -153,8 +153,8 @@ function FitProcess() {
       </section>
 
       {/* Process timeline */}
-      <section style={{background:'var(--uc-cream)',padding: isMobile ? '64px 20px' : '120px 32px'}}>
-        <div style={{maxWidth:1280,margin:'0 auto'}}>
+      <section style={{background:'var(--uc-cream)',padding: isMobile ? '64px 0' : '120px 0'}}>
+        <div style={{maxWidth:1280,margin:'0 auto', padding: isMobile ? '0 20px' : '0 32px'}}>
           <div style={{display:'grid',gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',gap: isMobile ? 18 : 80,marginBottom: isMobile ? 32 : 56,alignItems: isMobile ? 'start' : 'end'}}>
             <div>
               <div className="uc-eyebrow" style={{marginBottom: isMobile ? 12 : 18}}>Process</div>
@@ -166,58 +166,62 @@ function FitProcess() {
               No discovery purgatory. No "we'll get you a proposal next quarter." A 28-day clock starts the day you sign.
             </p>
           </div>
-          {/* Scroll-driven poker hand. The outer scroller is taller than the
-              viewport — its scroll progress determines which card has been
-              revealed. The inner sticky stage pins the hand in place while
-              the user scrolls past, so each scroll tick deals the next card. */}
-          <div
-            ref={scrollerRef}
-            style={{
-              position:'relative',
-              height: isMobile ? '300vh' : '320vh',
-              marginTop: isMobile ? 12 : 24,
-            }}
-          >
-            <div style={{
-              position:'sticky',
-              top: isMobile ? '6vh' : '10vh',
-              height: isMobile ? '88vh' : '80vh',
-              display:'flex',alignItems:'center',justifyContent:'center',
-            }}>
-              <div style={{position:'relative', width:'100%', height:'100%'}}>
-                {weeks.map((w,i)=>{
-                  // Sized in % of the inner stage so the hand stays within the
-                  // 1280px page wrapper on every viewport. Cards never grow
-                  // beyond ~280px wide or shrink below ~190px.
-                  const cardWidth  = isMobile ? '86%'                       : 'clamp(190px, 19%, 260px)';
-                  const cardHeight = isMobile ? 'clamp(180px,28vh,260px)'   : 'clamp(340px, 62%, 500px)';
-                  return (
-                    <article
-                      key={w.n}
-                      ref={cardRefs.current[i]}
-                      data-week-idx={i}
-                      style={{
-                        position:'absolute',
-                        left:'50%',
-                        top:'50%',
-                        width: cardWidth,
-                        height: cardHeight,
-                        background:'#fff',
-                        border:'1px solid var(--uc-black)',
-                        borderRadius:14,
-                        boxShadow:'0 24px 56px rgba(10,10,10,0.18), 0 8px 22px rgba(10,10,10,0.08)',
-                        padding: isMobile ? '22px 22px 20px' : '28px 28px 24px',
-                        display:'flex',flexDirection:'column',gap: isMobile ? 10 : 14,
-                        zIndex: i + 1,
-                        transformOrigin:'50% 110%',
-                        // Initial: hidden below + flat. The scroll listener
-                        // takes over on first rAF and updates transform every
-                        // frame, so we deliberately leave transition off.
-                        transform: 'translate(-50%, -50%) translateY(70vh) rotate(0deg)',
-                        opacity: 0,
-                        willChange:'transform, opacity',
-                      }}
-                    >
+        </div>
+        {/* Scroll-driven poker hand. The outer scroller is taller than the
+            viewport — its scroll progress determines which card has been
+            revealed. The card stage lives in its own wider wrapper (1800-max)
+            so the hand spreads across the screen on big monitors instead of
+            clumping in the middle of an iMac. */}
+        <div
+          ref={scrollerRef}
+          style={{
+            position:'relative',
+            height: isMobile ? '300vh' : '320vh',
+            marginTop: isMobile ? 12 : 24,
+          }}
+        >
+          <div style={{
+            position:'sticky',
+            top: isMobile ? '6vh' : '10vh',
+            height: isMobile ? '88vh' : '80vh',
+            display:'flex',alignItems:'center',justifyContent:'center',
+            padding: isMobile ? '0 20px' : '0 32px',
+            boxSizing:'border-box',
+          }}>
+            <div style={{position:'relative', width:'100%', maxWidth: isMobile ? 'none' : 1800, height:'100%', margin:'0 auto'}}>
+              {weeks.map((w,i)=>{
+                // Sized in % of the inner stage so the hand spreads with the
+                // 1800-max card wrapper on large screens but never overflows
+                // it. Cards clamp between 200px and 320px on desktop.
+                const cardWidth  = isMobile ? '86%'                       : 'clamp(200px, 19%, 320px)';
+                const cardHeight = isMobile ? 'clamp(180px,28vh,260px)'   : 'clamp(340px, 62%, 500px)';
+                return (
+                  <article
+                    key={w.n}
+                    ref={cardRefs.current[i]}
+                    data-week-idx={i}
+                    style={{
+                      position:'absolute',
+                      left:'50%',
+                      top:'50%',
+                      width: cardWidth,
+                      height: cardHeight,
+                      background:'#fff',
+                      border:'1px solid var(--uc-black)',
+                      borderRadius:14,
+                      boxShadow:'0 24px 56px rgba(10,10,10,0.18), 0 8px 22px rgba(10,10,10,0.08)',
+                      padding: isMobile ? '22px 22px 20px' : '28px 28px 24px',
+                      display:'flex',flexDirection:'column',gap: isMobile ? 10 : 14,
+                      zIndex: i + 1,
+                      transformOrigin:'50% 110%',
+                      // Initial: hidden below + flat. The scroll listener
+                      // takes over on first rAF and updates transform every
+                      // frame, so we deliberately leave transition off.
+                      transform: 'translate(-50%, -50%) translateY(70vh) rotate(0deg)',
+                      opacity: 0,
+                      willChange:'transform, opacity',
+                    }}
+                  >
                       <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:10}}>
                         <span style={{
                           width: isMobile ? 36 : 44, height: isMobile ? 36 : 44,
@@ -246,7 +250,6 @@ function FitProcess() {
                     </article>
                   );
                 })}
-              </div>
             </div>
           </div>
         </div>
