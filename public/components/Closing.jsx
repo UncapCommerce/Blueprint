@@ -64,16 +64,18 @@ function Guarantee() {
             </div>
           </div>
         </div>
-        <div className="uc-eyebrow" style={{marginBottom: isMobile ? 12 : 18}}>Guarantee</div>
-        <h2 style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize: isMobile ? 'clamp(28px, 7.6vw, 40px)' : 'clamp(40px,4.4vw,72px)',lineHeight:1.05,letterSpacing:'-.03em',color:'var(--fg-1)',margin:'0 0 14px',maxWidth:840}}>
-          If it doesn't give you clarity, you don't pay.
-        </h2>
-        <p style={{fontFamily:'var(--font-serif)',fontStyle:'italic',fontSize: isMobile ? 'clamp(17px, 4.6vw, 22px)' : 'clamp(22px,2vw,30px)',lineHeight:1.35,color:'var(--fg-2)',margin:'0 0 24px',maxWidth:760,letterSpacing:'-.01em'}}>
-          Finish the Discovery Call. If you don't feel confident in your migration path, we refund every dollar.
-        </p>
-        <p style={{fontSize: isMobile ? 15 : 17,color:'var(--fg-3)',margin:0,fontWeight:500}}>
-          Although, we've never had to.
-        </p>
+        <div data-reveal="fade-up">
+          <div className="uc-eyebrow" style={{marginBottom: isMobile ? 12 : 18}}>Guarantee</div>
+          <h2 style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize: isMobile ? 'clamp(28px, 7.6vw, 40px)' : 'clamp(40px,4.4vw,72px)',lineHeight:1.05,letterSpacing:'-.03em',color:'var(--fg-1)',margin:'0 0 14px',maxWidth:840}}>
+            If it doesn't give you clarity, you don't pay.
+          </h2>
+          <p style={{fontFamily:'var(--font-serif)',fontStyle:'italic',fontSize: isMobile ? 'clamp(17px, 4.6vw, 22px)' : 'clamp(22px,2vw,30px)',lineHeight:1.35,color:'var(--fg-2)',margin:'0 0 24px',maxWidth:760,letterSpacing:'-.01em'}}>
+            Finish the Discovery Call. If you don't feel confident in your migration path, we refund every dollar.
+          </p>
+          <p style={{fontSize: isMobile ? 15 : 17,color:'var(--fg-3)',margin:0,fontWeight:500}}>
+            Although, we've never had to.
+          </p>
+        </div>
       </div>
     </section>
   );
@@ -122,7 +124,7 @@ function Founder() {
   return (
     <section style={{background:'var(--uc-black)',color:'#fff',padding: isMobile ? '64px 20px' : '120px 32px'}}>
       <div style={{maxWidth:1080,margin:'0 auto',display:'grid',gridTemplateColumns: isMobile ? '1fr' : '1fr 1.6fr',gap: isMobile ? 28 : 64,alignItems:'center'}}>
-        <div>
+        <div data-reveal="scale-in">
           <div style={{aspectRatio:'4/5',background:'#1A1A1A',border:'1px solid #2B2B2B',borderRadius:5,position:'relative',overflow:'hidden',maxWidth: isMobile ? 320 : 'none',margin: isMobile ? '0 auto' : 0}}>
             <picture>
               <source srcSet="assets/denis-dyli-uncap.webp" type="image/webp"/>
@@ -131,7 +133,7 @@ function Founder() {
             <div style={{position:'absolute',bottom:16,left:16,padding:'4px 10px',background:'var(--uc-signal)',borderRadius:3,fontSize:11,fontWeight:700,letterSpacing:'.06em',textTransform:'uppercase',color:'var(--uc-black)'}}>Denis Dyli · Founder</div>
           </div>
         </div>
-        <div>
+        <div data-reveal="slide-right">
           <div className="uc-eyebrow" style={{color:'var(--uc-stone-500)',marginBottom: isMobile ? 12 : 18}}>Why I built this</div>
           <p style={{fontFamily:'var(--font-display)',fontWeight:500,fontSize: isMobile ? 'clamp(20px, 5.4vw, 28px)' : 'clamp(28px,3vw,42px)',lineHeight:1.2,letterSpacing:'-.025em',color:'#fff',margin:'0 0 18px'}}>
             I've watched too many brands sign migration contracts they didn't understand and pay for it for years.
@@ -160,10 +162,12 @@ function FinalCTA() {
         </div>
       )}
       <div style={{maxWidth:1080,margin:'0 auto',textAlign:'left',position:'relative',zIndex:1}}>
-        <div className="uc-eyebrow" style={{marginBottom: isMobile ? 16 : 24}}>Final step</div>
-        <h2 style={{fontFamily:'var(--font-hero)',fontWeight:800,fontSize: isMobile ? 'clamp(36px, 10vw, 56px)' : 'clamp(48px,6vw,108px)',lineHeight:1,letterSpacing:'-.04em',color:'var(--fg-1)',margin:'0 0 18px',textWrap:'balance'}}>
-          Ready to see the whole map?
-        </h2>
+        <div data-reveal="scale-in" style={{display:'inline-block',width:'100%'}}>
+          <div className="uc-eyebrow" style={{marginBottom: isMobile ? 16 : 24}}>Final step</div>
+          <h2 style={{fontFamily:'var(--font-hero)',fontWeight:800,fontSize: isMobile ? 'clamp(36px, 10vw, 56px)' : 'clamp(48px,6vw,108px)',lineHeight:1,letterSpacing:'-.04em',color:'var(--fg-1)',margin:'0 0 18px',textWrap:'balance'}}>
+            Ready to see the whole map?
+          </h2>
+        </div>
         <p style={{fontFamily:'var(--font-serif)',fontStyle:'italic',fontSize: isMobile ? 'clamp(18px, 4.8vw, 24px)' : 'clamp(24px,2.4vw,36px)',lineHeight:1.3,color:'var(--fg-2)',margin: isMobile ? '0 0 28px' : '0 0 48px',maxWidth:760,letterSpacing:'-.01em'}}>
           Eight 5-minute questions. $500 reservation fee, fully refundable if we're not a fit on the discovery call.
         </p>

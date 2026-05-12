@@ -251,24 +251,19 @@ function App(){
   return (
     <React.Fragment>
       <div data-screen-label="Blueprint Landing">
-        {/* Header is sticky and Hero is above-the-fold — both stay
-            outside the reveal system. FitProcess and the Closing's stamp
-            already animate themselves. Every other section wraps in its
-            own reveal variant so the scroll picks up a distinct beat per
-            section. */}
         <Header/>
         <Hero/>
-        <div data-reveal="slide-right"><TrustStrip/></div>
-        <div data-reveal="fade-up"><Problem/></div>
-        <div data-reveal="blur-in"><Shift/></div>
-        <div data-reveal="fade-up"><Offer/></div>
-        <div data-reveal="slide-left"><MathSection/></div>
-        <div data-reveal="tilt-in"><SocialProof/></div>
+        <TrustStrip/>
+        <Problem/>
+        <Shift/>
+        <Offer/>
+        <MathSection/>
+        <SocialProof/>
         <FitProcess/>
-        <div data-reveal="scale-in"><Guarantee/></div>
-        <div data-reveal="slide-right"><Founder/></div>
-        <div data-reveal="fade-up"><FAQ/></div>
-        <div data-reveal="scale-out"><FinalCTA/></div>
+        <Guarantee/>
+        <Founder/>
+        <FAQ/>
+        <FinalCTA/>
         <Footer/>
       </div>
     </React.Fragment>

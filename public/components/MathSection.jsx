@@ -5,7 +5,7 @@ function MathSection() {
     <section id="math" style={{background:'var(--uc-cream)',padding: isMobile ? '64px 20px' : '120px 32px',position:'relative',overflow:'hidden',scrollMarginTop:80}}>
       <div style={{maxWidth:1280,margin:'0 auto',position:'relative',zIndex:1}}>
         <div style={{display:'grid',gridTemplateColumns: isMobile ? '1fr' : '1fr 1.2fr',gap: isMobile ? 32 : 80,alignItems:'center'}}>
-          <div>
+          <div data-reveal="slide-left">
             <div className="uc-eyebrow" style={{marginBottom: isMobile ? 12 : 18}}>The math</div>
             <h2 style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize: isMobile ? 'clamp(28px, 7.6vw, 40px)' : 'clamp(40px,4.4vw,72px)',lineHeight:1.05,letterSpacing:'-.03em',color:'var(--fg-1)',margin:'0 0 14px'}}>
               $7K to see the whole map.
@@ -16,7 +16,7 @@ function MathSection() {
           </div>
 
           {/* Bar comparison */}
-          <div style={{display:'flex',flexDirection:'column',gap: isMobile ? 22 : 18}}>
+          <div data-reveal-stagger style={{display:'flex',flexDirection:'column',gap: isMobile ? 22 : 18}}>
             <Bar label="A bad migration" sub="Wasted spend, lost revenue, lost months" amount="$120K – $250K" widthPct={100} dark isMobile={isMobile}/>
             <Bar label="One week of an agency retainer" sub="Industry standard, $300–$500/hr × 40h" amount="$12K – $20K" widthPct={20} stripe isMobile={isMobile}/>
             <Bar label="The Blueprint" sub="Fixed. Locked. Yours to keep." amount="$7,000" widthPct={7} signal isMobile={isMobile}/>
