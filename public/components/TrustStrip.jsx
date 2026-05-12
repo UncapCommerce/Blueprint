@@ -1,21 +1,45 @@
 // TrustStrip.jsx: Infinite horizontal marquee of customer logos
 function TrustStrip() {
   const isMobile = window.useIsMobile ? window.useIsMobile() : false;
-  // 6 black-on-light + 2 white-on-dark logos. We render on a dark background
-  // and invert the black ones so all read as light marks on dark.
-  // On a light background: invert the white-on-dark logos so they render dark.
+  // All logos are black-on-transparent rectangle marks; the marquee runs on a
+  // white background so no inversion is needed. The list is ordered roughly by
+  // brand recognition / variety so the marquee never groups two visually-
+  // similar marks back-to-back.
   const logos = [
-    {name:'ULE Group',           src:'assets/logos/ulegroup.svg',          invert:false},
-    {name:'Welding Store',       src:'assets/logos/weldingstore.svg',      invert:false},
-    {name:'Sign Warehouse',      src:'assets/logos/signwarehouse.svg',     invert:false},
-    {name:'Warehouse Lighting',  src:'assets/logos/warehouselighting.svg', invert:false},
-    {name:'Uneeda',              src:'assets/logos/uneeda.svg',            invert:false},
-    {name:'AgriDrain',           src:'assets/logos/agridrain.svg',         invert:false},
-    {name:'E3 Spark Plugs',      src:'assets/logos/e3sparkplugs.svg',      invert:false},
-    {name:'Canon',               src:'assets/logos/canon.svg',             invert:false},
-    {name:'HTI Materials',       src:'assets/logos/htimaterials.svg',      invert:false},
-    {name:'Industry Railway Suppliers', src:'assets/logos/industryrailwaysuppliers.svg', invert:false},
-    {name:'Frontier Distributing', src:'assets/logos/frontierdistributing.svg', invert:false},
+    {name:'Canon',                       src:'assets/logos/canon-rectangle-black.svg'},
+    {name:'Kooks',                       src:'assets/logos/kooks-rectangle-black.svg'},
+    {name:'TotalBoat',                   src:'assets/logos/TotalBoat-rectangle-black.svg'},
+    {name:'ULE Group',                   src:'assets/logos/ULEgroup-rectangle-black.svg'},
+    {name:'Vermont Woods',               src:'assets/logos/VermontWoods-rectangle-black.svg'},
+    {name:'Welding Store',               src:'assets/logos/WeldingStore-rectangle-black.svg'},
+    {name:'Sign Warehouse',              src:'assets/logos/signwarehouse-rectangle-black.svg'},
+    {name:'Warehouse Lighting',          src:'assets/logos/WarehouseLighting-rectangle-black.svg'},
+    {name:'E3 Spark Plugs',              src:'assets/logos/E3SparkPlugs-rectangle-black.svg'},
+    {name:'Genuine Scooter Company',     src:'assets/logos/GenuineScooterCompany-rectangle-black.svg'},
+    {name:'AgriDrain',                   src:'assets/logos/agridrain-rectangle-black.svg'},
+    {name:'Uneeda',                      src:'assets/logos/uneeda-rectangle-black.svg'},
+    {name:'Industry Railway Suppliers',  src:'assets/logos/IndustryRailwaySuppliers-rectangle-black.svg'},
+    {name:'Frontier Distributing',       src:'assets/logos/Frontierdistributing-rectangle-black.svg'},
+    {name:'MAC',                         src:'assets/logos/MAC-rectangle-black.svg'},
+    {name:'Microfiber Wholesale',        src:'assets/logos/MicrofiberWholesale-rectangle-black.svg'},
+    {name:'Nail Super Store',            src:'assets/logos/NailSuperStore-rectangle-black.svg'},
+    {name:'Norton Supply',               src:'assets/logos/NortonSupply-rectangle-black.svg'},
+    {name:'Sanitaire',                   src:'assets/logos/Sanitaire-rectangle-black.svg'},
+    {name:'Leki',                        src:'assets/logos/Leki-rectangle-black.svg'},
+    {name:'Kodo',                        src:'assets/logos/Kodo-rectangle-black.svg'},
+    {name:'KBS',                         src:'assets/logos/kbs-rectangle-black.svg'},
+    {name:'Crowd Control Warehouse',     src:'assets/logos/CrowdControlWarehouse-rectangle-black.svg'},
+    {name:'Trailer Parts Kingdom',       src:'assets/logos/trailerpartskingdom-rectangle-black.svg'},
+    {name:'Thermosoft',                  src:'assets/logos/thermosoft-rectangle-black.svg'},
+    {name:'eVacuum',                     src:'assets/logos/evacuum-rectangle-black.svg'},
+    {name:'Farmers',                     src:'assets/logos/farmers-rectangle-black.svg'},
+    {name:'Jones and Sons',              src:'assets/logos/jonesandsons-rectangle-black.svg'},
+    {name:'Phoenix Mecano',              src:'assets/logos/phoenixmecano-rectangle-black.svg'},
+    {name:'Blueroot',                    src:'assets/logos/blueroot-rectangle-black.svg'},
+    {name:'Dash Designs',                src:'assets/logos/dashdesigns-rectangle-black.svg'},
+    {name:'Explore Industries',          src:'assets/logos/ExploreIndustries-rectangle-black.svg'},
+    {name:'Greatlakes Biosystem',        src:'assets/logos/GreatlakesBiosystem-rectangle-black.svg'},
+    {name:'EEA',                         src:'assets/logos/EEA-rectangle-black.svg'},
   ];
 
   // Duplicate the list so the CSS marquee loops seamlessly.
@@ -78,7 +102,6 @@ function TrustStrip() {
                   decoding="async"
                   style={{
                     height: isMobile ? 56 : 64,width:'auto',display:'block',
-                    filter: logo.invert ? 'invert(1)' : 'none',
                   }}
                 />
               </div>
