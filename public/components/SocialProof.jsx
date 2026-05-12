@@ -6,9 +6,9 @@ function SocialProof() {
   const reviews = [
     {
       tone:'dark', size:'tall',
-      quote:'The Blueprint surfaced three integration risks our previous partner hadn\'t even mentioned. We saved a year.',
-      attr:'Denise Foley',
-      role:'EVP E-Commerce, ULE Group',
+      quote:'The team communicated consistently and efficiently, and internal stakeholders were particularly impressed with the service Uncaps\' vast technical expertise.',
+      attr:'Todd Arey',
+      role:'E3 Spark Plugs',
       photo:'https://i.pravatar.cc/120?img=44',
       stat:{n:'6×', l:'Online sales after launch'},
     },
