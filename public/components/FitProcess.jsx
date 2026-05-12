@@ -47,14 +47,15 @@ function FitProcess() {
         { rot: 4,  x: 0, y: 90  },
       ]
     : [
-        // Wider spread + gentler tilt so each card has clear breathing room
-        // and the body copy reads cleanly. Outer cards push to ±38%, inner
-        // sit at ±13% — leaves a visible gap between adjacent cards on the
-        // page so the text inside isn't fighting for attention.
-        { rot: -11, x: -38, y: 30 },
-        { rot: -4,  x: -13, y: 4  },
-        { rot: 4,   x: 13,  y: 4  },
-        { rot: 11,  x: 38,  y: 30 },
+        // Spread far enough that each card has a clear horizontal gap to its
+        // neighbour, even after rotation kicks the corners out. Outer cards
+        // sit at ±37%, inner at ±12%; widths clamp tightly so the gaps stay
+        // visible at every breakpoint. Tilt softens to ±9 / ±3 so each card
+        // reads on its own without the hand fighting the copy.
+        { rot: -9, x: -37, y: 32 },
+        { rot: -3, x: -12, y: 4  },
+        { rot: 3,  x: 12,  y: 4  },
+        { rot: 9,  x: 37,  y: 32 },
       ];
 
   React.useEffect(() => {
@@ -188,8 +189,8 @@ function FitProcess() {
                   // Sized in % of the inner stage so the hand stays within the
                   // 1280px page wrapper on every viewport. Cards never grow
                   // beyond ~280px wide or shrink below ~190px.
-                  const cardWidth  = isMobile ? '86%'                       : 'clamp(200px, 22%, 290px)';
-                  const cardHeight = isMobile ? 'clamp(180px,28vh,260px)'   : 'clamp(320px, 60%, 480px)';
+                  const cardWidth  = isMobile ? '86%'                       : 'clamp(190px, 19%, 260px)';
+                  const cardHeight = isMobile ? 'clamp(180px,28vh,260px)'   : 'clamp(340px, 62%, 500px)';
                   return (
                     <article
                       key={w.n}
