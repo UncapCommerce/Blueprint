@@ -979,6 +979,14 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
       display:'flex',flexDirection:'column',gap:18,
     }}>
       <div style={{
+        fontFamily:'var(--font-display)',fontWeight:500,
+        fontSize: isMobile ? 14 : 'clamp(13px, 1.2vw, 15px)',
+        lineHeight:1.4,letterSpacing:'-.005em',
+        textAlign: isMobile ? 'center' : 'left',
+      }}>
+        Reserve your spot to schedule the discovery call.
+      </div>
+      <div style={{
         position:'relative',
         background:'#fff',color:'var(--fg-1)',borderRadius:5,
         padding: isMobile ? 12 : 16,
