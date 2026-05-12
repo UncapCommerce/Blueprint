@@ -251,37 +251,37 @@ function BlueprintArtifact({isMobile, heroErp}){
             <PreparedByName/>
             <div style={{display:'flex',alignItems:'center'}}>
               {[
-                // When the team photos land in public/assets/team/, drop them
-                // at these filenames and the stack picks them up. The remote
-                // pravatar fallbacks stay until then so the artifact never
-                // shows broken-image icons.
-                {name:'Ryan',    src:'assets/team/ryan.jpg',    fallback:'https://i.pravatar.cc/80?img=12'},
-                {name:'Jo',      src:'assets/team/jo.jpg',      fallback:'https://i.pravatar.cc/80?img=44'},
-                {name:'Michael', src:'assets/team/michael.jpg', fallback:'https://i.pravatar.cc/80?img=14'},
-                {name:'Mike',    src:'assets/team/mike.jpg',    fallback:'https://i.pravatar.cc/80?img=9'},
+                // Placeholder initials until real headshots ship into
+                // public/assets/team/. Each entry can become an <img/> as the
+                // photo lands; for now the initial-bubble keeps the artifact
+                // looking deliberate instead of carrying dummy stock faces.
+                {name:'Ryan',    tone:'#1f4cd6'},
+                {name:'Jo',      tone:'#0a6d4a'},
+                {name:'Michael', tone:'#a3531f'},
+                {name:'Mike',    tone:'#5a3a8a'},
               ].map((person, i) => (
-                <img
+                <span
                   key={person.name}
-                  src={person.src}
-                  onError={(e) => {
-                    if (e.currentTarget.src !== person.fallback) {
-                      e.currentTarget.src = person.fallback;
-                    }
-                  }}
-                  alt={person.name}
                   title={person.name}
-                  loading="lazy"
-                  decoding="async"
+                  aria-label={person.name}
                   style={{
                     width: m ? 22 : 26,
                     height: m ? 22 : 26,
                     borderRadius:999,
-                    objectFit:'cover',
+                    background: person.tone,
+                    color:'#fff',
                     border:'2px solid #fff',
                     marginLeft: i === 0 ? 0 : -8,
-                    display:'block',
+                    display:'inline-flex',
+                    alignItems:'center',
+                    justifyContent:'center',
+                    fontFamily:'var(--font-mono)',
+                    fontWeight:700,
+                    fontSize: m ? 10 : 11,
+                    letterSpacing:'0',
+                    boxShadow:'0 0 0 1px rgba(10,10,10,0.04)',
                   }}
-                />
+                >{person.name[0]}</span>
               ))}
             </div>
           </div>
