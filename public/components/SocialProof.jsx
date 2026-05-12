@@ -29,9 +29,9 @@ function SocialProof() {
     },
     {
       tone:'white', size:'small',
-      quote:'Senior people, every meeting. No bait-and-switch to juniors after kickoff.',
-      attr:'Tom Reilly',
-      role:'CTO, Welding Store',
+      quote:'Uncap team demonstrated a deep understanding of working within the Shopify ecosystem from the get-go, which in turn helped me tremendously with aligning the new site with our older business model and work flows.',
+      attr:'Andy Morgan',
+      role:'ScooterWorks',
       photo:'https://i.pravatar.cc/120?img=14',
     },
     {
