@@ -40,6 +40,13 @@ function SocialProof() {
       attr:'Atlas Hardware',
     },
     {
+      tone:'white', size:'small',
+      quote:'I’ve honestly never worked with a firm like them before; they’re absolutely outstanding.',
+      attr:'Pete Suter',
+      role:"Shirley's Gourmet Popcorn",
+      photo:'https://i.pravatar.cc/120?img=33',
+    },
+    {
       tone:'white', size:'wide',
       quote:'During the Blueprint, the Uncap team went through each of my requirements and laid out if it was doable, if it was native to Shopify, if it required an app and which one they recommend, or if custom work was needed.',
       attr:'Denise Foley',
