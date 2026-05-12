@@ -97,7 +97,7 @@ function FAQ() {
         <h2 style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize: isMobile ? 'clamp(28px, 7.6vw, 38px)' : 'clamp(40px,4.4vw,68px)',lineHeight:1.05,letterSpacing:'-.03em',color:'var(--fg-1)',margin: isMobile ? '0 0 28px' : '0 0 48px'}}>
           Questions worth asking.
         </h2>
-        <div style={{borderTop:'1px solid var(--uc-black)'}}>
+        <div data-reveal-stagger style={{borderTop:'1px solid var(--uc-black)'}}>
           {items.map((it,i)=>(
             <div key={it.q} style={{borderBottom:'1px solid var(--uc-black)'}}>
               <button onClick={()=>setOpen(open===i?-1:i)} style={{width:'100%',background:'transparent',border:'none',padding: isMobile ? '18px 0' : '24px 0',textAlign:'left',display:'flex',justifyContent:'space-between',alignItems:'center',cursor:'pointer',gap: isMobile ? 14 : 24}}>
