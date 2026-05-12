@@ -48,8 +48,10 @@ function SocialProof() {
     },
     {
       tone:'dark', size:'small',
-      stat:{n:'$0', l:'change orders, end of project'},
-      attr:'Northwoods Mfg.',
+      quote:'I cannot praise the Uncap team enough. They are hell of a team.',
+      attr:'Andy Blechschmidt',
+      role:'Jerico',
+      photo:'https://i.pravatar.cc/120?img=11',
     },
     {
       tone:'cream', size:'small',
