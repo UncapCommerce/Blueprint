@@ -267,7 +267,7 @@ function renderWithRedaction(text, target){
   );
 }
 
-const REDACTION_REVEAL_MS = 10000;
+const REDACTION_REVEAL_MS = 3000;
 function Redaction({children}){
   const [revealed, setRevealed] = React.useState(false);
   React.useEffect(() => {
