@@ -27,7 +27,7 @@ function Shift() {
         </div>
       )}
       <div style={{maxWidth:1280,margin:'0 auto',position:'relative',zIndex:1}}>
-        <div style={{maxWidth:880,marginBottom: isMobile ? 32 : 64}}>
+        <div data-reveal="fade-up" style={{maxWidth:880,marginBottom: isMobile ? 32 : 64}}>
           <div className="uc-eyebrow" style={{color:'var(--uc-stone-500)',marginBottom: isMobile ? 12 : 18}}>The shift</div>
           <h2 style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize: isMobile ? 'clamp(28px, 7.6vw, 40px)' : 'clamp(40px,4.4vw,72px)',lineHeight:1.05,letterSpacing:'-.03em',margin:'0 0 12px',color:'#fff'}}>
             The "free estimate" is the real real trap.
@@ -39,7 +39,7 @@ function Shift() {
 
         <div style={{display:'grid',gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',gap: isMobile ? 16 : 24}}>
           {/* Left: how most agencies sell it */}
-          <div style={{border:'1px solid #2B2B2B',borderRadius:5,padding: isMobile ? '24px 22px' : 32,background:'#111'}}>
+          <div data-reveal="slide-left" style={{border:'1px solid #2B2B2B',borderRadius:5,padding: isMobile ? '24px 22px' : 32,background:'#111'}}>
             <div style={{display:'flex',alignItems:'center',gap:10,marginBottom: isMobile ? 16 : 24}}>
               <div style={{width:8,height:8,borderRadius:999,background:'#B5322B'}}/>
               <div style={{fontSize:13,fontWeight:600,color:'var(--uc-stone-300)',letterSpacing:'.04em',textTransform:'uppercase'}}>How most agencies sell it</div>
@@ -56,7 +56,7 @@ function Shift() {
           </div>
 
           {/* Right: how the blueprint works */}
-          <div style={{border:'1px solid var(--uc-signal)',borderRadius:5,padding: isMobile ? '24px 22px' : 32,background:'#0E0E0E',position:'relative',marginTop: isMobile ? 16 : 0}}>
+          <div data-reveal="slide-right" style={{border:'1px solid var(--uc-signal)',borderRadius:5,padding: isMobile ? '24px 22px' : 32,background:'#0E0E0E',position:'relative',marginTop: isMobile ? 16 : 0}}>
             <div style={{position:'absolute',top:-12,right: isMobile ? 16 : 24,padding:'4px 10px',background:'var(--uc-signal)',borderRadius:3,fontSize:11,fontWeight:700,letterSpacing:'.06em',textTransform:'uppercase',color:'var(--uc-black)'}}>The Blueprint</div>
             <div style={{display:'flex',alignItems:'center',gap:10,marginBottom: isMobile ? 16 : 24}}>
               <div style={{width:8,height:8,borderRadius:999,background:'var(--uc-signal)'}}/>

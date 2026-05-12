@@ -99,7 +99,7 @@ function SocialProof() {
         </div>
 
         {/* 3-column mosaic with varied card heights: collapses to 1-column on mobile */}
-        <div style={{
+        <div data-reveal-stagger style={{
           columnCount: isMobile ? 1 : 3,
           columnGap:16,
         }}>

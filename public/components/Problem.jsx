@@ -65,7 +65,7 @@ function Problem() {
       <div style={{maxWidth:1280,margin:'0 auto',position:'relative',zIndex:1}}>
 
         {/* Header: file folder tab metaphor */}
-        <div style={{maxWidth:920,marginBottom: isMobile ? 36 : 72,position:'relative'}}>
+        <div data-reveal="fade-up" style={{maxWidth:920,marginBottom: isMobile ? 36 : 72,position:'relative'}}>
           <div style={{
             display:'inline-flex',alignItems:'center',gap:10,
             padding:'6px 14px',
@@ -102,7 +102,7 @@ function Problem() {
         </div>
 
         {/* The 4 case files: staggered, rotated dossier cards (no rotation on mobile) */}
-        <div style={{
+        <div data-reveal-stagger style={{
           display:'grid',
           gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)',
           gap: isMobile ? 28 : 24,

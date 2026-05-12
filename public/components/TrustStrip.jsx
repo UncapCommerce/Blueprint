@@ -31,7 +31,7 @@ function TrustStrip() {
       position:'relative',
       overflow:'hidden',
     }}>
-      <div style={{
+      <div data-reveal="slide-right" style={{
         maxWidth:1280,margin:'0 auto',
         padding: isMobile ? '0 20px' : '0 32px',
         display:'flex',

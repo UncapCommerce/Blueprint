@@ -17,7 +17,7 @@ function Offer() {
     <section id="offer" style={{background:'#fff',padding: isMobile ? '64px 20px' : '120px 32px',scrollMarginTop:80}}>
       <div style={{maxWidth:1280,margin:'0 auto'}}>
         <div style={{display:'grid',gridTemplateColumns: isMobile ? '1fr' : '1.1fr 1fr',gap: isMobile ? 28 : 80,alignItems: isMobile ? 'start' : 'end',marginBottom: isMobile ? 36 : 64}}>
-          <div>
+          <div data-reveal="fade-up">
             <div className="uc-eyebrow" style={{marginBottom: isMobile ? 12 : 18}}>The offer</div>
             <h2 style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize: isMobile ? 'clamp(30px, 8vw, 44px)' : 'clamp(40px,4.6vw,76px)',lineHeight: isMobile ? 1.05 : 1.0,letterSpacing:'-.035em',color:'var(--fg-1)',margin:'0 0 14px'}}>
               {isMobile ? 'What $7K actually gets you.' : <React.Fragment>What $7K actually<br/>gets you.</React.Fragment>}
@@ -26,7 +26,7 @@ function Offer() {
               Full consultation. Solution deep-dive. A complete migration playbook, not a slide deck.
             </p>
           </div>
-          <figure style={{
+          <figure data-reveal="slide-right" style={{
             margin:0,
             display:'flex',flexDirection:'column',gap: isMobile ? 16 : 20,
             padding: isMobile ? '24px 22px' : '30px 32px',
