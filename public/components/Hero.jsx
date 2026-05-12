@@ -248,14 +248,12 @@ function BlueprintArtifact({isMobile, heroErp}){
 
         <div style={{marginTop: m ? 14 : 20,paddingTop:14,borderTop:'1px solid var(--uc-black)',display:'flex',justifyContent:'space-between',alignItems:'center',gap:8,flexWrap:'wrap'}}>
           <div style={{display:'flex',alignItems:'center',gap:10}}>
-            <PreparedByName/>
             <div style={{display:'flex',alignItems:'center'}}>
               {[
                 // Tries to load a real headshot first; if the file isn't in
                 // public/assets/team/ yet, falls back to the colored initial
-                // bubble. Drop jack.jpg / jo.jpg / michael.jpg / mike.jpg into
-                // that folder and the artifact picks them up with no code
-                // change.
+                // bubble. Drop the team photos into that folder and the
+                // artifact picks them up with no code change.
                 {name:'Jack',    file:'Jack - IMG.png',    tone:'#1f4cd6'},
                 {name:'Jo',      file:'Jo - IMG.png',      tone:'#0a6d4a'},
                 {name:'Michael', file:'Michael - IMG.png', tone:'#a3531f'},
@@ -264,6 +262,7 @@ function BlueprintArtifact({isMobile, heroErp}){
                 <TeamAvatar key={person.name} person={person} i={i} m={m}/>
               ))}
             </div>
+            <PreparedByName/>
           </div>
           <span style={{display:'inline-flex',alignItems:'center',gap:6,padding:'4px 10px',background:'var(--uc-signal)',borderRadius:3,fontSize:11,fontWeight:700,letterSpacing:'.06em',textTransform:'uppercase'}}>$7,000 fixed</span>
         </div>
