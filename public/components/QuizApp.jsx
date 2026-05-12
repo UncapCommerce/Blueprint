@@ -797,7 +797,7 @@ function Confirmation({answers, otherErp, otherPlatform, contact, setupPromiseRe
           <CheckSm/> $500 fully refundable if not a fit.
         </span>
         <span style={{display:'inline-flex',alignItems:'center',gap:8}}>
-          <CheckSm/> Credited toward implementation
+          <DiscountSm/> Credited toward implementation
         </span>
       </div>
     </div>
@@ -1040,6 +1040,14 @@ function Lock(){ return (
 function CheckSm(){ return (
   <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
     <path d="M2.5 7.5L5.5 10L11.5 4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
+  </svg>
+);}
+// Small discount-tag icon: price-tag silhouette + dot accent. Sized to drop
+// in alongside CheckSm in the post-Stripe payment strip.
+function DiscountSm(){ return (
+  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+    <path d="M7.4 1.4H12.2V6.2L6.0 12.4L1.6 8L7.4 1.4Z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" strokeLinecap="round"/>
+    <circle cx="9.7" cy="4.1" r="0.9" fill="currentColor"/>
   </svg>
 );}
 

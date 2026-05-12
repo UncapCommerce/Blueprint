@@ -72,7 +72,7 @@ function Hero() {
                 <span style={{fontSize:13,color:'var(--fg-2)',fontWeight:500,whiteSpace:'nowrap'}}>Fully refundable if not a fit.</span>
               </div>
               <div style={{display:'flex',alignItems:'center',gap:8}}>
-                <DiscountTag/>
+                <CheckDot/>
                 <span style={{fontSize:13,color:'var(--fg-2)',fontWeight:500,whiteSpace:'nowrap'}}>Credited toward implementation</span>
               </div>
             </div>
@@ -165,19 +165,6 @@ function CheckDot(){
   return (
     <span style={{width:18,height:18,borderRadius:999,background:'var(--uc-black)',display:'inline-flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
       <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><path d="M2 5.2L4 7.2L8 2.8" stroke="#fff" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>
-    </span>
-  );
-}
-
-// Discount tag icon: a price-tag silhouette with a percent inside, sized the
-// same as the CheckDot so it can drop in next to other hero-strip items.
-function DiscountTag(){
-  return (
-    <span style={{width:18,height:18,borderRadius:999,background:'var(--uc-black)',display:'inline-flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-      <svg width="11" height="11" viewBox="0 0 11 11" fill="none" aria-hidden="true">
-        <path d="M5.6 1.2H9.2V4.8L4.4 9.6L1 6.2L5.6 1.2Z" stroke="#fff" strokeWidth="1.2" strokeLinejoin="round"/>
-        <circle cx="7.6" cy="3.4" r="0.7" fill="#fff"/>
-      </svg>
     </span>
   );
 }
