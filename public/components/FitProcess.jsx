@@ -22,35 +22,47 @@ function FitProcess() {
     {n:'Week 4', t:'Delivery & Founder Briefing', d:'Full Blueprint and prototype handed over 1:1 with the founder. Fixed-cost implementation estimate. Risk register. You own it.'},
   ];
 
-  // Sticky-deck scroll: each week card pins to the top of the viewport in
-  // turn, then the next one slides up and covers it like a deck of playing
-  // cards. We track which card is currently "on top" so the small progress
-  // dots inside each card reflect the user's position through the deck.
-  const deckRef = React.useRef(null);
-  const cardRefs = React.useRef(weeks.map(() => React.createRef()));
-  const [activeIdx, setActiveIdx] = React.useState(0);
+  // Poker-hand scroll-in: the four week cards start below the viewport, then
+  // rise into a fanned-out hand as the section scrolls into view. Cards land
+  // staggered (left-to-right) and settle into asymmetric rotations + vertical
+  // offsets so they read like cards held in a hand.
+  const handRef = React.useRef(null);
+  const [revealed, setRevealed] = React.useState(0);
   React.useEffect(() => {
-    if (typeof window === 'undefined' || !window.IntersectionObserver) return;
-    const stickyTop = isMobile ? 76 : 120;
+    if (typeof window === 'undefined' || !window.IntersectionObserver || !handRef.current) {
+      setRevealed(weeks.length);
+      return;
+    }
+    let triggered = false;
     const obs = new IntersectionObserver(entries => {
-      // Pick the last card whose top has crossed the sticky line — that's
-      // the one currently pinned.
-      let topIdx = 0;
       entries.forEach(e => {
-        const idx = Number(e.target.dataset.weekIdx);
-        const rect = e.boundingClientRect;
-        if (rect.top <= stickyTop + 2) topIdx = Math.max(topIdx, idx);
+        if (e.isIntersecting && !triggered) {
+          triggered = true;
+          weeks.forEach((_, i) => {
+            setTimeout(() => setRevealed(r => Math.max(r, i + 1)), i * 220);
+          });
+          obs.disconnect();
+        }
       });
-      cardRefs.current.forEach((ref, i) => {
-        if (!ref.current) return;
-        const r = ref.current.getBoundingClientRect();
-        if (r.top <= stickyTop + 2) topIdx = Math.max(topIdx, i);
-      });
-      setActiveIdx(topIdx);
-    }, { threshold: [0, 1], rootMargin: `-${stickyTop}px 0px 0px 0px` });
-    cardRefs.current.forEach(ref => { if (ref.current) obs.observe(ref.current); });
+    }, { rootMargin: '0px 0px -12% 0px', threshold: 0.2 });
+    obs.observe(handRef.current);
     return () => obs.disconnect();
-  }, [isMobile]);
+  }, []);
+  // Final fan positions — symmetric arc, outer cards rotated more and slightly
+  // lifted so the hand reads like the cards are angled toward the viewer.
+  const fanLayouts = isMobile
+    ? [
+        { rot: -6, x: -3,  y: 0  },
+        { rot: -2, x: -1,  y: 0  },
+        { rot: 2,  x: 1,   y: 0  },
+        { rot: 6,  x: 3,   y: 0  },
+      ]
+    : [
+        { rot: -14, x: -27, y: 26 },
+        { rot: -5,  x: -9,  y: 4  },
+        { rot: 5,   x: 9,   y: 4  },
+        { rot: 14,  x: 27,  y: 26 },
+      ];
   return (
     <React.Fragment>
       {/* Who it's for */}
@@ -110,77 +122,88 @@ function FitProcess() {
               No discovery purgatory. No "we'll get you a proposal next quarter." A 28-day clock starts the day you sign.
             </p>
           </div>
-          {/* Sticky-deck: each card pins to the top of the viewport in turn,
-              and the next one slides up over it like a deck of cards. */}
-          <div ref={deckRef} style={{position:'relative'}}>
+          {/* Poker-hand: cards rise from below into a fanned arrangement. */}
+          <div
+            ref={handRef}
+            style={{
+              position:'relative',
+              height: isMobile ? 'auto' : 'min(70vh, 560px)',
+              minHeight: isMobile ? '92vh' : 'min(70vh, 560px)',
+              marginTop: isMobile ? 12 : 24,
+              perspective: '1400px',
+            }}
+          >
             {weeks.map((w,i)=>{
-              const stickyTop = isMobile ? 76 : 120;
-              const cardHeight = isMobile ? 'auto' : 'auto';
-              const minHeight = isMobile ? 'min(74vh, 560px)' : 'min(64vh, 520px)';
-              const isActive = i === activeIdx;
+              const layout = fanLayouts[i];
+              const visible = i < revealed;
+              // Card geometry — kept around 1/4 of the viewport on desktop so
+              // the hand spreads cleanly across the column. Mobile cards
+              // stack vertically with subtle rotation so the hand-feel still
+              // reads on small screens.
+              const cardWidth  = isMobile ? '86vw'                          : 'min(25vw, 320px)';
+              const cardHeight = isMobile ? 'min(28vh, 240px)'              : 'min(58vh, 460px)';
+              const restTransform = isMobile
+                ? `translate(-50%, ${i * 92}px) rotate(${layout.rot}deg)`
+                : `translate(-50%, -50%) translate(${layout.x}vw, ${layout.y}px) rotate(${layout.rot}deg)`;
+              const hiddenTransform = isMobile
+                ? `translate(-50%, calc(${i * 92}px + 120vh)) rotate(0deg)`
+                : `translate(-50%, -50%) translate(0vw, 100vh) rotate(0deg)`;
               return (
-                <div
+                <article
                   key={w.n}
-                  ref={cardRefs.current[i]}
                   data-week-idx={i}
                   style={{
-                    position:'sticky',
-                    top: stickyTop,
-                    zIndex: i + 1,
-                    marginTop: i === 0 ? 0 : (isMobile ? '22vh' : '26vh'),
+                    position:'absolute',
+                    left:'50%',
+                    top: isMobile ? 0 : '50%',
+                    width: cardWidth,
+                    height: cardHeight,
                     background:'#fff',
                     border:'1px solid var(--uc-black)',
-                    borderRadius:10,
-                    padding: isMobile ? '28px 24px 26px' : '48px 56px 44px',
-                    boxShadow: '0 20px 60px rgba(10,10,10,0.08), 0 4px 16px rgba(10,10,10,0.04)',
-                    display:'flex',flexDirection:'column',gap: isMobile ? 16 : 22,
-                    minHeight,
-                    height: cardHeight,
+                    borderRadius:14,
+                    boxShadow:'0 24px 56px rgba(10,10,10,0.18), 0 8px 22px rgba(10,10,10,0.08)',
+                    padding: isMobile ? '22px 22px 20px' : '28px 28px 24px',
+                    display:'flex',flexDirection:'column',gap: isMobile ? 10 : 14,
+                    zIndex: i + 1,
+                    transformOrigin: isMobile
+                      ? '50% 110%'      // pivot near bottom so rotation reads as wrist motion
+                      : '50% 110%',
+                    transform: visible ? restTransform : hiddenTransform,
+                    opacity: visible ? 1 : 0,
+                    transition:
+                      'transform 820ms cubic-bezier(.18,1.02,.36,1), ' +
+                      'opacity 360ms ease-out',
+                    willChange:'transform, opacity',
                   }}
                 >
-                  <div style={{display:'flex',alignItems:'center',gap:14}}>
+                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:10}}>
                     <span style={{
-                      width: isMobile ? 52 : 64, height: isMobile ? 52 : 64,
+                      width: isMobile ? 36 : 44, height: isMobile ? 36 : 44,
                       borderRadius:999,
-                      background: isActive ? 'var(--uc-signal)' : 'var(--uc-cream)',
+                      background:'var(--uc-signal)',
                       color:'var(--uc-black)',
                       display:'inline-flex',alignItems:'center',justifyContent:'center',
                       fontFamily:'var(--font-mono)',fontWeight:800,
-                      fontSize: isMobile ? 20 : 26,
+                      fontSize: isMobile ? 16 : 19,
                       flexShrink:0,
                       border:'1px solid var(--uc-black)',
-                      transition:'background 320ms var(--ease-out), transform 320ms var(--ease-out)',
-                      transform: isActive ? 'scale(1)' : 'scale(0.96)',
                     }}>{i+1}</span>
-                    <span style={{fontFamily:'var(--font-mono)',fontSize: isMobile ? 12 : 13,color:'var(--fg-3)',letterSpacing:'.1em',textTransform:'uppercase',fontWeight:700}}>{w.n}</span>
+                    <span style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--fg-3)',letterSpacing:'.12em',textTransform:'uppercase',fontWeight:700}}>{w.n}</span>
                   </div>
                   <h3 style={{
                     fontFamily:'var(--font-display)',fontWeight:700,
-                    fontSize: isMobile ? 'clamp(26px, 7vw, 36px)' : 'clamp(36px, 3.6vw, 56px)',
-                    letterSpacing:'-.025em',margin:0,color:'var(--fg-1)',lineHeight:1.05,
-                    maxWidth: 760,
+                    fontSize: isMobile ? 20 : 'clamp(22px, 1.7vw, 28px)',
+                    letterSpacing:'-.02em',margin:0,color:'var(--fg-1)',lineHeight:1.1,
                   }}>{w.t}</h3>
                   <p style={{
-                    fontSize: isMobile ? 16 : 19,
-                    lineHeight:1.55,color:'var(--fg-2)',margin:0,
-                    maxWidth: 640,
+                    fontSize: isMobile ? 14 : 14,
+                    lineHeight:1.5,color:'var(--fg-2)',margin:0,
+                    flex:1,
+                    overflow:'hidden',
                   }}>{w.d}</p>
-                  {/* Progress dots */}
-                  <div style={{display:'flex',gap:8,alignItems:'center',marginTop:'auto',paddingTop: isMobile ? 8 : 16}}>
-                    {weeks.map((_, j) => (
-                      <span key={j} style={{
-                        width: j === i ? 28 : 8, height:8, borderRadius:999,
-                        background: j <= i ? 'var(--uc-black)' : 'var(--line-1)',
-                        transition: 'width 280ms var(--ease-out), background 280ms var(--ease-out)',
-                      }}/>
-                    ))}
-                  </div>
-                </div>
+                </article>
               );
             })}
-            {/* Tail of scroll space so the last card has room to pin before
-                the next section pulls it out of view. */}
-            <div style={{height: isMobile ? '20vh' : '24vh'}}/>
           </div>
         </div>
       </section>
