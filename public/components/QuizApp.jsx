@@ -1049,7 +1049,7 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
       </button>
 
       <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,fontSize:12,color:'var(--uc-stone-300)',lineHeight:1.45}}>
-        $500 reservation fee charged today. Fully refundable if we're not a fit on the discovery call.
+        $500 reservation fee charged today. Applied towards Blueprint. Fully refundable if we're not a fit on the discovery call.
       </div>
     </form>
   );
