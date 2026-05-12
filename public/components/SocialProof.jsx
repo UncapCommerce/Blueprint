@@ -53,9 +53,9 @@ function SocialProof() {
     },
     {
       tone:'cream', size:'small',
-      quote:'Every assumption documented, every risk owned, every dollar accounted for before we wrote a line of code.',
-      attr:'Jordan Marsh',
-      role:'Director of Engineering, Uneeda',
+      quote:'The team was incredible and very honest and transparent with us when we voiced our needs and concerns.',
+      attr:'Georgia Kryssing',
+      role:'Kooks Headers',
       photo:'https://i.pravatar.cc/120?img=15',
     },
   ];
