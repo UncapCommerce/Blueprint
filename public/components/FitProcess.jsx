@@ -22,91 +22,32 @@ function FitProcess() {
     {n:'Week 4', t:'Delivery & Founder Briefing', d:'Full Blueprint and prototype handed over 1:1 with the founder. Fixed-cost implementation estimate. Risk register. You own it.'},
   ];
 
-  // Parallax-style scroll reveal. Each card has its own scroll window through
-  // the section (e.g. 0-32%, 20-52%, ...) and its transform is interpolated
-  // continuously between "hidden below" and "in the fan". Updates run through
-  // requestAnimationFrame writing straight to the DOM via refs — no React
-  // re-renders per scroll tick, so it stays smooth at 60fps.
-  const scrollerRef = React.useRef(null);
-  const cardRefs = React.useRef(weeks.map(() => React.createRef()));
-  // Per-card scroll windows. Overlap is intentional — adjacent cards animate
-  // at the same time so the hand feels like it's continuously building rather
-  // than snapping one card at a time.
-  const cardWindowsRef = React.useRef([
-    [0.00, 0.32],
-    [0.18, 0.52],
-    [0.36, 0.72],
-    [0.54, 0.92],
-  ]);
-  const fanLayoutsRef = React.useRef(null);
-  fanLayoutsRef.current = isMobile
-    ? [
-        { rot: -4, x: 0, y: -90 },
-        { rot: -2, x: 0, y: -30 },
-        { rot: 2,  x: 0, y: 30  },
-        { rot: 4,  x: 0, y: 90  },
-      ]
-    : [
-        // Spread far enough that each card has a clear horizontal gap to its
-        // neighbour, even after rotation kicks the corners out. Outer cards
-        // sit at ±37%, inner at ±12%; widths clamp tightly so the gaps stay
-        // visible at every breakpoint. Tilt softens to ±9 / ±3 so each card
-        // reads on its own without the hand fighting the copy.
-        { rot: -9, x: -37, y: 32 },
-        { rot: -3, x: -12, y: 4  },
-        { rot: 3,  x: 12,  y: 4  },
-        { rot: 9,  x: 37,  y: 32 },
-      ];
-
+  // Stagger-reveal on scroll: when the row enters the viewport the cards
+  // rise + fade in one after another with a soft spring on each number
+  // badge and the connecting arrows. Progressive enhancement — without
+  // IntersectionObserver every card just renders visible from the start.
+  const weeksRowRef = React.useRef(null);
+  const [revealCount, setRevealCount] = React.useState(0);
   React.useEffect(() => {
-    if (typeof window === 'undefined' || !scrollerRef.current) return;
-    const easeOut = t => 1 - Math.pow(1 - t, 3);
-    const reducedMotion =
-      window.matchMedia &&
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    let rafId = 0;
-    const update = () => {
-      rafId = 0;
-      const el = scrollerRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      const vh = window.innerHeight || document.documentElement.clientHeight;
-      const total = Math.max(1, rect.height - vh);
-      const scrolled = Math.min(total, Math.max(0, -rect.top));
-      const progress = scrolled / total;
-      cardRefs.current.forEach((ref, i) => {
-        const card = ref.current;
-        if (!card) return;
-        const [start, end] = cardWindowsRef.current[i];
-        let raw = (progress - start) / (end - start);
-        if (raw < 0) raw = 0;
-        if (raw > 1) raw = 1;
-        const e = reducedMotion ? (raw > 0 ? 1 : 0) : easeOut(raw);
-        const layout = fanLayoutsRef.current[i];
-        const hiddenVh = (1 - e) * 70; // start ~70vh below the rest position
-        const tx = e * layout.x;       // 0% → fan x offset
-        const tyPx = e * layout.y;     // 0px → fan y offset
-        const rot = e * layout.rot;    // 0° → final rotation
-        card.style.opacity = e.toFixed(3);
-        card.style.transform =
-          'translate(-50%, -50%) ' +
-          `translateX(${tx.toFixed(2)}%) ` +
-          `translateY(calc(${hiddenVh.toFixed(2)}vh + ${tyPx.toFixed(1)}px)) ` +
-          `rotate(${rot.toFixed(2)}deg)`;
+    if (typeof window === 'undefined' || !window.IntersectionObserver || !weeksRowRef.current) {
+      setRevealCount(weeks.length);
+      return;
+    }
+    let cancelled = false;
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting && !cancelled) {
+          cancelled = true;
+          weeks.forEach((_, i) => {
+            setTimeout(() => setRevealCount(r => Math.max(r, i + 1)), i * 240);
+          });
+          obs.disconnect();
+        }
       });
-    };
-    const onScroll = () => {
-      if (!rafId) rafId = requestAnimationFrame(update);
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll);
-    update();
-    return () => {
-      if (rafId) cancelAnimationFrame(rafId);
-      window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onScroll);
-    };
-  }, [isMobile]);
+    }, { rootMargin: '0px 0px -12% 0px', threshold: 0.15 });
+    obs.observe(weeksRowRef.current);
+    return () => { cancelled = true; obs.disconnect(); };
+  }, []);
   return (
     <React.Fragment>
       {/* Who it's for */}
@@ -153,8 +94,8 @@ function FitProcess() {
       </section>
 
       {/* Process timeline */}
-      <section style={{background:'var(--uc-cream)',padding: isMobile ? '64px 0' : '120px 0'}}>
-        <div style={{maxWidth:1280,margin:'0 auto', padding: isMobile ? '0 20px' : '0 32px'}}>
+      <section style={{background:'var(--uc-cream)',padding: isMobile ? '64px 20px' : '120px 32px'}}>
+        <div style={{maxWidth:1280,margin:'0 auto'}}>
           <div style={{display:'grid',gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',gap: isMobile ? 18 : 80,marginBottom: isMobile ? 32 : 56,alignItems: isMobile ? 'start' : 'end'}}>
             <div>
               <div className="uc-eyebrow" style={{marginBottom: isMobile ? 12 : 18}}>Process</div>
@@ -166,91 +107,47 @@ function FitProcess() {
               No discovery purgatory. No "we'll get you a proposal next quarter." A 28-day clock starts the day you sign.
             </p>
           </div>
-        </div>
-        {/* Scroll-driven poker hand. The outer scroller is taller than the
-            viewport — its scroll progress determines which card has been
-            revealed. The card stage lives in its own wider wrapper (1800-max)
-            so the hand spreads across the screen on big monitors instead of
-            clumping in the middle of an iMac. */}
-        <div
-          ref={scrollerRef}
-          style={{
-            position:'relative',
-            height: isMobile ? '300vh' : '320vh',
-            marginTop: isMobile ? 12 : 24,
-          }}
-        >
-          <div style={{
-            position:'sticky',
-            top: isMobile ? '6vh' : '10vh',
-            height: isMobile ? '88vh' : '80vh',
-            display:'flex',alignItems:'center',justifyContent:'center',
-            padding: isMobile ? '0 20px' : '0 32px',
-            boxSizing:'border-box',
-          }}>
-            <div style={{position:'relative', width:'100%', maxWidth: isMobile ? 'none' : 1800, height:'100%', margin:'0 auto'}}>
-              {weeks.map((w,i)=>{
-                // Sized in % of the inner stage so the hand spreads with the
-                // 1800-max card wrapper on large screens but never overflows
-                // it. Cards clamp between 200px and 320px on desktop.
-                const cardWidth  = isMobile ? '86%'                       : 'clamp(200px, 19%, 320px)';
-                const cardHeight = isMobile ? 'clamp(180px,28vh,260px)'   : 'clamp(340px, 62%, 500px)';
-                return (
-                  <article
-                    key={w.n}
-                    ref={cardRefs.current[i]}
-                    data-week-idx={i}
-                    style={{
-                      position:'absolute',
-                      left:'50%',
-                      top:'50%',
-                      width: cardWidth,
-                      height: cardHeight,
-                      background:'#fff',
-                      border:'1px solid var(--uc-black)',
-                      borderRadius:14,
-                      boxShadow:'0 24px 56px rgba(10,10,10,0.18), 0 8px 22px rgba(10,10,10,0.08)',
-                      padding: isMobile ? '22px 22px 20px' : '28px 28px 24px',
-                      display:'flex',flexDirection:'column',gap: isMobile ? 10 : 14,
-                      zIndex: i + 1,
-                      transformOrigin:'50% 110%',
-                      // Initial: hidden below + flat. The scroll listener
-                      // takes over on first rAF and updates transform every
-                      // frame, so we deliberately leave transition off.
-                      transform: 'translate(-50%, -50%) translateY(70vh) rotate(0deg)',
-                      opacity: 0,
-                      willChange:'transform, opacity',
-                    }}
-                  >
-                      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:10}}>
-                        <span style={{
-                          width: isMobile ? 36 : 44, height: isMobile ? 36 : 44,
-                          borderRadius:999,
-                          background:'var(--uc-signal)',
-                          color:'var(--uc-black)',
-                          display:'inline-flex',alignItems:'center',justifyContent:'center',
-                          fontFamily:'var(--font-mono)',fontWeight:800,
-                          fontSize: isMobile ? 16 : 19,
-                          flexShrink:0,
-                          border:'1px solid var(--uc-black)',
-                        }}>{i+1}</span>
-                        <span style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--fg-3)',letterSpacing:'.12em',textTransform:'uppercase',fontWeight:700}}>{w.n}</span>
-                      </div>
-                      <h3 style={{
-                        fontFamily:'var(--font-display)',fontWeight:700,
-                        fontSize: isMobile ? 20 : 'clamp(20px, 1.5vw, 26px)',
-                        letterSpacing:'-.02em',margin:0,color:'var(--fg-1)',lineHeight:1.1,
-                      }}>{w.t}</h3>
-                      <p style={{
-                        fontSize: isMobile ? 14 : 13.5,
-                        lineHeight:1.5,color:'var(--fg-2)',margin:0,
-                        flex:1,
-                        overflow:'hidden',
-                      }}>{w.d}</p>
-                    </article>
-                  );
-                })}
-            </div>
+          <div ref={weeksRowRef} style={{display:'grid',gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)',gap:0,border:'1px solid var(--uc-black)',borderRadius:5,background:'#fff',overflow:'hidden'}}>
+            {weeks.map((w,i)=>{
+              const isLast = i === weeks.length - 1;
+              const borderRight = !isMobile && i<3 ? '1px solid var(--line-1)' : 'none';
+              const borderBottom = isMobile && !isLast ? '1px solid var(--line-1)' : 'none';
+              const revealed = i < revealCount;
+              const arrowOn = i + 1 < revealCount;
+              return (
+                <div key={w.n} style={{
+                  padding: isMobile ? '24px 22px 28px' : '32px 28px 36px',
+                  borderRight,borderBottom,
+                  display:'flex',flexDirection:'column',gap: isMobile ? 14 : 18,
+                  position:'relative',
+                  opacity: revealed ? 1 : 0,
+                  transform: revealed ? 'translateY(0) scale(1)' : 'translateY(22px) scale(0.97)',
+                  transition: 'opacity 620ms var(--ease-out), transform 620ms var(--ease-out)',
+                  willChange:'opacity, transform',
+                }}>
+                  <div style={{display:'flex',alignItems:'center',gap:10}}>
+                    <span style={{
+                      width:32,height:32,borderRadius:999,background:'var(--uc-black)',color:'#fff',
+                      display:'inline-flex',alignItems:'center',justifyContent:'center',
+                      fontFamily:'var(--font-mono)',fontWeight:700,fontSize:13,flexShrink:0,
+                      transform: revealed ? 'scale(1)' : 'scale(0)',
+                      transition: 'transform 520ms cubic-bezier(.34,1.56,.64,1) 120ms',
+                    }}>{i+1}</span>
+                    <span style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--fg-3)',letterSpacing:'.06em',textTransform:'uppercase',fontWeight:600}}>{w.n}</span>
+                  </div>
+                  <h3 style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize: isMobile ? 22 : 28,letterSpacing:'-.025em',margin:0,color:'var(--fg-1)',lineHeight:1.05}}>{w.t}</h3>
+                  <p style={{fontSize: isMobile ? 15 : 14,lineHeight:1.55,color:'var(--fg-2)',margin:0}}>{w.d}</p>
+                  {!isMobile && i<3 && (
+                    <span style={{
+                      position:'absolute',top:46,right:-8,zIndex:2,background:'#fff',padding:'2px 4px',color:'var(--fg-3)',fontSize:14,
+                      opacity: arrowOn ? 1 : 0,
+                      transform: arrowOn ? 'translateX(0)' : 'translateX(-6px)',
+                      transition: 'opacity 360ms var(--ease-out) 140ms, transform 360ms var(--ease-out) 140ms',
+                    }}>→</span>
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       </section>
