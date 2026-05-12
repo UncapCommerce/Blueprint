@@ -84,11 +84,11 @@ function TrustStrip() {
           maskImage:'linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent)',
           WebkitMaskImage:'linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent)',
         }}>
-          <div className="ts-track" style={{display:'flex',alignItems:'center',gap: isMobile ? 48 : 80,width:'max-content'}}>
+          <div className="ts-track" style={{display:'flex',alignItems:'center',gap: isMobile ? 28 : 44,width:'max-content'}}>
             {track.map((logo, i)=>(
               <div key={i} title={logo.name} style={{
                 flexShrink:0,
-                height: isMobile ? 56 : 64,
+                height: isMobile ? 36 : 44,
                 display:'flex',alignItems:'center',justifyContent:'center',
                 opacity:.78,
                 transition:'opacity .25s var(--ease-out)',
@@ -101,7 +101,7 @@ function TrustStrip() {
                   loading="lazy"
                   decoding="async"
                   style={{
-                    height: isMobile ? 56 : 64,width:'auto',display:'block',
+                    height: isMobile ? 36 : 44,width:'auto',display:'block',
                   }}
                 />
               </div>
@@ -116,7 +116,7 @@ function TrustStrip() {
           to   { transform: translateX(-50%); }
         }
         .ts-track {
-          animation: tsScroll 38s linear infinite;
+          animation: tsScroll 70s linear infinite;
         }
         .ts-marquee:hover .ts-track {
           animation-play-state: paused;
