@@ -1035,8 +1035,8 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
             <span style={{
               marginLeft:10,
               padding:'4px 10px',
-              background:'#A8C81F',
-              color:'#fff',
+              background:'#C8E033',
+              color:'var(--uc-black)',
               borderRadius:999,
               fontSize:12,
               fontWeight:700,
