@@ -22,9 +22,9 @@ function SocialProof() {
     },
     {
       tone:'signal', size:'small',
-      quote:'We hired the Blueprint as a second opinion. It became the entire project plan.',
-      attr:'Priya Shah',
-      role:'Head of DTC, Atlas Hardware',
+      quote:'They are brilliant and very knowledgeable of all that Shopify can do.',
+      attr:'Peggy Farabaugh',
+      role:'Vermont Woods',
       photo:'https://i.pravatar.cc/120?img=5',
     },
     {
