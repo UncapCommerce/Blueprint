@@ -47,13 +47,14 @@ function FitProcess() {
         { rot: 4,  x: 0, y: 90  },
       ]
     : [
-        // Outer cards sit ~35% from center, inner cards ~12%. At the 1280-max
-        // wrapper width the outer cards still leave a comfortable margin on
-        // each side, so the hand reads wide-but-contained.
-        { rot: -14, x: -36, y: 28 },
-        { rot: -5,  x: -12, y: 4  },
-        { rot: 5,   x: 12,  y: 4  },
-        { rot: 14,  x: 36,  y: 28 },
+        // Wider spread + gentler tilt so each card has clear breathing room
+        // and the body copy reads cleanly. Outer cards push to ±38%, inner
+        // sit at ±13% — leaves a visible gap between adjacent cards on the
+        // page so the text inside isn't fighting for attention.
+        { rot: -11, x: -38, y: 30 },
+        { rot: -4,  x: -13, y: 4  },
+        { rot: 4,   x: 13,  y: 4  },
+        { rot: 11,  x: 38,  y: 30 },
       ];
 
   React.useEffect(() => {
@@ -187,7 +188,7 @@ function FitProcess() {
                   // Sized in % of the inner stage so the hand stays within the
                   // 1280px page wrapper on every viewport. Cards never grow
                   // beyond ~280px wide or shrink below ~190px.
-                  const cardWidth  = isMobile ? '86%'                       : 'clamp(210px, 24%, 320px)';
+                  const cardWidth  = isMobile ? '86%'                       : 'clamp(200px, 22%, 290px)';
                   const cardHeight = isMobile ? 'clamp(180px,28vh,260px)'   : 'clamp(320px, 60%, 480px)';
                   return (
                     <article
