@@ -21,6 +21,32 @@ function FitProcess() {
     {n:'Week 3', t:'Architecture & Prototyping', d:'We design your migration end-to-end and ship a working prototype. Data, integrations, rendering, identity, SEO: every layer specified.'},
     {n:'Week 4', t:'Delivery & Founder Briefing', d:'Full Blueprint and prototype handed over 1:1 with the founder. Fixed-cost implementation estimate. Risk register. You own it.'},
   ];
+
+  // Stagger-reveal: the four week cards rise + fade in one after another when
+  // the row enters the viewport. Progressive enhancement — without
+  // IntersectionObserver every card just renders visible from the start.
+  const weeksRowRef = React.useRef(null);
+  const [revealCount, setRevealCount] = React.useState(0);
+  React.useEffect(() => {
+    if (typeof window === 'undefined' || !window.IntersectionObserver || !weeksRowRef.current) {
+      setRevealCount(weeks.length);
+      return;
+    }
+    let cancelled = false;
+    const obs = new IntersectionObserver(entries => {
+      entries.forEach(e => {
+        if (e.isIntersecting && !cancelled) {
+          cancelled = true;
+          weeks.forEach((_, i) => {
+            setTimeout(() => setRevealCount(r => Math.max(r, i + 1)), i * 240);
+          });
+          obs.disconnect();
+        }
+      });
+    }, { rootMargin: '0px 0px -12% 0px', threshold: 0.15 });
+    obs.observe(weeksRowRef.current);
+    return () => { cancelled = true; obs.disconnect(); };
+  }, []);
   return (
     <React.Fragment>
       {/* Who it's for */}
@@ -80,20 +106,44 @@ function FitProcess() {
               No discovery purgatory. No "we'll get you a proposal next quarter." A 28-day clock starts the day you sign.
             </p>
           </div>
-          <div style={{display:'grid',gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)',gap:0,border:'1px solid var(--uc-black)',borderRadius:5,background:'#fff',overflow:'hidden'}}>
+          <div ref={weeksRowRef} style={{display:'grid',gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)',gap:0,border:'1px solid var(--uc-black)',borderRadius:5,background:'#fff',overflow:'hidden'}}>
             {weeks.map((w,i)=>{
               const isLast = i === weeks.length - 1;
               const borderRight = !isMobile && i<3 ? '1px solid var(--line-1)' : 'none';
               const borderBottom = isMobile && !isLast ? '1px solid var(--line-1)' : 'none';
+              const revealed = i < revealCount;
+              const arrowOn = i + 1 < revealCount;
               return (
-                <div key={w.n} style={{padding: isMobile ? '24px 22px 28px' : '32px 28px 36px',borderRight,borderBottom,display:'flex',flexDirection:'column',gap: isMobile ? 14 : 18,position:'relative'}}>
+                <div key={w.n} style={{
+                  padding: isMobile ? '24px 22px 28px' : '32px 28px 36px',
+                  borderRight,borderBottom,
+                  display:'flex',flexDirection:'column',gap: isMobile ? 14 : 18,
+                  position:'relative',
+                  opacity: revealed ? 1 : 0,
+                  transform: revealed ? 'translateY(0) scale(1)' : 'translateY(22px) scale(0.97)',
+                  transition: 'opacity 620ms var(--ease-out), transform 620ms var(--ease-out)',
+                  willChange:'opacity, transform',
+                }}>
                   <div style={{display:'flex',alignItems:'center',gap:10}}>
-                    <span style={{width:32,height:32,borderRadius:999,background:'var(--uc-black)',color:'#fff',display:'inline-flex',alignItems:'center',justifyContent:'center',fontFamily:'var(--font-mono)',fontWeight:700,fontSize:13,flexShrink:0}}>{i+1}</span>
+                    <span style={{
+                      width:32,height:32,borderRadius:999,background:'var(--uc-black)',color:'#fff',
+                      display:'inline-flex',alignItems:'center',justifyContent:'center',
+                      fontFamily:'var(--font-mono)',fontWeight:700,fontSize:13,flexShrink:0,
+                      transform: revealed ? 'scale(1)' : 'scale(0)',
+                      transition: 'transform 520ms cubic-bezier(.34,1.56,.64,1) 120ms',
+                    }}>{i+1}</span>
                     <span style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--fg-3)',letterSpacing:'.06em',textTransform:'uppercase',fontWeight:600}}>{w.n}</span>
                   </div>
                   <h3 style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize: isMobile ? 22 : 28,letterSpacing:'-.025em',margin:0,color:'var(--fg-1)',lineHeight:1.05}}>{w.t}</h3>
                   <p style={{fontSize: isMobile ? 15 : 14,lineHeight:1.55,color:'var(--fg-2)',margin:0}}>{w.d}</p>
-                  {!isMobile && i<3 && <span style={{position:'absolute',top:46,right:-8,zIndex:2,background:'#fff',padding:'2px 4px',color:'var(--fg-3)',fontSize:14}}>→</span>}
+                  {!isMobile && i<3 && (
+                    <span style={{
+                      position:'absolute',top:46,right:-8,zIndex:2,background:'#fff',padding:'2px 4px',color:'var(--fg-3)',fontSize:14,
+                      opacity: arrowOn ? 1 : 0,
+                      transform: arrowOn ? 'translateX(0)' : 'translateX(-6px)',
+                      transition: 'opacity 360ms var(--ease-out) 140ms, transform 360ms var(--ease-out) 140ms',
+                    }}>→</span>
+                  )}
                 </div>
               );
             })}
