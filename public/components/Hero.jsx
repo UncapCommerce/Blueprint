@@ -248,7 +248,7 @@ function BlueprintArtifact({isMobile, heroErp}){
 
         <div style={{marginTop: m ? 14 : 20,paddingTop:14,borderTop:'1px solid var(--uc-black)',display:'flex',justifyContent:'space-between',alignItems:'center',gap:8,flexWrap:'wrap'}}>
           <div style={{display:'flex',alignItems:'center',gap:10}}>
-            <span style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--fg-3)'}}>Prepared by</span>
+            <PreparedByName/>
             <div style={{display:'flex',alignItems:'center'}}>
               {[
                 'https://i.pravatar.cc/80?img=12',
@@ -279,6 +279,42 @@ function BlueprintArtifact({isMobile, heroErp}){
         </div>
       </div>
     </div>
+  );
+}
+
+// Rotates through the team name on the artifact's "Prepared by" label so the
+// card never feels static. Phases through Ryan → Jo → Michael → Mike on a
+// gentle fade-and-rise cross-swap. Pauses for prefers-reduced-motion users by
+// just printing the first name.
+function PreparedByName(){
+  const names = React.useMemo(() => ['Ryan', 'Jo', 'Michael', 'Mike'], []);
+  const [idx, setIdx] = React.useState(0);
+  const [shown, setShown] = React.useState(true);
+  React.useEffect(() => {
+    if (typeof window !== 'undefined' &&
+        window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      return;
+    }
+    const cycle = setInterval(() => {
+      setShown(false);
+      setTimeout(() => {
+        setIdx(i => (i + 1) % names.length);
+        setShown(true);
+      }, 220);
+    }, 2600);
+    return () => clearInterval(cycle);
+  }, [names.length]);
+  return (
+    <span style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--fg-3)',whiteSpace:'nowrap'}}>
+      Prepared by{' '}
+      <span style={{
+        color:'var(--fg-1)',fontWeight:700,
+        display:'inline-block',minWidth:'4.4em',
+        opacity: shown ? 1 : 0,
+        transform: shown ? 'translateY(0)' : 'translateY(-3px)',
+        transition:'opacity 220ms var(--ease-out), transform 220ms var(--ease-out)',
+      }}>{names[idx]}</span>
+    </span>
   );
 }
 
