@@ -41,9 +41,9 @@ function SocialProof() {
     },
     {
       tone:'white', size:'wide',
-      quote:'Three weeks in we had a working prototype on real Shopify, not a Figma file. That alone changed how every internal stakeholder talked about the project.',
-      attr:'Lena Kowalski',
-      role:'VP Digital, Sign Warehouse',
+      quote:'During the Blueprint, the Uncap team went through each of my requirements and laid out if it was doable, if it was native to Shopify, if it required an app and which one they recommend, or if custom work was needed.',
+      attr:'Denise Foley',
+      role:'ULE Group',
       photo:'https://i.pravatar.cc/120?img=9',
     },
     {
