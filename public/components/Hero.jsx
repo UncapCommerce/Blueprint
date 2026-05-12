@@ -256,10 +256,10 @@ function BlueprintArtifact({isMobile, heroErp}){
                 // bubble. Drop jack.jpg / jo.jpg / michael.jpg / mike.jpg into
                 // that folder and the artifact picks them up with no code
                 // change.
-                {name:'Jack',    file:'jack.jpg',    tone:'#1f4cd6'},
-                {name:'Jo',      file:'jo.jpg',      tone:'#0a6d4a'},
-                {name:'Michael', file:'michael.jpg', tone:'#a3531f'},
-                {name:'Mike',    file:'mike.jpg',    tone:'#5a3a8a'},
+                {name:'Jack',    file:'Jack - IMG.png',    tone:'#1f4cd6'},
+                {name:'Jo',      file:'Jo - IMG.png',      tone:'#0a6d4a'},
+                {name:'Michael', file:'Michael - IMG.png', tone:'#a3531f'},
+                {name:'Mike',    file:'Mike - IMG.png',    tone:'#5a3a8a'},
               ].map((person, i) => (
                 <TeamAvatar key={person.name} person={person} i={i} m={m}/>
               ))}
