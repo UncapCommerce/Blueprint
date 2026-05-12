@@ -251,37 +251,17 @@ function BlueprintArtifact({isMobile, heroErp}){
             <PreparedByName/>
             <div style={{display:'flex',alignItems:'center'}}>
               {[
-                // Placeholder initials until real headshots ship into
-                // public/assets/team/. Each entry can become an <img/> as the
-                // photo lands; for now the initial-bubble keeps the artifact
-                // looking deliberate instead of carrying dummy stock faces.
-                {name:'Ryan',    tone:'#1f4cd6'},
-                {name:'Jo',      tone:'#0a6d4a'},
-                {name:'Michael', tone:'#a3531f'},
-                {name:'Mike',    tone:'#5a3a8a'},
+                // Tries to load a real headshot first; if the file isn't in
+                // public/assets/team/ yet, falls back to the colored initial
+                // bubble. Drop jack.jpg / jo.jpg / michael.jpg / mike.jpg into
+                // that folder and the artifact picks them up with no code
+                // change.
+                {name:'Jack',    file:'jack.jpg',    tone:'#1f4cd6'},
+                {name:'Jo',      file:'jo.jpg',      tone:'#0a6d4a'},
+                {name:'Michael', file:'michael.jpg', tone:'#a3531f'},
+                {name:'Mike',    file:'mike.jpg',    tone:'#5a3a8a'},
               ].map((person, i) => (
-                <span
-                  key={person.name}
-                  title={person.name}
-                  aria-label={person.name}
-                  style={{
-                    width: m ? 22 : 26,
-                    height: m ? 22 : 26,
-                    borderRadius:999,
-                    background: person.tone,
-                    color:'#fff',
-                    border:'2px solid #fff',
-                    marginLeft: i === 0 ? 0 : -8,
-                    display:'inline-flex',
-                    alignItems:'center',
-                    justifyContent:'center',
-                    fontFamily:'var(--font-mono)',
-                    fontWeight:700,
-                    fontSize: m ? 10 : 11,
-                    letterSpacing:'0',
-                    boxShadow:'0 0 0 1px rgba(10,10,10,0.04)',
-                  }}
-                >{person.name[0]}</span>
+                <TeamAvatar key={person.name} person={person} i={i} m={m}/>
               ))}
             </div>
           </div>
@@ -292,12 +272,63 @@ function BlueprintArtifact({isMobile, heroErp}){
   );
 }
 
+// Avatar slot that tries to load /assets/team/<file> first, and renders the
+// colored initial bubble when that image is missing. No remote pravatar /
+// stock photo fallback — once a real headshot is dropped into the folder it
+// takes over with no code change.
+function TeamAvatar({person, i, m}){
+  const [failed, setFailed] = React.useState(false);
+  const baseStyle = {
+    width: m ? 22 : 26,
+    height: m ? 22 : 26,
+    borderRadius: 999,
+    border: '2px solid #fff',
+    marginLeft: i === 0 ? 0 : -8,
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    boxShadow: '0 0 0 1px rgba(10,10,10,0.04)',
+    flexShrink: 0,
+  };
+  if (failed) {
+    return (
+      <span
+        title={person.name}
+        aria-label={person.name}
+        style={{
+          ...baseStyle,
+          background: person.tone,
+          color: '#fff',
+          fontFamily: 'var(--font-mono)',
+          fontWeight: 700,
+          fontSize: m ? 10 : 11,
+        }}
+      >{person.name[0]}</span>
+    );
+  }
+  return (
+    <img
+      src={`assets/team/${person.file}`}
+      alt={person.name}
+      title={person.name}
+      loading="lazy"
+      decoding="async"
+      onError={() => setFailed(true)}
+      style={{
+        ...baseStyle,
+        objectFit: 'cover',
+        background: '#fff',
+      }}
+    />
+  );
+}
+
 // Rotates through the team name on the artifact's "Prepared by" label so the
-// card never feels static. Phases through Ryan → Jo → Michael → Mike on a
+// card never feels static. Phases through Jack → Jo → Michael → Mike on a
 // gentle fade-and-rise cross-swap. Pauses for prefers-reduced-motion users by
 // just printing the first name.
 function PreparedByName(){
-  const names = React.useMemo(() => ['Ryan', 'Jo', 'Michael', 'Mike'], []);
+  const names = React.useMemo(() => ['Jack', 'Jo', 'Michael', 'Mike'], []);
   const [idx, setIdx] = React.useState(0);
   const [shown, setShown] = React.useState(true);
   React.useEffect(() => {
