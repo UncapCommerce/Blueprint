@@ -26,22 +26,49 @@ function Offer() {
               Full consultation. Solution deep-dive. A complete migration playbook, not a slide deck.
             </p>
           </div>
-          <div style={{display:'flex',flexDirection:'column',gap:14,padding: isMobile ? '20px 22px' : '24px 28px',background:'var(--uc-cream)',border:'1px solid var(--uc-black)',borderRadius:5}}>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline',gap:10,flexWrap:'wrap'}}>
-              <span style={{fontSize:13,color:'var(--fg-3)',fontWeight:500,letterSpacing:'.04em',textTransform:'uppercase'}}>Fixed price</span>
-              <span style={{fontFamily:'var(--font-display)',fontWeight:800,fontSize: isMobile ? 38 : 48,letterSpacing:'-.04em',color:'var(--fg-1)',lineHeight:1}}>$7,000</span>
-            </div>
-            <div style={{height:1,background:'var(--line-1)'}}/>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline'}}>
-              <span style={{fontSize:13,color:'var(--fg-3)',fontWeight:500,letterSpacing:'.04em',textTransform:'uppercase'}}>Delivery</span>
-              <span style={{fontSize: isMobile ? 17 : 18,fontWeight:600,color:'var(--fg-1)'}}>4 weeks</span>
-            </div>
-            <div style={{height:1,background:'var(--line-1)'}}/>
-            <div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline'}}>
-              <span style={{fontSize:13,color:'var(--fg-3)',fontWeight:500,letterSpacing:'.04em',textTransform:'uppercase'}}>Ownership</span>
-              <span style={{fontSize: isMobile ? 17 : 18,fontWeight:600,color:'var(--fg-1)'}}>Yours to keep</span>
-            </div>
-          </div>
+          <figure style={{
+            margin:0,
+            display:'flex',flexDirection:'column',gap: isMobile ? 16 : 20,
+            padding: isMobile ? '24px 22px' : '30px 32px',
+            background:'var(--uc-cream)',
+            border:'1px solid var(--uc-black)',
+            borderRadius:5,
+            position:'relative',
+          }}>
+            <span aria-hidden="true" style={{
+              fontFamily:'var(--font-display)',fontWeight:800,
+              fontSize: isMobile ? 56 : 72,
+              lineHeight:.6,
+              color:'var(--uc-black)',
+              opacity:.18,
+              position:'absolute',
+              top: isMobile ? 10 : 14,
+              left: isMobile ? 14 : 22,
+              pointerEvents:'none',
+              userSelect:'none',
+            }}>“</span>
+            <blockquote style={{
+              margin:0,
+              fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:500,
+              fontSize: isMobile ? 'clamp(17px, 4.4vw, 21px)' : 'clamp(20px, 1.7vw, 25px)',
+              lineHeight:1.35,letterSpacing:'-.012em',
+              color:'var(--fg-1)',
+              paddingTop: isMobile ? 18 : 22,
+            }}>
+              45 accumulated years of operator experience went into curating this Blueprint.
+            </blockquote>
+            <figcaption style={{display:'flex',alignItems:'center',gap:12}}>
+              <span style={{
+                width:36,height:36,borderRadius:999,background:'var(--uc-black)',color:'#fff',
+                display:'inline-flex',alignItems:'center',justifyContent:'center',
+                fontFamily:'var(--font-mono)',fontWeight:700,fontSize:13,flexShrink:0,
+              }}>RM</span>
+              <div style={{display:'flex',flexDirection:'column',gap:1,lineHeight:1.25}}>
+                <span style={{fontSize: isMobile ? 14 : 14,fontWeight:600,color:'var(--fg-1)'}}>Ryan Muir</span>
+                <span style={{fontSize:12,color:'var(--fg-3)',fontWeight:500}}>Managing Director @ Uncap</span>
+              </div>
+            </figcaption>
+          </figure>
         </div>
 
         <div style={{display:'grid',gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)',gap:0,border:'1px solid var(--uc-black)',borderRadius:5,background:'#fff',overflow:'hidden'}}>
