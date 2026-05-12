@@ -4,14 +4,18 @@ function Guarantee() {
   return (
     <section style={{background:'#fff',padding: isMobile ? '64px 20px' : '120px 32px'}}>
       <div style={{maxWidth:1080,margin:'0 auto',position:'relative'}}>
-        {/* Stamp: absolute on desktop, inline above headline on mobile so it never overlaps */}
-        <div style={isMobile ? {
+        {/* Stamp: absolute on desktop, inline above headline on mobile so it
+            never overlaps. Animated via .uc-stamp (pop on mount + lazy float)
+            with --stamp-rot supplying each breakpoint's resting angle. */}
+        <div className="uc-stamp" style={isMobile ? {
           width:108,height:108,border:'1px solid var(--uc-black)',borderRadius:999,
-          display:'flex',alignItems:'center',justifyContent:'center',transform:'rotate(-6deg)',
+          display:'flex',alignItems:'center',justifyContent:'center',
           background:'var(--uc-signal)',margin:'0 0 24px',
+          '--stamp-rot': '-6deg',
         } : {
           position:'absolute',top:-20,right:0,width:140,height:140,border:'1px solid var(--uc-black)',borderRadius:999,
-          display:'flex',alignItems:'center',justifyContent:'center',transform:'rotate(8deg)',background:'var(--uc-signal)',
+          display:'flex',alignItems:'center',justifyContent:'center',background:'var(--uc-signal)',
+          '--stamp-rot': '8deg',
         }}>
           <div style={{textAlign:'center',fontFamily:'var(--font-display)',fontWeight:800,fontSize: isMobile ? 12 : 14,letterSpacing:'.04em',textTransform:'uppercase',lineHeight:1.1,color:'var(--uc-black)'}}>
             100%<br/>Money-back<br/>Guarantee
@@ -25,7 +29,7 @@ function Guarantee() {
           Finish the Discovery Call. If you don't feel confident in your migration path, we refund every dollar.
         </p>
         <p style={{fontSize: isMobile ? 15 : 17,color:'var(--fg-3)',margin:0,fontWeight:500}}>
-          We've never had to.
+          Although, we've never had to.
         </p>
       </div>
     </section>
@@ -92,7 +96,10 @@ function Founder() {
           <p style={{fontFamily:'var(--font-serif)',fontStyle:'italic',fontSize: isMobile ? 'clamp(17px, 4.6vw, 22px)' : 'clamp(22px,2vw,28px)',lineHeight:1.4,color:'var(--uc-stone-300)',margin: isMobile ? '0 0 18px' : '0 0 28px',letterSpacing:'-.01em'}}>
             The Blueprint is the brief I wish every founder had before they signed anything.
           </p>
-          <div style={{fontSize: isMobile ? 13 : 14,fontWeight:500,color:'var(--uc-stone-500)',lineHeight:1.5}}>, Denis Dyli, Founder, Uncap · Building on Shopify since 2013 · 380+ projects launched</div>
+          <div style={{fontSize: isMobile ? 13 : 14,fontWeight:500,color:'var(--uc-stone-500)',lineHeight:1.5}}>
+            <div style={{color:'var(--uc-stone-300)',fontWeight:600,marginBottom:2}}>Denis Dyli, Founder @ Uncap</div>
+            <div>Building on Shopify since 2013 · 380+ projects launched</div>
+          </div>
         </div>
       </div>
     </section>

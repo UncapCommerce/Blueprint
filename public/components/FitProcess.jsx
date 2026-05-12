@@ -22,31 +22,35 @@ function FitProcess() {
     {n:'Week 4', t:'Delivery & Founder Briefing', d:'Full Blueprint and prototype handed over 1:1 with the founder. Fixed-cost implementation estimate. Risk register. You own it.'},
   ];
 
-  // Stagger-reveal: the four week cards rise + fade in one after another when
-  // the row enters the viewport. Progressive enhancement — without
-  // IntersectionObserver every card just renders visible from the start.
-  const weeksRowRef = React.useRef(null);
-  const [revealCount, setRevealCount] = React.useState(0);
+  // Sticky-deck scroll: each week card pins to the top of the viewport in
+  // turn, then the next one slides up and covers it like a deck of playing
+  // cards. We track which card is currently "on top" so the small progress
+  // dots inside each card reflect the user's position through the deck.
+  const deckRef = React.useRef(null);
+  const cardRefs = React.useRef(weeks.map(() => React.createRef()));
+  const [activeIdx, setActiveIdx] = React.useState(0);
   React.useEffect(() => {
-    if (typeof window === 'undefined' || !window.IntersectionObserver || !weeksRowRef.current) {
-      setRevealCount(weeks.length);
-      return;
-    }
-    let cancelled = false;
+    if (typeof window === 'undefined' || !window.IntersectionObserver) return;
+    const stickyTop = isMobile ? 76 : 120;
     const obs = new IntersectionObserver(entries => {
+      // Pick the last card whose top has crossed the sticky line — that's
+      // the one currently pinned.
+      let topIdx = 0;
       entries.forEach(e => {
-        if (e.isIntersecting && !cancelled) {
-          cancelled = true;
-          weeks.forEach((_, i) => {
-            setTimeout(() => setRevealCount(r => Math.max(r, i + 1)), i * 240);
-          });
-          obs.disconnect();
-        }
+        const idx = Number(e.target.dataset.weekIdx);
+        const rect = e.boundingClientRect;
+        if (rect.top <= stickyTop + 2) topIdx = Math.max(topIdx, idx);
       });
-    }, { rootMargin: '0px 0px -12% 0px', threshold: 0.15 });
-    obs.observe(weeksRowRef.current);
-    return () => { cancelled = true; obs.disconnect(); };
-  }, []);
+      cardRefs.current.forEach((ref, i) => {
+        if (!ref.current) return;
+        const r = ref.current.getBoundingClientRect();
+        if (r.top <= stickyTop + 2) topIdx = Math.max(topIdx, i);
+      });
+      setActiveIdx(topIdx);
+    }, { threshold: [0, 1], rootMargin: `-${stickyTop}px 0px 0px 0px` });
+    cardRefs.current.forEach(ref => { if (ref.current) obs.observe(ref.current); });
+    return () => obs.disconnect();
+  }, [isMobile]);
   return (
     <React.Fragment>
       {/* Who it's for */}
@@ -106,47 +110,77 @@ function FitProcess() {
               No discovery purgatory. No "we'll get you a proposal next quarter." A 28-day clock starts the day you sign.
             </p>
           </div>
-          <div ref={weeksRowRef} style={{display:'grid',gridTemplateColumns: isMobile ? '1fr' : 'repeat(4, 1fr)',gap:0,border:'1px solid var(--uc-black)',borderRadius:5,background:'#fff',overflow:'hidden'}}>
+          {/* Sticky-deck: each card pins to the top of the viewport in turn,
+              and the next one slides up over it like a deck of cards. */}
+          <div ref={deckRef} style={{position:'relative'}}>
             {weeks.map((w,i)=>{
-              const isLast = i === weeks.length - 1;
-              const borderRight = !isMobile && i<3 ? '1px solid var(--line-1)' : 'none';
-              const borderBottom = isMobile && !isLast ? '1px solid var(--line-1)' : 'none';
-              const revealed = i < revealCount;
-              const arrowOn = i + 1 < revealCount;
+              const stickyTop = isMobile ? 76 : 120;
+              const cardHeight = isMobile ? 'auto' : 'auto';
+              const minHeight = isMobile ? 'min(74vh, 560px)' : 'min(64vh, 520px)';
+              const isActive = i === activeIdx;
               return (
-                <div key={w.n} style={{
-                  padding: isMobile ? '24px 22px 28px' : '32px 28px 36px',
-                  borderRight,borderBottom,
-                  display:'flex',flexDirection:'column',gap: isMobile ? 14 : 18,
-                  position:'relative',
-                  opacity: revealed ? 1 : 0,
-                  transform: revealed ? 'translateY(0) scale(1)' : 'translateY(22px) scale(0.97)',
-                  transition: 'opacity 620ms var(--ease-out), transform 620ms var(--ease-out)',
-                  willChange:'opacity, transform',
-                }}>
-                  <div style={{display:'flex',alignItems:'center',gap:10}}>
+                <div
+                  key={w.n}
+                  ref={cardRefs.current[i]}
+                  data-week-idx={i}
+                  style={{
+                    position:'sticky',
+                    top: stickyTop,
+                    zIndex: i + 1,
+                    marginTop: i === 0 ? 0 : (isMobile ? '22vh' : '26vh'),
+                    background:'#fff',
+                    border:'1px solid var(--uc-black)',
+                    borderRadius:10,
+                    padding: isMobile ? '28px 24px 26px' : '48px 56px 44px',
+                    boxShadow: '0 20px 60px rgba(10,10,10,0.08), 0 4px 16px rgba(10,10,10,0.04)',
+                    display:'flex',flexDirection:'column',gap: isMobile ? 16 : 22,
+                    minHeight,
+                    height: cardHeight,
+                  }}
+                >
+                  <div style={{display:'flex',alignItems:'center',gap:14}}>
                     <span style={{
-                      width:32,height:32,borderRadius:999,background:'var(--uc-black)',color:'#fff',
+                      width: isMobile ? 52 : 64, height: isMobile ? 52 : 64,
+                      borderRadius:999,
+                      background: isActive ? 'var(--uc-signal)' : 'var(--uc-cream)',
+                      color:'var(--uc-black)',
                       display:'inline-flex',alignItems:'center',justifyContent:'center',
-                      fontFamily:'var(--font-mono)',fontWeight:700,fontSize:13,flexShrink:0,
-                      transform: revealed ? 'scale(1)' : 'scale(0)',
-                      transition: 'transform 520ms cubic-bezier(.34,1.56,.64,1) 120ms',
+                      fontFamily:'var(--font-mono)',fontWeight:800,
+                      fontSize: isMobile ? 20 : 26,
+                      flexShrink:0,
+                      border:'1px solid var(--uc-black)',
+                      transition:'background 320ms var(--ease-out), transform 320ms var(--ease-out)',
+                      transform: isActive ? 'scale(1)' : 'scale(0.96)',
                     }}>{i+1}</span>
-                    <span style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--fg-3)',letterSpacing:'.06em',textTransform:'uppercase',fontWeight:600}}>{w.n}</span>
+                    <span style={{fontFamily:'var(--font-mono)',fontSize: isMobile ? 12 : 13,color:'var(--fg-3)',letterSpacing:'.1em',textTransform:'uppercase',fontWeight:700}}>{w.n}</span>
                   </div>
-                  <h3 style={{fontFamily:'var(--font-display)',fontWeight:700,fontSize: isMobile ? 22 : 28,letterSpacing:'-.025em',margin:0,color:'var(--fg-1)',lineHeight:1.05}}>{w.t}</h3>
-                  <p style={{fontSize: isMobile ? 15 : 14,lineHeight:1.55,color:'var(--fg-2)',margin:0}}>{w.d}</p>
-                  {!isMobile && i<3 && (
-                    <span style={{
-                      position:'absolute',top:46,right:-8,zIndex:2,background:'#fff',padding:'2px 4px',color:'var(--fg-3)',fontSize:14,
-                      opacity: arrowOn ? 1 : 0,
-                      transform: arrowOn ? 'translateX(0)' : 'translateX(-6px)',
-                      transition: 'opacity 360ms var(--ease-out) 140ms, transform 360ms var(--ease-out) 140ms',
-                    }}>→</span>
-                  )}
+                  <h3 style={{
+                    fontFamily:'var(--font-display)',fontWeight:700,
+                    fontSize: isMobile ? 'clamp(26px, 7vw, 36px)' : 'clamp(36px, 3.6vw, 56px)',
+                    letterSpacing:'-.025em',margin:0,color:'var(--fg-1)',lineHeight:1.05,
+                    maxWidth: 760,
+                  }}>{w.t}</h3>
+                  <p style={{
+                    fontSize: isMobile ? 16 : 19,
+                    lineHeight:1.55,color:'var(--fg-2)',margin:0,
+                    maxWidth: 640,
+                  }}>{w.d}</p>
+                  {/* Progress dots */}
+                  <div style={{display:'flex',gap:8,alignItems:'center',marginTop:'auto',paddingTop: isMobile ? 8 : 16}}>
+                    {weeks.map((_, j) => (
+                      <span key={j} style={{
+                        width: j === i ? 28 : 8, height:8, borderRadius:999,
+                        background: j <= i ? 'var(--uc-black)' : 'var(--line-1)',
+                        transition: 'width 280ms var(--ease-out), background 280ms var(--ease-out)',
+                      }}/>
+                    ))}
+                  </div>
                 </div>
               );
             })}
+            {/* Tail of scroll space so the last card has room to pin before
+                the next section pulls it out of view. */}
+            <div style={{height: isMobile ? '20vh' : '24vh'}}/>
           </div>
         </div>
       </section>
