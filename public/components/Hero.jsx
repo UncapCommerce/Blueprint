@@ -251,15 +251,25 @@ function BlueprintArtifact({isMobile, heroErp}){
             <PreparedByName/>
             <div style={{display:'flex',alignItems:'center'}}>
               {[
-                'https://i.pravatar.cc/80?img=12',
-                'https://i.pravatar.cc/80?img=44',
-                'https://i.pravatar.cc/80?img=14',
-                'https://i.pravatar.cc/80?img=9',
-              ].map((src, i) => (
+                // When the team photos land in public/assets/team/, drop them
+                // at these filenames and the stack picks them up. The remote
+                // pravatar fallbacks stay until then so the artifact never
+                // shows broken-image icons.
+                {name:'Ryan',    src:'assets/team/ryan.jpg',    fallback:'https://i.pravatar.cc/80?img=12'},
+                {name:'Jo',      src:'assets/team/jo.jpg',      fallback:'https://i.pravatar.cc/80?img=44'},
+                {name:'Michael', src:'assets/team/michael.jpg', fallback:'https://i.pravatar.cc/80?img=14'},
+                {name:'Mike',    src:'assets/team/mike.jpg',    fallback:'https://i.pravatar.cc/80?img=9'},
+              ].map((person, i) => (
                 <img
-                  key={src}
-                  src={src}
-                  alt=""
+                  key={person.name}
+                  src={person.src}
+                  onError={(e) => {
+                    if (e.currentTarget.src !== person.fallback) {
+                      e.currentTarget.src = person.fallback;
+                    }
+                  }}
+                  alt={person.name}
+                  title={person.name}
                   loading="lazy"
                   decoding="async"
                   style={{
