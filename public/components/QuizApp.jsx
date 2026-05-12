@@ -1029,7 +1029,23 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
         }}
       >
         <Lock/>
-        {phase === 'submitting' ? 'Processing reservation…' : 'Reserve Your Spot'}
+        {phase === 'submitting' ? 'Processing reservation…' : (
+          <React.Fragment>
+            Reserve Your Spot
+            <span style={{
+              marginLeft:10,
+              padding:'4px 10px',
+              background:'#A8C81F',
+              color:'var(--uc-black)',
+              borderRadius:999,
+              fontSize:12,
+              fontWeight:700,
+              letterSpacing:'.04em',
+              lineHeight:1,
+              whiteSpace:'nowrap',
+            }}>$500 deposit</span>
+          </React.Fragment>
+        )}
       </button>
 
       <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,fontSize:12,color:'var(--uc-stone-300)',lineHeight:1.45}}>
