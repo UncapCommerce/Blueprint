@@ -22,55 +22,24 @@ function FitProcess() {
     {n:'Week 4', t:'Delivery & Founder Briefing', d:'Full Blueprint and prototype handed over 1:1 with the founder. Fixed-cost implementation estimate. Risk register. You own it.'},
   ];
 
-  // Scroll-tied reveal: the section is taller than the viewport so the user
-  // scrolls through it to reveal cards one at a time. The inner hand is
-  // sticky-pinned for the duration. Cards rise from below into a fanned
-  // poker hand, each card unveiled at a separate scroll threshold.
+  // Parallax-style scroll reveal. Each card has its own scroll window through
+  // the section (e.g. 0-32%, 20-52%, ...) and its transform is interpolated
+  // continuously between "hidden below" and "in the fan". Updates run through
+  // requestAnimationFrame writing straight to the DOM via refs — no React
+  // re-renders per scroll tick, so it stays smooth at 60fps.
   const scrollerRef = React.useRef(null);
-  const [revealed, setRevealed] = React.useState(0);
-  React.useEffect(() => {
-    if (typeof window === 'undefined' || !scrollerRef.current) {
-      setRevealed(weeks.length);
-      return;
-    }
-    // Card N reveals when section scroll progress crosses these thresholds.
-    // Card 1 lands ~as the section enters the pin range, card 4 lands near
-    // the end so the user feels each scroll moves the story forward.
-    const thresholds = [0.04, 0.30, 0.56, 0.82];
-    let rafId = 0;
-    const update = () => {
-      rafId = 0;
-      const el = scrollerRef.current;
-      if (!el) return;
-      const rect = el.getBoundingClientRect();
-      const vh = window.innerHeight || document.documentElement.clientHeight;
-      const total = Math.max(1, rect.height - vh);
-      const scrolled = Math.min(total, Math.max(0, -rect.top));
-      const progress = scrolled / total;
-      let count = 0;
-      for (let i = 0; i < thresholds.length; i++) {
-        if (progress >= thresholds[i]) count = i + 1;
-      }
-      setRevealed(prev => prev === count ? prev : count);
-    };
-    const onScroll = () => {
-      if (!rafId) rafId = requestAnimationFrame(update);
-    };
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll);
-    update();
-    return () => {
-      if (rafId) cancelAnimationFrame(rafId);
-      window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onScroll);
-    };
-  }, []);
-  // Final fan positions — symmetric arc, sized as percentages of the hand
-  // container width so they never escape the page wrapper. Outer cards rotate
-  // more + lift slightly so the hand reads like cards angled toward viewer.
-  // Mobile stacks them with subtle tilt instead of fanning (4 wide cards
-  // don't fit a phone column).
-  const fanLayouts = isMobile
+  const cardRefs = React.useRef(weeks.map(() => React.createRef()));
+  // Per-card scroll windows. Overlap is intentional — adjacent cards animate
+  // at the same time so the hand feels like it's continuously building rather
+  // than snapping one card at a time.
+  const cardWindowsRef = React.useRef([
+    [0.00, 0.32],
+    [0.18, 0.52],
+    [0.36, 0.72],
+    [0.54, 0.92],
+  ]);
+  const fanLayoutsRef = React.useRef(null);
+  fanLayoutsRef.current = isMobile
     ? [
         { rot: -4, x: 0, y: -90 },
         { rot: -2, x: 0, y: -30 },
@@ -83,6 +52,56 @@ function FitProcess() {
         { rot: 5,   x: 11,  y: 4  },
         { rot: 14,  x: 32,  y: 26 },
       ];
+
+  React.useEffect(() => {
+    if (typeof window === 'undefined' || !scrollerRef.current) return;
+    const easeOut = t => 1 - Math.pow(1 - t, 3);
+    const reducedMotion =
+      window.matchMedia &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    let rafId = 0;
+    const update = () => {
+      rafId = 0;
+      const el = scrollerRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      const total = Math.max(1, rect.height - vh);
+      const scrolled = Math.min(total, Math.max(0, -rect.top));
+      const progress = scrolled / total;
+      cardRefs.current.forEach((ref, i) => {
+        const card = ref.current;
+        if (!card) return;
+        const [start, end] = cardWindowsRef.current[i];
+        let raw = (progress - start) / (end - start);
+        if (raw < 0) raw = 0;
+        if (raw > 1) raw = 1;
+        const e = reducedMotion ? (raw > 0 ? 1 : 0) : easeOut(raw);
+        const layout = fanLayoutsRef.current[i];
+        const hiddenVh = (1 - e) * 70; // start ~70vh below the rest position
+        const tx = e * layout.x;       // 0% → fan x offset
+        const tyPx = e * layout.y;     // 0px → fan y offset
+        const rot = e * layout.rot;    // 0° → final rotation
+        card.style.opacity = e.toFixed(3);
+        card.style.transform =
+          'translate(-50%, -50%) ' +
+          `translateX(${tx.toFixed(2)}%) ` +
+          `translateY(calc(${hiddenVh.toFixed(2)}vh + ${tyPx.toFixed(1)}px)) ` +
+          `rotate(${rot.toFixed(2)}deg)`;
+      });
+    };
+    const onScroll = () => {
+      if (!rafId) rafId = requestAnimationFrame(update);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    update();
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
+  }, [isMobile]);
   return (
     <React.Fragment>
       {/* Who it's for */}
@@ -162,22 +181,15 @@ function FitProcess() {
             }}>
               <div style={{position:'relative', width:'100%', height:'100%'}}>
                 {weeks.map((w,i)=>{
-                  const layout = fanLayouts[i];
-                  const visible = i < revealed;
                   // Sized in % of the inner stage so the hand stays within the
                   // 1280px page wrapper on every viewport. Cards never grow
                   // beyond ~280px wide or shrink below ~190px.
-                  const cardWidth  = isMobile ? '86%'                  : 'clamp(190px, 22%, 280px)';
-                  const cardHeight = isMobile ? 'clamp(180px,28vh,260px)' : 'clamp(300px, 56%, 460px)';
-                  const restTransform = isMobile
-                    ? `translate(-50%, calc(-50% + ${layout.y}px)) rotate(${layout.rot}deg)`
-                    : `translate(-50%, -50%) translate(${layout.x}%, ${layout.y}px) rotate(${layout.rot}deg)`;
-                  const hiddenTransform = isMobile
-                    ? `translate(-50%, calc(-50% + ${layout.y}px + 120vh)) rotate(0deg)`
-                    : `translate(-50%, -50%) translate(0%, 100vh) rotate(0deg)`;
+                  const cardWidth  = isMobile ? '86%'                       : 'clamp(190px, 22%, 280px)';
+                  const cardHeight = isMobile ? 'clamp(180px,28vh,260px)'   : 'clamp(300px, 56%, 460px)';
                   return (
                     <article
                       key={w.n}
+                      ref={cardRefs.current[i]}
                       data-week-idx={i}
                       style={{
                         position:'absolute',
@@ -193,11 +205,11 @@ function FitProcess() {
                         display:'flex',flexDirection:'column',gap: isMobile ? 10 : 14,
                         zIndex: i + 1,
                         transformOrigin:'50% 110%',
-                        transform: visible ? restTransform : hiddenTransform,
-                        opacity: visible ? 1 : 0,
-                        transition:
-                          'transform 820ms cubic-bezier(.18,1.02,.36,1), ' +
-                          'opacity 360ms ease-out',
+                        // Initial: hidden below + flat. The scroll listener
+                        // takes over on first rAF and updates transform every
+                        // frame, so we deliberately leave transition off.
+                        transform: 'translate(-50%, -50%) translateY(70vh) rotate(0deg)',
+                        opacity: 0,
                         willChange:'transform, opacity',
                       }}
                     >
