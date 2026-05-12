@@ -117,8 +117,92 @@ function SocialProof() {
             </div>
           ))}
         </div>
+
+        {/* Trust badges below the mosaic — Trustpilot, Clutch, Shopify, each
+            with a 5-star strip. Sits as a quiet ribbon so it reinforces the
+            wall of voices without competing with it. */}
+        <div style={{
+          marginTop: isMobile ? 32 : 48,
+          paddingTop: isMobile ? 24 : 32,
+          borderTop:'1px solid var(--line-1)',
+          display:'flex',
+          flexDirection: isMobile ? 'column' : 'row',
+          alignItems:'center',
+          justifyContent:'center',
+          gap: isMobile ? 18 : 56,
+          flexWrap:'wrap',
+        }}>
+          <TrustBadge brand="trustpilot"/>
+          <TrustBadge brand="clutch"/>
+          <TrustBadge brand="shopify"/>
+        </div>
       </div>
     </section>
+  );
+}
+
+// One review-platform badge: small brand icon + wordmark + 5-star row.
+// Kept inline-SVG / pure-CSS so it stays sharp at any DPI and ships with
+// no extra asset requests.
+function TrustBadge({brand}){
+  const data = {
+    trustpilot: {
+      label: 'Trustpilot',
+      colour: '#00B67A',
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+          <rect width="20" height="20" rx="2" fill="#00B67A"/>
+          <path d="M10 3.2l1.92 4.05 4.43.51-3.28 3.03.94 4.4L10 12.95l-3.99 2.24.94-4.4-3.28-3.03 4.43-.51L10 3.2z" fill="#fff"/>
+        </svg>
+      ),
+    },
+    clutch: {
+      label: 'Clutch',
+      colour: '#FF3D2E',
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+          <circle cx="10" cy="10" r="9" fill="#17313B"/>
+          <circle cx="10" cy="10" r="4.4" fill="none" stroke="#FF3D2E" strokeWidth="1.6"/>
+          <circle cx="10" cy="10" r="1.6" fill="#FF3D2E"/>
+        </svg>
+      ),
+    },
+    shopify: {
+      label: 'Shopify',
+      colour: '#5A8A3A',
+      icon: (
+        <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M14.6 4.2c-.05-.34-.34-.51-.6-.53-.05 0-1.1-.08-1.1-.08s-.74-.72-.82-.8c-.08-.08-.24-.06-.3-.04 0 0-.16.05-.43.13a3 3 0 0 0-.2-.5c-.3-.57-.74-.87-1.27-.87-.04 0-.07 0-.11.01-.02-.02-.03-.04-.05-.06C9.5 1.21 9.2 1.1 8.83 1.11c-.7.02-1.4.53-1.97 1.43-.4.63-.7 1.42-.79 2.04-.83.26-1.4.43-1.42.44-.42.13-.43.14-.49.54L3 16.62l11.05 1.9L16 4.4s-1.35-.18-1.4-.18zM10.92 3.4l-.66.2c-.01-.36-.06-.85-.22-1.27.5.1.74.66.88 1.07zM9.78 3.76l-1.94.6c.19-.73.55-1.45 1-1.93.16-.18.4-.37.66-.49.26.55.32 1.32.28 1.82zM8.84 1.7c.21 0 .4.05.55.14-.25.13-.5.32-.72.56-.6.65-1.07 1.65-1.25 2.62l-1.42.44c.32-1.5 1.58-3.71 2.84-3.76z" fill="#5A8A3A"/>
+        </svg>
+      ),
+    },
+  }[brand];
+
+  return (
+    <div style={{
+      display:'inline-flex',alignItems:'center',gap:10,
+      padding:'10px 16px',
+      background:'#fff',border:'1px solid var(--line-1)',borderRadius:6,
+      boxShadow:'0 1px 2px rgba(10,10,10,0.04)',
+    }}>
+      {data.icon}
+      <div style={{display:'flex',flexDirection:'column',gap:2,lineHeight:1.1}}>
+        <span style={{fontFamily:'var(--font-sans)',fontSize:13,fontWeight:700,color:'var(--fg-1)',letterSpacing:'-.005em'}}>{data.label}</span>
+        <FiveStars colour={data.colour}/>
+      </div>
+    </div>
+  );
+}
+
+function FiveStars({colour='#00B67A'}){
+  return (
+    <span aria-label="5 out of 5 stars" style={{display:'inline-flex',gap:2}}>
+      {[0,1,2,3,4].map(i => (
+        <svg key={i} width="13" height="13" viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M10 1.6l2.36 4.97 5.44.63-4.03 3.72 1.16 5.4L10 13.6l-4.93 2.72 1.16-5.4-4.03-3.72 5.44-.63L10 1.6z" fill={colour}/>
+        </svg>
+      ))}
+    </span>
   );
 }
 
