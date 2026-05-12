@@ -133,7 +133,7 @@ function RyanAvatar({isMobile}){
   }
   return (
     <img
-      src="assets/team/ryan-muir.jpg"
+      src="assets/team/Ryan - IMG.png"
       alt="Ryan Muir"
       loading="lazy"
       decoding="async"
