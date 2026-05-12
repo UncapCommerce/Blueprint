@@ -167,12 +167,12 @@ async function handlePaymentIntent(request, env) {
         currency:             RESERVATION_CURRENCY,
         setup_future_usage:   'off_session',
         description:          'Blueprint reservation fee (fully refundable)',
-        // Hard-pin the surfaced methods so the "Bank" tab (us_bank_account /
-        // pay_by_bank with Stripe's $5-back promo) cannot reappear via PMC
-        // defaults or dashboard toggles. Apple Pay / Google Pay still
-        // surface as wallet variants on top of `card`.
+        // Hard-pin to card only. Including Link in the allowlist lets users
+        // pick a saved bank account from their Link wallet, which reads as
+        // "Bank" in the UI even when the dashboard's Pay by Bank toggle is
+        // off. Dropping Link removes that surface entirely. Apple Pay /
+        // Google Pay still surface as wallet variants on top of `card`.
         'payment_method_types[0]': 'card',
-        'payment_method_types[1]': 'link',
         metadata,
       }),
     });
