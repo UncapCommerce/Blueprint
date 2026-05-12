@@ -41,6 +41,7 @@ function SocialProof() {
     },
     {
       tone:'white', size:'small',
+      stickWithPrevious: true,
       quote:'I’ve honestly never worked with a firm like them before; they’re absolutely outstanding.',
       attr:'Pete Suter',
       role:"Shirley's Gourmet Popcorn",
@@ -112,11 +113,29 @@ function SocialProof() {
           columnCount: isMobile ? 1 : 3,
           columnGap:16,
         }}>
-          {reviews.map((r, i)=>(
-            <div key={i} style={{breakInside:'avoid',WebkitColumnBreakInside:'avoid',pageBreakInside:'avoid',marginBottom:16}}>
-              <ReviewTile review={r} index={i} isMobile={isMobile}/>
-            </div>
-          ))}
+          {(() => {
+            // Render-time grouping: when a review carries stickWithPrevious,
+            // wrap it with its predecessor in a single break-inside-avoid
+            // container so the CSS column algorithm can't push them apart.
+            const out = [];
+            for (let i = 0; i < reviews.length; i++) {
+              const r = reviews[i];
+              const next = reviews[i + 1];
+              const groupNext = next && next.stickWithPrevious;
+              out.push(
+                <div key={i} style={{breakInside:'avoid',WebkitColumnBreakInside:'avoid',pageBreakInside:'avoid',marginBottom:16}}>
+                  <ReviewTile review={r} index={i} isMobile={isMobile}/>
+                  {groupNext ? (
+                    <div style={{marginTop:16}}>
+                      <ReviewTile review={next} index={i+1} isMobile={isMobile}/>
+                    </div>
+                  ) : null}
+                </div>
+              );
+              if (groupNext) i++; // skip the grouped item
+            }
+            return out;
+          })()}
         </div>
       </div>
     </section>
