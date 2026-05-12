@@ -22,46 +22,66 @@ function FitProcess() {
     {n:'Week 4', t:'Delivery & Founder Briefing', d:'Full Blueprint and prototype handed over 1:1 with the founder. Fixed-cost implementation estimate. Risk register. You own it.'},
   ];
 
-  // Poker-hand scroll-in: the four week cards start below the viewport, then
-  // rise into a fanned-out hand as the section scrolls into view. Cards land
-  // staggered (left-to-right) and settle into asymmetric rotations + vertical
-  // offsets so they read like cards held in a hand.
-  const handRef = React.useRef(null);
+  // Scroll-tied reveal: the section is taller than the viewport so the user
+  // scrolls through it to reveal cards one at a time. The inner hand is
+  // sticky-pinned for the duration. Cards rise from below into a fanned
+  // poker hand, each card unveiled at a separate scroll threshold.
+  const scrollerRef = React.useRef(null);
   const [revealed, setRevealed] = React.useState(0);
   React.useEffect(() => {
-    if (typeof window === 'undefined' || !window.IntersectionObserver || !handRef.current) {
+    if (typeof window === 'undefined' || !scrollerRef.current) {
       setRevealed(weeks.length);
       return;
     }
-    let triggered = false;
-    const obs = new IntersectionObserver(entries => {
-      entries.forEach(e => {
-        if (e.isIntersecting && !triggered) {
-          triggered = true;
-          weeks.forEach((_, i) => {
-            setTimeout(() => setRevealed(r => Math.max(r, i + 1)), i * 220);
-          });
-          obs.disconnect();
-        }
-      });
-    }, { rootMargin: '0px 0px -12% 0px', threshold: 0.2 });
-    obs.observe(handRef.current);
-    return () => obs.disconnect();
+    // Card N reveals when section scroll progress crosses these thresholds.
+    // Card 1 lands ~as the section enters the pin range, card 4 lands near
+    // the end so the user feels each scroll moves the story forward.
+    const thresholds = [0.04, 0.30, 0.56, 0.82];
+    let rafId = 0;
+    const update = () => {
+      rafId = 0;
+      const el = scrollerRef.current;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const vh = window.innerHeight || document.documentElement.clientHeight;
+      const total = Math.max(1, rect.height - vh);
+      const scrolled = Math.min(total, Math.max(0, -rect.top));
+      const progress = scrolled / total;
+      let count = 0;
+      for (let i = 0; i < thresholds.length; i++) {
+        if (progress >= thresholds[i]) count = i + 1;
+      }
+      setRevealed(prev => prev === count ? prev : count);
+    };
+    const onScroll = () => {
+      if (!rafId) rafId = requestAnimationFrame(update);
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    window.addEventListener('resize', onScroll);
+    update();
+    return () => {
+      if (rafId) cancelAnimationFrame(rafId);
+      window.removeEventListener('scroll', onScroll);
+      window.removeEventListener('resize', onScroll);
+    };
   }, []);
-  // Final fan positions — symmetric arc, outer cards rotated more and slightly
-  // lifted so the hand reads like the cards are angled toward the viewer.
+  // Final fan positions — symmetric arc, sized as percentages of the hand
+  // container width so they never escape the page wrapper. Outer cards rotate
+  // more + lift slightly so the hand reads like cards angled toward viewer.
+  // Mobile stacks them with subtle tilt instead of fanning (4 wide cards
+  // don't fit a phone column).
   const fanLayouts = isMobile
     ? [
-        { rot: -6, x: -3,  y: 0  },
-        { rot: -2, x: -1,  y: 0  },
-        { rot: 2,  x: 1,   y: 0  },
-        { rot: 6,  x: 3,   y: 0  },
+        { rot: -4, x: 0, y: -90 },
+        { rot: -2, x: 0, y: -30 },
+        { rot: 2,  x: 0, y: 30  },
+        { rot: 4,  x: 0, y: 90  },
       ]
     : [
-        { rot: -14, x: -27, y: 26 },
-        { rot: -5,  x: -9,  y: 4  },
-        { rot: 5,   x: 9,   y: 4  },
-        { rot: 14,  x: 27,  y: 26 },
+        { rot: -14, x: -32, y: 26 },
+        { rot: -5,  x: -11, y: 4  },
+        { rot: 5,   x: 11,  y: 4  },
+        { rot: 14,  x: 32,  y: 26 },
       ];
   return (
     <React.Fragment>
@@ -122,88 +142,95 @@ function FitProcess() {
               No discovery purgatory. No "we'll get you a proposal next quarter." A 28-day clock starts the day you sign.
             </p>
           </div>
-          {/* Poker-hand: cards rise from below into a fanned arrangement. */}
+          {/* Scroll-driven poker hand. The outer scroller is taller than the
+              viewport — its scroll progress determines which card has been
+              revealed. The inner sticky stage pins the hand in place while
+              the user scrolls past, so each scroll tick deals the next card. */}
           <div
-            ref={handRef}
+            ref={scrollerRef}
             style={{
               position:'relative',
-              height: isMobile ? 'auto' : 'min(70vh, 560px)',
-              minHeight: isMobile ? '92vh' : 'min(70vh, 560px)',
+              height: isMobile ? '300vh' : '320vh',
               marginTop: isMobile ? 12 : 24,
-              perspective: '1400px',
             }}
           >
-            {weeks.map((w,i)=>{
-              const layout = fanLayouts[i];
-              const visible = i < revealed;
-              // Card geometry — kept around 1/4 of the viewport on desktop so
-              // the hand spreads cleanly across the column. Mobile cards
-              // stack vertically with subtle rotation so the hand-feel still
-              // reads on small screens.
-              const cardWidth  = isMobile ? '86vw'                          : 'min(25vw, 320px)';
-              const cardHeight = isMobile ? 'min(28vh, 240px)'              : 'min(58vh, 460px)';
-              const restTransform = isMobile
-                ? `translate(-50%, ${i * 92}px) rotate(${layout.rot}deg)`
-                : `translate(-50%, -50%) translate(${layout.x}vw, ${layout.y}px) rotate(${layout.rot}deg)`;
-              const hiddenTransform = isMobile
-                ? `translate(-50%, calc(${i * 92}px + 120vh)) rotate(0deg)`
-                : `translate(-50%, -50%) translate(0vw, 100vh) rotate(0deg)`;
-              return (
-                <article
-                  key={w.n}
-                  data-week-idx={i}
-                  style={{
-                    position:'absolute',
-                    left:'50%',
-                    top: isMobile ? 0 : '50%',
-                    width: cardWidth,
-                    height: cardHeight,
-                    background:'#fff',
-                    border:'1px solid var(--uc-black)',
-                    borderRadius:14,
-                    boxShadow:'0 24px 56px rgba(10,10,10,0.18), 0 8px 22px rgba(10,10,10,0.08)',
-                    padding: isMobile ? '22px 22px 20px' : '28px 28px 24px',
-                    display:'flex',flexDirection:'column',gap: isMobile ? 10 : 14,
-                    zIndex: i + 1,
-                    transformOrigin: isMobile
-                      ? '50% 110%'      // pivot near bottom so rotation reads as wrist motion
-                      : '50% 110%',
-                    transform: visible ? restTransform : hiddenTransform,
-                    opacity: visible ? 1 : 0,
-                    transition:
-                      'transform 820ms cubic-bezier(.18,1.02,.36,1), ' +
-                      'opacity 360ms ease-out',
-                    willChange:'transform, opacity',
-                  }}
-                >
-                  <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:10}}>
-                    <span style={{
-                      width: isMobile ? 36 : 44, height: isMobile ? 36 : 44,
-                      borderRadius:999,
-                      background:'var(--uc-signal)',
-                      color:'var(--uc-black)',
-                      display:'inline-flex',alignItems:'center',justifyContent:'center',
-                      fontFamily:'var(--font-mono)',fontWeight:800,
-                      fontSize: isMobile ? 16 : 19,
-                      flexShrink:0,
-                      border:'1px solid var(--uc-black)',
-                    }}>{i+1}</span>
-                    <span style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--fg-3)',letterSpacing:'.12em',textTransform:'uppercase',fontWeight:700}}>{w.n}</span>
-                  </div>
-                  <h3 style={{
-                    fontFamily:'var(--font-display)',fontWeight:700,
-                    fontSize: isMobile ? 20 : 'clamp(22px, 1.7vw, 28px)',
-                    letterSpacing:'-.02em',margin:0,color:'var(--fg-1)',lineHeight:1.1,
-                  }}>{w.t}</h3>
-                  <p style={{
-                    fontSize: isMobile ? 14 : 14,
-                    lineHeight:1.5,color:'var(--fg-2)',margin:0,
-                    flex:1,
-                    overflow:'hidden',
-                  }}>{w.d}</p>
-                </article>
-              );
-            })}
+            <div style={{
+              position:'sticky',
+              top: isMobile ? '6vh' : '10vh',
+              height: isMobile ? '88vh' : '80vh',
+              display:'flex',alignItems:'center',justifyContent:'center',
+            }}>
+              <div style={{position:'relative', width:'100%', height:'100%'}}>
+                {weeks.map((w,i)=>{
+                  const layout = fanLayouts[i];
+                  const visible = i < revealed;
+                  // Sized in % of the inner stage so the hand stays within the
+                  // 1280px page wrapper on every viewport. Cards never grow
+                  // beyond ~280px wide or shrink below ~190px.
+                  const cardWidth  = isMobile ? '86%'                  : 'clamp(190px, 22%, 280px)';
+                  const cardHeight = isMobile ? 'clamp(180px,28vh,260px)' : 'clamp(300px, 56%, 460px)';
+                  const restTransform = isMobile
+                    ? `translate(-50%, calc(-50% + ${layout.y}px)) rotate(${layout.rot}deg)`
+                    : `translate(-50%, -50%) translate(${layout.x}%, ${layout.y}px) rotate(${layout.rot}deg)`;
+                  const hiddenTransform = isMobile
+                    ? `translate(-50%, calc(-50% + ${layout.y}px + 120vh)) rotate(0deg)`
+                    : `translate(-50%, -50%) translate(0%, 100vh) rotate(0deg)`;
+                  return (
+                    <article
+                      key={w.n}
+                      data-week-idx={i}
+                      style={{
+                        position:'absolute',
+                        left:'50%',
+                        top:'50%',
+                        width: cardWidth,
+                        height: cardHeight,
+                        background:'#fff',
+                        border:'1px solid var(--uc-black)',
+                        borderRadius:14,
+                        boxShadow:'0 24px 56px rgba(10,10,10,0.18), 0 8px 22px rgba(10,10,10,0.08)',
+                        padding: isMobile ? '22px 22px 20px' : '28px 28px 24px',
+                        display:'flex',flexDirection:'column',gap: isMobile ? 10 : 14,
+                        zIndex: i + 1,
+                        transformOrigin:'50% 110%',
+                        transform: visible ? restTransform : hiddenTransform,
+                        opacity: visible ? 1 : 0,
+                        transition:
+                          'transform 820ms cubic-bezier(.18,1.02,.36,1), ' +
+                          'opacity 360ms ease-out',
+                        willChange:'transform, opacity',
+                      }}
+                    >
+                      <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:10}}>
+                        <span style={{
+                          width: isMobile ? 36 : 44, height: isMobile ? 36 : 44,
+                          borderRadius:999,
+                          background:'var(--uc-signal)',
+                          color:'var(--uc-black)',
+                          display:'inline-flex',alignItems:'center',justifyContent:'center',
+                          fontFamily:'var(--font-mono)',fontWeight:800,
+                          fontSize: isMobile ? 16 : 19,
+                          flexShrink:0,
+                          border:'1px solid var(--uc-black)',
+                        }}>{i+1}</span>
+                        <span style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--fg-3)',letterSpacing:'.12em',textTransform:'uppercase',fontWeight:700}}>{w.n}</span>
+                      </div>
+                      <h3 style={{
+                        fontFamily:'var(--font-display)',fontWeight:700,
+                        fontSize: isMobile ? 20 : 'clamp(20px, 1.5vw, 26px)',
+                        letterSpacing:'-.02em',margin:0,color:'var(--fg-1)',lineHeight:1.1,
+                      }}>{w.t}</h3>
+                      <p style={{
+                        fontSize: isMobile ? 14 : 13.5,
+                        lineHeight:1.5,color:'var(--fg-2)',margin:0,
+                        flex:1,
+                        overflow:'hidden',
+                      }}>{w.d}</p>
+                    </article>
+                  );
+                })}
+              </div>
+            </div>
           </div>
         </div>
       </section>

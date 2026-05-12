@@ -1,24 +1,65 @@
 // Guarantee.jsx + FAQ.jsx + Founder.jsx + FinalCTA.jsx + Footer.jsx (responsive)
+
+// 11-point starburst polygon vertices, computed once at module load. 11 (a
+// prime) breaks rotational symmetry so the continuous spin reads clearly.
+const UC_STAMP_STARBURST = (() => {
+  const cx = 100, cy = 100, outerR = 96, innerR = 78;
+  const numPoints = 11;
+  const totalVerts = numPoints * 2;
+  const pts = [];
+  for (let i = 0; i < totalVerts; i++) {
+    const angle = -Math.PI / 2 + (i * 2 * Math.PI) / totalVerts;
+    const r = i % 2 === 0 ? outerR : innerR;
+    pts.push(`${(cx + r * Math.cos(angle)).toFixed(1)},${(cy + r * Math.sin(angle)).toFixed(1)}`);
+  }
+  return pts.join(' ');
+})();
+
 function Guarantee() {
   const isMobile = window.useIsMobile ? window.useIsMobile() : false;
   return (
     <section style={{background:'#fff',padding: isMobile ? '64px 20px' : '120px 32px'}}>
       <div style={{maxWidth:1080,margin:'0 auto',position:'relative'}}>
-        {/* Stamp: absolute on desktop, inline above headline on mobile so it
-            never overlaps. Animated via .uc-stamp (pop on mount + lazy float)
-            with --stamp-rot supplying each breakpoint's resting angle. */}
+        {/* Money-back stamp: the wrapper holds the resting tilt + one-shot
+            pop. The inner SVG starburst (.uc-stamp-rotor) spins continuously.
+            The text overlay sits on top and never moves. */}
         <div className="uc-stamp" style={isMobile ? {
-          width:108,height:108,border:'1px solid var(--uc-black)',borderRadius:999,
-          display:'flex',alignItems:'center',justifyContent:'center',
-          background:'var(--uc-signal)',margin:'0 0 24px',
+          width:124, height:124,
+          margin:'0 0 24px',
           '--stamp-rot': '-6deg',
         } : {
-          position:'absolute',top:-20,right:0,width:140,height:140,border:'1px solid var(--uc-black)',borderRadius:999,
-          display:'flex',alignItems:'center',justifyContent:'center',background:'var(--uc-signal)',
+          position:'absolute', top:-24, right:-6,
+          width:156, height:156,
           '--stamp-rot': '8deg',
         }}>
-          <div style={{textAlign:'center',fontFamily:'var(--font-display)',fontWeight:800,fontSize: isMobile ? 12 : 14,letterSpacing:'.04em',textTransform:'uppercase',lineHeight:1.1,color:'var(--uc-black)'}}>
-            100%<br/>Money-back<br/>Guarantee
+          <svg
+            className="uc-stamp-rotor"
+            viewBox="0 0 200 200"
+            aria-hidden="true"
+            style={{position:'absolute',inset:0,width:'100%',height:'100%',display:'block',overflow:'visible'}}
+          >
+            <polygon
+              points={UC_STAMP_STARBURST}
+              fill="var(--uc-signal)"
+              stroke="var(--uc-black)"
+              strokeWidth="2"
+              strokeLinejoin="round"
+            />
+          </svg>
+          <div style={{
+            position:'absolute', inset:0,
+            display:'flex', alignItems:'center', justifyContent:'center',
+            pointerEvents:'none',
+          }}>
+            <div style={{
+              textAlign:'center',
+              fontFamily:'var(--font-display)', fontWeight:800,
+              fontSize: isMobile ? 12 : 14,
+              letterSpacing:'.04em', textTransform:'uppercase',
+              lineHeight:1.1, color:'var(--uc-black)',
+            }}>
+              100%<br/>Money-back<br/>Guarantee
+            </div>
           </div>
         </div>
         <div className="uc-eyebrow" style={{marginBottom: isMobile ? 12 : 18}}>Guarantee</div>

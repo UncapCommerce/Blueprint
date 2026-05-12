@@ -238,25 +238,29 @@ code, .uc-code {
   border-radius: var(--r-sm);
 }
 
-/* Animated stamp/seal — used by the 100% money-back badge in Closing.jsx.
-   Reads its base rotation from --stamp-rot so mobile + desktop can each set
-   their own resting angle inline and reuse one keyframe. */
+/* Money-back badge in Closing.jsx. The wrapper holds the resting tilt and
+   one-time pop animation. Only the inner SVG starburst (.uc-stamp-rotor)
+   spins continuously — the text overlay sits on top and stays still. */
 @keyframes uc-stamp-pop {
   0%   { transform: rotate(var(--stamp-rot, 0deg)) scale(0.5); opacity: 0; }
   55%  { transform: rotate(var(--stamp-rot, 0deg)) scale(1.14); opacity: 1; }
   78%  { transform: rotate(var(--stamp-rot, 0deg)) scale(0.94); }
   100% { transform: rotate(var(--stamp-rot, 0deg)) scale(1); opacity: 1; }
 }
-@keyframes uc-stamp-float {
-  0%, 100% { transform: rotate(var(--stamp-rot, 0deg)) scale(1); }
-  50%      { transform: rotate(calc(var(--stamp-rot, 0deg) - 3deg)) scale(1.04); }
+@keyframes uc-stamp-spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
 .uc-stamp {
-  animation:
-    uc-stamp-pop 720ms cubic-bezier(.34,1.56,.64,1) both,
-    uc-stamp-float 5.4s ease-in-out 720ms infinite;
+  animation: uc-stamp-pop 720ms cubic-bezier(.34,1.56,.64,1) both;
+  transform-origin: 50% 50%;
+  position: relative;
+}
+.uc-stamp-rotor {
+  animation: uc-stamp-spin 28s linear infinite;
   transform-origin: 50% 50%;
 }
 @media (prefers-reduced-motion: reduce) {
-  .uc-stamp { animation: none; transform: rotate(var(--stamp-rot, 0deg)); }
+  .uc-stamp       { animation: none; transform: rotate(var(--stamp-rot, 0deg)); }
+  .uc-stamp-rotor { animation: none; }
 }
