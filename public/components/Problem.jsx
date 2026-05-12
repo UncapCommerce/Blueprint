@@ -148,10 +148,6 @@ function Problem() {
           box-shadow: 0 18px 36px rgba(10,10,10,0.14), 0 4px 8px rgba(10,10,10,0.06);
           z-index: 5;
         }
-        .case-file:hover .case-redact {
-          background: transparent;
-          color: var(--uc-error);
-        }
         .case-file:hover .case-stamp {
           opacity: 1;
           transform: rotate(-8deg) scale(1.04);
@@ -254,8 +250,9 @@ function CaseFile({item, index, isMobile}){
   );
 }
 
-// Render a paragraph with the matched substring rendered as a "redaction bar"
-// that reveals on hover via the .case-file:hover .case-redact rule.
+// Render a paragraph with the matched substring as a click-to-reveal
+// redaction bar. Clicking the bar lifts the black overlay for 10 seconds,
+// then it fades back to fully redacted.
 function renderWithRedaction(text, target){
   const idx = text.indexOf(target);
   if (idx === -1) return text;
@@ -264,17 +261,49 @@ function renderWithRedaction(text, target){
   return (
     <React.Fragment>
       {before}
-      <span className="case-redact" style={{
-        background:'var(--uc-black)',
-        color:'var(--uc-black)',
+      <Redaction>{target}</Redaction>
+      {after}
+    </React.Fragment>
+  );
+}
+
+const REDACTION_REVEAL_MS = 10000;
+function Redaction({children}){
+  const [revealed, setRevealed] = React.useState(false);
+  React.useEffect(() => {
+    if (!revealed) return;
+    const t = setTimeout(() => setRevealed(false), REDACTION_REVEAL_MS);
+    return () => clearTimeout(t);
+  }, [revealed]);
+  const reveal = (e) => {
+    e.stopPropagation();
+    setRevealed(true);
+  };
+  return (
+    <span
+      role="button"
+      tabIndex={0}
+      aria-pressed={revealed}
+      aria-label={revealed ? 'Redacted text revealed' : 'Click to reveal redacted text'}
+      onClick={reveal}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          reveal(e);
+        }
+      }}
+      style={{
+        cursor: revealed ? 'default' : 'pointer',
+        background: revealed ? 'transparent' : 'var(--uc-black)',
+        color:      revealed ? 'var(--uc-error)' : 'var(--uc-black)',
         padding:'1px 4px',
         borderRadius:2,
         transition:'background .35s var(--ease-out), color .35s var(--ease-out)',
         boxDecorationBreak:'clone',
         WebkitBoxDecorationBreak:'clone',
-      }}>{target}</span>
-      {after}
-    </React.Fragment>
+        userSelect:'none',
+      }}
+    >{children}</span>
   );
 }
 
