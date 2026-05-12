@@ -984,7 +984,7 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
         lineHeight:1.4,letterSpacing:'-.005em',
         textAlign: isMobile ? 'center' : 'left',
       }}>
-        Reserve your spot to schedule the discovery call.
+        Reserve your discovery call today.
       </div>
       <div style={{
         position:'relative',
