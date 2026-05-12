@@ -979,16 +979,6 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
       display:'flex',flexDirection:'column',gap:18,
     }}>
       <div style={{
-        fontFamily:'var(--font-display)',fontWeight:500,
-        fontSize: isMobile ? 14 : 'clamp(13px, 1.2vw, 15px)',
-        lineHeight:1.4,letterSpacing:'-.005em',
-        textAlign: isMobile ? 'center' : 'left',
-      }}>
-        We take on 12 Blueprints per quarter.{' '}
-        <strong style={{fontWeight:700}}>Lock yours in. $500 fully refundable.</strong>
-      </div>
-
-      <div style={{
         position:'relative',
         background:'#fff',color:'var(--fg-1)',borderRadius:5,
         padding: isMobile ? 12 : 16,
@@ -1031,7 +1021,7 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
         }}
       >
         <Lock/>
-        {phase === 'submitting' ? 'Processing reservation…' : 'Reserve your spot · $500'}
+        {phase === 'submitting' ? 'Processing reservation…' : 'Reserve Your Spot'}
       </button>
 
       <div style={{display:'flex',alignItems:'center',justifyContent:'center',gap:8,fontSize:12,color:'var(--uc-stone-300)',lineHeight:1.45}}>
