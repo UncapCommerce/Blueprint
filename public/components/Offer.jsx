@@ -58,11 +58,7 @@ function Offer() {
               45 accumulated years of operator experience went into crafting this Blueprint.
             </blockquote>
             <figcaption style={{display:'flex',alignItems:'center',gap:12}}>
-              <span style={{
-                width:36,height:36,borderRadius:999,background:'var(--uc-black)',color:'#fff',
-                display:'inline-flex',alignItems:'center',justifyContent:'center',
-                fontFamily:'var(--font-mono)',fontWeight:700,fontSize:13,flexShrink:0,
-              }}>RM</span>
+              <RyanAvatar isMobile={isMobile}/>
               <div style={{display:'flex',flexDirection:'column',gap:1,lineHeight:1.25}}>
                 <span style={{fontSize: isMobile ? 14 : 14,fontWeight:600,color:'var(--fg-1)'}}>Ryan Muir</span>
                 <span style={{fontSize:12,color:'var(--fg-3)',fontWeight:500}}>Managing Director @ Uncap</span>
@@ -98,7 +94,7 @@ function Offer() {
 
         <div style={{marginTop: isMobile ? 24 : 32,display:'flex',gap: isMobile ? 12 : 14,alignItems: isMobile ? 'stretch' : 'center',flexDirection: isMobile ? 'column' : 'row',flexWrap:'wrap'}}>
           <a href={`/build${hash}`} className="uc-btn b-primary" style={isMobile ? {width:'100%',justifyContent:'center',padding:'16px 24px',fontSize:16} : null}>Start the Blueprint <span>→</span></a>
-          <span style={{fontSize:13,color:'var(--fg-3)',textAlign: isMobile ? 'center' : 'left'}}>Delivered in 4 weeks. Yours to keep, with us or without.</span>
+          <span style={{fontSize:13,fontWeight:700,color:'var(--fg-1)',textAlign: isMobile ? 'center' : 'left'}}>Delivered in 4 weeks. Yours to keep, with us or without.</span>
         </div>
       </div>
     </section>
@@ -109,6 +105,41 @@ function CheckSquare(){
     <span style={{width:22,height:22,borderRadius:3,background:'var(--uc-black)',display:'inline-flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
       <svg width="12" height="12" viewBox="0 0 12 12" fill="none"><path d="M2.5 6.2L4.8 8.5L9.5 3.5" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
     </span>
+  );
+}
+
+// Tries to load Ryan Muir's headshot from /assets/team/ryan-muir.jpg. While
+// the file is absent, falls back to the RM monogram circle so the byline
+// always reads cleanly. Drop the photo in and reload — no further code change.
+function RyanAvatar({isMobile}){
+  const [failed, setFailed] = React.useState(false);
+  const size = isMobile ? 36 : 40;
+  const base = {
+    width: size, height: size, borderRadius: 999, flexShrink: 0,
+    border: '1px solid var(--uc-black)',
+  };
+  if (failed) {
+    return (
+      <span
+        aria-label="Ryan Muir"
+        style={{
+          ...base,
+          background:'var(--uc-black)', color:'#fff',
+          display:'inline-flex', alignItems:'center', justifyContent:'center',
+          fontFamily:'var(--font-mono)', fontWeight:700, fontSize:13,
+        }}
+      >RM</span>
+    );
+  }
+  return (
+    <img
+      src="assets/team/ryan-muir.jpg"
+      alt="Ryan Muir"
+      loading="lazy"
+      decoding="async"
+      onError={() => setFailed(true)}
+      style={{...base, objectFit:'cover', background:'#fff', display:'block'}}
+    />
   );
 }
 window.Offer = Offer;
