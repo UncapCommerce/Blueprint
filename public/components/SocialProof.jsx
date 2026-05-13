@@ -162,7 +162,7 @@ function SocialProof() {
 // no surrounding box. Logo SVGs live in public/assets/badges/. Every logo
 // renders at the same fixed visual height (LOGO_H) so the four lockups
 // line up visually regardless of each SVG's internal aspect ratio.
-const LOGO_H = 26;
+const LOGO_H = 18;
 function TrustBadge({brand}){
   const data = {
     trustpilot: { label:'Trustpilot', colour:'#00B67A', file:'Trust Pilot-logo.svg' },
