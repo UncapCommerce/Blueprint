@@ -117,9 +117,10 @@ function SocialProof() {
           ))}
         </div>
 
-        {/* Trust badges below the mosaic — Trustpilot, Clutch, Shopify, each
-            with a 5-star strip. Sits as a quiet ribbon so it reinforces the
-            wall of voices without competing with it. */}
+        {/* Trust badges below the mosaic — Trustpilot, Clutch, Google, Shopify.
+            Each lockup is icon + wordmark + 5-star strip in the brand colour,
+            rendered inline with no surrounding box so the row reads as a
+            clean ribbon under the wall of voices. */}
         <div style={{
           marginTop: isMobile ? 32 : 48,
           paddingTop: isMobile ? 24 : 32,
@@ -128,11 +129,12 @@ function SocialProof() {
           flexDirection: isMobile ? 'column' : 'row',
           alignItems:'center',
           justifyContent:'center',
-          gap: isMobile ? 18 : 56,
+          gap: isMobile ? 18 : 44,
           flexWrap:'wrap',
         }}>
           <TrustBadge brand="trustpilot"/>
           <TrustBadge brand="clutch"/>
+          <TrustBadge brand="google"/>
           <TrustBadge brand="shopify"/>
         </div>
       </div>
@@ -140,16 +142,15 @@ function SocialProof() {
   );
 }
 
-// One review-platform badge: small brand icon + wordmark + 5-star row.
-// Kept inline-SVG / pure-CSS so it stays sharp at any DPI and ships with
-// no extra asset requests.
+// One review-platform lockup: brand icon + wordmark + 5-star row, all inline,
+// no surrounding box. Stays sharp at any DPI and ships with no asset requests.
 function TrustBadge({brand}){
   const data = {
     trustpilot: {
       label: 'Trustpilot',
       colour: '#00B67A',
       icon: (
-        <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 20 20" aria-hidden="true">
           <rect width="20" height="20" rx="2" fill="#00B67A"/>
           <path d="M10 3.2l1.92 4.05 4.43.51-3.28 3.03.94 4.4L10 12.95l-3.99 2.24.94-4.4-3.28-3.03 4.43-.51L10 3.2z" fill="#fff"/>
         </svg>
@@ -159,10 +160,23 @@ function TrustBadge({brand}){
       label: 'Clutch',
       colour: '#FF3D2E',
       icon: (
-        <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 20 20" aria-hidden="true">
           <circle cx="10" cy="10" r="9" fill="#17313B"/>
           <circle cx="10" cy="10" r="4.4" fill="none" stroke="#FF3D2E" strokeWidth="1.6"/>
           <circle cx="10" cy="10" r="1.6" fill="#FF3D2E"/>
+        </svg>
+      ),
+    },
+    google: {
+      label: 'Google',
+      colour: '#FBBC05',
+      icon: (
+        // Multicolour G mark in the canonical Google Sign-in palette.
+        <svg width="22" height="22" viewBox="0 0 48 48" aria-hidden="true">
+          <path fill="#FFC107" d="M43.6 20.5H42V20H24v8h11.3c-1.6 4.7-6.1 8-11.3 8-6.6 0-12-5.4-12-12s5.4-12 12-12c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.2-.1-2.3-.4-3.5z"/>
+          <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.7 16 19 13 24 13c3 0 5.8 1.1 7.9 3l5.7-5.7C34 6.1 29.3 4 24 4 16.3 4 9.7 8.4 6.3 14.7z"/>
+          <path fill="#4CAF50" d="M24 44c5.2 0 9.9-2 13.4-5.2l-6.2-5.2c-2 1.4-4.5 2.4-7.2 2.4-5.2 0-9.6-3.3-11.3-8l-6.5 5C9.6 39.5 16.2 44 24 44z"/>
+          <path fill="#1976D2" d="M43.6 20.5H42V20H24v8h11.3c-.8 2.3-2.3 4.3-4.1 5.6l6.2 5.2C42.2 35 44 30 44 24c0-1.2-.1-2.3-.4-3.5z"/>
         </svg>
       ),
     },
@@ -170,7 +184,7 @@ function TrustBadge({brand}){
       label: 'Shopify',
       colour: '#5A8A3A',
       icon: (
-        <svg width="20" height="20" viewBox="0 0 20 20" aria-hidden="true">
+        <svg width="22" height="22" viewBox="0 0 20 20" aria-hidden="true">
           <path d="M14.6 4.2c-.05-.34-.34-.51-.6-.53-.05 0-1.1-.08-1.1-.08s-.74-.72-.82-.8c-.08-.08-.24-.06-.3-.04 0 0-.16.05-.43.13a3 3 0 0 0-.2-.5c-.3-.57-.74-.87-1.27-.87-.04 0-.07 0-.11.01-.02-.02-.03-.04-.05-.06C9.5 1.21 9.2 1.1 8.83 1.11c-.7.02-1.4.53-1.97 1.43-.4.63-.7 1.42-.79 2.04-.83.26-1.4.43-1.42.44-.42.13-.43.14-.49.54L3 16.62l11.05 1.9L16 4.4s-1.35-.18-1.4-.18zM10.92 3.4l-.66.2c-.01-.36-.06-.85-.22-1.27.5.1.74.66.88 1.07zM9.78 3.76l-1.94.6c.19-.73.55-1.45 1-1.93.16-.18.4-.37.66-.49.26.55.32 1.32.28 1.82zM8.84 1.7c.21 0 .4.05.55.14-.25.13-.5.32-.72.56-.6.65-1.07 1.65-1.25 2.62l-1.42.44c.32-1.5 1.58-3.71 2.84-3.76z" fill="#5A8A3A"/>
         </svg>
       ),
@@ -178,17 +192,10 @@ function TrustBadge({brand}){
   }[brand];
 
   return (
-    <div style={{
-      display:'inline-flex',alignItems:'center',gap:10,
-      padding:'10px 16px',
-      background:'#fff',border:'1px solid var(--line-1)',borderRadius:6,
-      boxShadow:'0 1px 2px rgba(10,10,10,0.04)',
-    }}>
+    <div style={{display:'inline-flex',alignItems:'center',gap:8}}>
       {data.icon}
-      <div style={{display:'flex',flexDirection:'column',gap:2,lineHeight:1.1}}>
-        <span style={{fontFamily:'var(--font-sans)',fontSize:13,fontWeight:700,color:'var(--fg-1)',letterSpacing:'-.005em'}}>{data.label}</span>
-        <FiveStars colour={data.colour}/>
-      </div>
+      <span style={{fontFamily:'var(--font-sans)',fontSize:13,fontWeight:700,color:'var(--fg-1)',letterSpacing:'-.005em'}}>{data.label}</span>
+      <FiveStars colour={data.colour}/>
     </div>
   );
 }
