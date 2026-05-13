@@ -37,6 +37,10 @@
 </script>
 <style>
   html,body{margin:0;background:var(--bg-1);color:var(--fg-1);font-family:var(--font-sans);-webkit-font-smoothing:antialiased}
+  /* Defensive clip against any stray rightward overflow on mobile (rotated
+     marker SVGs, decorative bg-vectors, etc) without breaking sticky-header. */
+  html{overflow-x:clip}
+  body{overflow-x:clip}
   *{box-sizing:border-box}
   ::selection{background:var(--uc-signal);color:var(--uc-black)}
 
