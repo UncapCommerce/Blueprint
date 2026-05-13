@@ -9,7 +9,7 @@ function SocialProof() {
       quote:'The team communicated consistently and efficiently, and internal stakeholders were particularly impressed with the Uncaps\' vast technical expertise.',
       attr:'Todd Arey',
       role:'E3 Spark Plugs',
-      photo:'https://i.pravatar.cc/120?img=44',
+      photo:'assets/reviews/Todd Arey.jpg',
       stat:{n:'60 DAYS', l:'migrating to Shopify after Blueprint'},
     },
     {
@@ -17,14 +17,14 @@ function SocialProof() {
       quote:'The personal touch, and constant communication is what separates them from other companies with a 50+ person team where the attention to detail may be lost.',
       attr:'Brandt DeVries',
       role:'WeldingStore',
-      photo:'https://i.pravatar.cc/120?img=12',
+      photo:'assets/reviews/Brandt DeVries.jpeg',
     },
     {
       tone:'signal', size:'small',
       quote:'The integration of our platforms created an easy solution that even our complex systems sales teams can easily use.',
       attr:'Bryan Snyder',
       role:'Canon Medical',
-      photo:'https://i.pravatar.cc/120?img=18',
+      photo:'assets/reviews/Bryan Snyder.jpeg',
       stat:{n:'83% LOWER', l:'Total cost of ownership running on Shopify'},
       statBig: true,
     },
@@ -33,7 +33,7 @@ function SocialProof() {
       quote:'They are brilliant and very knowledgeable of all that Shopify can do.',
       attr:'Peggy Farabaugh',
       role:'Vermont Woods',
-      photo:'https://i.pravatar.cc/120?img=5',
+      photo:'assets/reviews/Peggy Farabaugh.jpeg',
       stat:{n:'PRODUCT CONFIGURATOR', l:'Furniture manufacturing custom ordering'},
       statBig: true,
     },
@@ -42,7 +42,7 @@ function SocialProof() {
       quote:'Uncap team demonstrated a deep understanding of working within the Shopify ecosystem from the get-go, which in turn helped me tremendously with aligning the new site with our older business model and work flows.',
       attr:'Andy Morgan',
       role:'ScooterWorks',
-      photo:'https://i.pravatar.cc/120?img=14',
+      photo:'assets/reviews/Andy Morgan.png',
       stat:{n:'CUSTOM ERP', l:'integration data mapping for Shopify'},
       statBig: true,
     },
@@ -55,29 +55,30 @@ function SocialProof() {
       followUpQuote:'I’ve honestly never worked with a firm like them before; they’re absolutely outstanding.',
       followUpAttr:'Pete Suter',
       followUpRole:"Shirley's Gourmet Popcorn",
+      followUpPhoto:'assets/reviews/Pete Suter.jpeg',
     },
     {
       tone:'white', size:'wide',
       quote:'During the Blueprint, the Uncap team went through each of my requirements and laid out if it was doable, if it was native to Shopify, if it required an app and which one they recommend, or if custom work was needed.',
       attr:'Denise Foley',
       role:'ULE Group',
-      photo:'https://i.pravatar.cc/120?img=9',
+      photo:'assets/reviews/Denise Foley.jpeg',
       stat:{n:'1M SKUs', l:'Mapped to sync from Epicor to Shopify'},
       statBig: true,
     },
     {
       tone:'dark', size:'small',
-      quote:'I cannot praise the Uncap enough. They are hell of a team.',
+      quote:'I cannot praise the Uncap enough. They are a hell of a team.',
       attr:'Andy Blechschmidt',
       role:'Jerico',
-      photo:'https://i.pravatar.cc/120?img=11',
+      photo:'assets/reviews/Andy Blechschmidt.jpeg',
     },
     {
       tone:'cream', size:'small',
       quote:'The team was incredible and very honest and transparent with us when we voiced our needs and concerns.',
       attr:'Georgia Kryssing',
       role:'Kooks Headers',
-      photo:'https://i.pravatar.cc/120?img=15',
+      photo:'assets/reviews/Georgia Kryssing.jpeg',
       stat:{n:'YMM FITMENT', l:'ACES & PIES fitment live sync on the online store'},
       statBig: true,
     },
@@ -252,18 +253,21 @@ function ReviewTile({review, index, isMobile}){
           <div style={{
             marginTop:4,paddingTop:18,
             borderTop:'1px dashed rgba(10,10,10,0.18)',
-            display:'flex',flexDirection:'column',gap:10,
+            display:'flex',flexDirection:'column',gap:12,
           }}>
             <p style={{
               fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:500,
               fontSize:14,lineHeight:1.4,letterSpacing:'-.01em',
               color:p.fg,margin:0,
             }}>“{review.followUpQuote}”</p>
-            <div style={{display:'flex',flexDirection:'column',lineHeight:1.25}}>
-              <span style={{fontSize:12,fontWeight:600,color:p.fg}}>{review.followUpAttr}</span>
-              {review.followUpRole ? (
-                <span style={{fontSize:11,color:p.meta,fontWeight:500}}>{review.followUpRole}</span>
-              ) : null}
+            <div style={{display:'flex',alignItems:'center',gap:10}}>
+              <Avatar name={review.followUpAttr} src={review.followUpPhoto} dark={tone==='dark'} small/>
+              <div style={{display:'flex',flexDirection:'column',lineHeight:1.25}}>
+                <span style={{fontSize:13,fontWeight:600,color:p.fg}}>{review.followUpAttr}</span>
+                {review.followUpRole ? (
+                  <span style={{fontSize:11,color:p.meta,fontWeight:500}}>{review.followUpRole}</span>
+                ) : null}
+              </div>
             </div>
           </div>
         ) : null}
