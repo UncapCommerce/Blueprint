@@ -34,7 +34,8 @@ function SocialProof() {
       attr:'Peggy Farabaugh',
       role:'Vermont Woods',
       photo:'https://i.pravatar.cc/120?img=5',
-      stat:{n:'Product Configuration', l:'Furniture manufacturing custom ordering'},
+      stat:{n:'PRODUCT CONFIGURATOR', l:'Furniture manufacturing custom ordering'},
+      statBig: true,
     },
     {
       tone:'white', size:'small',
