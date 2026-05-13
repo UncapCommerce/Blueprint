@@ -55,7 +55,7 @@ function Offer() {
               color:'var(--fg-1)',
               paddingTop: isMobile ? 18 : 22,
             }}>
-              45 accumulated years of operator experience went into crafting this Blueprint.
+              Built on 380 migrations. We know exactly where they fail. The Blueprint catches it before you sign.
             </blockquote>
             <figcaption style={{display:'flex',alignItems:'center',gap:12}}>
               <RyanAvatar isMobile={isMobile}/>
