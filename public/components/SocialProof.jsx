@@ -21,6 +21,15 @@ function SocialProof() {
     },
     {
       tone:'signal', size:'small',
+      quote:'The integration of our platforms created an easy solution that even our complex systems sales teams can easily use.',
+      attr:'Bryan Snyder',
+      role:'Canon Medical',
+      photo:'https://i.pravatar.cc/120?img=18',
+      stat:{n:'83% LOWER', l:'Total cost of ownership running on Shopify'},
+      statBig: true,
+    },
+    {
+      tone:'signal', size:'small',
       quote:'They are brilliant and very knowledgeable of all that Shopify can do.',
       attr:'Peggy Farabaugh',
       role:'Vermont Woods',
