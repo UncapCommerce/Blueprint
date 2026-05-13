@@ -55,7 +55,7 @@ function Offer() {
               color:'var(--fg-1)',
               paddingTop: isMobile ? 18 : 22,
             }}>
-              Built on 380 migrations. We know exactly where they fail. The Blueprint catches it before you sign.
+              Built on 380+ migrations. We know exactly where they fail. The Blueprint catches it before you sign.
             </blockquote>
             <figcaption style={{display:'flex',alignItems:'center',gap:12}}>
               <RyanAvatar isMobile={isMobile}/>
