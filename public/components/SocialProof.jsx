@@ -160,16 +160,18 @@ function SocialProof() {
 
 // One review-platform lockup: real brand logo + 5-star row, all inline,
 // no surrounding box. Logo SVGs live in public/assets/badges/. Every logo
-// renders at the same fixed visual height (LOGO_H) so the four lockups
-// line up visually regardless of each SVG's internal aspect ratio.
+// renders inside a fixed-height slot (LOGO_H) so the four lockups line up
+// visually; individual brands can tune their own intrinsic height via the
+// optional `h` override to compensate for internal SVG padding differences.
 const LOGO_H = 18;
 function TrustBadge({brand}){
   const data = {
     trustpilot: { label:'Trustpilot', colour:'#00B67A', file:'Trust Pilot-logo.svg' },
-    clutch:     { label:'Clutch',     colour:'#FF3D2E', file:'Clutch-logo.svg'      },
+    clutch:     { label:'Clutch',     colour:'#FF3D2E', file:'Clutch-logo.svg', h: 14 },
     google:     { label:'Google',     colour:'#FBBC05', file:'Google-logo.svg'      },
     shopify:    { label:'Shopify',    colour:'#5A8A3A', file:'Shopify-logo.svg'     },
   }[brand];
+  const imgH = data.h || LOGO_H;
 
   return (
     <div style={{display:'inline-flex',alignItems:'center',gap:10}}>
@@ -179,7 +181,7 @@ function TrustBadge({brand}){
           alt={data.label}
           loading="lazy"
           decoding="async"
-          style={{height: LOGO_H, width:'auto', maxHeight: LOGO_H, display:'block', objectFit:'contain'}}
+          style={{height: imgH, width:'auto', maxHeight: imgH, display:'block', objectFit:'contain'}}
         />
       </span>
       <FiveStars colour={data.colour}/>
