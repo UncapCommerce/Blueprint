@@ -34,7 +34,7 @@ function SocialProof() {
       attr:'Peggy Farabaugh',
       role:'Vermont Woods',
       photo:'https://i.pravatar.cc/120?img=5',
-      stat:{n:'Product Configuration', l:'Furniture manufacturing custom orders'},
+      stat:{n:'Product Configuration', l:'Furniture manufacturing custom ordering'},
     },
     {
       tone:'white', size:'small',
@@ -42,7 +42,7 @@ function SocialProof() {
       attr:'Andy Morgan',
       role:'ScooterWorks',
       photo:'https://i.pravatar.cc/120?img=14',
-      stat:{n:'CUSTOM ERP', l:'integration mapping for Shopify'},
+      stat:{n:'CUSTOM ERP', l:'integration data mapping for Shopify'},
       statBig: true,
     },
     {
