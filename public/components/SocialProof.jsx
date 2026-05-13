@@ -10,7 +10,7 @@ function SocialProof() {
       attr:'Todd Arey',
       role:'E3 Spark Plugs',
       photo:'https://i.pravatar.cc/120?img=44',
-      stat:{n:'6×', l:'Online sales after launch'},
+      stat:{n:'60 days', l:'migrating to Shopify after Blueprint'},
     },
     {
       tone:'cream', size:'wide',
@@ -18,7 +18,6 @@ function SocialProof() {
       attr:'Brandt DeVries',
       role:'WeldingStore',
       photo:'https://i.pravatar.cc/120?img=12',
-      stat:{n:'$295K', l:'saved vs. the wrong quote'},
     },
     {
       tone:'signal', size:'small',
@@ -33,10 +32,11 @@ function SocialProof() {
       attr:'Andy Morgan',
       role:'ScooterWorks',
       photo:'https://i.pravatar.cc/120?img=14',
+      stat:{n:'Custom ERP', l:'integration mapping for Shopify'},
     },
     {
       tone:'stat', size:'small',
-      stat:{n:'11 weeks', l:'from stalled mid-build to relaunch'},
+      stat:{n:'Unified Commerce', l:'DTC + B2B + POS'},
       // Same tile carries the Pete Suter testimonial directly under the stat
       // copy, no extra box. The stat-tone renderer picks this up and stacks
       // it below the stat label.
@@ -50,6 +50,7 @@ function SocialProof() {
       attr:'Denise Foley',
       role:'ULE Group',
       photo:'https://i.pravatar.cc/120?img=9',
+      stat:{n:'1M', l:'SKUs listed on the online store'},
     },
     {
       tone:'dark', size:'small',
@@ -64,6 +65,7 @@ function SocialProof() {
       attr:'Georgia Kryssing',
       role:'Kooks Headers',
       photo:'https://i.pravatar.cc/120?img=15',
+      stat:{n:'YMM Fitment', l:'ACES & PIES fitment live sync'},
     },
   ];
 
@@ -373,7 +375,7 @@ function ReviewTile({review, index, isMobile}){
     <article style={{
       ...span,
       background:p.bg,color:p.fg,border:p.border,borderRadius:5,
-      padding:'22px 22px',display:'flex',flexDirection:'column',justifyContent:'space-between',gap:16,
+      padding:'22px 22px',display:'flex',flexDirection:'column',justifyContent:'space-between',gap:14,
     }}>
       <div>
         <Stars color={p.fg} small/>
@@ -383,6 +385,16 @@ function ReviewTile({review, index, isMobile}){
           margin:'10px 0 0',color:p.fg,
         }}>"{review.quote}"</p>
       </div>
+      {review.stat && (
+        <div style={{
+          paddingTop:12,
+          borderTop:`1px solid ${tone==='dark'?'#2B2B2B':'rgba(10,10,10,0.12)'}`,
+          display:'flex',justifyContent:'space-between',alignItems:'baseline',gap:10,
+        }}>
+          <div style={{fontFamily:'var(--font-display)',fontWeight:800,fontSize:20,letterSpacing:'-.02em',lineHeight:1}}>{review.stat.n}</div>
+          <div style={{fontSize:11,letterSpacing:'.05em',textTransform:'uppercase',color:p.meta,fontWeight:600,textAlign:'right'}}>{review.stat.l}</div>
+        </div>
+      )}
       <div style={{display:'flex',alignItems:'center',gap:10}}>
         <Avatar name={review.attr} src={review.photo} dark={tone==='dark'} small/>
         <div>
