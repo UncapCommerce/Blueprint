@@ -159,44 +159,29 @@ function SocialProof() {
 }
 
 // One review-platform lockup: real brand logo + 5-star row, all inline,
-// no surrounding box. Logo SVGs live in public/assets/badges/.
+// no surrounding box. Logo SVGs live in public/assets/badges/. Every logo
+// renders at the same fixed visual height (LOGO_H) so the four lockups
+// line up visually regardless of each SVG's internal aspect ratio.
+const LOGO_H = 26;
 function TrustBadge({brand}){
   const data = {
-    trustpilot: {
-      label: 'Trustpilot',
-      colour: '#00B67A',
-      file:   'Trust Pilot-logo.svg',
-      height: 22,
-    },
-    clutch: {
-      label: 'Clutch',
-      colour: '#FF3D2E',
-      file:   'Clutch-logo.svg',
-      height: 22,
-    },
-    google: {
-      label: 'Google',
-      colour: '#FBBC05',
-      file:   'Google-logo.svg',
-      height: 22,
-    },
-    shopify: {
-      label: 'Shopify',
-      colour: '#5A8A3A',
-      file:   'Shopify-logo.svg',
-      height: 22,
-    },
+    trustpilot: { label:'Trustpilot', colour:'#00B67A', file:'Trust Pilot-logo.svg' },
+    clutch:     { label:'Clutch',     colour:'#FF3D2E', file:'Clutch-logo.svg'      },
+    google:     { label:'Google',     colour:'#FBBC05', file:'Google-logo.svg'      },
+    shopify:    { label:'Shopify',    colour:'#5A8A3A', file:'Shopify-logo.svg'     },
   }[brand];
 
   return (
     <div style={{display:'inline-flex',alignItems:'center',gap:10}}>
-      <img
-        src={`assets/badges/${data.file}`}
-        alt={data.label}
-        loading="lazy"
-        decoding="async"
-        style={{height: data.height, width:'auto', display:'block'}}
-      />
+      <span style={{display:'inline-flex',alignItems:'center',height: LOGO_H,flexShrink:0}}>
+        <img
+          src={`assets/badges/${data.file}`}
+          alt={data.label}
+          loading="lazy"
+          decoding="async"
+          style={{height: LOGO_H, width:'auto', maxHeight: LOGO_H, display:'block', objectFit:'contain'}}
+        />
+      </span>
       <FiveStars colour={data.colour}/>
     </div>
   );
