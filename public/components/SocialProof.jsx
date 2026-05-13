@@ -10,7 +10,7 @@ function SocialProof() {
       attr:'Todd Arey',
       role:'E3 Spark Plugs',
       photo:'https://i.pravatar.cc/120?img=44',
-      stat:{n:'60 days', l:'migrating to Shopify after Blueprint'},
+      stat:{n:'60 DAYS', l:'migrating to Shopify after Blueprint'},
     },
     {
       tone:'cream', size:'wide',
@@ -25,6 +25,7 @@ function SocialProof() {
       attr:'Peggy Farabaugh',
       role:'Vermont Woods',
       photo:'https://i.pravatar.cc/120?img=5',
+      stat:{n:'Product Configuration', l:'Furniture manufacturing custom orders'},
     },
     {
       tone:'white', size:'small',
@@ -32,7 +33,8 @@ function SocialProof() {
       attr:'Andy Morgan',
       role:'ScooterWorks',
       photo:'https://i.pravatar.cc/120?img=14',
-      stat:{n:'Custom ERP', l:'integration mapping for Shopify'},
+      stat:{n:'CUSTOM ERP', l:'integration mapping for Shopify'},
+      statBig: true,
     },
     {
       tone:'stat', size:'small',
@@ -50,7 +52,8 @@ function SocialProof() {
       attr:'Denise Foley',
       role:'ULE Group',
       photo:'https://i.pravatar.cc/120?img=9',
-      stat:{n:'1M', l:'SKUs listed on the online store'},
+      stat:{n:'1M SKUs', l:'Mapped to sync from Epicor to Shopify'},
+      statBig: true,
     },
     {
       tone:'dark', size:'small',
@@ -65,7 +68,8 @@ function SocialProof() {
       attr:'Georgia Kryssing',
       role:'Kooks Headers',
       photo:'https://i.pravatar.cc/120?img=15',
-      stat:{n:'YMM Fitment', l:'ACES & PIES fitment live sync'},
+      stat:{n:'YMM FITMENT', l:'ACES & PIES fitment live sync on the online store'},
+      statBig: true,
     },
   ];
 
@@ -351,11 +355,12 @@ function ReviewTile({review, index, isMobile}){
         </div>
         {review.stat && (
           <div style={{
-            paddingTop:14,
+            paddingTop:14,paddingBottom:14,
             borderTop:`1px solid ${tone==='dark'?'#2B2B2B':'rgba(10,10,10,0.12)'}`,
+            borderBottom:`1px solid ${tone==='dark'?'#2B2B2B':'rgba(10,10,10,0.12)'}`,
             display:'flex',justifyContent:'space-between',alignItems:'baseline',gap:12,
           }}>
-            <div style={{fontFamily:'var(--font-display)',fontWeight:800,fontSize:24,letterSpacing:'-.02em',lineHeight:1}}>{review.stat.n}</div>
+            <div style={{fontFamily:'var(--font-display)',fontWeight:800,fontSize: review.statBig ? 32 : 24,letterSpacing:'-.02em',lineHeight:1}}>{review.stat.n}</div>
             <div style={{fontSize:11,letterSpacing:'.06em',textTransform:'uppercase',color:p.meta,fontWeight:600,textAlign:'right'}}>{review.stat.l}</div>
           </div>
         )}
@@ -387,11 +392,12 @@ function ReviewTile({review, index, isMobile}){
       </div>
       {review.stat && (
         <div style={{
-          paddingTop:12,
+          paddingTop:12,paddingBottom:12,
           borderTop:`1px solid ${tone==='dark'?'#2B2B2B':'rgba(10,10,10,0.12)'}`,
+          borderBottom:`1px solid ${tone==='dark'?'#2B2B2B':'rgba(10,10,10,0.12)'}`,
           display:'flex',justifyContent:'space-between',alignItems:'baseline',gap:10,
         }}>
-          <div style={{fontFamily:'var(--font-display)',fontWeight:800,fontSize:20,letterSpacing:'-.02em',lineHeight:1}}>{review.stat.n}</div>
+          <div style={{fontFamily:'var(--font-display)',fontWeight:800,fontSize: review.statBig ? 26 : 20,letterSpacing:'-.02em',lineHeight:1}}>{review.stat.n}</div>
           <div style={{fontSize:11,letterSpacing:'.05em',textTransform:'uppercase',color:p.meta,fontWeight:600,textAlign:'right'}}>{review.stat.l}</div>
         </div>
       )}
