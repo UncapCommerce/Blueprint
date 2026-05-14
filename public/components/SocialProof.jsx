@@ -34,7 +34,7 @@ function SocialProof() {
       attr:'Peggy Farabaugh',
       role:'Vermont Woods',
       photo:'assets/reviews/Peggy Farabaugh.jpeg',
-      stat:{n:'PRODUCT CONFIGURATOR', l:'Furniture manufacturing custom ordering'},
+      stat:{n:'PRODUCT CONFIGURATIONS', l:'Furniture manufacturing custom ordering'},
       statBig: true,
     },
     {
@@ -79,7 +79,7 @@ function SocialProof() {
       attr:'Georgia Kryssing',
       role:'Kooks Headers',
       photo:'assets/reviews/Georgia Kryssing.jpeg',
-      stat:{n:'YMM FITMENT', l:'ACES & PIES fitment live sync on the online store'},
+      stat:{n:'YMM FITMENT', l:'ACES & PIES auto parts fitment synced with the online store'},
       statBig: true,
     },
   ];
