@@ -25,7 +25,7 @@ function SocialProof() {
       attr:'Bryan Snyder',
       role:'Canon Medical',
       photo:'assets/reviews/Bryan Snyder.jpeg',
-      stat:{n:'83% LOWER', l:'Total cost of ownership running on Shopify'},
+      stat:{n:'83%', l:'LOWER TCO'},
       statBig: true,
     },
     {
