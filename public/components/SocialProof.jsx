@@ -34,7 +34,7 @@ function SocialProof() {
       attr:'Peggy Farabaugh',
       role:'Vermont Woods',
       photo:'assets/reviews/Peggy Farabaugh.jpeg',
-      stat:{n:'PRODUCT CONFIGURATIONS', l:'Custom products ordering for furniture manufacturing'},
+      stat:{n:'PRODUCT CONFIGURATIONS', l:'Custom product ordering for manufacturing'},
       statBig: true,
     },
     {
