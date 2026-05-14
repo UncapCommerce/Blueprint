@@ -25,7 +25,7 @@ function SocialProof() {
       attr:'Bryan Snyder',
       role:'Canon Medical',
       photo:'assets/reviews/Bryan Snyder.jpeg',
-      stat:{n:'83%', l:'LOWER TCO'},
+      stat:{n:'83% LOWER TCO', l:'Total cost of ownership running on Shopify'},
       statBig: true,
     },
     {
@@ -34,7 +34,7 @@ function SocialProof() {
       attr:'Peggy Farabaugh',
       role:'Vermont Woods',
       photo:'assets/reviews/Peggy Farabaugh.jpeg',
-      stat:{n:'PRODUCT CONFIGURATIONS', l:'Custom products ordering for furniture manufacturing'},
+      stat:{n:'PRODUCT CONFIGURATIONS', l:'Custom product ordering for manufacturing'},
       statBig: true,
     },
     {
