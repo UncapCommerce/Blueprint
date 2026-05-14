@@ -112,7 +112,7 @@ function SocialProof() {
               lineHeight:1.35,
               color:'var(--fg-2)',margin:0,letterSpacing:'-.01em',
             }}>
-              Executives. Operators. Founders. Same pattern, every time.
+              Executives. Operators. Founders. All migrated without surprises.
             </p>
           </div>
           <div style={{display:'flex',gap: isMobile ? 16 : 24,justifyContent: isMobile ? 'flex-start' : 'flex-end',alignItems:'baseline',flexWrap:'wrap'}}>
