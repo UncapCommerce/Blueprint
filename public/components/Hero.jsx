@@ -100,10 +100,15 @@ function HeroCta({isMobile, hash}) {
     // Light "looks like a domain" check. Quiz step 7 has the strict normalizer
     // for full validation; we just want to avoid forwarding junk through the
     // URL, since that'd send the user to step 7 with a broken pre-fill.
+    // Bare-host inputs are prepended with `https://www.` to match the visible
+    // input prefix the user just typed against.
     const looksLikeDomain = raw && /\.[a-z]{2,}/i.test(raw);
-    const normalized = looksLikeDomain
-      ? (/^https?:\/\//i.test(raw) ? raw : 'https://' + raw)
-      : '';
+    let normalized = '';
+    if (looksLikeDomain) {
+      if (/^https?:\/\//i.test(raw)) normalized = raw;
+      else if (/^www\./i.test(raw))  normalized = 'https://' + raw;
+      else                           normalized = 'https://www.' + raw;
+    }
     const query = normalized ? `?company=${encodeURIComponent(normalized)}` : '';
     window.location.href = `/build${query}${hash}`;
   };
@@ -137,14 +142,14 @@ function HeroCta({isMobile, hash}) {
           fontSize: 15,
           fontWeight: 500,
           fontFamily:'var(--font-sans)',
-        }}>http://</span>
+        }}>https://www.</span>
         <input
           type="url"
           value={companyUrl}
           onChange={(e) => setCompanyUrl(e.target.value)}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
-          placeholder=""
+          placeholder="yourcompany.com"
           autoComplete="url"
           aria-label="Company website"
           style={{
