@@ -236,12 +236,16 @@ async function attioUpsertPerson(env, { name, email }) {
   return res?.data?.id?.record_id || null;
 }
 
-async function attioUpsertCompany(env, { companyUrl }) {
+// `name` is optional — when Apollo enrichment is available the caller passes
+// the real company name; otherwise we fall back to the domain so the record
+// still has a sensible label.
+async function attioUpsertCompany(env, { companyUrl, name }) {
   const domain = hostFromUrl(companyUrl);
   if (!domain) return null;
+  const displayName = (name || '').trim() || domain;
   const values = {
     domains: [{ domain }],
-    name:    [{ value: domain }], // best-effort placeholder; edit in Attio anytime
+    name:    [{ value: displayName }],
   };
   const res = await attioFetch(env, '/objects/companies/records?matching_attribute=domains', {
     method: 'PUT',
@@ -343,17 +347,14 @@ async function syncBlueprintToAttio(env, { contact, answers, otherErp, otherPlat
   let apolloEnrichment = null;
 
   try {
-    // Apollo + the two Attio upserts run in parallel — they don't depend
-    // on each other, and the cache makes the Apollo call free on repeat
-    // visits to the same domain.
-    const [personIdOut, companyIdOut, apolloOut] = await Promise.all([
+    // Person upsert + Apollo enrich run in parallel — Person doesn't need
+    // Apollo, and Apollo is KV-cached so it's free on repeat visits to
+    // the same domain. Company upsert is held until Apollo finishes so the
+    // Companies record (and the Blueprint record's name) can use the real
+    // company name when Apollo returns one.
+    const [personIdOut, apolloOut] = await Promise.all([
       attioUpsertPerson(env, { name: contact.name, email: contact.email }).catch((e) => {
         const msg = `person upsert: ${e.message}`;
-        console.warn('attio:', msg); errors.push(msg);
-        return null;
-      }),
-      attioUpsertCompany(env, { companyUrl: contact.company }).catch((e) => {
-        const msg = `company upsert: ${e.message}`;
         console.warn('attio:', msg); errors.push(msg);
         return null;
       }),
@@ -363,10 +364,26 @@ async function syncBlueprintToAttio(env, { contact, answers, otherErp, otherPlat
       }),
     ]);
     personId = personIdOut;
-    companyId = companyIdOut;
     apolloEnrichment = apolloOut;
 
-    const recordName = hostFromUrl(contact.company) || contact.company || contact.name || contact.email || 'Blueprint reservation';
+    companyId = await attioUpsertCompany(env, {
+      companyUrl: contact.company,
+      name: apolloEnrichment?.name || '',
+    }).catch((e) => {
+      const msg = `company upsert: ${e.message}`;
+      console.warn('attio:', msg); errors.push(msg);
+      return null;
+    });
+
+    // Blueprint record name prefers Apollo's company name, then the bare
+    // domain, then contact fallbacks. So a record reads "Acme Supply" in
+    // Attio instead of "acme.com" when enrichment was available.
+    const recordName = apolloEnrichment?.name
+      || hostFromUrl(contact.company)
+      || contact.company
+      || contact.name
+      || contact.email
+      || 'Blueprint reservation';
     const detailsText = buildBlueprintDetails({ contact, answers, otherErp, otherPlatform })
       + renderApolloDetails(apolloEnrichment);
 
