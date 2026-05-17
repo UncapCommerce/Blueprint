@@ -53,7 +53,7 @@ function Hero() {
 
         <div style={{display:'grid',gridTemplateColumns: isMobile ? '1fr' : '1.35fr 1fr',gap: isMobile ? 28 : 80,alignItems: isMobile ? 'start' : 'end'}}>
           <div>
-            <h1 style={{fontFamily:'var(--font-hero)',fontWeight:800,fontSize: isMobile ? 'clamp(26px, 7vw, 34px)' : 'clamp(40px, 4.4vw, 64px)',lineHeight: isMobile ? 1.08 : 1.05,letterSpacing:'-.035em',color:'var(--fg-1)',margin: isMobile ? '0 0 16px' : '0 0 28px',textWrap:'balance'}}>
+            <h1 style={{fontFamily:'var(--font-hero)',fontWeight:800,fontSize: isMobile ? 'clamp(28px, 7.4vw, 36px)' : 'clamp(44px, 5vw, 72px)',lineHeight: isMobile ? 1.08 : 1.03,letterSpacing:'-.035em',color:'var(--fg-1)',margin: isMobile ? '0 0 16px' : '0 0 28px',textWrap:'balance'}}>
               {headlineNode}
             </h1>
             <p style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:500,fontSize: isMobile ? 'clamp(16px, 4.4vw, 19px)' : 'clamp(22px, 2vw, 28px)',lineHeight:1.35,letterSpacing:'-.015em',color:'var(--fg-2)',margin: isMobile ? '0 0 24px' : '0 0 40px',maxWidth:640}}>
