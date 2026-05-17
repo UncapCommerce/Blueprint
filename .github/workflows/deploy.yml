@@ -16,6 +16,13 @@ jobs:
       contents: read
     steps:
       - uses: actions/checkout@v4
+      - name: Stamp deploy hash into script tags (cache-bust)
+        # Substitutes ?v=DEPLOY_HASH placeholders in the HTML with the short
+        # commit SHA so every deploy changes the URLs the browser asks for.
+        # No build step needed; defeats CDN + browser caches of *.jsx files.
+        run: |
+          SHA="${GITHUB_SHA::8}"
+          sed -i "s/DEPLOY_HASH/${SHA}/g" public/index.html public/build/index.html
       - name: Deploy to Cloudflare Workers
         uses: cloudflare/wrangler-action@v3
         with:
