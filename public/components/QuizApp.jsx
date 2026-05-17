@@ -507,7 +507,7 @@ function QuizApp(){
               <FreeTextStep
                 type="url"
                 prefix="http://"
-                placeholder="yourcompany.com"
+                placeholder=""
                 autoComplete="url"
                 value={contact.company}
                 onChange={(v)=>{ if (companyUrlError) setCompanyUrlError(''); setContactField('company', v); }}
