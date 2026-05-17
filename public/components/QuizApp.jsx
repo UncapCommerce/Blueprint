@@ -506,7 +506,7 @@ function QuizApp(){
             >
               <FreeTextStep
                 type="url"
-                prefix="http://www."
+                prefix="http://"
                 placeholder="yourcompany.com"
                 autoComplete="url"
                 value={contact.company}
