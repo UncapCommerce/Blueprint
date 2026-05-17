@@ -47,10 +47,12 @@ ATTIO_BLUEPRINT_DETAILS_ATTR   = "details"
 ATTIO_BLUEPRINT_STAGE_ATTR     = "stage"
 ATTIO_BLUEPRINT_STAGE_ORDERED  = "Ordered"
 # Reference attributes on the Blueprint object that link out to People /
-# Companies. Set to the slug of the attribute, or leave empty to skip the
-# link entirely. (Your Blueprint object only has a Person ref today.)
+# Companies. Set to the slug of the attribute, or empty string to skip the
+# link entirely. If the slug is set but the attribute doesn't exist on the
+# Blueprint object, the create call retries without the ref so the record
+# still lands (just without the link).
 ATTIO_BLUEPRINT_PERSON_ATTR    = "person"
-ATTIO_BLUEPRINT_COMPANY_ATTR   = ""
+ATTIO_BLUEPRINT_COMPANY_ATTR   = "company"
 
 # Stripe / Attio credentials are configured in the Cloudflare dashboard:
 #   Workers & Pages → uncap-blueprint → Settings → "Variables and Secrets"
