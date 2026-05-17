@@ -2,6 +2,8 @@
 // Dynamic routes (form + Stripe) go through here; everything else falls
 // through to Workers Static Assets (the `public/` directory).
 
+import { EmailMessage } from "cloudflare:email";
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -92,33 +94,77 @@ async function stripeFetch(env, path, { method = 'POST', body, query } = {}) {
   return data;
 }
 
+// Splits a `"Display Name <email@domain>"` value into { display, address }.
+// Falls back to treating the whole input as the bare address.
+function parseAddress(input) {
+  const trimmed = (input || '').trim();
+  if (!trimmed) return { display: '', address: '' };
+  const m = trimmed.match(/^\s*(.+?)\s*<([^>]+)>\s*$/);
+  if (m) return { display: m[1].replace(/^"|"$/g, ''), address: m[2].trim() };
+  return { display: '', address: trimmed };
+}
+
+// Crockford-ish base64 for arbitrary UTF-8 bytes. Lets us put HTML bodies
+// straight into a MIME part without worrying about line-length / encoding
+// rules that quoted-printable would otherwise impose.
+function b64utf8(str) {
+  const bytes = new TextEncoder().encode(str);
+  let bin = '';
+  for (let i = 0; i < bytes.byteLength; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin).replace(/(.{76})/g, '$1\r\n');
+}
+
+// Builds a complete RFC 822 message and ships it via Cloudflare's send_email
+// binding. The recipient must be a verified destination address in Email
+// Routing for the zone the binding is attached to — otherwise the send
+// rejects with "no matching destination address". From-display ("Blueprint
+// <noreply@uncap.com>") is configured via the EMAIL_FROM var; the bare
+// address must be on a zone you control for deliverability.
 async function sendNotificationEmail(env, { subject, html, text, replyTo }) {
-  if (!env.RESEND_API_KEY) {
-    // Don't fail the whole request just because email is unconfigured ,
-    // the customer-facing operation already succeeded.
-    return { ok: false, error: 'RESEND_API_KEY not set' };
+  if (!env.NOTIFY_MAIL) {
+    return { ok: false, error: 'send_email binding not configured (env.NOTIFY_MAIL missing)' };
   }
-  const resp = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${env.RESEND_API_KEY}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      from: env.EMAIL_FROM || 'Blueprint <onboarding@resend.dev>',
-      to: [env.NOTIFY_EMAIL || 'denis@uncap.com'],
-      reply_to: replyTo,
-      subject,
-      html,
-      text,
-    }),
-  });
-  if (!resp.ok) {
-    const detail = await resp.text();
-    return { ok: false, error: `Email send failed: ${detail.slice(0, 240)}` };
+  const from = parseAddress(env.EMAIL_FROM || 'Blueprint <noreply@uncap.com>');
+  const to   = parseAddress(env.NOTIFY_EMAIL || 'denis@uncap.com');
+  if (!from.address || !to.address) {
+    return { ok: false, error: 'EMAIL_FROM or NOTIFY_EMAIL missing/invalid' };
   }
-  const result = await resp.json().catch(() => ({}));
-  return { ok: true, id: result.id || null };
+
+  const boundary = '----=_Part_' + Math.random().toString(36).slice(2) + Date.now().toString(36);
+  const headers = [
+    `From: ${from.display ? `"${from.display}" <${from.address}>` : from.address}`,
+    `To: ${to.address}`,
+    replyTo ? `Reply-To: ${replyTo}` : null,
+    `Subject: ${subject}`,
+    `Message-ID: <${crypto.randomUUID()}@${from.address.split('@')[1] || 'uncap.com'}>`,
+    `Date: ${new Date().toUTCString()}`,
+    `MIME-Version: 1.0`,
+    `Content-Type: multipart/alternative; boundary="${boundary}"`,
+  ].filter(Boolean).join('\r\n');
+
+  const parts = [
+    `--${boundary}`,
+    `Content-Type: text/plain; charset=UTF-8`,
+    `Content-Transfer-Encoding: base64`,
+    ``,
+    b64utf8(text || ''),
+    `--${boundary}`,
+    `Content-Type: text/html; charset=UTF-8`,
+    `Content-Transfer-Encoding: base64`,
+    ``,
+    b64utf8(html || ''),
+    `--${boundary}--`,
+    ``,
+  ].join('\r\n');
+
+  const raw = headers + '\r\n\r\n' + parts;
+
+  try {
+    await env.NOTIFY_MAIL.send(new EmailMessage(from.address, to.address, raw));
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: `send_email failed: ${(err && err.message) || err}` };
+  }
 }
 
 // ----------------------------------------------------------------------------

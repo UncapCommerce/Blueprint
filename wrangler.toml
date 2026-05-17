@@ -20,12 +20,23 @@ not_found_handling = "single-page-application"
 binding = "BUILD_SESSIONS"
 id = "fefd368a592342a4a2682f286e70c906"
 
+# Cloudflare-native outgoing email. Binds env.NOTIFY_MAIL.send(...). The
+# recipient (NOTIFY_EMAIL below) MUST be a verified destination address in
+# Cloudflare Email Routing for the uncap.com zone — otherwise sends are
+# rejected with "no matching destination address". No destination_address
+# is pinned here so we can change NOTIFY_EMAIL in the future without
+# redeploying.
+[[send_email]]
+name = "NOTIFY_MAIL"
+
 [vars]
 # Where fit-call form submissions and card-on-file notifications are emailed.
+# Must be a verified destination address in Cloudflare Email Routing.
 NOTIFY_EMAIL = "hay@uncap.com"
-# From-address shown to recipient. Must be on a domain you've verified in Resend
-# (or use Resend's default "onboarding@resend.dev" for testing).
-EMAIL_FROM = "Blueprint Fit Call <onboarding@resend.dev>"
+# From-address shown in the recipient's inbox. The bare address part must be
+# on a zone you control (uncap.com is on Cloudflare so SPF/DKIM are handled
+# automatically). Display name is free-form.
+EMAIL_FROM = "Blueprint <noreply@uncap.com>"
 
 # Attio CRM sync. Slugs match the object/attribute slugs in your Attio
 # workspace; change here if you renamed anything. Everything except the
@@ -38,13 +49,12 @@ ATTIO_BLUEPRINT_PERSON_ATTR    = "person"
 ATTIO_BLUEPRINT_COMPANY_ATTR   = "company"
 ATTIO_BLUEPRINT_STAGE_ORDERED  = "Ordered"
 
-# Stripe / Resend / Attio credentials are configured in the Cloudflare dashboard:
+# Stripe / Attio credentials are configured in the Cloudflare dashboard:
 #   Workers & Pages → uncap-blueprint → Settings → "Variables and Secrets"
 #
 # Required:
 #   STRIPE_SECRET_KEY       (Secret)    — sk_test_… / sk_live_…
 #   STRIPE_PUBLISHABLE_KEY  (Variable)  — pk_test_… / pk_live_…  (public, plaintext)
-#   RESEND_API_KEY          (Secret)    — from https://resend.com/api-keys
 #   ATTIO_API_KEY           (Secret)    — Attio API key (Settings → API & integrations)
 #
 # Secrets always persist across deploys. Plaintext Variables only persist
