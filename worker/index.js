@@ -12,6 +12,9 @@ export default {
     if (url.pathname === '/api/checkout/setup-complete' && request.method === 'POST') {
       return handlePaymentComplete(request, env);
     }
+    if (url.pathname === '/api/build/attio-prospect' && request.method === 'POST') {
+      return handleAttioProspect(request, env);
+    }
     if (url.pathname === '/api/build/session' && request.method === 'GET') {
       return handleSessionGet(request, env);
     }
@@ -118,6 +121,164 @@ async function sendNotificationEmail(env, { subject, html, text, replyTo }) {
   return { ok: true, id: result.id || null };
 }
 
+// ----------------------------------------------------------------------------
+// Attio CRM sync.
+// On every reservation: upsert a Person (matched by email), upsert a Company
+// (matched by domain), then create a new Blueprint record linked to both.
+// Stage stays empty until the customer actually pays; setup-complete patches
+// it to "Ordered" once Stripe confirms the charge.
+//
+// All Attio failures are caught + logged at the call site so a CRM outage
+// never blocks payment. Object/attribute slugs are configurable via vars
+// in wrangler.toml; if you rename anything in Attio, change them there.
+// ----------------------------------------------------------------------------
+async function attioFetch(env, path, init = {}) {
+  if (!env.ATTIO_API_KEY) throw new Error('ATTIO_API_KEY not configured');
+  const resp = await fetch(`https://api.attio.com/v2${path}`, {
+    ...init,
+    headers: {
+      'authorization': `Bearer ${env.ATTIO_API_KEY}`,
+      'content-type': 'application/json',
+      ...(init.headers || {}),
+    },
+  });
+  if (!resp.ok) {
+    const detail = await resp.text().catch(() => '');
+    throw new Error(`Attio ${resp.status}: ${detail.slice(0, 240)}`);
+  }
+  return resp.json();
+}
+
+// Splits "Ada Lovelace" → { first: "Ada", last: "Lovelace" }. Attio's name
+// attribute on the People object takes structured first/last + full name.
+function splitName(full) {
+  const trimmed = (full || '').trim();
+  if (!trimmed) return { first: '', last: '', full: '' };
+  const parts = trimmed.split(/\s+/);
+  if (parts.length === 1) return { first: parts[0], last: '', full: trimmed };
+  return { first: parts[0], last: parts.slice(1).join(' '), full: trimmed };
+}
+
+// URL → bare host without "www.". Used as Attio company match key.
+function hostFromUrl(raw) {
+  try { return new URL(raw).hostname.replace(/^www\./, ''); }
+  catch { return ''; }
+}
+
+async function attioUpsertPerson(env, { name, email }) {
+  if (!email) return null;
+  const n = splitName(name);
+  const values = {
+    email_addresses: [{ email_address: email }],
+  };
+  if (n.full) {
+    values.name = [{ first_name: n.first, last_name: n.last, full_name: n.full }];
+  }
+  const res = await attioFetch(env, '/objects/people/records?matching_attribute=email_addresses', {
+    method: 'PUT',
+    body: JSON.stringify({ data: { values } }),
+  });
+  return res?.data?.id?.record_id || null;
+}
+
+async function attioUpsertCompany(env, { companyUrl }) {
+  const domain = hostFromUrl(companyUrl);
+  if (!domain) return null;
+  const values = {
+    domains: [{ domain }],
+    name:    [{ value: domain }], // best-effort placeholder; edit in Attio anytime
+  };
+  const res = await attioFetch(env, '/objects/companies/records?matching_attribute=domains', {
+    method: 'PUT',
+    body: JSON.stringify({ data: { values } }),
+  });
+  return res?.data?.id?.record_id || null;
+}
+
+// Renders all collected quiz answers into a plain-text block that drops into
+// the Blueprint object's Details rich-text attribute.
+function buildBlueprintDetails({ contact, answers, otherErp, otherPlatform }) {
+  const erp = answers.erp === 'other' || (otherErp && !answers.erp)
+    ? `Other (${otherErp || '—'})`
+    : (answers.erp || '');
+  const platform = answers.platform === 'Other' && otherPlatform
+    ? `Other (${otherPlatform})`
+    : (answers.platform || '');
+  return [
+    `Name: ${contact.name || ''}`,
+    `Email: ${contact.email || ''}`,
+    `Company URL: ${contact.company || ''}`,
+    '',
+    `ERP: ${erp}`,
+    `Edition: ${answers.edition || ''}`,
+    `Current platform: ${platform}`,
+    `Annual online revenue: ${answers.revenue || ''}`,
+    `Business model: ${answers.model || ''}`,
+  ].join('\n');
+}
+
+async function attioCreateBlueprint(env, { name, detailsText, personId, companyId }) {
+  const object = env.ATTIO_BLUEPRINT_OBJECT || 'blueprint';
+  const values = {};
+  const nameAttr    = env.ATTIO_BLUEPRINT_NAME_ATTR    || 'name';
+  const detailsAttr = env.ATTIO_BLUEPRINT_DETAILS_ATTR || 'details';
+  const personAttr  = env.ATTIO_BLUEPRINT_PERSON_ATTR  || 'person';
+  const companyAttr = env.ATTIO_BLUEPRINT_COMPANY_ATTR || 'company';
+
+  if (name)        values[nameAttr]    = [{ value: name }];
+  if (detailsText) values[detailsAttr] = [{ value: detailsText }];
+  if (personId)    values[personAttr]  = [{ target_object: 'people',    target_record_id: personId }];
+  if (companyId)   values[companyAttr] = [{ target_object: 'companies', target_record_id: companyId }];
+
+  const res = await attioFetch(env, `/objects/${encodeURIComponent(object)}/records`, {
+    method: 'POST',
+    body: JSON.stringify({ data: { values } }),
+  });
+  return res?.data?.id?.record_id || null;
+}
+
+async function attioMarkBlueprintOrdered(env, blueprintId) {
+  if (!blueprintId) return;
+  const object     = env.ATTIO_BLUEPRINT_OBJECT        || 'blueprint';
+  const stageAttr  = env.ATTIO_BLUEPRINT_STAGE_ATTR    || 'stage';
+  const orderedStage = env.ATTIO_BLUEPRINT_STAGE_ORDERED || 'Ordered';
+  await attioFetch(env, `/objects/${encodeURIComponent(object)}/records/${encodeURIComponent(blueprintId)}`, {
+    method: 'PATCH',
+    body: JSON.stringify({
+      data: { values: { [stageAttr]: [{ status: orderedStage }] } },
+    }),
+  });
+}
+
+// One-shot orchestrator: upsert person + company, create blueprint, return id.
+// Failures are logged but never thrown — Attio outages must not block payment.
+async function syncBlueprintToAttio(env, { contact, answers, otherErp, otherPlatform }) {
+  try {
+    const [personId, companyId] = await Promise.all([
+      attioUpsertPerson(env, { name: contact.name, email: contact.email }).catch((e) => {
+        console.warn('attio: person upsert failed:', e.message); return null;
+      }),
+      attioUpsertCompany(env, { companyUrl: contact.company }).catch((e) => {
+        console.warn('attio: company upsert failed:', e.message); return null;
+      }),
+    ]);
+    const recordName = contact.name
+      ? `${contact.name}${contact.company ? ` — ${hostFromUrl(contact.company) || contact.company}` : ''}`
+      : (contact.email || 'Blueprint reservation');
+    const detailsText = buildBlueprintDetails({ contact, answers, otherErp, otherPlatform });
+    const blueprintId = await attioCreateBlueprint(env, {
+      name: recordName,
+      detailsText,
+      personId,
+      companyId,
+    });
+    return blueprintId;
+  } catch (err) {
+    console.warn('attio: blueprint sync failed:', err.message);
+    return null;
+  }
+}
+
 // Pulls the standard quiz answers off a request body. Used to populate
 // Stripe customer metadata + the post-card-on-file notification email.
 function readAnswers(body) {
@@ -191,12 +352,44 @@ async function handlePaymentIntent(request, env) {
 }
 
 // ----------------------------------------------------------------------------
+// POST /api/build/attio-prospect
+// Called when the user lands on the Place Order screen — every quiz answer
+// and contact field is in hand at that point. Creates the Attio Blueprint
+// record (with linked Person + Company) at "No stage". setup-complete later
+// patches the stage to "Ordered" if the customer pays.
+// Body: { contact: { name, email, company }, answers, otherErp, otherPlatform }
+// Returns: { ok: true, blueprintRecordId }
+// ----------------------------------------------------------------------------
+async function handleAttioProspect(request, env) {
+  let body;
+  try { body = await request.json(); }
+  catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+
+  const contact = {
+    name:    (body?.contact?.name    || '').toString().trim(),
+    email:   (body?.contact?.email   || '').toString().trim(),
+    company: (body?.contact?.company || '').toString().trim(),
+  };
+  if (!contact.email) {
+    return json(400, { ok: false, error: 'Email is required.' });
+  }
+  const answers = readAnswers(body);
+  const otherErp = (body.otherErp || '').toString().trim();
+  const otherPlatform = (body.otherPlatform || '').toString().trim();
+
+  const blueprintRecordId = await syncBlueprintToAttio(env, {
+    contact, answers, otherErp, otherPlatform,
+  });
+  return json(200, { ok: true, blueprintRecordId });
+}
+
+// ----------------------------------------------------------------------------
 // POST /api/checkout/setup-complete
 // After client-side stripe.confirmPayment() succeeds, we look up the
 // PaymentIntent, create a Customer (with billing details forwarded by the
 // client + the `company` we collected in our own UI), attach the saved
 // PaymentMethod, link the PaymentIntent, and notify Uncap.
-// Body: { intentId, company }
+// Body: { intentId, company, blueprintRecordId? }
 // ----------------------------------------------------------------------------
 async function handlePaymentComplete(request, env) {
   let body;
@@ -208,6 +401,7 @@ async function handlePaymentComplete(request, env) {
     return json(400, { ok: false, error: 'Invalid PaymentIntent id.' });
   }
   const company = (body.company || '').toString().trim();
+  const blueprintRecordId = (body.blueprintRecordId || '').toString().trim() || null;
 
   try {
     // Pull the intent + expanded payment_method so we can read billing details.
@@ -320,6 +514,14 @@ async function handlePaymentComplete(request, env) {
       `Payment:  ${intentUrl}\n`;
 
     await sendNotificationEmail(env, { subject, html, text, replyTo: email || undefined });
+
+    // Flip the Attio Blueprint record's stage to "Ordered". Non-blocking on
+    // failure: the payment has already succeeded by this point, so a CRM
+    // outage shouldn't surface as an error to the customer.
+    if (blueprintRecordId) {
+      try { await attioMarkBlueprintOrdered(env, blueprintRecordId); }
+      catch (e) { console.warn('attio: stage update failed:', e.message); }
+    }
 
     return json(200, { ok: true, customerId: customer.id });
   } catch (err) {
