@@ -506,13 +506,14 @@ function QuizApp(){
             >
               <FreeTextStep
                 type="url"
+                prefix="http://www."
                 placeholder="yourcompany.com"
                 autoComplete="url"
                 value={contact.company}
                 onChange={(v)=>{ if (companyUrlError) setCompanyUrlError(''); setContactField('company', v); }}
                 onSubmit={()=>{
                   const normalized = normalizeCompanyUrl(contact.company);
-                  if (!normalized) { setCompanyUrlError('Enter a valid website URL (eg. yourcompany.com)'); return; }
+                  if (!normalized) { setCompanyUrlError('Enter a valid website (eg. yourcompany.com)'); return; }
                   setContactField('company', normalized);
                   advance();
                 }}
@@ -677,33 +678,84 @@ function OptionGrid({options, selected, onChoose, columns=2, size='md'}){
 }
 
 /* ------- Free-text step (used for "Other" ERP and the contact steps) ------- */
-function FreeTextStep({placeholder, value, onChange, onSubmit, type='text', autoComplete, error}){
+// `prefix` renders a non-editable, grayed-out label inside the same bordered
+// box as the input — used for the company-website step to show "http://www."
+// as a persistent hint that doesn't disappear when the user starts typing.
+function FreeTextStep({placeholder, value, onChange, onSubmit, type='text', autoComplete, error, prefix}){
   const errored = !!error;
+  const [focused, setFocused] = React.useState(false);
+  const borderColor = errored ? '#c0392b' : (focused ? 'var(--uc-black)' : 'var(--line-1)');
+
+  // Without a prefix the input draws its own border (legacy behaviour). With
+  // a prefix we wrap input + prefix in a flex row that shares the border, so
+  // the two read as a single field.
+  const inputBase = {
+    fontSize:18,fontFamily:'var(--font-sans)',fontWeight:500,
+    color:'var(--fg-1)',
+    background:'#fff',
+    outline:'none',
+  };
+
   return (
     <div style={{display:'flex',flexDirection:'column',gap:12}}>
-      <input
-        type={type}
-        autoComplete={autoComplete}
-        value={value}
-        onChange={e=>onChange(e.target.value)}
-        onKeyDown={e=>{ if(e.key==='Enter') onSubmit(); }}
-        placeholder={placeholder}
-        autoFocus
-        aria-invalid={errored ? 'true' : 'false'}
-        style={{
-          width:'100%',
-          padding:'18px 20px',
-          fontSize:18,fontFamily:'var(--font-sans)',fontWeight:500,
-          color:'var(--fg-1)',
-          background:'#fff',
-          border:`1px solid ${errored ? '#c0392b' : 'var(--line-1)'}`,
+      {prefix ? (
+        <div style={{
+          display:'flex',alignItems:'stretch',
+          border:`1px solid ${borderColor}`,
           borderRadius:5,
-          outline:'none',
+          background:'#fff',
           transition:'border-color .15s var(--ease-out)',
-        }}
-        onFocus={e=>{ if (!errored) e.currentTarget.style.borderColor='var(--uc-black)'; }}
-        onBlur={e=>{ if (!errored) e.currentTarget.style.borderColor='var(--line-1)'; }}
-      />
+          overflow:'hidden',
+        }}>
+          <span style={{
+            ...inputBase,
+            padding:'18px 0 18px 20px',
+            color:'var(--fg-3)',
+            userSelect:'none',
+            whiteSpace:'nowrap',
+          }} aria-hidden="true">{prefix}</span>
+          <input
+            type={type}
+            autoComplete={autoComplete}
+            value={value}
+            onChange={e=>onChange(e.target.value)}
+            onKeyDown={e=>{ if(e.key==='Enter') onSubmit(); }}
+            placeholder={placeholder}
+            autoFocus
+            aria-invalid={errored ? 'true' : 'false'}
+            style={{
+              ...inputBase,
+              flex:1,
+              minWidth:0,
+              padding:'18px 20px 18px 0',
+              border:'none',
+            }}
+            onFocus={()=>setFocused(true)}
+            onBlur={()=>setFocused(false)}
+          />
+        </div>
+      ) : (
+        <input
+          type={type}
+          autoComplete={autoComplete}
+          value={value}
+          onChange={e=>onChange(e.target.value)}
+          onKeyDown={e=>{ if(e.key==='Enter') onSubmit(); }}
+          placeholder={placeholder}
+          autoFocus
+          aria-invalid={errored ? 'true' : 'false'}
+          style={{
+            ...inputBase,
+            width:'100%',
+            padding:'18px 20px',
+            border:`1px solid ${borderColor}`,
+            borderRadius:5,
+            transition:'border-color .15s var(--ease-out)',
+          }}
+          onFocus={()=>setFocused(true)}
+          onBlur={()=>setFocused(false)}
+        />
+      )}
       {errored && (
         <div style={{fontSize:13,color:'#c0392b',fontWeight:500}}>{error}</div>
       )}
