@@ -352,9 +352,7 @@ async function syncBlueprintToAttio(env, { contact, answers, otherErp, otherPlat
       }),
     ]);
 
-    const recordName = contact.name
-      ? `${contact.name}${contact.company ? ` — ${hostFromUrl(contact.company) || contact.company}` : ''}`
-      : (contact.email || 'Blueprint reservation');
+    const recordName = hostFromUrl(contact.company) || contact.company || contact.name || contact.email || 'Blueprint reservation';
     const detailsText = buildBlueprintDetails({ contact, answers, otherErp, otherPlatform });
 
     let blueprintRecordId = null;
