@@ -16,8 +16,10 @@ React, ReactDOM, and `@babel/standalone` (vendored under `/vendor/`) from
   `/api/build/session/*` (KV-backed quiz resume), then falls through to
   the static assets binding for everything else
 - Production: `blueprint.uncap.com`. Deploy is **automatic** on push to
-  `main` via `.github/workflows/deploy.yml` (runs `wrangler deploy
-  --keep-vars`)
+  `main` via Cloudflare's GitHub integration (Workers Builds). Status
+  visible at Cloudflare dashboard → Workers & Pages →
+  `uncap-blueprint` → Builds. There is **no GitHub Actions
+  workflow** — Cloudflare's CI handles it
 - Stripe + Resend secrets live in the Cloudflare dashboard, not in env
   files. `wrangler.toml` only declares vars that are safe in plaintext
   (e.g. `STRIPE_PUBLISHABLE_KEY`)
