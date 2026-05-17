@@ -27,13 +27,25 @@ NOTIFY_EMAIL = "hay@uncap.com"
 # (or use Resend's default "onboarding@resend.dev" for testing).
 EMAIL_FROM = "Blueprint Fit Call <onboarding@resend.dev>"
 
-# Stripe and Resend credentials are configured in the Cloudflare dashboard:
+# Attio CRM sync. Slugs match the object/attribute slugs in your Attio
+# workspace; change here if you renamed anything. Everything except the
+# API key is plaintext (no secrets), so they live in wrangler.toml.
+ATTIO_BLUEPRINT_OBJECT         = "blueprint"
+ATTIO_BLUEPRINT_NAME_ATTR      = "name"
+ATTIO_BLUEPRINT_DETAILS_ATTR   = "details"
+ATTIO_BLUEPRINT_STAGE_ATTR     = "stage"
+ATTIO_BLUEPRINT_PERSON_ATTR    = "person"
+ATTIO_BLUEPRINT_COMPANY_ATTR   = "company"
+ATTIO_BLUEPRINT_STAGE_ORDERED  = "Ordered"
+
+# Stripe / Resend / Attio credentials are configured in the Cloudflare dashboard:
 #   Workers & Pages → uncap-blueprint → Settings → "Variables and Secrets"
 #
 # Required:
 #   STRIPE_SECRET_KEY       (Secret)    — sk_test_… / sk_live_…
 #   STRIPE_PUBLISHABLE_KEY  (Variable)  — pk_test_… / pk_live_…  (public, plaintext)
 #   RESEND_API_KEY          (Secret)    — from https://resend.com/api-keys
+#   ATTIO_API_KEY           (Secret)    — Attio API key (Settings → API & integrations)
 #
 # Secrets always persist across deploys. Plaintext Variables only persist
 # because the GitHub Actions workflow runs `wrangler deploy --keep-vars`

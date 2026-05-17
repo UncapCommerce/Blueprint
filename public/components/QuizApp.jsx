@@ -772,6 +772,42 @@ function RecapCard({rows}){
 /* ------- Final step: scoped recap + Stripe checkout ------- */
 function Confirmation({answers, otherErp, otherPlatform, contact, setupPromiseRef, onSessionComplete}){
   const isMobile = window.useIsMobile ? window.useIsMobile() : false;
+
+  // Push the prospect into Attio the moment they hit this screen (well before
+  // they actually pay). The returned Attio record id is held in a ref so the
+  // payment-confirm handler can pass it back to /setup-complete, which flips
+  // the stage to "Ordered". Fires once per mount; Attio failures are silent
+  // (the server logs and returns null — we just won't have an id to update).
+  const blueprintRecordIdRef = React.useRef(null);
+  React.useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const resp = await fetch('/api/build/attio-prospect', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({
+            contact,
+            answers: {
+              ...answers,
+              platform: answers.platform === 'Other' && otherPlatform ? otherPlatform : answers.platform,
+            },
+            otherErp,
+            otherPlatform,
+          }),
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (!cancelled && data && data.blueprintRecordId) {
+          blueprintRecordIdRef.current = data.blueprintRecordId;
+        }
+      } catch (_) {
+        // Non-fatal; CRM outage shouldn't block payment.
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <div style={{animation:'quizFadeIn 480ms var(--ease-out) both'}}>
       <div style={{display:'inline-flex',alignItems:'center',gap:10,padding:'6px 14px',background:'var(--uc-signal)',borderRadius:999,marginBottom:24}}>
@@ -802,6 +838,7 @@ function Confirmation({answers, otherErp, otherPlatform, contact, setupPromiseRe
         contact={contact}
         isMobile={isMobile}
         setupPromiseRef={setupPromiseRef}
+        blueprintRecordIdRef={blueprintRecordIdRef}
         onSessionComplete={onSessionComplete}
       />
 
@@ -832,7 +869,7 @@ function Confirmation({answers, otherErp, otherPlatform, contact, setupPromiseRe
 // Name/email are forwarded to Stripe at confirm time as PaymentMethod
 // billing_details; company is sent to setup-complete and stored as Stripe
 // customer metadata + surfaced in the notify email.
-function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupPromiseRef, onSessionComplete}){
+function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupPromiseRef, blueprintRecordIdRef, onSessionComplete}){
   // Phases: loading → ready → submitting → success | error
   const [phase, setPhase] = React.useState('loading');
   const [error, setError] = React.useState('');
@@ -954,6 +991,7 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
         body: JSON.stringify({
           intentId: (paymentIntent && paymentIntent.id) || intentId,
           company: contact.company.trim(),
+          blueprintRecordId: (blueprintRecordIdRef && blueprintRecordIdRef.current) || null,
         }),
       });
       const data = await resp.json().catch(() => ({}));
