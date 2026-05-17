@@ -45,9 +45,12 @@ ATTIO_BLUEPRINT_OBJECT         = "blueprint"
 ATTIO_BLUEPRINT_NAME_ATTR      = "name"
 ATTIO_BLUEPRINT_DETAILS_ATTR   = "details"
 ATTIO_BLUEPRINT_STAGE_ATTR     = "stage"
-ATTIO_BLUEPRINT_PERSON_ATTR    = "person"
-ATTIO_BLUEPRINT_COMPANY_ATTR   = "company"
 ATTIO_BLUEPRINT_STAGE_ORDERED  = "Ordered"
+# Reference attributes on the Blueprint object that link out to People /
+# Companies. Set to the slug of the attribute, or leave empty to skip the
+# link entirely. (Your Blueprint object only has a Person ref today.)
+ATTIO_BLUEPRINT_PERSON_ATTR    = "person"
+ATTIO_BLUEPRINT_COMPANY_ATTR   = ""
 
 # Stripe / Attio credentials are configured in the Cloudflare dashboard:
 #   Workers & Pages → uncap-blueprint → Settings → "Variables and Secrets"
