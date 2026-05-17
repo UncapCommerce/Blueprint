@@ -271,7 +271,7 @@ async function handlePaymentComplete(request, env) {
     <table cellpadding="0" cellspacing="0" style="font-size:14px;">
       ${tableRow('Name', name)}
       ${tableRow('Email', email)}
-      ${tableRow('Company', company)}
+      ${tableRow('Company URL', company)}
       ${tableRow('Phone', phone)}
       ${tableRow('Stripe customer', customer.id)}
       ${tableRow('Card', card.brand ? `${card.brand.toUpperCase()} ···· ${card.last4} (exp ${card.exp_month}/${card.exp_year})` : '')}
@@ -299,10 +299,10 @@ async function handlePaymentComplete(request, env) {
       `New Blueprint reservation\n` +
       `${amountCharged} reservation fee charged (refundable if not a fit).\n` +
       `\n` +
-      `Name:    ${name || ''}\n` +
-      `Email:   ${email || ''}\n` +
-      `Company: ${company || ''}\n` +
-      `Phone:   ${phone || ''}\n` +
+      `Name:        ${name || ''}\n` +
+      `Email:       ${email || ''}\n` +
+      `Company URL: ${company || ''}\n` +
+      `Phone:       ${phone || ''}\n` +
       `Stripe:  ${customer.id}\n` +
       `Card:    ${card.brand ? `${card.brand.toUpperCase()} ···· ${card.last4} (exp ${card.exp_month}/${card.exp_year})` : ''}\n` +
       `Charge:  ${amountCharged} (${intent.id})\n` +
