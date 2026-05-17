@@ -61,6 +61,7 @@ ATTIO_BLUEPRINT_COMPANY_ATTR   = "company"
 #   STRIPE_SECRET_KEY       (Secret)    — sk_test_… / sk_live_…
 #   STRIPE_PUBLISHABLE_KEY  (Variable)  — pk_test_… / pk_live_…  (public, plaintext)
 #   ATTIO_API_KEY           (Secret)    — Attio API key (Settings → API & integrations)
+#   APOLLO_API_KEY          (Secret)    — Apollo.io API key for /organizations/enrich
 #
 # Secrets always persist across deploys. Plaintext Variables only persist
 # because every deploy passes `--keep-vars` (see package.json's
