@@ -17,6 +17,9 @@ export default {
     if (url.pathname === '/api/build/attio-prospect' && request.method === 'POST') {
       return handleAttioProspect(request, env);
     }
+    if (url.pathname === '/api/build/attio-ping' && request.method === 'GET') {
+      return handleAttioPing(request, env);
+    }
     if (url.pathname === '/api/build/session' && request.method === 'GET') {
       return handleSessionGet(request, env);
     }
@@ -266,15 +269,18 @@ function buildBlueprintDetails({ contact, answers, otherErp, otherPlatform }) {
 async function attioCreateBlueprint(env, { name, detailsText, personId, companyId }) {
   const object = env.ATTIO_BLUEPRINT_OBJECT || 'blueprint';
   const values = {};
-  const nameAttr    = env.ATTIO_BLUEPRINT_NAME_ATTR    || 'name';
-  const detailsAttr = env.ATTIO_BLUEPRINT_DETAILS_ATTR || 'details';
-  const personAttr  = env.ATTIO_BLUEPRINT_PERSON_ATTR  || 'person';
-  const companyAttr = env.ATTIO_BLUEPRINT_COMPANY_ATTR || 'company';
+  // Empty-string env vars mean "this attribute doesn't exist on the user's
+  // Blueprint object, skip the field" — important for refs that the user
+  // hasn't created. Falsy check (not ||) keeps the empty-string semantic.
+  const nameAttr    = env.ATTIO_BLUEPRINT_NAME_ATTR    ?? 'name';
+  const detailsAttr = env.ATTIO_BLUEPRINT_DETAILS_ATTR ?? 'details';
+  const personAttr  = env.ATTIO_BLUEPRINT_PERSON_ATTR  ?? 'person';
+  const companyAttr = env.ATTIO_BLUEPRINT_COMPANY_ATTR ?? '';
 
-  if (name)        values[nameAttr]    = [{ value: name }];
-  if (detailsText) values[detailsAttr] = [{ value: detailsText }];
-  if (personId)    values[personAttr]  = [{ target_object: 'people',    target_record_id: personId }];
-  if (companyId)   values[companyAttr] = [{ target_object: 'companies', target_record_id: companyId }];
+  if (name        && nameAttr)    values[nameAttr]    = [{ value: name }];
+  if (detailsText && detailsAttr) values[detailsAttr] = [{ value: detailsText }];
+  if (personId    && personAttr)  values[personAttr]  = [{ target_object: 'people',    target_record_id: personId }];
+  if (companyId   && companyAttr) values[companyAttr] = [{ target_object: 'companies', target_record_id: companyId }];
 
   const res = await attioFetch(env, `/objects/${encodeURIComponent(object)}/records`, {
     method: 'POST',
@@ -427,6 +433,44 @@ async function handleAttioProspect(request, env) {
     contact, answers, otherErp, otherPlatform,
   });
   return json(200, { ok: true, blueprintRecordId });
+}
+
+// ----------------------------------------------------------------------------
+// GET /api/build/attio-ping
+// Diagnostic: hits Attio with the configured API key and returns the raw
+// status + response body so we can see whether the key is missing, scoped
+// wrong, or the Blueprint object slug is mismatched. No-op for production
+// traffic — invoke directly via curl.
+//   ?object=people       (default) — sanity-checks key + read scope on People
+//   ?object=blueprint              — verifies Blueprint object slug + scope
+// ----------------------------------------------------------------------------
+async function handleAttioPing(request, env) {
+  if (!env.ATTIO_API_KEY) {
+    return json(503, { ok: false, step: 'config', error: 'ATTIO_API_KEY not set on the Worker' });
+  }
+  const objectSlug = (new URL(request.url)).searchParams.get('object') || 'people';
+  const path = `/v2/objects/${encodeURIComponent(objectSlug)}/attributes`;
+  try {
+    const resp = await fetch(`https://api.attio.com${path}`, {
+      headers: { 'authorization': `Bearer ${env.ATTIO_API_KEY}` },
+    });
+    const text = await resp.text();
+    let parsed = null;
+    try { parsed = JSON.parse(text); } catch (_) { parsed = text; }
+    // Returns just the slugs on success so output stays scannable.
+    const slugs = (parsed && parsed.data && Array.isArray(parsed.data))
+      ? parsed.data.map(a => ({ slug: a.api_slug, type: a.type, title: a.title }))
+      : null;
+    return json(resp.ok ? 200 : resp.status, {
+      ok: resp.ok,
+      object: objectSlug,
+      status: resp.status,
+      slugs,
+      body: slugs ? undefined : parsed,
+    });
+  } catch (err) {
+    return json(500, { ok: false, step: 'fetch', error: err.message });
+  }
 }
 
 // ----------------------------------------------------------------------------
