@@ -55,15 +55,23 @@ const MODEL_OPTIONS = [
   {id:'unified', label:'Unified', sub:'Mix of B2B, B2C, and retail in one storefront'},
 ];
 
-// Accepts what people actually type ("acme.com", "www.acme.com", "https://acme.com/about"),
-// returns a normalized https:// URL or '' if it doesn't look like a domain at all.
-// Bare-host inputs get a plain `https://` scheme prepended. The recap card
-// and the Attio Blueprint record both display whatever this returns, so the
-// user sees the full URL even though the input only asked for the domain.
+// Accepts what people actually type ("acme.com", "www.acme.com",
+// "https://acme.com/about") and returns a normalized https:// URL, or ''
+// if the input doesn't look like a domain at all. Bare-host inputs get
+// `https://www.` prepended so the recap + Attio record always render the
+// full canonical address (with www) rather than a stripped variant.
+// Already-prefixed inputs (with scheme or leading www.) are honoured as-is.
 function normalizeCompanyUrl(raw){
   const trimmed = (raw || '').trim();
   if (!trimmed) return '';
-  const withScheme = /^https?:\/\//i.test(trimmed) ? trimmed : 'https://' + trimmed;
+  let withScheme;
+  if (/^https?:\/\//i.test(trimmed)) {
+    withScheme = trimmed;
+  } else if (/^www\./i.test(trimmed)) {
+    withScheme = 'https://' + trimmed;
+  } else {
+    withScheme = 'https://www.' + trimmed;
+  }
   try {
     const u = new URL(withScheme);
     // Require at least one dot in the hostname (rules out "localhost", "foo", etc).
