@@ -214,6 +214,14 @@ function splitName(full) {
   return { first: parts[0], last: parts.slice(1).join(' '), full: trimmed };
 }
 
+// Apollo returns industry as lowercase ("computer software"). Display
+// surface wants "Computer Software". Cheap word-initial capitalization
+// without trying to handle small-word exceptions.
+function titleCase(s) {
+  if (!s || typeof s !== 'string') return null;
+  return s.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase());
+}
+
 // URL → bare host without "www.". Used as Attio company match key.
 function hostFromUrl(raw) {
   try { return new URL(raw).hostname.replace(/^www\./, ''); }
@@ -526,14 +534,18 @@ async function apolloEnrichForDomain(env, rawCompanyUrl) {
     // Focused enrichment: only the fields we actively surface to the user
     // and append to Attio Details today. Adding more later = add a line to
     // this object + the renderer below + the banner JSX in QuizApp.
-    const address = [org.street_address, org.city, org.state, org.country]
-      .filter(Boolean)
-      .join(', ') || null;
+    // Address prefers Apollo's pre-formatted raw_address when present
+    // (most reliable on US records) and otherwise stitches the structured
+    // fields together.
+    const address = (org.raw_address && org.raw_address.trim())
+      || [org.street_address, org.city, org.state, org.postal_code, org.country]
+           .filter(Boolean).join(', ')
+      || null;
     const enrichment = {
       domain,
       name:             org.name || null,
       address,
-      industry:         org.industry || null,
+      industry:         titleCase(org.industry),
       employees:        org.estimated_num_employees || null,
       foundedYear:      org.founded_year || null,
       detectedPlatform: detectPlatformFromApollo(technologies),
