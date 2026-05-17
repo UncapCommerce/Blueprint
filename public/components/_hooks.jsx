@@ -1,4 +1,10 @@
 // Shared hooks. Loaded BEFORE other components on each page.
+
+// Base path the app is mounted at. Empty string on the apex deployment
+// (blueprint.uncap.com/...) and "/blueprint" on the marketing-site embed
+// (uncap.com/blueprint/...). Used to prefix absolute hrefs / img src / fetch
+// paths so the same code works in both deployments without per-call edits.
+window.UC_BASE = (typeof window !== 'undefined' && window.location.pathname.startsWith('/blueprint')) ? '/blueprint' : '';
 // JS-driven viewport branching is more reliable than CSS attribute selectors
 // when component styles are inline (React's serialization can vary).
 function useIsMobile() {

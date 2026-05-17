@@ -61,6 +61,14 @@ function makeSessionId(){
   return Array.from(bytes, b => b.toString(16).padStart(2, '0')).join('');
 }
 
+// Same-origin URL for the worker's /api/* endpoints. Honours window.UC_BASE
+// (set by _hooks.jsx) so the same fetch works at blueprint.uncap.com/... and
+// at uncap.com/blueprint/....
+function apiUrl(path){
+  if (typeof window === 'undefined') return path;
+  return (window.UC_BASE || '') + path;
+}
+
 // Maps the URL-hash slugs that Hero.jsx uses for marketing deep links to the
 // answer values the quiz stores internally. ERP keeps its short id (the same
 // id the quiz uses), platforms map to the full label string.
@@ -184,7 +192,7 @@ function QuizApp(){
       if (validId) {
         sessionIdRef.current = existing;
         try {
-          const resp = await fetch(`/api/build/session?id=${encodeURIComponent(existing)}`);
+          const resp = await fetch(apiUrl(`/api/build/session?id=${encodeURIComponent(existing)}`));
           if (!cancelled && resp.ok) {
             const data = await resp.json().catch(() => ({}));
             const s = data && data.ok && data.state;
@@ -226,7 +234,7 @@ function QuizApp(){
   React.useEffect(() => {
     if (!sessionRestored || !sessionIdRef.current) return;
     const t = setTimeout(() => {
-      fetch('/api/build/session', {
+      fetch(apiUrl('/api/build/session'), {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({
@@ -244,7 +252,7 @@ function QuizApp(){
   const onSessionComplete = React.useCallback(() => {
     const id = sessionIdRef.current;
     if (id) {
-      fetch(`/api/build/session?id=${encodeURIComponent(id)}`, { method: 'DELETE' }).catch(() => {});
+      fetch(apiUrl(`/api/build/session?id=${encodeURIComponent(id)}`), { method: 'DELETE' }).catch(() => {});
       sessionIdRef.current = null;
       window.history.replaceState({}, '', window.location.pathname);
     }
@@ -270,7 +278,7 @@ function QuizApp(){
         : fullAnswers.platform,
     };
     setupPromiseRef.current = (async () => {
-      const resp = await fetch('/api/checkout/setup-intent', {
+      const resp = await fetch(apiUrl('/api/checkout/setup-intent'), {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ answers: merged, otherErp: fullOtherErp }),
@@ -545,8 +553,8 @@ function QuizHeader({currentNumber, total, onBack, canGoBack, isConfirm}){
         )}
 
         {/* Centered brand */}
-        <a href={`/${hash}`} style={{display:'flex',alignItems:'center',gap:12,textDecoration:'none',color:'var(--fg-1)'}}>
-          <img src="/assets/uncap-logo-black.svg" style={{height:20}} alt="Uncap"/>
+        <a href={`${window.UC_BASE || ""}/${hash || ""}`} style={{display:'flex',alignItems:'center',gap:12,textDecoration:'none',color:'var(--fg-1)'}}>
+          <img src={`${window.UC_BASE || ""}/assets/uncap-logo-black.svg`} style={{height:20}} alt="Uncap"/>
           <span style={{height:14,width:1,background:'var(--line-1)'}}/>
           <span style={{fontFamily:'var(--font-display)',fontWeight:600,fontSize:13,letterSpacing:'-.01em'}}>Blueprint</span>
         </a>
@@ -837,7 +845,7 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
                   ? otherPlatform
                   : answers.platform,
               };
-              const resp = await fetch('/api/checkout/setup-intent', {
+              const resp = await fetch(apiUrl('/api/checkout/setup-intent'), {
                 method: 'POST',
                 headers: { 'content-type': 'application/json' },
                 body: JSON.stringify({ answers: merged, otherErp }),
@@ -925,7 +933,7 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
       return;
     }
     try {
-      const resp = await fetch('/api/checkout/setup-complete', {
+      const resp = await fetch(apiUrl('/api/checkout/setup-complete'), {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify({

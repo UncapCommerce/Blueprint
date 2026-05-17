@@ -1,9 +1,45 @@
 // Cloudflare Worker entry point.
 // Dynamic routes (form + Stripe) go through here; everything else falls
 // through to Workers Static Assets (the `public/` directory).
+//
+// The same Worker serves both the apex deployment (blueprint.uncap.com/*)
+// and the path-mounted embed on the marketing site (uncap.com/blueprint/*).
+// When a request arrives under /blueprint we strip that prefix once at the
+// top so every downstream route (/api/* and static assets) keeps working
+// without per-route changes.
+
+const EMBED_PREFIX = '/blueprint';
+
+// Pages that need a trailing slash so the HTML's relative resource paths
+// (vendor/foo.js, ../vendor/foo.js, etc.) resolve against the right directory.
+function needsTrailingSlash(pathname) {
+  return pathname === EMBED_PREFIX
+      || pathname === EMBED_PREFIX + '/build'
+      || pathname === '/build';
+}
+
+function stripEmbedPrefix(request) {
+  const url = new URL(request.url);
+  if (url.pathname === EMBED_PREFIX) {
+    // Bare /blueprint with no trailing slash → serve the landing index.
+    url.pathname = '/';
+    return new Request(url.toString(), request);
+  }
+  if (url.pathname.startsWith(EMBED_PREFIX + '/')) {
+    url.pathname = url.pathname.slice(EMBED_PREFIX.length) || '/';
+    return new Request(url.toString(), request);
+  }
+  return request;
+}
 
 export default {
   async fetch(request, env, ctx) {
+    const incoming = new URL(request.url);
+    if (needsTrailingSlash(incoming.pathname)) {
+      incoming.pathname = incoming.pathname + '/';
+      return Response.redirect(incoming.toString(), 308);
+    }
+    request = stripEmbedPrefix(request);
     const url = new URL(request.url);
 
     if (url.pathname === '/api/checkout/setup-intent' && request.method === 'POST') {
