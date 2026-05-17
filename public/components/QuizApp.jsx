@@ -55,6 +55,23 @@ const MODEL_OPTIONS = [
   {id:'unified', label:'Unified', sub:'Mix of B2B, B2C, and retail in one storefront'},
 ];
 
+// Accepts what people actually type ("acme.com", "www.acme.com", "https://acme.com/about"),
+// returns a normalized https:// URL or '' if it doesn't look like a domain at all.
+// We intentionally accept missing schemes because most people type the bare host.
+function normalizeCompanyUrl(raw){
+  const trimmed = (raw || '').trim();
+  if (!trimmed) return '';
+  const withScheme = /^https?:\/\//i.test(trimmed) ? trimmed : 'https://' + trimmed;
+  try {
+    const u = new URL(withScheme);
+    // Require at least one dot in the hostname (rules out "localhost", "foo", etc).
+    if (!/\.[a-z]{2,}$/i.test(u.hostname)) return '';
+    return u.toString().replace(/\/$/, '');
+  } catch (_) {
+    return '';
+  }
+}
+
 function makeSessionId(){
   const bytes = new Uint8Array(16);
   crypto.getRandomValues(bytes);
@@ -149,6 +166,7 @@ function QuizApp(){
   // + sent to /api/checkout/setup-complete (company).
   const [contact, setContact] = React.useState({ name:'', email:'', company:'' });
   const [emailError, setEmailError] = React.useState('');
+  const [companyUrlError, setCompanyUrlError] = React.useState('');
 
   // Resumable-session plumbing. Every visit to /build either reuses an
   // existing `?s=<id>` (and rehydrates from Workers KV) or generates a new
@@ -483,17 +501,22 @@ function QuizApp(){
           {step === 7 && (
             <Step
               eyebrow={stepLabel(7)}
-              title="What company are you with?"
-              sub="Surfaced in the Blueprint and on the kickoff invite."
+              title="What's your company URL?"
+              sub="Helps us pull together a quick read on your site before the kickoff."
             >
               <FreeTextStep
-                placeholder="Company name"
-                autoComplete="organization"
+                type="url"
+                placeholder="yourcompany.com"
+                autoComplete="url"
                 value={contact.company}
-                onChange={(v)=>setContactField('company', v)}
+                onChange={(v)=>{ if (companyUrlError) setCompanyUrlError(''); setContactField('company', v); }}
                 onSubmit={()=>{
-                  if (contact.company.trim()) advance();
+                  const normalized = normalizeCompanyUrl(contact.company);
+                  if (!normalized) { setCompanyUrlError('Enter a valid website URL (eg. yourcompany.com)'); return; }
+                  setContactField('company', normalized);
+                  advance();
                 }}
+                error={companyUrlError}
               />
             </Step>
           )}
@@ -714,7 +737,7 @@ function recapRows(answers, otherErp, otherPlatform, contact){
   const modelName = MODEL_OPTIONS.find(o=>o.id===answers.model)?.label || answers.model || '';
   return [
     {l:'Name',                  v:contact?.name    || ''},
-    {l:'Company',               v:contact?.company || ''},
+    {l:'Company URL',           v:contact?.company || ''},
     {l:'Email',                 v:contact?.email   || ''},
     {l:'ERP',                   v:erpName},
     {l:'Edition',               v:answers.edition || ''},
