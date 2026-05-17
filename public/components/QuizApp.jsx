@@ -184,6 +184,42 @@ function QuizApp(){
   const [emailError, setEmailError] = React.useState('');
   const [companyUrlError, setCompanyUrlError] = React.useState('');
 
+  // Apollo enrichment fetched once per known company domain. Drives the
+  // platform pre-fill (step 2) and the "we see you run on…" banner on the
+  // confirmation screen. Worker caches per domain in KV so this is one
+  // Apollo credit per (domain, week) regardless of how many times the
+  // client calls it.
+  const [apolloEnrichment, setApolloEnrichment] = React.useState(null);
+  const apolloRequestedDomainRef = React.useRef(null);
+  React.useEffect(() => {
+    const domain = (contact.company || '').trim();
+    if (!domain) return;
+    // De-dup per session: only fire once per resolved domain string.
+    if (apolloRequestedDomainRef.current === domain) return;
+    apolloRequestedDomainRef.current = domain;
+    let cancelled = false;
+    (async () => {
+      try {
+        const resp = await fetch('/api/build/apollo-enrich', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json' },
+          body: JSON.stringify({ companyUrl: domain }),
+        });
+        const data = await resp.json().catch(() => ({}));
+        if (cancelled || !data || !data.enrichment) return;
+        setApolloEnrichment(data.enrichment);
+        // Auto-fill platform if Apollo found a known commerce stack and
+        // the user hasn't already chosen one. Never overrides an explicit
+        // pick.
+        const detected = data.enrichment.detectedPlatform;
+        if (detected && PLATFORM_OPTIONS.includes(detected)) {
+          setAnswers(prev => prev.platform ? prev : { ...prev, platform: detected });
+        }
+      } catch (_) { /* silent — non-fatal */ }
+    })();
+    return () => { cancelled = true; };
+  }, [contact.company]);
+
   // Resumable-session plumbing. Every visit to /build either reuses an
   // existing `?s=<id>` (and rehydrates from Workers KV) or generates a new
   // one and replaces the URL non-destructively. State changes are saved
@@ -550,6 +586,7 @@ function QuizApp(){
               otherErp={otherErp}
               otherPlatform={otherPlatform}
               contact={contact}
+              apolloEnrichment={apolloEnrichment}
               setupPromiseRef={setupPromiseRef}
               onSessionComplete={onSessionComplete}
             />
@@ -821,6 +858,55 @@ function recapRows(answers, otherErp, otherPlatform, contact){
   ];
 }
 
+// Small "we already did our homework" card that surfaces the Apollo
+// enrichment hits we pulled on the typed domain. Only renders chips for
+// fields Apollo actually returned, so empty fields don't leave gaps.
+function ApolloBanner({enrichment}){
+  const e = enrichment || {};
+  const chips = [];
+  if (e.detectedPlatform) chips.push({label:'Platform detected', value:e.detectedPlatform});
+  if (e.industry)         chips.push({label:'Industry', value:e.industry});
+  if (e.employees)        chips.push({label:'Team size',  value:`${e.employees} people`});
+  if (e.revenueLabel)     chips.push({label:'Revenue',    value:e.revenueLabel});
+  if (e.foundedYear)      chips.push({label:'Founded',    value:String(e.foundedYear)});
+  const stack = (e.technologies || []).slice(0, 8).map(t => t.name).filter(Boolean);
+  if (!chips.length && !stack.length && !e.name) return null;
+  return (
+    <div style={{
+      background:'var(--uc-black)',color:'#fff',
+      borderRadius:5,padding:'18px 22px',marginBottom:20,
+    }}>
+      <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
+        <span style={{
+          fontFamily:'var(--font-mono)',fontSize:10,fontWeight:700,
+          letterSpacing:'.14em',textTransform:'uppercase',color:'var(--uc-signal)',
+        }}>We pulled this on {e.domain || (e.name || 'your company')}</span>
+      </div>
+      {chips.length > 0 && (
+        <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom: stack.length ? 12 : 0}}>
+          {chips.map(c => (
+            <span key={c.label} style={{
+              display:'inline-flex',alignItems:'center',gap:6,
+              padding:'5px 10px',borderRadius:999,
+              background:'rgba(255,255,255,0.08)',border:'1px solid rgba(255,255,255,0.14)',
+              fontSize:12,fontWeight:500,color:'#fff',
+            }}>
+              <span style={{opacity:.6,fontSize:11,textTransform:'uppercase',letterSpacing:'.06em'}}>{c.label}:</span>
+              <span style={{fontWeight:600}}>{c.value}</span>
+            </span>
+          ))}
+        </div>
+      )}
+      {stack.length > 0 && (
+        <div style={{fontSize:12,color:'rgba(255,255,255,0.72)',lineHeight:1.45}}>
+          <span style={{opacity:.7,marginRight:6,textTransform:'uppercase',letterSpacing:'.06em',fontSize:10,fontWeight:700}}>Stack:</span>
+          {stack.join(' · ')}
+        </div>
+      )}
+    </div>
+  );
+}
+
 function RecapCard({rows}){
   return (
     <div style={{
@@ -844,7 +930,7 @@ function RecapCard({rows}){
 }
 
 /* ------- Final step: scoped recap + Stripe checkout ------- */
-function Confirmation({answers, otherErp, otherPlatform, contact, setupPromiseRef, onSessionComplete}){
+function Confirmation({answers, otherErp, otherPlatform, contact, apolloEnrichment, setupPromiseRef, onSessionComplete}){
   const isMobile = window.useIsMobile ? window.useIsMobile() : false;
 
   // Push the prospect into Attio the moment they hit this screen (well before
@@ -910,6 +996,8 @@ function Confirmation({answers, otherErp, otherPlatform, contact, setupPromiseRe
       }}>
         $500 reservation fee. Fully refundable if we're not a fit.
       </p>
+
+      {apolloEnrichment && <ApolloBanner enrichment={apolloEnrichment}/>}
 
       <RecapCard rows={recapRows(answers, otherErp, otherPlatform, contact)}/>
 

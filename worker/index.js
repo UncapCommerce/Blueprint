@@ -17,6 +17,9 @@ export default {
     if (url.pathname === '/api/build/attio-prospect' && request.method === 'POST') {
       return handleAttioProspect(request, env);
     }
+    if (url.pathname === '/api/build/apollo-enrich' && request.method === 'POST') {
+      return handleApolloEnrich(request, env);
+    }
     if (url.pathname === '/api/build/attio-ping' && request.method === 'GET') {
       return handleAttioPing(request, env);
     }
@@ -337,9 +340,13 @@ async function syncBlueprintToAttio(env, { contact, answers, otherErp, otherPlat
   const errors = [];
   let personId = null;
   let companyId = null;
+  let apolloEnrichment = null;
 
   try {
-    [personId, companyId] = await Promise.all([
+    // Apollo + the two Attio upserts run in parallel — they don't depend
+    // on each other, and the cache makes the Apollo call free on repeat
+    // visits to the same domain.
+    const [personIdOut, companyIdOut, apolloOut] = await Promise.all([
       attioUpsertPerson(env, { name: contact.name, email: contact.email }).catch((e) => {
         const msg = `person upsert: ${e.message}`;
         console.warn('attio:', msg); errors.push(msg);
@@ -350,10 +357,18 @@ async function syncBlueprintToAttio(env, { contact, answers, otherErp, otherPlat
         console.warn('attio:', msg); errors.push(msg);
         return null;
       }),
+      apolloEnrichForDomain(env, contact.company).then((r) => {
+        if (r.error) { errors.push(`apollo enrich: ${r.error}`); console.warn('apollo:', r.error); }
+        return r.enrichment;
+      }),
     ]);
+    personId = personIdOut;
+    companyId = companyIdOut;
+    apolloEnrichment = apolloOut;
 
     const recordName = hostFromUrl(contact.company) || contact.company || contact.name || contact.email || 'Blueprint reservation';
-    const detailsText = buildBlueprintDetails({ contact, answers, otherErp, otherPlatform });
+    const detailsText = buildBlueprintDetails({ contact, answers, otherErp, otherPlatform })
+      + renderApolloDetails(apolloEnrichment);
 
     let blueprintRecordId = null;
     try {
@@ -371,6 +386,148 @@ async function syncBlueprintToAttio(env, { contact, answers, otherErp, otherPlat
     console.warn('attio:', msg); errors.push(msg);
     return { blueprintRecordId: null, personId, companyId, errors };
   }
+}
+
+// ----------------------------------------------------------------------------
+// Apollo enrichment.
+// One GET per (domain, 7-day-window), backed by Workers KV. The endpoint is
+// idempotent so the client can call it from multiple places without piling
+// on credit consumption. Returns a distilled object — full Apollo response
+// is huge and we only need a handful of fields.
+// ----------------------------------------------------------------------------
+const APOLLO_CACHE_TTL_SECONDS = 60 * 60 * 24 * 7;
+
+// Apollo's `technologies[].name` to the canonical platform label this quiz
+// recognises. Used to auto-fill the platform answer when Apollo detects a
+// commerce stack on the domain.
+const APOLLO_PLATFORM_BY_TECH = {
+  'Magento':                    'Magento / Adobe Commerce',
+  'Adobe Commerce':             'Magento / Adobe Commerce',
+  'BigCommerce':                'BigCommerce',
+  'WooCommerce':                'WooCommerce',
+  'NetSuite SuiteCommerce':     'NetSuite SuiteCommerce',
+  'Optimizely':                 'Optimizely Commerce',
+  'Optimizely Commerce':        'Optimizely Commerce',
+  'Salesforce Commerce Cloud':  'Salesforce Commerce Cloud',
+  'Demandware':                 'Salesforce Commerce Cloud',
+  'SAP Commerce Cloud':         'SAP Commerce Cloud',
+  'Hybris':                     'SAP Commerce Cloud',
+  'commercetools':              'commercetools',
+  'VTEX':                       'VTEX',
+};
+
+function detectPlatformFromApollo(technologies) {
+  for (const t of (technologies || [])) {
+    const hit = APOLLO_PLATFORM_BY_TECH[t?.name];
+    if (hit) return hit;
+  }
+  return '';
+}
+
+// Returns { enrichment: {...} | null, cached: bool, error: string | null }.
+// Never throws — failures degrade to null enrichment so callers can soldier
+// on. Cache hit/miss surfaced for diagnostics.
+async function apolloEnrichForDomain(env, rawCompanyUrl) {
+  const domain = hostFromUrl(rawCompanyUrl);
+  if (!domain) return { enrichment: null, cached: false, error: 'no domain' };
+
+  const cacheKey = `apollo:${domain}`;
+  if (env.BUILD_SESSIONS) {
+    try {
+      const cached = await env.BUILD_SESSIONS.get(cacheKey, 'json');
+      if (cached) return { enrichment: cached, cached: true, error: null };
+    } catch (_) { /* swallow */ }
+  }
+
+  if (!env.APOLLO_API_KEY) {
+    return { enrichment: null, cached: false, error: 'APOLLO_API_KEY not configured' };
+  }
+
+  try {
+    const resp = await fetch(
+      `https://api.apollo.io/v1/organizations/enrich?domain=${encodeURIComponent(domain)}`,
+      {
+        method: 'GET',
+        headers: {
+          'X-Api-Key': env.APOLLO_API_KEY,
+          'Cache-Control': 'no-cache',
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    if (!resp.ok) {
+      const detail = await resp.text().catch(() => '');
+      return { enrichment: null, cached: false, error: `Apollo ${resp.status}: ${detail.slice(0, 240)}` };
+    }
+    const raw = await resp.json().catch(() => ({}));
+    const org = raw?.organization || {};
+    const technologies = Array.isArray(org.technologies) ? org.technologies.slice(0, 30) : [];
+
+    const enrichment = {
+      domain,
+      name:           org.name || null,
+      industry:       org.industry || null,
+      employees:      org.estimated_num_employees || null,
+      revenueLabel:   org.annual_revenue_printed || org.organization_revenue_printed || null,
+      foundedYear:    org.founded_year || null,
+      city:           org.city || null,
+      country:        org.country || null,
+      linkedinUrl:    org.linkedin_url || null,
+      websiteUrl:     org.website_url || null,
+      shortDescription: (org.short_description || org.seo_description || '').slice(0, 280) || null,
+      technologies:   technologies.map(t => ({ name: t?.name || '', category: t?.category || '' })),
+      detectedPlatform: detectPlatformFromApollo(technologies),
+    };
+
+    if (env.BUILD_SESSIONS) {
+      env.BUILD_SESSIONS
+        .put(cacheKey, JSON.stringify(enrichment), { expirationTtl: APOLLO_CACHE_TTL_SECONDS })
+        .catch(() => {});
+    }
+    return { enrichment, cached: false, error: null };
+  } catch (err) {
+    return { enrichment: null, cached: false, error: err.message || 'fetch failed' };
+  }
+}
+
+// ----------------------------------------------------------------------------
+// POST /api/build/apollo-enrich
+// Body: { companyUrl }
+// Returns: { ok, enrichment: {...} | null, cached, error }
+// Client calls this when a domain is known (from hero CTA, from quiz step 7,
+// or from resume) so the rest of the experience can be tailored.
+// ----------------------------------------------------------------------------
+async function handleApolloEnrich(request, env) {
+  let body;
+  try { body = await request.json(); }
+  catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  const companyUrl = (body.companyUrl || '').toString().trim();
+  const result = await apolloEnrichForDomain(env, companyUrl);
+  return json(200, { ok: true, ...result });
+}
+
+// Renders Apollo enrichment as plain text, ready to drop after the quiz
+// answers section in the Attio Blueprint Details rich-text field. Empty
+// string if no enrichment is available.
+function renderApolloDetails(enrichment) {
+  if (!enrichment) return '';
+  const lines = ['', '--- Apollo enrichment ---'];
+  if (enrichment.name)             lines.push(`Company name: ${enrichment.name}`);
+  if (enrichment.industry)         lines.push(`Industry: ${enrichment.industry}`);
+  if (enrichment.employees)        lines.push(`Employees: ${enrichment.employees}`);
+  if (enrichment.revenueLabel)     lines.push(`Revenue: ${enrichment.revenueLabel}`);
+  if (enrichment.foundedYear)      lines.push(`Founded: ${enrichment.foundedYear}`);
+  if (enrichment.city || enrichment.country) {
+    lines.push(`Location: ${[enrichment.city, enrichment.country].filter(Boolean).join(', ')}`);
+  }
+  if (enrichment.detectedPlatform) lines.push(`Detected platform: ${enrichment.detectedPlatform}`);
+  if (enrichment.technologies?.length) {
+    const stack = enrichment.technologies.slice(0, 20).map(t => t.name).filter(Boolean).join(', ');
+    if (stack) lines.push(`Tech stack: ${stack}`);
+  }
+  if (enrichment.linkedinUrl)      lines.push(`LinkedIn: ${enrichment.linkedinUrl}`);
+  if (enrichment.shortDescription) lines.push(`Description: ${enrichment.shortDescription}`);
+  return lines.join('\n');
 }
 
 // Pulls the standard quiz answers off a request body. Used to populate
