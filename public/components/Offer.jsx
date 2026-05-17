@@ -93,7 +93,7 @@ function Offer() {
         </div>
 
         <div style={{marginTop: isMobile ? 24 : 32,display:'flex',gap: isMobile ? 12 : 14,alignItems: isMobile ? 'stretch' : 'center',flexDirection: isMobile ? 'column' : 'row',flexWrap:'wrap'}}>
-          <a href={`/build${hash}`} className="uc-btn b-primary" style={isMobile ? {width:'100%',justifyContent:'center',padding:'16px 24px',fontSize:16} : null}>Start the Blueprint <span>→</span></a>
+          <a href={`${window.UC_BASE || ""}/build${hash}`} className="uc-btn b-primary" style={isMobile ? {width:'100%',justifyContent:'center',padding:'16px 24px',fontSize:16} : null}>Start the Blueprint <span>→</span></a>
           <span style={{fontSize:13,fontWeight:700,color:'var(--fg-1)',textAlign: isMobile ? 'center' : 'left'}}>Delivered in 4 weeks. Yours to keep, with us or without.</span>
         </div>
       </div>

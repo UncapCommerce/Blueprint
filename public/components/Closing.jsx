@@ -172,7 +172,7 @@ function FinalCTA() {
           Eight 5-minute questions. $500 reservation fee, fully refundable if we're not a fit on the discovery call.
         </p>
         <div style={{display:'flex',gap: isMobile ? 10 : 14,alignItems:'stretch',flexDirection: isMobile ? 'column' : 'row',flexWrap:'wrap',marginBottom:32}}>
-          <a href={`/build${hash}`} className="uc-btn b-primary" style={isMobile ? {width:'100%',justifyContent:'center',padding:'16px 24px',fontSize:16} : {padding:'18px 28px',fontSize:16}}>Start the Blueprint <span>→</span></a>
+          <a href={`${window.UC_BASE || ""}/build${hash}`} className="uc-btn b-primary" style={isMobile ? {width:'100%',justifyContent:'center',padding:'16px 24px',fontSize:16} : {padding:'18px 28px',fontSize:16}}>Start the Blueprint <span>→</span></a>
         </div>
         <div style={{display:'grid',gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(4, 1fr)',gap: isMobile ? 18 : 32,paddingTop: isMobile ? 24 : 32,borderTop:'1px solid var(--line-1)'}}>
           {[
