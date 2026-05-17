@@ -1,0 +1,13 @@
+{
+  "name": "uncap-blueprint",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Blueprint marketing site + /build reservation flow. Single Cloudflare Worker backed by Workers Static Assets. No build step — Babel transpiles JSX in the browser.",
+  "scripts": {
+    "deploy": "wrangler deploy --keep-vars",
+    "dev": "wrangler dev"
+  },
+  "devDependencies": {
+    "wrangler": "^3.90.0"
+  }
+}

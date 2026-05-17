@@ -48,6 +48,6 @@ ATTIO_BLUEPRINT_STAGE_ORDERED  = "Ordered"
 #   ATTIO_API_KEY           (Secret)    — Attio API key (Settings → API & integrations)
 #
 # Secrets always persist across deploys. Plaintext Variables only persist
-# because the GitHub Actions workflow runs `wrangler deploy --keep-vars`
-# (see .github/workflows/deploy.yml). Without that flag, Wrangler strips
-# any var not declared in this file on every deploy.
+# because every deploy passes `--keep-vars` (see package.json's
+# `deploy` script). Without that flag, Wrangler strips any var not
+# declared in this file on every deploy.
