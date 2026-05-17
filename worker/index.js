@@ -207,7 +207,7 @@ function buildBlueprintDetails({ contact, answers, otherErp, otherPlatform }) {
   return [
     `Name: ${contact.name || ''}`,
     `Email: ${contact.email || ''}`,
-    `Company URL: ${contact.company || ''}`,
+    `Company Website: ${contact.company || ''}`,
     '',
     `ERP: ${erp}`,
     `Edition: ${answers.edition || ''}`,
@@ -465,7 +465,7 @@ async function handlePaymentComplete(request, env) {
     <table cellpadding="0" cellspacing="0" style="font-size:14px;">
       ${tableRow('Name', name)}
       ${tableRow('Email', email)}
-      ${tableRow('Company URL', company)}
+      ${tableRow('Company Website', company)}
       ${tableRow('Phone', phone)}
       ${tableRow('Stripe customer', customer.id)}
       ${tableRow('Card', card.brand ? `${card.brand.toUpperCase()} ···· ${card.last4} (exp ${card.exp_month}/${card.exp_year})` : '')}
@@ -495,7 +495,7 @@ async function handlePaymentComplete(request, env) {
       `\n` +
       `Name:        ${name || ''}\n` +
       `Email:       ${email || ''}\n` +
-      `Company URL: ${company || ''}\n` +
+      `Company Website: ${company || ''}\n` +
       `Phone:       ${phone || ''}\n` +
       `Stripe:  ${customer.id}\n` +
       `Card:    ${card.brand ? `${card.brand.toUpperCase()} ···· ${card.last4} (exp ${card.exp_month}/${card.exp_year})` : ''}\n` +
