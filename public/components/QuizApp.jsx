@@ -501,7 +501,7 @@ function QuizApp(){
           {step === 7 && (
             <Step
               eyebrow={stepLabel(7)}
-              title="What's your company URL?"
+              title="What's your company website?"
               sub="Helps us pull together a quick read on your site before the kickoff."
             >
               <FreeTextStep
@@ -737,7 +737,7 @@ function recapRows(answers, otherErp, otherPlatform, contact){
   const modelName = MODEL_OPTIONS.find(o=>o.id===answers.model)?.label || answers.model || '';
   return [
     {l:'Name',                  v:contact?.name    || ''},
-    {l:'Company URL',           v:contact?.company || ''},
+    {l:'Company Website',       v:contact?.company || ''},
     {l:'Email',                 v:contact?.email   || ''},
     {l:'ERP',                   v:erpName},
     {l:'Edition',               v:answers.edition || ''},
