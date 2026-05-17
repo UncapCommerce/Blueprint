@@ -5,8 +5,8 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
 <title>The Blueprint · Uncap</title>
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png"/>
-<link rel="apple-touch-icon" href="favicon-32.png"/>
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png"/>
+<link rel="apple-touch-icon" href="/favicon-32.png"/>
 
 <!-- Open early connections to the third-party origins we'll hit during the
      critical path: Google Fonts CSS+font origins. (React/Babel are now
@@ -16,9 +16,9 @@
 
 <!-- Critical font preload: the body face is referenced by every paragraph
      above the fold, so kick off the fetch before CSS parse discovers it. -->
-<link rel="preload" as="font" type="font/woff2" href="fonts/Inter_18pt-Regular.woff2" crossorigin/>
-<link rel="preload" as="font" type="font/woff2" href="fonts/Inter_24pt-ExtraBold.woff2" crossorigin/>
-<link rel="preload" as="font" type="font/woff2" href="fonts/Inter_28pt-ExtraBold.woff2" crossorigin/>
+<link rel="preload" as="font" type="font/woff2" href="/fonts/Inter_18pt-Regular.woff2" crossorigin/>
+<link rel="preload" as="font" type="font/woff2" href="/fonts/Inter_24pt-ExtraBold.woff2" crossorigin/>
+<link rel="preload" as="font" type="font/woff2" href="/fonts/Inter_28pt-ExtraBold.woff2" crossorigin/>
 
 <link rel="stylesheet" href="colors_and_type.css"/>
 <!-- Google Fonts moved out of the CSS @import so its discovery isn't
@@ -226,9 +226,9 @@
      @babel/standalone@7.29.0). Production-minified React drops ~900 KB of
      dev warnings/parsing vs .development.js. Same-origin removes the
      third-party RTT and lets our edge cache headers apply. -->
-<script src="vendor/react.production.min.js"></script>
-<script src="vendor/react-dom.production.min.js"></script>
-<script src="vendor/babel.min.js"></script>
+<script src="/vendor/react.production.min.js"></script>
+<script src="/vendor/react-dom.production.min.js"></script>
+<script src="/vendor/babel.min.js"></script>
 
 <script type="text/babel" src="components/_hooks.jsx"></script>
 <script type="text/babel" src="components/Header.jsx"></script>
