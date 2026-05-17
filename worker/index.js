@@ -416,9 +416,52 @@ const APOLLO_PLATFORM_BY_TECH = {
   'VTEX':                       'VTEX',
 };
 
+// Apollo `technologies[].name` to ERP id used by the quiz. Mirrors the
+// id values in ERP_OPTIONS on the client.
+const APOLLO_ERP_BY_TECH = {
+  'NetSuite':                  'netsuite',
+  'Oracle NetSuite':           'netsuite',
+  'NetSuite ERP':              'netsuite',
+  'NetSuite OneWorld':         'netsuite',
+  'Microsoft Dynamics':        'msdyn',
+  'Microsoft Dynamics 365':    'msdyn',
+  'Microsoft Dynamics GP':     'msdyn',
+  'Microsoft Dynamics NAV':    'msdyn',
+  'Microsoft Dynamics AX':     'msdyn',
+  'Dynamics 365':              'msdyn',
+  'Business Central':          'msdyn',
+  'Acumatica':                 'acumatica',
+  'Epicor':                    'epicor',
+  'Epicor Kinetic':            'epicor',
+  'Epicor Prophet 21':         'epicor',
+  'Sage':                      'sage',
+  'Sage Intacct':              'sage',
+  'Sage X3':                   'sage',
+  'Sage 100':                  'sage',
+  'Sage 300':                  'sage',
+  'SAP':                       'sap',
+  'SAP S/4HANA':               'sap',
+  'SAP Business One':          'sap',
+  'SAP ECC':                   'sap',
+  'Infor':                     'infor',
+  'Infor CloudSuite':          'infor',
+  'Infor M3':                  'infor',
+  'Infor LN':                  'infor',
+  'Odoo':                      'odoo',
+  'Odoo ERP':                  'odoo',
+};
+
 function detectPlatformFromApollo(technologies) {
   for (const t of (technologies || [])) {
     const hit = APOLLO_PLATFORM_BY_TECH[t?.name];
+    if (hit) return hit;
+  }
+  return '';
+}
+
+function detectErpFromApollo(technologies) {
+  for (const t of (technologies || [])) {
+    const hit = APOLLO_ERP_BY_TECH[t?.name];
     if (hit) return hit;
   }
   return '';
@@ -463,20 +506,21 @@ async function apolloEnrichForDomain(env, rawCompanyUrl) {
     const org = raw?.organization || {};
     const technologies = Array.isArray(org.technologies) ? org.technologies.slice(0, 30) : [];
 
+    // Focused enrichment: only the fields we actively surface to the user
+    // and append to Attio Details today. Adding more later = add a line to
+    // this object + the renderer below + the banner JSX in QuizApp.
+    const address = [org.street_address, org.city, org.state, org.country]
+      .filter(Boolean)
+      .join(', ') || null;
     const enrichment = {
       domain,
-      name:           org.name || null,
-      industry:       org.industry || null,
-      employees:      org.estimated_num_employees || null,
-      revenueLabel:   org.annual_revenue_printed || org.organization_revenue_printed || null,
-      foundedYear:    org.founded_year || null,
-      city:           org.city || null,
-      country:        org.country || null,
-      linkedinUrl:    org.linkedin_url || null,
-      websiteUrl:     org.website_url || null,
-      shortDescription: (org.short_description || org.seo_description || '').slice(0, 280) || null,
-      technologies:   technologies.map(t => ({ name: t?.name || '', category: t?.category || '' })),
+      name:             org.name || null,
+      address,
+      industry:         org.industry || null,
+      employees:        org.estimated_num_employees || null,
+      foundedYear:      org.founded_year || null,
       detectedPlatform: detectPlatformFromApollo(technologies),
+      detectedErp:      detectErpFromApollo(technologies),
     };
 
     if (env.BUILD_SESSIONS) {
@@ -513,21 +557,13 @@ function renderApolloDetails(enrichment) {
   if (!enrichment) return '';
   const lines = ['', '--- Apollo enrichment ---'];
   if (enrichment.name)             lines.push(`Company name: ${enrichment.name}`);
+  if (enrichment.address)          lines.push(`Address: ${enrichment.address}`);
   if (enrichment.industry)         lines.push(`Industry: ${enrichment.industry}`);
-  if (enrichment.employees)        lines.push(`Employees: ${enrichment.employees}`);
-  if (enrichment.revenueLabel)     lines.push(`Revenue: ${enrichment.revenueLabel}`);
+  if (enrichment.employees)        lines.push(`Team size: ${enrichment.employees}`);
   if (enrichment.foundedYear)      lines.push(`Founded: ${enrichment.foundedYear}`);
-  if (enrichment.city || enrichment.country) {
-    lines.push(`Location: ${[enrichment.city, enrichment.country].filter(Boolean).join(', ')}`);
-  }
-  if (enrichment.detectedPlatform) lines.push(`Detected platform: ${enrichment.detectedPlatform}`);
-  if (enrichment.technologies?.length) {
-    const stack = enrichment.technologies.slice(0, 20).map(t => t.name).filter(Boolean).join(', ');
-    if (stack) lines.push(`Tech stack: ${stack}`);
-  }
-  if (enrichment.linkedinUrl)      lines.push(`LinkedIn: ${enrichment.linkedinUrl}`);
-  if (enrichment.shortDescription) lines.push(`Description: ${enrichment.shortDescription}`);
-  return lines.join('\n');
+  if (enrichment.detectedPlatform) lines.push(`Ecommerce platform: ${enrichment.detectedPlatform}`);
+  if (enrichment.detectedErp)      lines.push(`ERP: ${enrichment.detectedErp}`);
+  return lines.length > 2 ? lines.join('\n') : '';
 }
 
 // Pulls the standard quiz answers off a request body. Used to populate

@@ -120,7 +120,7 @@ function HeroCta({isMobile, hash}) {
       }}
     >
       <input
-        type="url"
+        type="text"
         value={companyUrl}
         onChange={(e) => setCompanyUrl(e.target.value)}
         onFocus={() => setFocused(true)}
