@@ -119,14 +119,24 @@ function parseBuildHash(raw){
 const STEPS = ['erp', 'edition', 'platform', 'revenue', 'model', 'name', 'email', 'company'];
 const STEP_INDEX = { erp: 0, edition: 1, platform: 2, revenue: 3, model: 4, name: 5, email: 6, company: 7 };
 
+// Reads the `?company=<url>` query param the hero's CTA forwards. Returned
+// pre-normalized so the quiz can drop it straight into contact.company.
+function parseCompanyQuery(){
+  if (typeof window === 'undefined') return '';
+  const raw = new URLSearchParams(window.location.search).get('company') || '';
+  return raw ? normalizeCompanyUrl(raw) : '';
+}
+
 // Steps to skip entirely when the URL hash already provides the answer. The
 // erp step is bypassed when the hash signals an ERP (we still need the edition
 // step because options depend on the erp id). The platform step is bypassed
-// when the hash signals a platform.
+// when the hash signals a platform. The company step is bypassed when the
+// hero's CTA forwarded a `?company=...` URL.
 function bypassFromHint(hint){
   const set = new Set();
   if (hint && hint.erp)      set.add(STEP_INDEX.erp);
   if (hint && hint.platform) set.add(STEP_INDEX.platform);
+  if (hint && hint.company)  set.add(STEP_INDEX.company);
   return set;
 }
 function firstNonBypassed(bypassed){
@@ -137,14 +147,14 @@ function firstNonBypassed(bypassed){
 }
 
 function QuizApp(){
-  // Hash-signaled hint resolved once on first render. ERP id (eg 'netsuite')
-  // and platform display label (eg 'Magento / Adobe Commerce') populate
-  // straight into the answers state so the bypass+recap reads them without
-  // any further plumbing.
-  const initialHint = React.useMemo(
-    () => parseBuildHash(typeof window !== 'undefined' ? window.location.hash : ''),
-    []
-  );
+  // Hint resolved once on first render. ERP id + platform label come from
+  // the URL hash (Hero's marketing deep links); company website comes from
+  // the `?company=` query param the hero's CTA forwards. All three pre-fill
+  // the corresponding answer/contact field and skip the matching step.
+  const initialHint = React.useMemo(() => {
+    const hashHint = parseBuildHash(typeof window !== 'undefined' ? window.location.hash : '');
+    return { ...hashHint, company: parseCompanyQuery() };
+  }, []);
   // Set of step indices to skip. Locked in on mount so the visible step count
   // stays stable for the whole session even if the user navigates within
   // fragment anchors later.
@@ -164,7 +174,11 @@ function QuizApp(){
   // values survive back-nav and feed the recap on the final step. Forwarded
   // to Stripe at confirm time as PaymentMethod billing_details (name/email)
   // + sent to /api/checkout/setup-complete (company).
-  const [contact, setContact] = React.useState({ name:'', email:'', company:'' });
+  const [contact, setContact] = React.useState({
+    name:    '',
+    email:   '',
+    company: initialHint.company || '',
+  });
   const [emailError, setEmailError] = React.useState('');
   const [companyUrlError, setCompanyUrlError] = React.useState('');
 
@@ -225,7 +239,14 @@ function QuizApp(){
               }
               if (typeof s.otherErp === 'string') setOtherErp(s.otherErp);
               if (typeof s.otherPlatform === 'string') setOtherPlatform(s.otherPlatform);
-              if (s.contact) setContact(prev => ({...prev, ...s.contact}));
+              if (s.contact) {
+                // Same "hint wins for bypassed fields" rule applies to the
+                // hero's `?company=` pre-fill: don't let a stale saved value
+                // (or blank) overwrite the URL-provided company website.
+                const c = {...s.contact};
+                if (bypassed.has(STEP_INDEX.company)) delete c.company;
+                setContact(prev => ({...prev, ...c}));
+              }
             }
           }
         } catch {}

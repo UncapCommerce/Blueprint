@@ -59,9 +59,7 @@ function Hero() {
             <p style={{fontFamily:'var(--font-display)',fontStyle:'italic',fontWeight:500,fontSize: isMobile ? 'clamp(16px, 4.4vw, 19px)' : 'clamp(22px, 2vw, 28px)',lineHeight:1.35,letterSpacing:'-.015em',color:'var(--fg-2)',margin: isMobile ? '0 0 24px' : '0 0 40px',maxWidth:640}}>
               Everything you need to migrate to Shopify. Without the guesswork. $7K flat. Yours to keep.
             </p>
-            <div style={{display:'flex',gap: isMobile ? 10 : 14,alignItems: isMobile ? 'stretch' : 'center',flexDirection: isMobile ? 'column' : 'row',flexWrap:'wrap'}}>
-              <a href={`/build${hash}`} className="uc-btn b-primary" style={isMobile ? {width:'100%',justifyContent:'center',padding:'16px 22px',fontSize:16} : null}>Start the Blueprint <span>→</span></a>
-            </div>
+            <HeroCta isMobile={isMobile} hash={hash}/>
             <div style={{display:'flex',gap: isMobile ? 10 : 16,alignItems: isMobile ? 'flex-start' : 'center',marginTop: isMobile ? 24 : 36,flexDirection: isMobile ? 'column' : 'row',flexWrap: isMobile ? 'wrap' : 'nowrap'}}>
               <div style={{display:'flex',alignItems:'center',gap:8}}>
                 <CheckDot/>
@@ -83,6 +81,95 @@ function Hero() {
         </div>
       </div>
     </section>
+  );
+}
+
+// CTA row: optional company-website input on the left + "Start the Blueprint"
+// button on the right. Filling the URL is optional; if the user provides
+// something that looks like a domain, we forward it to /build as a `company=`
+// query param so the quiz can pre-fill (and skip) the company-website step.
+// Empty / non-domain input just falls through to the original /build link.
+function HeroCta({isMobile, hash}) {
+  const [companyUrl, setCompanyUrl] = React.useState('');
+  const [focused, setFocused] = React.useState(false);
+  const borderColor = focused ? 'var(--uc-black)' : 'var(--line-1)';
+
+  const submit = (e) => {
+    e.preventDefault();
+    const raw = companyUrl.trim();
+    // Light "looks like a domain" check. Quiz step 7 has the strict normalizer
+    // for full validation; we just want to avoid forwarding junk through the
+    // URL, since that'd send the user to step 7 with a broken pre-fill.
+    const looksLikeDomain = raw && /\.[a-z]{2,}/i.test(raw);
+    const normalized = looksLikeDomain
+      ? (/^https?:\/\//i.test(raw) ? raw : 'https://' + raw)
+      : '';
+    const query = normalized ? `?company=${encodeURIComponent(normalized)}` : '';
+    window.location.href = `/build${query}${hash}`;
+  };
+
+  return (
+    <form
+      onSubmit={submit}
+      style={{
+        display:'flex',
+        flexDirection: isMobile ? 'column' : 'row',
+        gap: isMobile ? 10 : 12,
+        alignItems:'stretch',
+        maxWidth: 560,
+      }}
+    >
+      <div style={{
+        display:'flex',alignItems:'stretch',
+        border:`1px solid ${borderColor}`,
+        borderRadius:5,
+        background:'#fff',
+        transition:'border-color .15s var(--ease-out)',
+        overflow:'hidden',
+        flex: isMobile ? 'none' : 1,
+        minWidth:0,
+      }}>
+        <span aria-hidden="true" style={{
+          padding: isMobile ? '14px 0 14px 14px' : '14px 0 14px 16px',
+          color:'var(--fg-3)',
+          userSelect:'none',
+          whiteSpace:'nowrap',
+          fontSize: 15,
+          fontWeight: 500,
+          fontFamily:'var(--font-sans)',
+        }}>http://</span>
+        <input
+          type="url"
+          value={companyUrl}
+          onChange={(e) => setCompanyUrl(e.target.value)}
+          onFocus={() => setFocused(true)}
+          onBlur={() => setFocused(false)}
+          placeholder=""
+          autoComplete="url"
+          aria-label="Company website"
+          style={{
+            flex:1,minWidth:0,
+            padding: isMobile ? '14px 14px 14px 0' : '14px 16px 14px 0',
+            border:'none',
+            outline:'none',
+            background:'transparent',
+            fontSize: 15,
+            fontFamily:'var(--font-sans)',
+            fontWeight: 500,
+            color:'var(--fg-1)',
+          }}
+        />
+      </div>
+      <button
+        type="submit"
+        className="uc-btn b-primary"
+        style={isMobile
+          ? {width:'100%',justifyContent:'center',padding:'16px 22px',fontSize:16}
+          : {whiteSpace:'nowrap'}}
+      >
+        Start the Blueprint <span>→</span>
+      </button>
+    </form>
   );
 }
 
