@@ -20,6 +20,9 @@ export default {
     if (url.pathname === '/api/build/attio-ping' && request.method === 'GET') {
       return handleAttioPing(request, env);
     }
+    if (url.pathname === '/api/build/attio-test' && request.method === 'GET') {
+      return handleAttioTest(request, env);
+    }
     if (url.pathname === '/api/build/session' && request.method === 'GET') {
       return handleSessionGet(request, env);
     }
@@ -268,25 +271,49 @@ function buildBlueprintDetails({ contact, answers, otherErp, otherPlatform }) {
 
 async function attioCreateBlueprint(env, { name, detailsText, personId, companyId }) {
   const object = env.ATTIO_BLUEPRINT_OBJECT || 'blueprint';
-  const values = {};
   // Empty-string env vars mean "this attribute doesn't exist on the user's
   // Blueprint object, skip the field" — important for refs that the user
-  // hasn't created. Falsy check (not ||) keeps the empty-string semantic.
+  // hasn't created. The ?? keeps the empty-string semantic distinct from
+  // an unset var (which falls back to the default slug).
   const nameAttr    = env.ATTIO_BLUEPRINT_NAME_ATTR    ?? 'name';
   const detailsAttr = env.ATTIO_BLUEPRINT_DETAILS_ATTR ?? 'details';
   const personAttr  = env.ATTIO_BLUEPRINT_PERSON_ATTR  ?? 'person';
-  const companyAttr = env.ATTIO_BLUEPRINT_COMPANY_ATTR ?? '';
+  const companyAttr = env.ATTIO_BLUEPRINT_COMPANY_ATTR ?? 'company';
 
-  if (name        && nameAttr)    values[nameAttr]    = [{ value: name }];
-  if (detailsText && detailsAttr) values[detailsAttr] = [{ value: detailsText }];
-  if (personId    && personAttr)  values[personAttr]  = [{ target_object: 'people',    target_record_id: personId }];
-  if (companyId   && companyAttr) values[companyAttr] = [{ target_object: 'companies', target_record_id: companyId }];
+  // Builds the values payload, optionally including ref attributes. We try
+  // with refs first, and fall back without them on a 4xx (which usually
+  // means the user hasn't created the reference attribute on Blueprint).
+  function buildValues(includeRefs) {
+    const v = {};
+    if (name        && nameAttr)    v[nameAttr]    = [{ value: name }];
+    if (detailsText && detailsAttr) v[detailsAttr] = [{ value: detailsText }];
+    if (includeRefs) {
+      if (personId  && personAttr)  v[personAttr]  = [{ target_object: 'people',    target_record_id: personId }];
+      if (companyId && companyAttr) v[companyAttr] = [{ target_object: 'companies', target_record_id: companyId }];
+    }
+    return v;
+  }
 
-  const res = await attioFetch(env, `/objects/${encodeURIComponent(object)}/records`, {
-    method: 'POST',
-    body: JSON.stringify({ data: { values } }),
-  });
-  return res?.data?.id?.record_id || null;
+  async function postCreate(values) {
+    const res = await attioFetch(env, `/objects/${encodeURIComponent(object)}/records`, {
+      method: 'POST',
+      body: JSON.stringify({ data: { values } }),
+    });
+    return res?.data?.id?.record_id || null;
+  }
+
+  try {
+    return await postCreate(buildValues(true));
+  } catch (err) {
+    // Most likely cause: the Blueprint object doesn't have a `person` or
+    // `company` reference attribute the user explicitly added. Retry with
+    // just name + details so the record still lands.
+    if (/^Attio (4\d\d)/.test(err.message)) {
+      console.warn('attio: blueprint create with refs failed, retrying without:', err.message);
+      return await postCreate(buildValues(false));
+    }
+    throw err;
+  }
 }
 
 async function attioMarkBlueprintOrdered(env, blueprintId) {
@@ -302,32 +329,49 @@ async function attioMarkBlueprintOrdered(env, blueprintId) {
   });
 }
 
-// One-shot orchestrator: upsert person + company, create blueprint, return id.
-// Failures are logged but never thrown — Attio outages must not block payment.
+// One-shot orchestrator: upsert person + company, create blueprint. Returns
+// { blueprintRecordId, personId, companyId, errors[] }. Errors are collected
+// per-step so handleAttioProspect can surface them inline for debugging.
+// Throwing is suppressed because Attio outages must not block payment.
 async function syncBlueprintToAttio(env, { contact, answers, otherErp, otherPlatform }) {
+  const errors = [];
+  let personId = null;
+  let companyId = null;
+
   try {
-    const [personId, companyId] = await Promise.all([
+    [personId, companyId] = await Promise.all([
       attioUpsertPerson(env, { name: contact.name, email: contact.email }).catch((e) => {
-        console.warn('attio: person upsert failed:', e.message); return null;
+        const msg = `person upsert: ${e.message}`;
+        console.warn('attio:', msg); errors.push(msg);
+        return null;
       }),
       attioUpsertCompany(env, { companyUrl: contact.company }).catch((e) => {
-        console.warn('attio: company upsert failed:', e.message); return null;
+        const msg = `company upsert: ${e.message}`;
+        console.warn('attio:', msg); errors.push(msg);
+        return null;
       }),
     ]);
+
     const recordName = contact.name
       ? `${contact.name}${contact.company ? ` — ${hostFromUrl(contact.company) || contact.company}` : ''}`
       : (contact.email || 'Blueprint reservation');
     const detailsText = buildBlueprintDetails({ contact, answers, otherErp, otherPlatform });
-    const blueprintId = await attioCreateBlueprint(env, {
-      name: recordName,
-      detailsText,
-      personId,
-      companyId,
-    });
-    return blueprintId;
+
+    let blueprintRecordId = null;
+    try {
+      blueprintRecordId = await attioCreateBlueprint(env, {
+        name: recordName, detailsText, personId, companyId,
+      });
+    } catch (e) {
+      const msg = `blueprint create: ${e.message}`;
+      console.warn('attio:', msg); errors.push(msg);
+    }
+
+    return { blueprintRecordId, personId, companyId, errors };
   } catch (err) {
-    console.warn('attio: blueprint sync failed:', err.message);
-    return null;
+    const msg = `sync wrapper: ${err.message}`;
+    console.warn('attio:', msg); errors.push(msg);
+    return { blueprintRecordId: null, personId, companyId, errors };
   }
 }
 
@@ -429,10 +473,10 @@ async function handleAttioProspect(request, env) {
   const otherErp = (body.otherErp || '').toString().trim();
   const otherPlatform = (body.otherPlatform || '').toString().trim();
 
-  const blueprintRecordId = await syncBlueprintToAttio(env, {
+  const result = await syncBlueprintToAttio(env, {
     contact, answers, otherErp, otherPlatform,
   });
-  return json(200, { ok: true, blueprintRecordId });
+  return json(200, { ok: true, ...result });
 }
 
 // ----------------------------------------------------------------------------
@@ -444,6 +488,35 @@ async function handleAttioProspect(request, env) {
 //   ?object=people       (default) — sanity-checks key + read scope on People
 //   ?object=blueprint              — verifies Blueprint object slug + scope
 // ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+// GET /api/build/attio-test
+// Runs the full upsert-person + upsert-company + create-blueprint flow with
+// stable dummy values (so we don't pollute Attio on each call — the People
+// and Companies records collapse onto the same email/domain). Returns the
+// full diagnostics object. Curl once after any Attio config change to verify
+// end-to-end without going through the quiz.
+// ----------------------------------------------------------------------------
+async function handleAttioTest(request, env) {
+  if (!env.ATTIO_API_KEY) {
+    return json(503, { ok: false, step: 'config', error: 'ATTIO_API_KEY not set on the Worker' });
+  }
+  const result = await syncBlueprintToAttio(env, {
+    contact: {
+      name: 'Attio Diagnostic',
+      email: 'attio-diagnostic@uncap.com',
+      company: 'https://attio-diagnostic.example.com',
+    },
+    answers: {
+      erp: 'netsuite', edition: 'OneWorld',
+      platform: 'Magento / Adobe Commerce',
+      revenue: '$5M – $25M', model: 'b2b',
+    },
+    otherErp: '',
+    otherPlatform: '',
+  });
+  return json(200, { ok: true, ...result });
+}
+
 async function handleAttioPing(request, env) {
   if (!env.ATTIO_API_KEY) {
     return json(503, { ok: false, step: 'config', error: 'ATTIO_API_KEY not set on the Worker' });

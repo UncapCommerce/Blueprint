@@ -870,11 +870,19 @@ function Confirmation({answers, otherErp, otherPlatform, contact, setupPromiseRe
           }),
         });
         const data = await resp.json().catch(() => ({}));
-        if (!cancelled && data && data.blueprintRecordId) {
-          blueprintRecordIdRef.current = data.blueprintRecordId;
+        if (!cancelled) {
+          if (data && data.blueprintRecordId) {
+            blueprintRecordIdRef.current = data.blueprintRecordId;
+          }
+          // Surface per-step Attio errors in the browser console so the
+          // operator can spot CRM-side issues (slug mismatch, missing scope)
+          // without needing to wrangler-tail. Non-fatal — payment continues.
+          if (data && Array.isArray(data.errors) && data.errors.length) {
+            console.warn('[blueprint] attio sync errors:', data.errors);
+          }
         }
-      } catch (_) {
-        // Non-fatal; CRM outage shouldn't block payment.
+      } catch (err) {
+        if (!cancelled) console.warn('[blueprint] attio sync request failed:', err);
       }
     })();
     return () => { cancelled = true; };
