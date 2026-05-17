@@ -11,8 +11,6 @@ worker.bundle.js
 .wrangler/
 .wrangler-tools/
 node_modules/
-package-lock.json
-package.json
 
 # macOS / editor cruft
 .DS_Store
