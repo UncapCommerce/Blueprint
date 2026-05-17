@@ -564,7 +564,7 @@ function QuizApp(){
               sub="Helps us pull together a quick read on your site before the kickoff."
             >
               <FreeTextStep
-                type="url"
+                type="text"
                 placeholder="yourcompany.com"
                 autoComplete="url"
                 value={contact.company}
@@ -864,13 +864,13 @@ function recapRows(answers, otherErp, otherPlatform, contact){
 function ApolloBanner({enrichment}){
   const e = enrichment || {};
   const chips = [];
-  if (e.detectedPlatform) chips.push({label:'Platform detected', value:e.detectedPlatform});
-  if (e.industry)         chips.push({label:'Industry', value:e.industry});
-  if (e.employees)        chips.push({label:'Team size',  value:`${e.employees} people`});
-  if (e.revenueLabel)     chips.push({label:'Revenue',    value:e.revenueLabel});
-  if (e.foundedYear)      chips.push({label:'Founded',    value:String(e.foundedYear)});
-  const stack = (e.technologies || []).slice(0, 8).map(t => t.name).filter(Boolean);
-  if (!chips.length && !stack.length && !e.name) return null;
+  if (e.industry)         chips.push({label:'Industry',  value:e.industry});
+  if (e.employees)        chips.push({label:'Team size', value:`${e.employees} people`});
+  if (e.address)          chips.push({label:'Address',   value:e.address});
+  if (e.foundedYear)      chips.push({label:'Founded',   value:String(e.foundedYear)});
+  if (e.detectedPlatform) chips.push({label:'Platform',  value:e.detectedPlatform});
+  if (e.detectedErp)      chips.push({label:'ERP',       value:e.detectedErp});
+  if (!chips.length && !e.name) return null;
   return (
     <div style={{
       background:'var(--uc-black)',color:'#fff',
@@ -880,10 +880,10 @@ function ApolloBanner({enrichment}){
         <span style={{
           fontFamily:'var(--font-mono)',fontSize:10,fontWeight:700,
           letterSpacing:'.14em',textTransform:'uppercase',color:'var(--uc-signal)',
-        }}>We pulled this on {e.domain || (e.name || 'your company')}</span>
+        }}>We pulled this on {e.name || e.domain || 'your company'}</span>
       </div>
       {chips.length > 0 && (
-        <div style={{display:'flex',flexWrap:'wrap',gap:8,marginBottom: stack.length ? 12 : 0}}>
+        <div style={{display:'flex',flexWrap:'wrap',gap:8}}>
           {chips.map(c => (
             <span key={c.label} style={{
               display:'inline-flex',alignItems:'center',gap:6,
@@ -895,12 +895,6 @@ function ApolloBanner({enrichment}){
               <span style={{fontWeight:600}}>{c.value}</span>
             </span>
           ))}
-        </div>
-      )}
-      {stack.length > 0 && (
-        <div style={{fontSize:12,color:'rgba(255,255,255,0.72)',lineHeight:1.45}}>
-          <span style={{opacity:.7,marginRight:6,textTransform:'uppercase',letterSpacing:'.06em',fontSize:10,fontWeight:700}}>Stack:</span>
-          {stack.join(' · ')}
         </div>
       )}
     </div>
