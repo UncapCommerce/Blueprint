@@ -57,21 +57,13 @@ const MODEL_OPTIONS = [
 
 // Accepts what people actually type ("acme.com", "www.acme.com", "https://acme.com/about"),
 // returns a normalized https:// URL or '' if it doesn't look like a domain at all.
-// Bare host inputs are prepended with the same `https://www.` shown as the
-// persistent visual prefix on the input, so what the user sees matches what
-// we save. Already-prefixed inputs (with scheme or leading www.) are honoured
-// as-is.
+// Bare-host inputs get a plain `https://` scheme prepended. The recap card
+// and the Attio Blueprint record both display whatever this returns, so the
+// user sees the full URL even though the input only asked for the domain.
 function normalizeCompanyUrl(raw){
   const trimmed = (raw || '').trim();
   if (!trimmed) return '';
-  let withScheme;
-  if (/^https?:\/\//i.test(trimmed)) {
-    withScheme = trimmed;
-  } else if (/^www\./i.test(trimmed)) {
-    withScheme = 'https://' + trimmed;
-  } else {
-    withScheme = 'https://www.' + trimmed;
-  }
+  const withScheme = /^https?:\/\//i.test(trimmed) ? trimmed : 'https://' + trimmed;
   try {
     const u = new URL(withScheme);
     // Require at least one dot in the hostname (rules out "localhost", "foo", etc).
@@ -537,7 +529,6 @@ function QuizApp(){
             >
               <FreeTextStep
                 type="url"
-                prefix="https://www."
                 placeholder="yourcompany.com"
                 autoComplete="url"
                 value={contact.company}
