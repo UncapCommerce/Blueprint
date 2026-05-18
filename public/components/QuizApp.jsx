@@ -1113,7 +1113,12 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
             theme: 'flat',
             variables: {
               fontFamily: 'system-ui, -apple-system, "Segoe UI", Inter, Helvetica, Arial, sans-serif',
-              fontSizeBase: '15px',
+              // 16px is the iOS Safari auto-zoom threshold — anything below
+              // triggers a viewport zoom whenever the user focuses a Stripe
+              // input (card number, expiry, cvc). Inside our iframe embed
+              // that zoom cascades into the parent and shrinks the visible
+              // padding, so we sit right at the boundary.
+              fontSizeBase: '16px',
               colorPrimary: '#0a0a0a',
               colorText: '#0a0a0a',
               colorDanger: '#c0392b',
@@ -1121,7 +1126,7 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
               spacingUnit: '4px',
             },
             rules: {
-              '.Input': { border: '1px solid #e6e6e6', boxShadow: 'none' },
+              '.Input': { border: '1px solid #e6e6e6', boxShadow: 'none', fontSize: '16px' },
               '.Input:focus': { border: '1px solid #0a0a0a' },
               '.Label': { fontWeight: '600', color: '#3d3d3d' },
             },
