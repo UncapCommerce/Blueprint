@@ -856,7 +856,7 @@ function recapRows(answers, otherErp, otherPlatform, contact){
   const modelName = MODEL_OPTIONS.find(o=>o.id===answers.model)?.label || answers.model || '';
   return [
     {l:'Name',                  v:contact?.name    || ''},
-    {l:'Company Website',       v:contact?.company || ''},
+    {l:'Website',               v:contact?.company || ''},
     {l:'Email',                 v:contact?.email   || ''},
     {l:'ERP',                   v:erpName},
     {l:'Edition',               v:answers.edition || ''},
