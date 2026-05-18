@@ -872,10 +872,10 @@ function recapRows(answers, otherErp, otherPlatform, contact){
 function ApolloBanner({enrichment}){
   const e = enrichment || {};
   const chips = [];
-  if (e.industry)         chips.push({label:'Industry',  value:e.industry});
-  if (e.employees)        chips.push({label:'Team size', value:`${e.employees} people`});
   if (e.address)          chips.push({label:'Address',   value:e.address});
+  if (e.industry)         chips.push({label:'Industry',  value:e.industry});
   if (e.foundedYear)      chips.push({label:'Founded',   value:String(e.foundedYear)});
+  if (e.employees)        chips.push({label:'Team size', value:`${e.employees} people`});
   if (e.detectedPlatform) chips.push({label:'Platform',  value:e.detectedPlatform});
   if (e.detectedErp)      chips.push({label:'ERP',       value:e.detectedErp});
   if (!chips.length && !e.name) return null;
