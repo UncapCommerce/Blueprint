@@ -1113,12 +1113,13 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
             theme: 'flat',
             variables: {
               fontFamily: 'system-ui, -apple-system, "Segoe UI", Inter, Helvetica, Arial, sans-serif',
-              // 16px is the iOS Safari auto-zoom threshold — anything below
-              // triggers a viewport zoom whenever the user focuses a Stripe
-              // input (card number, expiry, cvc). Inside our iframe embed
-              // that zoom cascades into the parent and shrinks the visible
-              // padding, so we sit right at the boundary.
-              fontSizeBase: '16px',
+              // iOS Safari auto-zooms whenever the focused <input> font-size
+              // is < 16px, and some iOS builds round 16px-exact down below
+              // the threshold so the zoom still fires. 17px sits comfortably
+              // above for every iOS version. Inside our /blueprint iframe
+              // embed the zoom cascades into the parent and shrinks the
+              // visible padding, which is what made the form look "wrong".
+              fontSizeBase: '17px',
               colorPrimary: '#0a0a0a',
               colorText: '#0a0a0a',
               colorDanger: '#c0392b',
@@ -1126,7 +1127,7 @@ function CardOnFile({answers, otherErp, otherPlatform, contact, isMobile, setupP
               spacingUnit: '4px',
             },
             rules: {
-              '.Input': { border: '1px solid #e6e6e6', boxShadow: 'none', fontSize: '16px' },
+              '.Input': { border: '1px solid #e6e6e6', boxShadow: 'none', fontSize: '17px' },
               '.Input:focus': { border: '1px solid #0a0a0a' },
               '.Label': { fontWeight: '600', color: '#3d3d3d' },
             },
