@@ -652,7 +652,7 @@ function QuizHeader({currentNumber, total, onBack, canGoBack, isConfirm}){
             }}/>
           </div>
           <span style={{fontFamily:'var(--font-mono)',fontSize:11,color:'var(--fg-3)',letterSpacing:'.06em',whiteSpace:'nowrap'}}>
-            {isConfirm ? 'COMPLETE' : `${Math.min(currentNumber, total)} / ${total}`}
+            {isConfirm ? 'DEPOSIT' : `${Math.min(currentNumber, total)} / ${total}`}
           </span>
         </div>
       </div>
