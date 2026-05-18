@@ -576,7 +576,7 @@ function QuizApp(){
                 placeholder="yourcompany.com"
                 autoComplete="url"
                 value={contact.company}
-                onChange={(v)=>{ if (companyUrlError) setCompanyUrlError(''); setContactField('company', v); }}
+                onChange={(v)=>{ if (companyUrlError) setCompanyUrlError(''); setContactField('company', v.toLowerCase()); }}
                 onSubmit={()=>{
                   const normalized = normalizeCompanyUrl(contact.company);
                   if (!normalized) { setCompanyUrlError('Enter a valid website (eg. yourcompany.com)'); return; }

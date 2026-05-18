@@ -127,7 +127,7 @@ function HeroCta({isMobile, hash}) {
       <input
         type="text"
         value={companyUrl}
-        onChange={(e) => setCompanyUrl(e.target.value)}
+        onChange={(e) => setCompanyUrl(e.target.value.toLowerCase())}
         onFocus={() => setFocused(true)}
         onBlur={() => setFocused(false)}
         placeholder="yourcompany.com"
