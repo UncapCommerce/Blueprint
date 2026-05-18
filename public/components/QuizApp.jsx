@@ -910,21 +910,40 @@ function ApolloBanner({enrichment}){
 }
 
 function RecapCard({rows}){
+  const isMobile = window.useIsMobile ? window.useIsMobile() : false;
   return (
     <div style={{
       background:'#fff',border:'1px solid var(--uc-black)',borderRadius:5,
-      padding:'8px 24px',marginBottom:28,
+      padding: isMobile ? '4px 18px' : '8px 24px',marginBottom:28,
       boxShadow:'0 4px 16px rgba(10,10,10,0.06)',
     }}>
       {rows.map((r,i)=>(
         <div key={r.l} style={{
-          display:'grid',gridTemplateColumns:'180px 1fr',gap:24,
-          padding:'16px 0',
+          // Stacked single column on mobile so long values (URLs,
+          // addresses) wrap inside the card width instead of overflowing
+          // the 180px-label + 1fr-value grid we use on desktop.
+          display:'grid',
+          gridTemplateColumns: isMobile ? '1fr' : '180px 1fr',
+          gap: isMobile ? 4 : 24,
+          padding: isMobile ? '12px 0' : '16px 0',
           borderTop: i===0 ? 'none' : '1px solid var(--line-1)',
           alignItems:'baseline',
+          minWidth: 0,
         }}>
-          <span style={{fontFamily:'var(--font-mono)',fontSize:11,fontWeight:600,letterSpacing:'.1em',color:'var(--fg-3)',textTransform:'uppercase'}}>{r.l}</span>
-          <span style={{fontSize:16,fontWeight:500,color:'var(--fg-1)'}}>{r.v}</span>
+          <span style={{
+            fontFamily:'var(--font-mono)',
+            fontSize: isMobile ? 10 : 11,
+            fontWeight:600,letterSpacing:'.1em',color:'var(--fg-3)',
+            textTransform:'uppercase',
+          }}>{r.l}</span>
+          <span style={{
+            fontSize: isMobile ? 15 : 16,fontWeight:500,color:'var(--fg-1)',
+            // Force long unbroken strings (URLs, long addresses) to wrap
+            // inside the card on every viewport, not just mobile.
+            wordBreak:'break-word',
+            overflowWrap:'anywhere',
+            minWidth: 0,
+          }}>{r.v}</span>
         </div>
       ))}
     </div>
