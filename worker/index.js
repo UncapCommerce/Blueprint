@@ -495,11 +495,16 @@ function detectErpFromApollo(technologies) {
 // Returns { enrichment: {...} | null, cached: bool, error: string | null }.
 // Never throws — failures degrade to null enrichment so callers can soldier
 // on. Cache hit/miss surfaced for diagnostics.
+//
+// Cache key carries a version segment so any time the enrichment shape
+// changes (added field, normalisation tweak, etc.) we can bump the version
+// and stale entries become unreachable without manually purging KV.
+const APOLLO_CACHE_VERSION = 'v2';
 async function apolloEnrichForDomain(env, rawCompanyUrl) {
   const domain = hostFromUrl(rawCompanyUrl);
   if (!domain) return { enrichment: null, cached: false, error: 'no domain' };
 
-  const cacheKey = `apollo:${domain}`;
+  const cacheKey = `apollo:${APOLLO_CACHE_VERSION}:${domain}`;
   if (env.BUILD_SESSIONS) {
     try {
       const cached = await env.BUILD_SESSIONS.get(cacheKey, 'json');
