@@ -87,9 +87,12 @@
       font-size: 16px !important;
     }
 
-    /* Free-text "Other ERP" input: 16px to prevent iOS zoom-on-focus */
-    main input[type="text"] { font-size: 16px !important; padding: 16px 18px !important; }
-    main input[type="text"] + button { width: 100% !important; justify-content: center !important; }
+    /* Free-text inputs (text/email/url): font-size must be >16px to dodge
+       iOS Safari's auto-zoom-on-focus. 16px sits right at the boundary and
+       some iOS builds round below the threshold, so we ship 17px to be safe.
+       Targets every input type the quiz renders, not just type=text. */
+    main input { font-size: 17px !important; padding: 16px 18px !important; }
+    main input + button { width: 100% !important; justify-content: center !important; }
 
     /* ----- Confirmation step (Place Order screen) ----- */
     /* Recap card: stack label/value rather than 180px-1fr two-col */
