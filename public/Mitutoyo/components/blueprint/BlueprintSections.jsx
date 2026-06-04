@@ -2478,6 +2478,13 @@ function BPNav() {
 }
 window.BPNav = BPNav;
 
+// BPAgentic + BPMigration were defined as functions earlier in this file
+// but never assigned to window in the original export. The HTML's inline
+// App component references them, so without these exports React threw
+// ReferenceError on first render and the page stayed blank.
+window.BPAgentic = BPAgentic;
+window.BPMigration = BPMigration;
+
 window.BPIntro = BPIntro;
 window.BPSummary = BPSummary;
 window.BPWhere = BPWhere;
