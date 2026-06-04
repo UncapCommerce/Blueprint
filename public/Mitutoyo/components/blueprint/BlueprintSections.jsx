@@ -2117,7 +2117,6 @@ function BPInvestment() {
       who: 'For operators building a new store on Shopify who need their catalog imported and their ERP and systems wired into one.',
       workLabel: 'Everything in Launch, plus',
       work: [
-        'Real-time Shopify-to-ERP integration with Uncap Connect',
         'B2B-aware data: customer pricing, terms, credit, tax',
         'Multi-location inventory, one source of truth',
         'Custom experience built around how your buyers order',
@@ -2133,6 +2132,7 @@ function BPInvestment() {
       who: 'For operators rebuilding the full operation, with crafted experiences and tools built exclusively for the way their business runs.',
       workLabel: 'Everything in Grow, plus',
       work: [
+        'Real-time Shopify-to-ERP integration with Uncap Connect',
         'Uncap Blueprint first: architecture, roadmap, risk, TCO',
         'Private ordering portal experience for your buyers',
         'Custom commerce for services and rentals, not just products',
