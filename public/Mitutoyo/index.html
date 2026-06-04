@@ -55,31 +55,144 @@
 <script type="text/babel" src="components/blueprint/BlueprintSections.jsx?v=DEPLOY_HASH"></script>
 
 <script type="text/babel">
+  // ── Soft passcode gate. Client-side only (anyone who reads the page source
+  // can bypass), so this is for casual gating — keeps the URL out of search
+  // results and stops drive-bys. The unlocked state persists for the tab
+  // session via sessionStorage so a reload doesn't re-prompt. ──
+  const PASSCODE = 'UNCAP64';
+  const STORAGE_KEY = 'mitutoyo_unlocked';
+
+  function Gate({ children }) {
+    const [unlocked, setUnlocked] = React.useState(
+      () => typeof window !== 'undefined' && window.sessionStorage.getItem(STORAGE_KEY) === '1'
+    );
+    const [value, setValue] = React.useState('');
+    const [error, setError] = React.useState(false);
+    const inputRef = React.useRef(null);
+
+    React.useEffect(() => {
+      if (!unlocked && inputRef.current) inputRef.current.focus();
+    }, [unlocked]);
+
+    if (unlocked) return children;
+
+    const submit = (e) => {
+      e.preventDefault();
+      if (value.trim().toUpperCase() === PASSCODE) {
+        try { window.sessionStorage.setItem(STORAGE_KEY, '1'); } catch (_) {}
+        setUnlocked(true);
+      } else {
+        setError(true);
+        setValue('');
+        setTimeout(() => setError(false), 1200);
+      }
+    };
+
+    return (
+      <div style={{
+        minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: 'var(--uc-cream)', color: 'var(--fg-1)',
+        fontFamily: 'var(--font-sans)', padding: 24
+      }}>
+        <form onSubmit={submit} style={{
+          width: '100%', maxWidth: 420,
+          background: 'var(--uc-paper)',
+          border: '1px solid var(--uc-black)',
+          borderRadius: 8, padding: 36,
+          boxShadow: '0 18px 40px -22px rgba(10,10,10,0.25)'
+        }}>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 24,
+            fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700,
+            letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--fg-3)'
+          }}>
+            <span style={{ width: 14, height: 2, background: 'var(--uc-signal)' }}/>
+            Private proposal
+          </div>
+          <h1 style={{
+            margin: '0 0 10px',
+            fontFamily: 'var(--font-hero)', fontWeight: 800,
+            fontSize: 'clamp(28px, 4vw, 36px)', lineHeight: 1.04,
+            letterSpacing: '-0.03em'
+          }}>Passcode required.</h1>
+          <p style={{
+            margin: '0 0 24px',
+            fontFamily: 'var(--font-serif)', fontStyle: 'italic',
+            fontSize: 15, lineHeight: 1.5, color: 'var(--fg-2)'
+          }}>
+            This proposal isn&rsquo;t public. Enter the passcode you were sent to continue.
+          </p>
+          <input
+            ref={inputRef}
+            type="text"
+            value={value}
+            onChange={(e) => setValue(e.target.value.toUpperCase())}
+            placeholder="Passcode"
+            autoComplete="off"
+            spellCheck="false"
+            autoCapitalize="characters"
+            aria-label="Passcode"
+            aria-invalid={error}
+            style={{
+              width: '100%', boxSizing: 'border-box',
+              padding: '14px 16px',
+              fontFamily: 'var(--font-mono)', fontSize: 17, fontWeight: 600,
+              letterSpacing: '0.12em', textTransform: 'uppercase',
+              color: 'var(--fg-1)', background: 'var(--uc-cream)',
+              border: '1px solid ' + (error ? 'var(--uc-error)' : 'var(--line-1)'),
+              borderRadius: 5, outline: 'none',
+              transition: 'border-color .15s var(--ease-out)'
+            }}
+            onFocus={(e) => { if (!error) e.currentTarget.style.borderColor = 'var(--uc-black)'; }}
+            onBlur={(e)  => { if (!error) e.currentTarget.style.borderColor = 'var(--line-1)'; }}
+          />
+          {error && (
+            <div style={{
+              marginTop: 10, fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700,
+              letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--uc-error)'
+            }}>That passcode didn&rsquo;t match. Try again.</div>
+          )}
+          <button type="submit" className="uc-btn b-primary"
+            style={{ width: '100%', justifyContent: 'center', marginTop: 18 }}>
+            Unlock <span>→</span>
+          </button>
+          <div style={{
+            marginTop: 22, paddingTop: 18, borderTop: '1px solid var(--line-1)',
+            fontFamily: 'var(--font-mono)', fontSize: 10,
+            letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--fg-3)'
+          }}>Trouble? Email hay@uncap.com</div>
+        </form>
+      </div>
+    );
+  }
+
   function App() {
     return (
-      <div id="top">
-        <BPNav/>
-        <main>
-          <BPIntro/>
-          <BPSummary/>
-          <BPWhere/>
-          <BPObjectives/>
-          <BPApproach/>
-          <BPScope/>
-          <BPPerformance/>
-          <BPContent/>
-          <BPTechStack/>
-          <BPB2B/>
-          <BPAgentic/>
-          <BPMigration/>
-          <BPDelivery/>
-          <BPInvestment/>
-          <BPGrowth/>
-          <BPTeam/>
-          <BPWhy/>
-          <div id="talk"><BPNext/></div>
-        </main>
-      </div>
+      <Gate>
+        <div id="top">
+          <BPNav/>
+          <main>
+            <BPIntro/>
+            <BPSummary/>
+            <BPWhere/>
+            <BPObjectives/>
+            <BPApproach/>
+            <BPScope/>
+            <BPPerformance/>
+            <BPContent/>
+            <BPTechStack/>
+            <BPB2B/>
+            <BPAgentic/>
+            <BPMigration/>
+            <BPDelivery/>
+            <BPInvestment/>
+            <BPGrowth/>
+            <BPTeam/>
+            <BPWhy/>
+            <div id="talk"><BPNext/></div>
+          </main>
+        </div>
+      </Gate>
     );
   }
   ReactDOM.createRoot(document.getElementById('root')).render(<App/>);

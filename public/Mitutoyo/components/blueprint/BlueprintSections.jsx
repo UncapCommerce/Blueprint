@@ -2249,8 +2249,8 @@ function BPWhy() {
   return (
     <BPSection id="why" n="15" label="Uncap" dark tail="THE CASE">
       <BPHeadline dark>
-        Same caliber.{' '}
-        <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, color: 'var(--uc-stone-300)' }}>Without the drag.</span>
+        Uncap Commerce.{' '}
+        <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, color: 'var(--uc-stone-300)' }}>Unified.</span>
       </BPHeadline>
 
       {/* Platinum partner badge */}
