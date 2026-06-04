@@ -2122,7 +2122,7 @@ function BPInvestment() {
         'Custom experience built around how your buyers order',
         'Quote management workflow — request, approve, convert',
         'Tailored private portal for wholesale buyers',
-        'SSO login experience with your ID system',
+        'SSO login experience with your customer ID system',
         'Workflow automation across your systems'
       ],
       outcome: 'Your store and back-office telling one story, in real time, built to scale.',
