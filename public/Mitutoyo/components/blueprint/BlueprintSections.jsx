@@ -112,7 +112,7 @@ function BPIntro() {
           fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--uc-stone-500)', letterSpacing: 0
         }}>
           <span style={{ display: 'inline-flex', alignItems: 'center' }}>
-            <img src={window.__resources.shopifyBadge} alt="Shopify Platinum Partner" style={{ height: 22, width: 'auto', display: 'block', filter: 'brightness(0) invert(1)' }}/>
+            <img src={window.__resources.shopifyBadge} alt="Shopify Platinum Partner" style={{ height: 36, width: 'auto', display: 'block', filter: 'brightness(0) invert(1)' }}/>
           </span>
           <span>BLUEPRINT 001 · PREPARED JUNE 2026 · CONFIDENTIAL</span>
         </div>
