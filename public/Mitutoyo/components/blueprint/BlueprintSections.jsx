@@ -386,8 +386,8 @@ function BPObjectives() {
 function BPApproach() {
   const steps = [
     { n: 'Phase 1', t: 'Blueprint', d: 'Architecture, data model, integration map. A plan that holds up under scrutiny.', wk: 'Weeks 1–3' },
-    { n: 'Phase 2', t: 'Build', d: 'Storefront, B2B, ERP sync. Fixed scope, senior team, no surprises.', wk: 'Weeks 4–10' },
-    { n: 'Phase 3', t: 'Grow', d: 'Import, go live, then optimize conversion, AOV, and automation.', wk: 'Weeks 11–12+' }
+    { n: 'Phase 2', t: 'Build', d: 'Storefront, B2B, ERP sync. Fixed scope, senior team, no surprises.', wk: '16 weeks' },
+    { n: 'Phase 3', t: 'Grow', d: 'Import, go live, then optimize conversion, AOV, and automation.', wk: '6–12 months' }
   ];
   return (
     <BPSection id="approach" n="04" label="Recommended Approach" dark tail="THE PLAN">
