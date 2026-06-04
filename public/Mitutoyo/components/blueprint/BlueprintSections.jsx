@@ -2117,7 +2117,7 @@ function BPInvestment() {
       who: 'For operators building a new store on Shopify who need their catalog imported and their ERP and systems wired into one.',
       workLabel: 'Everything in Launch, plus',
       work: [
-        'B2B-aware data: customer pricing, terms, credit, tax',
+        'Full B2B Enablement: companies, contracts, terms, credit, tax',
         'Multi-location inventory, one source of truth',
         'Custom experience built around how your buyers order',
         'Quote management workflow — request, approve, convert',
