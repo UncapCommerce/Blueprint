@@ -1467,7 +1467,7 @@ function BPTechStack() {
       <div style={{ border:'1px solid #1F1F1F', borderRadius:6, overflow:'hidden' }}>
         {/* Header */}
         <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1.1fr) minmax(0,1.6fr) minmax(0,1.1fr) minmax(0,auto)', gap:16, padding:'12px 18px', background:'#0F0F0F', borderBottom:'1px solid #1F1F1F', fontFamily:'var(--font-mono)', fontSize:10, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'var(--uc-stone-500)' }}>
-          <span>Name</span><span>Functionality</span><span style={{ textAlign:'center' }}>Priority</span><span style={{ textAlign:'right' }}>Cost</span>
+          <span>Name</span><span>Functionality</span><span style={{ justifySelf:'center' }}>Priority</span><span style={{ justifySelf:'end' }}>Cost</span>
         </div>
         {/* Rows */}
         {rows.map((r, i) => {
