@@ -2056,7 +2056,7 @@ function BPInvestmentCard({ p }) {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(12px, 1.6vw, 16px)' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', color: faint }}>PACKAGE {p.n}</span>
-          {feat && <span style={{ fontFamily: 'var(--font-mono)', fontSize: 8.5, fontWeight: 800, letterSpacing: '0.1em', color: 'var(--uc-black)', background: 'var(--uc-signal)', borderRadius: 999, padding: '2px 8px' }}>POPULAR</span>}
+          {feat && <span style={{ fontFamily: 'var(--font-mono)', fontSize: 8.5, fontWeight: 800, letterSpacing: '0.1em', color: 'var(--uc-black)', background: 'var(--uc-signal)', borderRadius: 999, padding: '2px 8px' }}>YOUR FIT</span>}
         </div>
         <div>
           <div style={{ fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(28px, 3vw, 40px)', letterSpacing: '-0.04em', lineHeight: 0.92, color: fg }}>{p.name}</div>
@@ -2096,7 +2096,7 @@ function BPInvestmentCard({ p }) {
 function BPInvestment() {
   const packages = [
     {
-      n: '01', name: 'Launch', tagline: 'Live on Shopify fast, with unified commerce from day one.',
+      n: '01', name: 'Launch', tagline: 'Live on Shopify fast, with unified commerce from day one.', feature: true,
       who: 'For operators launching a new store on Shopify, selling B2B and B2C from day one, with a clean catalog imported and no legacy systems to wire in.',
       workLabel: 'The work',
       work: [
@@ -2113,7 +2113,7 @@ function BPInvestment() {
       priceLabel: 'Fixed price', price: '$54k'
     },
     {
-      n: '02', name: 'Grow', tagline: 'Your store and your integrated systems, working as one.', feature: true,
+      n: '02', name: 'Grow', tagline: 'Your store and your integrated systems, working as one.',
       who: 'For operators building a new store on Shopify who need their catalog imported and their ERP and systems wired into one.',
       workLabel: 'Everything in Launch, plus',
       work: [
