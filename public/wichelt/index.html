@@ -1,0 +1,201 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>uncap — blueprint proposal</title>
+<link rel="icon" href="assets/uncap-logo-black.svg"/>
+
+<meta name="ext-resource-dependency" content="assets/uncap-logo-black.svg" data-resource-id="uncapLogoBlack"/>
+<meta name="ext-resource-dependency" content="assets/uncap-logo-white.svg" data-resource-id="uncapLogoWhite"/>
+<meta name="ext-resource-dependency" content="assets/shopify-platinum-partner-black.svg" data-resource-id="shopifyBadge"/>
+
+<script>
+  if (!window.__resources) {
+    window.__resources = {
+      uncapLogoBlack: 'assets/uncap-logo-black.svg',
+      uncapLogoWhite: 'assets/uncap-logo-white.svg',
+      shopifyBadge:   'assets/shopify-platinum-partner-black.svg',
+      bgVector1:      'assets/bg-vector-1.svg',
+      bgVector2:      'assets/bg-vector-2.svg',
+      bgVector3:      'assets/bg-vector-3.svg',
+      reviewBrandt:   'assets/review-brandt.webp'
+    };
+  }
+  // ── Brand config — change `name`, or set `logoSrc` to an uploaded image path,
+  //    and the company name + logo update everywhere they're used. ──
+  window.__brand = window.__brand || {
+    name: 'Wichelt',
+    logoSrc: ''   // e.g. 'assets/wichelt-logo.svg' — overrides the wordmark when set
+  };
+</script>
+
+<template id="__bundler_thumbnail" data-bg-color="#F2EFE7">
+  <svg viewBox="0 0 1200 800" xmlns="http://www.w3.org/2000/svg">
+    <rect width="1200" height="800" fill="#F2EFE7"/>
+    <text x="600" y="430" text-anchor="middle" font-family="serif" font-size="180" font-weight="700" fill="#0A0A0A">Blueprint</text>
+    <rect x="120" y="490" width="960" height="20" fill="#E8FF52"/>
+  </svg>
+</template>
+
+<link rel="stylesheet" href="colors_and_type.css"/>
+<link rel="stylesheet" href="page-shell.css"/>
+
+</head>
+<body>
+<div id="root"></div>
+
+<script src="/vendor/react.production.min.js"></script>
+<script src="/vendor/react-dom.production.min.js"></script>
+<script src="/vendor/babel.min.js"></script>
+
+<script src="image-slot.js?v=DEPLOY_HASH"></script>
+<script type="text/babel" src="components/poster/Posters.jsx?v=DEPLOY_HASH"></script>
+<script type="text/babel" src="components/blueprint/BlueprintSections.jsx?v=DEPLOY_HASH"></script>
+
+<script type="text/babel">
+  // ── Soft passcode gate. Client-side only (anyone who reads the page source
+  // can bypass), so this is for casual gating — keeps the URL out of search
+  // results and stops drive-bys. The unlocked state persists for the tab
+  // session via sessionStorage so a reload doesn't re-prompt. ──
+  const PASSCODE = 'UNCAP68';
+  const STORAGE_KEY = 'wichelt_unlocked';
+
+  function Gate({ children }) {
+    const [unlocked, setUnlocked] = React.useState(
+      () => typeof window !== 'undefined' && window.sessionStorage.getItem(STORAGE_KEY) === '1'
+    );
+    const [value, setValue] = React.useState('');
+    const [error, setError] = React.useState(false);
+    const inputRef = React.useRef(null);
+
+    React.useEffect(() => {
+      if (!unlocked && inputRef.current) inputRef.current.focus();
+    }, [unlocked]);
+
+    if (unlocked) return children;
+
+    const submit = (e) => {
+      e.preventDefault();
+      if (value.trim().toUpperCase() === PASSCODE) {
+        try { window.sessionStorage.setItem(STORAGE_KEY, '1'); } catch (_) {}
+        setUnlocked(true);
+      } else {
+        setError(true);
+        setValue('');
+        setTimeout(() => setError(false), 1200);
+      }
+    };
+
+    return (
+      <div style={{
+        minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
+        background: 'var(--uc-cream)', color: 'var(--fg-1)',
+        fontFamily: 'var(--font-sans)', padding: 24
+      }}>
+        <form onSubmit={submit} style={{
+          width: '100%', maxWidth: 420,
+          background: 'var(--uc-paper)',
+          border: '1px solid var(--uc-black)',
+          borderRadius: 8, padding: 36,
+          boxShadow: '0 18px 40px -22px rgba(10,10,10,0.25)'
+        }}>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 24,
+            fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700,
+            letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--fg-3)'
+          }}>
+            <span style={{ width: 14, height: 2, background: 'var(--uc-signal)' }}/>
+            Private proposal
+          </div>
+          <h1 style={{
+            margin: '0 0 10px',
+            fontFamily: 'var(--font-hero)', fontWeight: 800,
+            fontSize: 'clamp(28px, 4vw, 36px)', lineHeight: 1.04,
+            letterSpacing: '-0.03em'
+          }}>Passcode required.</h1>
+          <p style={{
+            margin: '0 0 24px',
+            fontFamily: 'var(--font-serif)', fontStyle: 'italic',
+            fontSize: 15, lineHeight: 1.5, color: 'var(--fg-2)'
+          }}>
+            This proposal isn&rsquo;t public. Enter the passcode you were sent to continue.
+          </p>
+          <input
+            ref={inputRef}
+            type="text"
+            value={value}
+            onChange={(e) => setValue(e.target.value.toUpperCase())}
+            placeholder="Passcode"
+            autoComplete="off"
+            spellCheck="false"
+            autoCapitalize="characters"
+            aria-label="Passcode"
+            aria-invalid={error}
+            style={{
+              width: '100%', boxSizing: 'border-box',
+              padding: '14px 16px',
+              fontFamily: 'var(--font-mono)', fontSize: 17, fontWeight: 600,
+              letterSpacing: '0.12em', textTransform: 'uppercase',
+              color: 'var(--fg-1)', background: 'var(--uc-cream)',
+              border: '1px solid ' + (error ? 'var(--uc-error)' : 'var(--line-1)'),
+              borderRadius: 5, outline: 'none',
+              transition: 'border-color .15s var(--ease-out)'
+            }}
+            onFocus={(e) => { if (!error) e.currentTarget.style.borderColor = 'var(--uc-black)'; }}
+            onBlur={(e)  => { if (!error) e.currentTarget.style.borderColor = 'var(--line-1)'; }}
+          />
+          {error && (
+            <div style={{
+              marginTop: 10, fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700,
+              letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--uc-error)'
+            }}>That passcode didn&rsquo;t match. Try again.</div>
+          )}
+          <button type="submit" className="uc-btn b-primary"
+            style={{ width: '100%', justifyContent: 'center', marginTop: 18 }}>
+            Unlock <span>→</span>
+          </button>
+          <div style={{
+            marginTop: 22, paddingTop: 18, borderTop: '1px solid var(--line-1)',
+            fontFamily: 'var(--font-mono)', fontSize: 10,
+            letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--fg-3)'
+          }}>Trouble? Email hay@uncap.com</div>
+        </form>
+      </div>
+    );
+  }
+
+  function App() {
+    return (
+      <Gate>
+        <div id="top">
+          <BPNav/>
+          <main>
+            <BPIntro/>
+            <BPSummary/>
+            <BPWhere/>
+            <BPObjectives/>
+            <BPApproach/>
+            <BPScope/>
+            <BPPerformance/>
+            <BPContent/>
+            <BPTechStack/>
+            <BPB2B/>
+            <BPPhase2/>
+            <BPAgentic/>
+            <BPMigration/>
+            <BPDelivery/>
+            <BPInvestment/>
+            <BPGrowth/>
+            <BPTeam/>
+            <BPWhy/>
+            <div id="talk"><BPNext/></div>
+          </main>
+        </div>
+      </Gate>
+    );
+  }
+  ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

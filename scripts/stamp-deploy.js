@@ -29,6 +29,7 @@ const files = [
   'public/index.html',
   'public/build/index.html',
   'public/Mitutoyo/index.html',
+  'public/wichelt/index.html',
   'public/demo/blueprint/index.html',
 ];
 
