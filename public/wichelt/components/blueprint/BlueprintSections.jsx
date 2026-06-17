@@ -1110,7 +1110,7 @@ function BPPerformance() {
     sub: 'Make the second order easier than the first.',
     points: [
     { t: 'Self-Serve Ordering Portal', d: 'A logged-in account experience for reorders, quotes, and team management.' },
-    { t: 'Quick Order & Subscription', d: 'One-click reorders, saved lists, and recurring orders that run themselves.' }],
+    { t: 'Quick Order', d: 'One-click reorders and saved lists.' }],
 
     gfx: <GfxPortal />
   }];
