@@ -1589,49 +1589,56 @@ function BPB2B() {
 
 }
 
-// ── 09b PHASE 2 ──────────────────────────────────────────────────────────────
+// ── 11b PHASE 2 ──────────────────────────────────────────────────────────────
 function BPPhase2() {
-  const blocks = [
-  { n: '01', t: 'Mill Hill Direct', d: 'Launch a dedicated Mill Hill storefront selling kits, beads, and accessories direct to consumers. The full catalog, not the 230 SKUs available through resellers today.' },
-  { n: '02', t: 'Mirabilia Designs Direct', d: 'A designer-forward storefront for Nora Corbett\u2019s Mirabilia chart collection, built for the cross-stitch enthusiast who wants the full lineup.' },
-  { n: '03', t: 'Local Store Support Program', d: 'A channel conflict solution built into checkout. Geo-locate the buyer, suggest their nearest independent needlework retailer, and optionally credit that store for the sale.' }];
+  const pkg = {
+    n: '01', name: 'Phase 2', tagline: 'A direct-to-consumer flagship for Mill Hill.', feature: false, accentBar: true,
+    who: 'A standalone DTC storefront at MillHill.com — its own theme, URL, catalog, and customer database, home to the Mill Hill, Mirabilia, Nora Corbett, Permin, and Zweigart brands.',
+    workLabel: 'What it includes',
+    work: [
+    'Dedicated DTC storefront at MillHill.com, fully separate from the Wichelt B2B site',
+    'Consumer-only at MSRP — no B2B tiers, with an outbound "Become a Retailer" link to Wichelt',
+    'Catalog import: ~500 Mill Hill and ~200 Mirabilia / Nora Corbett SKUs, plus Permin, Zweigart fabric, complements & an outlet',
+    'Brand and designer storytelling that gives each label a real home',
+    '"Complete your project" cross-sell — threads, fabric, and accessories beside kits and charts',
+    'Store locator featuring LNS partners and the Mill Hill La Crosse store',
+    'Faceted filtering tuned to the catalog — brand, theme, fabric count, price, availability',
+    'Learn section with a beginner\u2019s guide and how-to content',
+    'Email capture wired to your marketing platform with lifecycle flows',
+    'US launch first — Canada and select markets to follow via Shopify Markets'],
+
+    outcome: 'A boutique consumer storefront — heritage, warm, and designer-forward — backed by a 60-year manufacturer.',
+    priceLabel: 'Project estimate', price: '$25k'
+  };
 
   return (
-    <BPSection id="phase2" n="09b" label="Phase 2" tail="WHAT COMES NEXT">
+    <BPSection id="phase2" n="11b" label="Phase 2" tail="THE CONSUMER STORE">
       <BPHeadline>
         Phase 2:{' '}
-        <BPSerif>Own the consumer.</BPSerif>
+        <BPSerif>A home for Mill Hill.</BPSerif>
       </BPHeadline>
-      <p style={{ marginTop: 'clamp(18px, 2.2vw, 26px)', maxWidth: 620, fontFamily: 'var(--font-serif)', fontSize: 'clamp(15px, 1.3vw, 18px)', lineHeight: 1.5, color: 'var(--fg-2)' }}>
-        The B2B foundation unlocks everything. Here&rsquo;s what comes next.
+      <p style={{ marginTop: 'clamp(18px, 2.2vw, 26px)', maxWidth: 640, fontFamily: 'var(--font-serif)', fontSize: 'clamp(15px, 1.3vw, 18px)', lineHeight: 1.5, color: 'var(--fg-2)' }}>
+        A separate direct-to-consumer storefront for the Mill Hill family of brands &mdash; its own store, its own audience, built on the same foundation.
       </p>
 
-      {/* three initiative blocks */}
-      <div style={{ marginTop: 'clamp(30px, 4vw, 52px)', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
-        {blocks.map((b, i) =>
-        <div key={i} style={{
-          position: 'relative', overflow: 'hidden',
-          background: 'var(--uc-paper)', border: '1px solid var(--line-2)', borderRadius: 10,
-          padding: 'clamp(20px, 2.4vw, 28px)',
-          display: 'flex', flexDirection: 'column', gap: 12, minHeight: 230
-        }}>
-            <span aria-hidden="true" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 3, background: 'var(--uc-signal)' }} />
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(26px, 2.8vw, 40px)', letterSpacing: '-0.04em', lineHeight: 0.9, color: 'var(--uc-stone-300)' }}>{b.n}</span>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--fg-1)', border: '1px solid var(--line-2)', borderRadius: 999, padding: '3px 9px', whiteSpace: 'nowrap', flexShrink: 0 }}>Phase 2</span>
-            </div>
-            <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
-              <div style={{ fontFamily: 'var(--font-hero)', fontWeight: 700, fontSize: 'clamp(19px, 1.9vw, 26px)', letterSpacing: '-0.03em', lineHeight: 1.05, color: 'var(--fg-1)', minHeight: '2.1em', display: 'flex', alignItems: 'flex-end' }}>{b.t}</div>
-              <div style={{ fontFamily: 'var(--font-serif)', fontSize: 14, lineHeight: 1.45, color: 'var(--fg-2)', textWrap: 'pretty' }}>{b.d}</div>
-            </div>
-          </div>
-        )}
+      <div style={{ marginTop: 'clamp(30px, 4vw, 52px)', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 14, alignItems: 'stretch' }}>
+        <BPInvestmentCard p={pkg} />
       </div>
 
-      {/* footer note */}
-      <p style={{ marginTop: 'clamp(20px, 2.4vw, 28px)', maxWidth: 760, fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 'clamp(14px, 1.2vw, 17px)', lineHeight: 1.5, color: 'var(--fg-3)' }}>
-        Shopify Plus is built for multi-brand commerce. When you&rsquo;re ready, we&rsquo;ll architect the right setup based on what Shopify supports and what makes the most sense for how {brandName()} operates.
-      </p>
+      {/* Next-step note (no buffer allowance here) */}
+      <div style={{
+        marginTop: 16, padding: 'clamp(22px, 2.6vw, 32px)',
+        border: '1px dashed var(--line-2)', borderRadius: 12, background: 'var(--uc-bone)'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+          <span aria-hidden="true" style={{ width: 16, height: 2, background: 'var(--uc-signal)' }} />
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--fg-3)' }}>Next step</span>
+        </div>
+        <div style={{ fontFamily: 'var(--font-hero)', fontWeight: 700, fontSize: 'clamp(20px, 2vw, 28px)', letterSpacing: '-0.03em', lineHeight: 1.05, color: 'var(--fg-1)' }}>A fixed price and proposal, when you&rsquo;re ready.</div>
+        <p style={{ margin: '10px 0 0', maxWidth: 720, fontFamily: 'var(--font-serif)', fontSize: 'clamp(14px, 1.2vw, 16px)', lineHeight: 1.5, color: 'var(--fg-2)', textWrap: 'pretty' }}>
+          This $25k figure frames the Phase 2 investment. We&rsquo;ll lock a fixed bid price and a full proposal separately &mdash; during the Wichelt B2B build or after, whenever you&rsquo;re ready to move on the consumer store.
+        </p>
+      </div>
 
     </BPSection>);
 
@@ -2128,7 +2135,7 @@ function BPInvestmentCard({ p }) {
       padding: 'clamp(24px, 3vw, 40px)',
       display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 'clamp(28px, 4vw, 56px)'
     }}>
-      {feat && <span aria-hidden="true" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 3, background: 'var(--uc-signal)' }} />}
+      {(feat || p.accentBar) && <span aria-hidden="true" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 3, background: 'var(--uc-signal)' }} />}
 
       {/* LEFT: identity + price + outcome */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(16px, 2vw, 22px)' }}>
@@ -2436,11 +2443,11 @@ function BPNav() {
   { id: 'content', n: '07', l: 'Content' },
   { id: 'techstack', n: '08', l: 'Architecture' },
   { id: 'b2b', n: '09', l: 'Unified' },
-  { id: 'phase2', n: '10', l: 'Phase 2' },
-  { id: 'agentic', n: '11', l: 'Agentic' },
-  { id: 'migration', n: '12', l: 'Migration' },
-  { id: 'delivery', n: '13', l: 'Delivery' },
-  { id: 'investment', n: '14', l: 'Investment' },
+  { id: 'agentic', n: '10', l: 'Agentic' },
+  { id: 'migration', n: '11', l: 'Migration' },
+  { id: 'delivery', n: '12', l: 'Delivery' },
+  { id: 'investment', n: '13', l: 'Investment' },
+  { id: 'phase2', n: '14', l: 'Phase 2' },
   { id: 'growth', n: '15', l: 'Growth' },
   { id: 'team', n: '16', l: 'Team' },
   { id: 'why', n: '17', l: 'Uncap' },
@@ -2530,12 +2537,11 @@ function BPNav() {
 }
 window.BPNav = BPNav;
 
-// BPPhase2 + BPAgentic + BPMigration were defined in this file but the
-// design tool's export missed their window.* assignments — without these,
-// the HTML's inline App ReferenceErrors out and the page renders blank.
+// BPPhase2 + BPAgentic were defined in this file but the design tool's
+// export missed their window.* assignments — without these, the inline
+// App ReferenceErrors out and the page renders blank.
 window.BPPhase2 = BPPhase2;
 window.BPAgentic = BPAgentic;
-window.BPMigration = BPMigration;
 
 window.BPIntro = BPIntro;
 window.BPSummary = BPSummary;
