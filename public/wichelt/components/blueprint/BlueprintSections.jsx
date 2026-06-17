@@ -1529,7 +1529,6 @@ function BPB2B() {
   const caps = [
   { t: 'Company accounts & roles', d: 'Multi-buyer companies, permissions, and spend limits per seat.' },
   { t: 'Catalog & price lists', d: 'Customer-specific catalogs, contract pricing, and volume breaks.' },
-  { t: 'Quotes & approvals', d: 'Request, review, and convert quotes to orders inside Shopify.' },
   { t: 'Payment terms', d: 'NET-30/45/60, PO numbers, and credit limits at checkout.' },
   { t: 'Quick order and reorder', d: 'Customer account pages for quick order and reorder, and vaulted credit cards.' },
   { t: 'Sales rep tools', d: 'Order on behalf of, draft orders, and assisted selling.' }];
