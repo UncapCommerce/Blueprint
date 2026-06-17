@@ -1100,7 +1100,6 @@ function BPPerformance() {
     sub: 'Turn more visits into orders.',
     points: [
     { t: 'Robust Product Page', d: 'Rich, tailored sections with comparisons, spec tables, and assets.' },
-    { t: 'Bundles & Configured Products', d: 'Curated kits and build-your-own bundles checked out as one order.' },
     { t: 'Customer Engagement', d: 'Social proof, reviews, how-to videos, and proprietary instructions.' }],
 
     gfx: <GfxPDP />
