@@ -1,0 +1,263 @@
+
+html { scroll-behavior: smooth; scroll-padding-top: 96px; }
+  html, body { margin: 0; background: var(--uc-cream); color: var(--fg-1); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+  * { box-sizing: border-box; }
+  ::selection { background: var(--uc-signal); color: var(--uc-black); }
+  a { color: inherit; }
+  .bp-scope-card:hover { border-color: var(--uc-black); transform: translateY(-4px); box-shadow: 0 18px 40px -22px rgba(10,10,10,0.4); }
+
+  .uc-btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 14px 22px; border-radius: var(--radius);
+    font-family: var(--font-sans);
+    font-weight: 600; font-size: 14px; letter-spacing: -0.005em;
+    border: 1px solid transparent; cursor: pointer;
+    transition: background .18s var(--ease-out), color .18s var(--ease-out), transform .12s var(--ease-out);
+    text-decoration: none; line-height: 1;
+  }
+  .uc-btn span { transition: transform .18s var(--ease-out); display: inline-flex; }
+  .uc-btn:hover:not(:disabled) span { transform: translateX(4px); }
+  .uc-btn:active:not(:disabled) { transform: scale(0.97); }
+  .uc-btn.b-primary { background: var(--uc-brand); color: var(--uc-paper); padding: 14px 22px; }
+  .uc-btn.b-primary:hover { background: var(--uc-brand-hover); color: var(--uc-paper); }
+  .uc-btn.b-dark { background: var(--uc-brand); color: var(--uc-paper); padding: 16px 24px; font-size: 15px; }
+  .uc-btn.b-dark:hover { background: var(--uc-brand-hover); color: var(--uc-paper); }
+  .uc-btn.b-signal { background: var(--uc-signal); color: var(--uc-black); padding: 16px 24px; font-size: 15px; }
+  .uc-btn.b-signal:hover { background: var(--uc-paper); color: var(--uc-black); }
+
+  /* Outlined button on dark backgrounds */
+  .uc-outline-light {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 14px 22px; border-radius: var(--radius);
+    border: 1px solid var(--uc-paper);
+    background: transparent; color: var(--uc-paper);
+    font-family: var(--font-sans); font-weight: 600; font-size: 14px;
+    letter-spacing: -0.005em; text-decoration: none; line-height: 1;
+    transition: background .18s var(--ease-out), color .18s var(--ease-out), border-color .18s var(--ease-out), transform .12s var(--ease-out);
+  }
+  .uc-outline-light span { transition: transform .18s var(--ease-out); display: inline-flex; }
+  .uc-outline-light:hover { background: var(--uc-signal); color: var(--uc-black); border-color: var(--uc-signal); }
+  .uc-outline-light:hover span { transform: translateX(4px); }
+  .uc-outline-light:active { transform: scale(0.97); }
+  .uc-btn.b-on-dark { background: var(--uc-paper); color: var(--uc-black); }
+  .uc-btn.b-on-dark:hover { background: var(--uc-signal); color: var(--uc-black); }
+
+  .uc-link {
+    color: var(--fg-1); text-decoration: none; font-weight: 600; font-size: 14px;
+    display: inline-flex; align-items: center; gap: 8px;
+    border-bottom: 1px solid transparent;
+    transition: border-color .15s var(--ease-out); line-height: 1.2;
+  }
+  .uc-link:hover { border-bottom-color: currentColor; }
+  .uc-link span { transition: transform .18s var(--ease-out); }
+  .uc-link:hover span { transform: translateX(3px); }
+  .uc-link.uc-link-light { color: var(--uc-paper); }
+  .uc-link.uc-link-light:hover { border-bottom-color: var(--uc-paper); }
+
+  .uc-pulse {
+    width: 8px; height: 8px; border-radius: 999px;
+    background: var(--uc-signal);
+    box-shadow: 0 0 0 0 rgba(232,255,82,0.7);
+    animation: uc-pulse-kf 2.4s ease-out infinite;
+  }
+  @keyframes uc-pulse-kf {
+    0%   { box-shadow: 0 0 0 0 rgba(232,255,82,0.6); }
+    70%  { box-shadow: 0 0 0 10px rgba(232,255,82,0); }
+    100% { box-shadow: 0 0 0 0 rgba(232,255,82,0); }
+  }
+
+  .uc-rise { display: block; opacity: 0; transform: translateY(40px); transition: opacity 1s var(--ease-out), transform 1s var(--ease-out); }
+  .uc-rise.in { opacity: 1; transform: none; }
+
+  /* Header mega menu */
+  .uc-menu-item:hover { background: rgba(10,10,10,0.04); }
+  .uc-menu-item:hover .uc-menu-arrow { transform: translateX(3px); color: var(--fg-1); }
+  .uc-menu-item:hover .uc-menu-icon { transform: translateY(-1px); }
+
+  /* Footer link underline */
+  .uc-footer-link { position: relative; transition: color .15s var(--ease-out); }
+  .uc-footer-link:hover { color: var(--uc-paper); }
+  .uc-footer-link::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: -3px;
+    height: 1px; background: var(--uc-signal);
+    transform: scaleX(0); transform-origin: left;
+    transition: transform .2s var(--ease-out);
+  }
+  .uc-footer-link:hover::after { transform: scaleX(1); }
+
+  /* Mega CTA (footer) */
+  .uc-cta-mega {
+    display: inline-flex; align-items: center; gap: 28px;
+    padding: 22px 28px; background: var(--uc-signal); color: var(--uc-black);
+    border-radius: 5px; text-decoration: none;
+    border: 1px solid var(--uc-signal);
+    transition: background .2s var(--ease-out), color .2s var(--ease-out), transform .12s var(--ease-out);
+  }
+  .uc-cta-mega:hover { background: var(--uc-paper); border-color: var(--uc-paper); }
+  .uc-cta-mega-arrow {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 48px; height: 48px; border-radius: 999px;
+    border: 1.5px solid var(--uc-black); color: var(--uc-black);
+    transition: transform .2s var(--ease-out), background .2s var(--ease-out), color .2s var(--ease-out);
+  }
+  .uc-cta-mega:hover .uc-cta-mega-arrow { background: var(--uc-black); color: var(--uc-signal); transform: translateX(4px); }
+
+  @keyframes uc-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0ms !important; transition-duration: 0ms !important; }
+    .uc-rise { opacity: 1 !important; transform: none !important; }
+  }
+  /* ===== MOBILE RESPONSIVENESS =================================================
+     The proposal sections are 2500 lines of inline-styled React with hardcoded
+     multi-column grids and pixel widths. Rather than refactor every component,
+     we target the inline-style patterns at narrow viewports via attribute
+     selectors and force them into single-column / fluid behaviour.
+
+     Touched concerns:
+     - BPNav (fixed left rail at 220px wide) — hidden on mobile, swap for a
+       compact bottom-anchored pill that just lists "Section X of N" so the
+       reader knows where they are without consuming horizontal space.
+     - Multi-column section grids (1fr 1fr, repeat(2/3/4, 1fr), 1.x fr 1fr)
+       collapse to single column.
+     - Sticky $7K Investment card unsticks so it sits below the bullet list.
+     - Wide Gantt + tables get horizontal scroll containers so they don't push
+       page width past the viewport.
+     - Hero / display headlines shrink one step.
+     - Body padding tightens so the cream margins don't eat half the screen.
+     ============================================================================ */
+
+  /* Tablet and below */
+  @media (max-width: 960px) {
+    /* Section padding tightens — original was clamp(32-80px) horizontal */
+    section[data-bp-section] {
+      padding-left: 20px !important;
+      padding-right: 20px !important;
+      padding-top: clamp(48px, 9vw, 80px) !important;
+      padding-bottom: clamp(48px, 9vw, 80px) !important;
+    }
+    /* Every section's inner column wrapper was maxWidth:1080 — make it fluid */
+    section[data-bp-section] > div[style*="max-width: 1080"],
+    section[data-bp-section] > div[style*="maxWidth: 1080"] {
+      max-width: 100% !important;
+    }
+
+    /* Floating fixed left nav steals all horizontal space — drop it on
+       tablet+phone. The page is a long scroll document; users just scroll. */
+    nav[style*="position: fixed"] {
+      display: none !important;
+    }
+
+    /* Collapse common multi-column inline grids to single column */
+    [style*="grid-template-columns: 1fr 1fr"],
+    [style*="grid-template-columns:1fr 1fr"],
+    [style*="grid-template-columns: 1.1fr 1fr"],
+    [style*="grid-template-columns: 1.2fr 1fr"],
+    [style*="grid-template-columns: 1.3fr 1fr"],
+    [style*="grid-template-columns: 1.4fr 1fr"],
+    [style*="grid-template-columns: 1.5fr 1fr"],
+    [style*="grid-template-columns: 1.6fr 1fr"],
+    [style*="grid-template-columns: 1.8fr 1fr"],
+    [style*="grid-template-columns: 1fr 1.1fr"],
+    [style*="grid-template-columns: 1fr 1.2fr"],
+    [style*="grid-template-columns: 1fr 1.3fr"],
+    [style*="grid-template-columns: 1fr 1.4fr"],
+    [style*="grid-template-columns: 2fr 1fr"],
+    [style*="grid-template-columns: 1fr 2fr"],
+    [style*="grid-template-columns: repeat(2, 1fr)"],
+    [style*="grid-template-columns:repeat(2, 1fr)"] {
+      grid-template-columns: 1fr !important;
+      gap: 24px !important;
+    }
+    /* 3- and 4-col grids → 2 cols on tablet */
+    [style*="grid-template-columns: repeat(3, 1fr)"],
+    [style*="grid-template-columns:repeat(3, 1fr)"],
+    [style*="grid-template-columns: repeat(4, 1fr)"],
+    [style*="grid-template-columns:repeat(4, 1fr)"] {
+      grid-template-columns: repeat(2, 1fr) !important;
+      gap: 16px !important;
+    }
+
+    /* Sticky elements (investment card, etc.) unstick */
+    [style*="position: sticky"] { position: static !important; }
+  }
+
+  /* Phone */
+  @media (max-width: 640px) {
+    /* Even tighter side padding */
+    section[data-bp-section] {
+      padding-left: 16px !important;
+      padding-right: 16px !important;
+    }
+
+    /* All grids stack on phone */
+    [style*="grid-template-columns: repeat(3, 1fr)"],
+    [style*="grid-template-columns:repeat(3, 1fr)"],
+    [style*="grid-template-columns: repeat(4, 1fr)"],
+    [style*="grid-template-columns:repeat(4, 1fr)"],
+    [style*="grid-template-columns: repeat(5, 1fr)"],
+    [style*="grid-template-columns:repeat(5, 1fr)"],
+    [style*="grid-template-columns: repeat(6, 1fr)"],
+    [style*="grid-template-columns:repeat(6, 1fr)"] {
+      grid-template-columns: 1fr !important;
+      gap: 14px !important;
+    }
+
+    /* Headlines shrink. The BPHeadline default font-size is
+       clamp(34px, 4.4vw, 68px) — on mobile we want closer to the lower
+       bound and a touch tighter to fit. */
+    h1, h2, h3 { letter-spacing: -0.02em !important; }
+    h1[style*="clamp("], h2[style*="clamp("] {
+      font-size: clamp(28px, 8vw, 40px) !important;
+      line-height: 1.04 !important;
+    }
+    /* Hero / display-scale headlines shrink one more step */
+    [style*="font-size: clamp(48px"],
+    [style*="font-size:clamp(48px"],
+    [style*="font-size: clamp(56px"],
+    [style*="font-size:clamp(56px"],
+    [style*="font-size: clamp(64px"],
+    [style*="font-size:clamp(64px"] {
+      font-size: clamp(32px, 9vw, 48px) !important;
+      line-height: 1.02 !important;
+    }
+
+    /* Buttons + CTAs get bigger tap targets */
+    .uc-btn, .uc-outline-light, .uc-cta-mega { min-height: 44px; font-size: 14px; }
+
+    /* Long unbroken strings (URLs, code-y labels) wrap */
+    section[data-bp-section] p,
+    section[data-bp-section] span,
+    section[data-bp-section] li { overflow-wrap: anywhere; }
+
+    /* Wide rails (gantt week columns, fitment tables) become horizontally
+       scrollable rather than blowing the page width. The Gantt uses inline
+       widths > 600px in a single row of cells. */
+    [data-bp-gantt],
+    [style*="overflow-x"],
+    section[data-bp-section] table { overflow-x: auto !important; -webkit-overflow-scrolling: touch; }
+
+    /* Storefront device mockups (GfxChrome/PDP/Cart/Portal) often render at
+       a hardcoded width that exceeds the viewport. Force them fluid. */
+    section[data-bp-section] [style*="width: 380px"],
+    section[data-bp-section] [style*="width:380px"],
+    section[data-bp-section] [style*="width: 420px"],
+    section[data-bp-section] [style*="width:420px"],
+    section[data-bp-section] [style*="width: 480px"],
+    section[data-bp-section] [style*="width:480px"],
+    section[data-bp-section] [style*="width: 520px"],
+    section[data-bp-section] [style*="width:520px"],
+    section[data-bp-section] [style*="width: 560px"],
+    section[data-bp-section] [style*="width:560px"],
+    section[data-bp-section] [style*="width: 640px"],
+    section[data-bp-section] [style*="width:640px"] {
+      width: 100% !important;
+      max-width: 100% !important;
+    }
+
+    /* Generic images shouldn't overflow */
+    section[data-bp-section] img { max-width: 100% !important; height: auto !important; }
+
+    /* Force inputs to ≥17px to stop iOS auto-zoom on focus */
+    input, textarea, select { font-size: 17px !important; }
+  }

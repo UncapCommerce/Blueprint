@@ -29,6 +29,7 @@ const files = [
   'public/index.html',
   'public/Mitutoyo/index.html',
   'public/wichelt/index.html',
+  'public/ElevateOralCare/index.html',
   'public/demo/blueprint/index.html',
 ];
 
