@@ -2188,12 +2188,15 @@ function BPWhy() {
 
 }
 
-// ── Approve & kickoff CTA. Clicking still fires the mailto: link so the
-// stakeholder's email client opens; the button itself flips to an
-// "Approved" + checkmark confirmation state that persists for the tab
-// session (sessionStorage), so a reload keeps the confirmation visible. ──
+// ── Approve & kickoff CTA. Clicking flips the button to a disabled
+// "Approved" pill with a lime check-circle confirmation state that
+// persists for the tab session (sessionStorage), so a reload keeps the
+// confirmation visible. No email or external action is triggered — pure
+// UI affordance. The storage-key version (v2) was bumped so any prior
+// test-click in this tab is invalidated and the button reads its initial
+// state again. ──
 function BPApproveButton() {
-  const APPROVED_KEY = 'elevateoralcare_approved';
+  const APPROVED_KEY = 'elevateoralcare_approved_v2';
   const [approved, setApproved] = React.useState(
     () => typeof window !== 'undefined' && window.sessionStorage.getItem(APPROVED_KEY) === '1'
   );
@@ -2234,14 +2237,14 @@ function BPApproveButton() {
     );
   }
   return (
-    <a
-      href="mailto:hey@uncap.com?subject=Approve%20%26%20Kickoff%20%E2%80%94%20Elevate%20Oral%20Care%20Blueprint"
-      className="uc-btn b-signal"
-      style={{ padding: '16px 26px', fontSize: 15 }}
+    <button
+      type="button"
       onClick={onClick}
+      className="uc-btn b-signal"
+      style={{ padding: '16px 26px', fontSize: 15, border: 'none', cursor: 'pointer' }}
     >
       Approve &amp; kickoff <span>→</span>
-    </a>
+    </button>
   );
 }
 
