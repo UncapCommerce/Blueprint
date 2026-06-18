@@ -1,278 +1,36 @@
 <!doctype html>
-<!-- pipeline test: deployed via GitHub Actions on 2026-05-07 -->
 <html lang="en">
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>The Blueprint · Uncap</title>
-<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png"/>
-<link rel="apple-touch-icon" href="/favicon-32.png"/>
-
-<!-- Open early connections to the third-party origins we'll hit during the
-     critical path: Google Fonts CSS+font origins. (React/Babel are now
-     vendored under /vendor/, so unpkg.com is no longer in the path.) -->
-<link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
-
-<!-- Critical font preload: the body face is referenced by every paragraph
-     above the fold, so kick off the fetch before CSS parse discovers it. -->
-<link rel="preload" as="font" type="font/woff2" href="/fonts/Inter_18pt-Regular.woff2" crossorigin/>
-<link rel="preload" as="font" type="font/woff2" href="/fonts/Inter_24pt-ExtraBold.woff2" crossorigin/>
-<link rel="preload" as="font" type="font/woff2" href="/fonts/Inter_28pt-ExtraBold.woff2" crossorigin/>
-
-<link rel="stylesheet" href="colors_and_type.css"/>
-<!-- Google Fonts moved out of the CSS @import so its discovery isn't
-     gated on stylesheet parse — runs in parallel with our local CSS. -->
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=JetBrains+Mono:wght@400;500;600&display=swap"/>
-
-<!-- Google tag (gtag.js): deferred so it doesn't compete with the React
-     CDN scripts during the critical path. dataLayer is a queue, so calls
-     made before gtag.js loads are buffered and replayed on init. -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-3P6Y3163D9"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'G-3P6Y3163D9');
-</script>
+<title>Uncap</title>
+<link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png"/>
+<link rel="apple-touch-icon" href="favicon-32.png"/>
 <style>
-  html,body{margin:0;background:var(--bg-1);color:var(--fg-1);font-family:var(--font-sans);-webkit-font-smoothing:antialiased}
-  /* Defensive clip against any stray rightward overflow on mobile (rotated
-     marker SVGs, decorative bg-vectors, etc) without breaking sticky-header. */
-  html{overflow-x:clip}
-  body{overflow-x:clip}
-  *{box-sizing:border-box}
-  ::selection{background:var(--uc-signal);color:var(--uc-black)}
-
-  /* Buttons */
-  .uc-btn{display:inline-flex;align-items:center;gap:8px;padding:14px 22px;border-radius:5px;font-weight:600;font-size:15px;font-family:var(--font-sans);border:1px solid transparent;cursor:pointer;transition:all .15s var(--ease-out);text-decoration:none;line-height:1;white-space:nowrap}
-  .uc-btn:disabled{opacity:.7;cursor:default}
-  .uc-btn.b-primary{background:var(--uc-brand);color:#fff}
-  .uc-btn.b-primary:hover{background:var(--uc-brand-hover)}
-  .uc-btn.b-outline{background:transparent;border-color:var(--uc-brand);color:var(--uc-brand)}
-  .uc-btn.b-outline:hover{background:var(--uc-brand);color:#fff}
-  .uc-btn.b-text{background:transparent;color:var(--uc-black);padding:14px 8px}
-  .uc-btn.b-text:hover{text-decoration:underline}
-  .uc-btn.b-signal{background:var(--uc-signal);color:var(--uc-black)}
-  .uc-btn.b-signal:hover{background:#d8ee3c}
-  .uc-btn span{transition:transform .15s var(--ease-out);display:inline-block}
-  .uc-btn:hover span{transform:translateX(3px)}
-  a{color:inherit}
-
-  /* Reveal-on-scroll: base + variants. JS toggles `.in` when the element
-     crosses the viewport. Each variant decides its own initial transform so
-     different sections can pick a motion that fits their content. */
-  [data-reveal]{opacity:0;transition:opacity 720ms var(--ease-out),transform 720ms var(--ease-out),filter 720ms var(--ease-out);will-change:opacity,transform,filter}
-  [data-reveal].in{opacity:1;transform:none;filter:none}
-  [data-reveal="fade-up"]    {transform:translateY(22px)}
-  [data-reveal="fade-down"]  {transform:translateY(-18px)}
-  [data-reveal="slide-left"] {transform:translateX(-38px)}
-  [data-reveal="slide-right"]{transform:translateX(38px)}
-  [data-reveal="scale-in"]   {transform:scale(.94)}
-  [data-reveal="scale-out"]  {transform:scale(1.06)}
-  [data-reveal="blur-in"]    {filter:blur(10px);transform:translateY(10px)}
-  [data-reveal="tilt-in"]    {transform:rotate(-1.4deg) translateY(14px)}
-
-  /* Container-level stagger: each direct child eases in with a small delay. */
-  [data-reveal-stagger] > *{opacity:0;transform:translateY(16px);transition:opacity 620ms var(--ease-out),transform 620ms var(--ease-out)}
-  [data-reveal-stagger].in > *{opacity:1;transform:none}
-  [data-reveal-stagger].in > *:nth-child(1){transition-delay: 60ms}
-  [data-reveal-stagger].in > *:nth-child(2){transition-delay:160ms}
-  [data-reveal-stagger].in > *:nth-child(3){transition-delay:260ms}
-  [data-reveal-stagger].in > *:nth-child(4){transition-delay:360ms}
-  [data-reveal-stagger].in > *:nth-child(5){transition-delay:460ms}
-  [data-reveal-stagger].in > *:nth-child(6){transition-delay:560ms}
-  [data-reveal-stagger].in > *:nth-child(7){transition-delay:660ms}
-  [data-reveal-stagger].in > *:nth-child(8){transition-delay:760ms}
-
-  @media (prefers-reduced-motion: reduce){
-    [data-reveal],[data-reveal-stagger] > *{opacity:1 !important;transform:none !important;filter:none !important;transition:none !important}
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: #F2EFE7; /* Uncap cream */
+    -webkit-font-smoothing: antialiased;
   }
-
-  /* ============== MOBILE / TABLET RESPONSIVE ============== */
-
-  /* Tablet: ≤960px: collapse 2-col grids, shrink padding */
-  @media (max-width: 960px) {
-    section[id], section { padding-left: 24px !important; padding-right: 24px !important; }
-    /* Collapse all 2-column and 3-column grids inside sections to single column */
-    section [style*="grid-template-columns:1fr 1.1fr"],,
-  section [style*="grid-template-columns: 1fr 1.1fr"],
-    section [style*="grid-template-columns:1fr 1.2fr"],,
-  section [style*="grid-template-columns: 1fr 1.2fr"],
-    section [style*="grid-template-columns:1.1fr 1fr"],,
-  section [style*="grid-template-columns: 1.1fr 1fr"],
-    section [style*="grid-template-columns:1.2fr 1fr"],,
-  section [style*="grid-template-columns: 1.2fr 1fr"],
-    section [style*="grid-template-columns:1.6fr 1fr"],,
-  section [style*="grid-template-columns: 1.6fr 1fr"],
-    section [style*="grid-template-columns:1fr 1.6fr"],,
-  section [style*="grid-template-columns: 1fr 1.6fr"],
-    section [style*="grid-template-columns:1fr 1fr"],,
-  section [style*="grid-template-columns: 1fr 1fr"],
-    section [style*="grid-template-columns:repeat(3, 1fr)"],,
-  section [style*="grid-template-columns: repeat(3, 1fr)"],
-    section [style*="grid-template-columns:2fr 1fr 1fr 1fr"],,
-  section [style*="grid-template-columns: 2fr 1fr 1fr 1fr"],
-    footer [style*="grid-template-columns:2fr 1fr 1fr 1fr"] {,
-  footer [style*="grid-template-columns: 2fr 1fr 1fr 1fr"] {
-      grid-template-columns: 1fr !important;
-      gap: 32px !important;
-    }
-    /* 4-col card grids → 2 columns */
-    section [style*="grid-template-columns:repeat(4, 1fr)"] {,
-  section [style*="grid-template-columns: repeat(4, 1fr)"] {
-      grid-template-columns: repeat(2, 1fr) !important;
-    }
-    /* Mosaic columns → 2 cols */
-    section [style*="column-count:3"] { column-count: 2 !important; },
-  section [style*="column-count: 3"] { column-count: 2 !important; }
-
-    /* Header: hide nav links, keep only the primary CTA */
-    header nav { display: none !important; }
-    header a[href="#book"]:not(.uc-btn) { display: none !important; }
-
-    /* Smaller section padding top/bottom */
-    section[id="problem"], section[id="offer"], section[id="proof"],
-    section[id="math"], section[id="process"], section[id="faq"] {
-      padding-top: 80px !important; padding-bottom: 80px !important;
-    }
+  body {
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
-
-  /* Mobile: ≤640px: single column everything, smaller type */
-  @media (max-width: 640px) {
-    section, footer { padding-left: 20px !important; padding-right: 20px !important; }
-    section [style*="grid-template-columns:repeat(2, 1fr)"],,
-  section [style*="grid-template-columns: repeat(2, 1fr)"],
-    section [style*="grid-template-columns:repeat(4, 1fr)"] {,
-  section [style*="grid-template-columns: repeat(4, 1fr)"] {
-      grid-template-columns: 1fr !important;
-    }
-    section [style*="column-count:2"] { column-count: 1 !important; },
-  section [style*="column-count: 2"] { column-count: 1 !important; }
-    section [style*="column-count:3"] { column-count: 1 !important; },
-  section [style*="column-count: 3"] { column-count: 1 !important; }
-
-    /* Trust strip: stack label above marquee */
-    section [style*="grid-template-columns:auto 1fr"] {,
-  section [style*="grid-template-columns: auto 1fr"] {
-      grid-template-columns: 1fr !important;
-      gap: 16px !important;
-    }
-
-    /* Buttons: bigger tap target, allow wrap, never block */
-    .uc-btn { font-size: 14px !important; padding: 14px 20px !important; min-height: 44px; }
-
-    /* Hide rotation on case files (Problem section) */
-    .case-file { transform: none !important; }
-
-    /* Hero stats / inline rows: wrap */
-    [style*="display:flex"][style*="gap:24px"],,
-  [style*="display: flex"][style*="gap: 24px"],
-    [style*="display:flex"][style*="gap:32px"] { flex-wrap: wrap !important; },
-  [style*="display: flex"][style*="gap: 32px"] { flex-wrap: wrap !important; }
-
-    /* ===== Performance: skip the 600KB+ decorative bg vectors on mobile.
-       They're hidden visually anyway in narrow viewports: and modern
-       browsers will *not* fetch images on display:none parents in many
-       cases, so this saves ~2MB on first paint. ===== */
-    section img[src*="bg-vector-"] { display: none !important; }
-
-    /* ===== Hero: tighter on mobile so the right column (artifact card)
-       lines up below the headline without wasted white space. ===== */
-    section [style*="padding:72px 32px 96px"] {,
-  section [style*="padding: 72px 32px 96px"] {
-      padding: 36px 20px 56px !important;
-    }
-    section [style*="grid-template-columns:1.35fr 1fr"] {,
-  section [style*="grid-template-columns: 1.35fr 1fr"] {
-      grid-template-columns: 1fr !important;
-      gap: 28px !important;
-    }
-    /* Hero CTA row: stack & full-width primary on mobile */
-    section .uc-btn.b-primary { width: 100%; justify-content: center; }
-    section .uc-btn.b-text { padding-left: 0 !important; }
-
-    /* Artifact card padding tighter so it doesn't overflow */
-    section [style*="border-radius:5px"][style*="padding:28px"][style*="border:1px solid"] {,
-  section [style*="border-radius: 5px"][style*="padding: 28px"][style*="border: 1px solid"] {
-      padding: 18px !important;
-    }
-
-    /* H2s smaller on mobile */
-    section h2 { font-size: clamp(28px, 7vw, 40px) !important; line-height: 1.05 !important; letter-spacing: -.02em !important; }
-
-    /* FAQ accordion items have larger tap target */
-    section [style*="border-bottom:1px solid var(--uc-black)"] button { padding: 18px 0 !important; },
-  section [style*="border-bottom: 1px solid var(--uc-black)"] button { padding: 18px 0 !important; }
-
-    /* Footer: single column, cleaner spacing */
-    footer { padding: 36px 20px 24px !important; }
+  img {
+    width: 240px;
+    max-width: 60vw;
+    height: auto;
+    display: block;
   }
-
+  @media (prefers-color-scheme: dark) {
+    /* Optional: keep cream regardless of OS theme — Uncap brand is monochrome. */
+  }
 </style>
 </head>
 <body>
-<div id="root"></div>
-
-<!-- The mobile-only sticky bottom CTA bar is rendered by App below
-     (inside React's tree) so it only appears after the app mounts ,
-     prevents a flash of an unstyled link during JSX compile. -->
-
-<!-- React + Babel are vendored under /vendor/ (pinned to react@18.3.1 and
-     @babel/standalone@7.29.0). Production-minified React drops ~900 KB of
-     dev warnings/parsing vs .development.js. Same-origin removes the
-     third-party RTT and lets our edge cache headers apply. -->
-<script src="/vendor/react.production.min.js"></script>
-<script src="/vendor/react-dom.production.min.js"></script>
-<script src="/vendor/babel.min.js"></script>
-
-<!-- ?v=DEPLOY_HASH is substituted with the short commit SHA by
-     scripts/stamp-deploy.js (invoked by npm run deploy) so every deploy
-     invalidates Cloudflare's edge cache + browser cache of these files. -->
-<script type="text/babel" src="components/_hooks.jsx?v=DEPLOY_HASH"></script>
-<script type="text/babel" src="components/Header.jsx?v=DEPLOY_HASH"></script>
-<script type="text/babel" src="components/Hero.jsx?v=DEPLOY_HASH"></script>
-<script type="text/babel" src="components/TrustStrip.jsx?v=DEPLOY_HASH"></script>
-<script type="text/babel" src="components/Problem.jsx?v=DEPLOY_HASH"></script>
-<script type="text/babel" src="components/Shift.jsx?v=DEPLOY_HASH"></script>
-<script type="text/babel" src="components/Offer.jsx?v=DEPLOY_HASH"></script>
-<script type="text/babel" src="components/MathSection.jsx?v=DEPLOY_HASH"></script>
-<script type="text/babel" src="components/SocialProof.jsx?v=DEPLOY_HASH"></script>
-<script type="text/babel" src="components/FitProcess.jsx?v=DEPLOY_HASH"></script>
-<script type="text/babel" src="components/Closing.jsx?v=DEPLOY_HASH"></script>
-
-<script type="text/babel">
-function App(){
-  React.useEffect(()=>{
-    const els = document.querySelectorAll('[data-reveal], [data-reveal-stagger]');
-    const io = new IntersectionObserver((entries)=>{
-      entries.forEach(e=>{ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target);} });
-    },{threshold:0.12, rootMargin: '0px 0px -6% 0px'});
-    els.forEach(el=>io.observe(el));
-    return ()=>io.disconnect();
-  },[]);
-  return (
-    <React.Fragment>
-      <div data-screen-label="Blueprint Landing">
-        <Header/>
-        <Hero/>
-        <TrustStrip/>
-        <Problem/>
-        <Shift/>
-        <Offer/>
-        <MathSection/>
-        <SocialProof/>
-        <FitProcess/>
-        <Guarantee/>
-        <Founder/>
-        <FAQ/>
-        <FinalCTA/>
-        <Footer/>
-      </div>
-    </React.Fragment>
-  );
-}
-ReactDOM.createRoot(document.getElementById('root')).render(<App/>);
-</script>
+  <img src="assets/uncap-logo-black.svg" alt="Uncap"/>
 </body>
 </html>
