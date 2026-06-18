@@ -2188,6 +2188,63 @@ function BPWhy() {
 
 }
 
+// ── Approve & kickoff CTA. Clicking still fires the mailto: link so the
+// stakeholder's email client opens; the button itself flips to an
+// "Approved" + checkmark confirmation state that persists for the tab
+// session (sessionStorage), so a reload keeps the confirmation visible. ──
+function BPApproveButton() {
+  const APPROVED_KEY = 'elevateoralcare_approved';
+  const [approved, setApproved] = React.useState(
+    () => typeof window !== 'undefined' && window.sessionStorage.getItem(APPROVED_KEY) === '1'
+  );
+  const onClick = () => {
+    try { window.sessionStorage.setItem(APPROVED_KEY, '1'); } catch (_) {}
+    setApproved(true);
+  };
+  if (approved) {
+    return (
+      <button
+        type="button"
+        disabled
+        aria-label="Approved"
+        style={{
+          display: 'inline-flex', alignItems: 'center', gap: 10,
+          padding: '16px 26px', fontSize: 15,
+          background: 'var(--uc-paper)', color: 'var(--uc-black)',
+          border: '1px solid var(--uc-paper)', borderRadius: 'var(--radius)',
+          fontFamily: 'var(--font-sans)', fontWeight: 600, letterSpacing: '-0.005em',
+          lineHeight: 1, cursor: 'default'
+        }}
+      >
+        <span
+          aria-hidden="true"
+          style={{
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            width: 22, height: 22, borderRadius: 999,
+            background: 'var(--uc-signal)', color: 'var(--uc-black)'
+          }}
+        >
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none" aria-hidden="true">
+            <path d="M2.5 6.2 L4.8 8.5 L9.5 3.5"
+              stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+        </span>
+        Approved
+      </button>
+    );
+  }
+  return (
+    <a
+      href="mailto:hey@uncap.com?subject=Approve%20%26%20Kickoff%20%E2%80%94%20Elevate%20Oral%20Care%20Blueprint"
+      className="uc-btn b-signal"
+      style={{ padding: '16px 26px', fontSize: 15 }}
+      onClick={onClick}
+    >
+      Approve &amp; kickoff <span>→</span>
+    </a>
+  );
+}
+
 // ── 10 NEXT STEPS ───────────────────────────────────────────────────────────
 function BPNext() {
   const steps = [
@@ -2228,9 +2285,7 @@ function BPNext() {
           </div>
           <div style={{ marginTop: 14, fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--uc-stone-300)' }}>hey@uncap.com · (312) 469-0944 · Chicago, IL</div>
         </div>
-        <a href="mailto:hey@uncap.com" className="uc-btn b-signal" style={{ padding: '16px 26px', fontSize: 15 }}>
-          Approve &amp; kickoff <span>→</span>
-        </a>
+        <BPApproveButton/>
       </div>
     </BPSection>);
 
