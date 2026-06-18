@@ -2196,7 +2196,7 @@ function BPWhy() {
 // test-click in this tab is invalidated and the button reads its initial
 // state again. ──
 function BPApproveButton() {
-  const APPROVED_KEY = 'elevateoralcare_approved_v2';
+  const APPROVED_KEY = 'elevateoralcare_approved_v3';
   const [approved, setApproved] = React.useState(
     () => typeof window !== 'undefined' && window.sessionStorage.getItem(APPROVED_KEY) === '1'
   );
