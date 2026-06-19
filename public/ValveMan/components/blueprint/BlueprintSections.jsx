@@ -1388,6 +1388,7 @@ function BPTechStack() {
     { name: 'Attentive',        fn: 'SMS marketing',                    pri: 'launch', cost: '—' },
     { name: 'Judge.me',         fn: 'Reviews + ratings',                pri: 'launch', cost: '$15/mo' },
     { name: 'ShipStation',      fn: 'Order fulfillment',                pri: 'launch', cost: '—' },
+    { name: 'QuickBooks Online', fn: 'Accounting + financial sync',     pri: 'launch', cost: '—' },
     { name: 'Advanced Shipping Rates', fn: 'Rate rules at checkout',    pri: 'launch', cost: '—' },
     { name: 'InXpress Shipping Rates', fn: 'Carrier-negotiated rates',  pri: 'launch', cost: '—' },
     { name: 'Simprosys',        fn: 'Google Shopping feed',             pri: 'launch', cost: '$20/mo' },
