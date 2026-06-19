@@ -3,7 +3,7 @@
 //
 //   POST /api/auth/request-code  →  { email, blueprintId }
 //     Generates a 6-digit code, stashes it in KV with a 10-minute TTL,
-//     emails it to the requested address via Resend. If the email field
+//     emails it via Cloudflare's send_email binding. If the email field
 //     contains the admin passcode, returns an admin session token
 //     immediately (no code step, no notification).
 //
@@ -52,7 +52,6 @@ const escapeHtml = (s) =>
   ));
 
 function genCode() {
-  // 6 digits, zero-padded, from crypto entropy.
   const buf = new Uint32Array(1);
   crypto.getRandomValues(buf);
   return String(buf[0] % 1_000_000).padStart(6, '0');
@@ -126,7 +125,6 @@ async function handleVerify(request, env, ctx) {
   if (!stored || stored !== code) {
     return json(401, { ok: false, error: 'Wrong code — try again or request a new one.' });
   }
-  // One-shot — burn the code so it can't be reused.
   await env.BLUEPRINT_AUTH.delete(key);
 
   const token = genToken();
@@ -137,7 +135,7 @@ async function handleVerify(request, env, ctx) {
   );
 
   // Fire-and-forget admin notification — don't block the response on the
-  // email send so the client unlocks even if Resend is slow.
+  // email send so the client unlocks even if the SMTP path is slow.
   const notify = notifyAdmin(env, {
     subject: `[Blueprint] ${blueprintId} viewed by ${email}`,
     text:    `${email} just unlocked the Blueprint at /${blueprintId}/.`,
@@ -180,17 +178,15 @@ async function handleNotify(request, env) {
 }
 
 // ----------------------------------------------------------------------------
-// Email senders
+// Email senders — both routes go through Cloudflare's send_email binding.
+//
+// Important constraint: send_email is restricted to addresses that are
+// already registered + verified as destination addresses in Cloudflare
+// Email Routing on the worker's zone. Sends to unverified addresses
+// fail with an error from Cloudflare's side.
 // ----------------------------------------------------------------------------
 
-// 6-digit code to a client recipient. Resend is required here because
-// Cloudflare's send_email binding is restricted to addresses that are
-// already verified in Email Routing on the worker's zone — it can't reach
-// arbitrary client inboxes.
 async function sendCodeEmail(env, { to, code, blueprintId }) {
-  if (!env.RESEND_API_KEY) {
-    throw new Error('RESEND_API_KEY is not set on the Worker');
-  }
   const subject = `Your Uncap Blueprint passcode`;
   const text =
     `Your 6-digit passcode to view the Uncap Blueprint:\n\n` +
@@ -203,61 +199,19 @@ async function sendCodeEmail(env, { to, code, blueprintId }) {
       <p style="font-family:monospace;font-size:34px;letter-spacing:8px;font-weight:700;margin:0 0 24px;background:#FFFFFF;border-radius:8px;padding:20px 24px;text-align:center;color:#0A0A0A;">${escapeHtml(code)}</p>
       <p style="font-size:13px;color:#707070;margin:0;">Valid for 10 minutes. If you didn't request this, you can ignore the email.</p>
     </div>`;
-
-  const resp = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      'authorization': `Bearer ${env.RESEND_API_KEY}`,
-      'content-type':  'application/json',
-    },
-    body: JSON.stringify({
-      from: env.EMAIL_FROM || 'Uncap Blueprint <noreply@uncap.com>',
-      to:   [to],
-      subject,
-      text,
-      html,
-    }),
-  });
-  if (!resp.ok) {
-    const detail = await resp.text().catch(() => '');
-    throw new Error(`Resend ${resp.status}: ${detail.slice(0, 200)}`);
-  }
+  await sendViaCloudflareEmail(env, { to, subject, text, html });
 }
 
-// Admin notification. Prefer Resend (same domain, no destination-verification
-// friction); fall back to Cloudflare's send_email when Resend is absent.
 async function notifyAdmin(env, { subject, text }) {
-  const to = env.NOTIFY_EMAIL || 'denis@uncap.com';
+  const to   = env.NOTIFY_EMAIL || 'denis@uncap.com';
   const html = `<p>${escapeHtml(text).replace(/\n/g, '<br>')}</p>`;
-
-  if (env.RESEND_API_KEY) {
-    const resp = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        'authorization': `Bearer ${env.RESEND_API_KEY}`,
-        'content-type':  'application/json',
-      },
-      body: JSON.stringify({
-        from: env.EMAIL_FROM || 'Uncap Blueprint <noreply@uncap.com>',
-        to:   [to],
-        subject,
-        text,
-        html,
-      }),
-    });
-    if (!resp.ok) {
-      const detail = await resp.text().catch(() => '');
-      throw new Error(`Resend ${resp.status}: ${detail.slice(0, 200)}`);
-    }
-    return;
-  }
-  if (env.NOTIFY_MAIL) {
-    return sendViaCloudflareEmail(env, { to, subject, text, html });
-  }
-  throw new Error('No email sender configured (set RESEND_API_KEY)');
+  await sendViaCloudflareEmail(env, { to, subject, text, html });
 }
 
 async function sendViaCloudflareEmail(env, { to, subject, text, html }) {
+  if (!env.NOTIFY_MAIL) {
+    throw new Error('NOTIFY_MAIL binding is not configured');
+  }
   const from = parseAddress(env.EMAIL_FROM || 'Uncap Blueprint <noreply@uncap.com>');
   const boundary = '----=_Part_' + crypto.randomUUID();
   const headers = [

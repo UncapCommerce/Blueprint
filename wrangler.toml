@@ -15,16 +15,20 @@ binding = "ASSETS"
 not_found_handling = "single-page-application"
 
 # Stores 6-digit verification codes (10-min TTL) and session tokens
-# (24-hour TTL) for the blueprint auth flow. Reusing the namespace ID
-# that used to back the /build reservation flow — the binding name is
-# new but the underlying KV namespace is the same.
+# (24-hour TTL) for the blueprint auth flow.
 [[kv_namespaces]]
 binding = "BLUEPRINT_AUTH"
 id = "fefd368a592342a4a2682f286e70c906"
 
-# Cloudflare-native outgoing email — used as a fallback for the admin
-# notification to denis@uncap.com when Resend isn't configured. The
-# recipient must be a verified destination in Email Routing.
+# Cloudflare-native outgoing email. Both the 6-digit code emails and
+# the admin notifications to denis@uncap.com go through this binding.
+#
+# CONSTRAINT: send_email can only deliver to addresses that are already
+# registered + verified as Destination Addresses in Cloudflare Email
+# Routing on the uncap.com zone. Sends to unverified addresses fail
+# with an error. That means every client who will receive a 6-digit
+# code must first be added at Email → Email Routing → Destination
+# addresses and click the verification link Cloudflare emails them.
 [[send_email]]
 name = "NOTIFY_MAIL"
 
@@ -35,12 +39,3 @@ EMAIL_FROM   = "Uncap Blueprint <noreply@uncap.com>"
 # the 6-digit code step. Plain-text on purpose so admins can edit it
 # without touching secrets; rotate by editing this line.
 ADMIN_PASSCODE = "Uncap#CH"
-
-# Secrets configured in the Cloudflare dashboard:
-#   RESEND_API_KEY  (Secret)
-# Required to send the 6-digit code to arbitrary client emails.
-# Cloudflare's send_email binding can only send to addresses verified
-# in Email Routing, so we use Resend for transactional code-delivery
-# to client recipients. Admin notifications to denis@uncap.com prefer
-# Resend (same FROM domain, no verification dance) and fall back to
-# the send_email binding when Resend is absent.
