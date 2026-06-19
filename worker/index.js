@@ -127,20 +127,31 @@ async function handleVerify(request, env, ctx) {
   }
   await env.BLUEPRINT_AUTH.delete(key);
 
+  // "Self-test" sessions: when the logged-in email IS the notification
+  // recipient (e.g. denis@uncap.com testing the customer flow), we want
+  // the full code-delivery experience but no notifications about himself
+  // viewing or approving. Marks the session so handleNotify can short-
+  // circuit too.
+  const notifyEmail = (env.NOTIFY_EMAIL || '').trim().toLowerCase();
+  const selfTest    = notifyEmail && email === notifyEmail;
+
   const token = genToken();
   await env.BLUEPRINT_AUTH.put(
     `session:${token}`,
-    JSON.stringify({ email, admin: false, blueprintId, ts: Date.now() }),
+    JSON.stringify({ email, admin: false, selfTest, blueprintId, ts: Date.now() }),
     { expirationTtl: SESSION_TTL_SECONDS }
   );
 
   // Fire-and-forget admin notification — don't block the response on the
-  // email send so the client unlocks even if the SMTP path is slow.
-  const notify = notifyAdmin(env, {
-    subject: `[Blueprint] ${blueprintId} viewed by ${email}`,
-    text:    `${email} just unlocked the Blueprint at /${blueprintId}/.`,
-  }).catch(() => {});
-  if (ctx && ctx.waitUntil) ctx.waitUntil(notify);
+  // email send so the client unlocks even if the SMTP path is slow. Skip
+  // entirely for self-test sessions so we don't notify ourselves.
+  if (!selfTest) {
+    const notify = notifyAdmin(env, {
+      subject: `[Blueprint] ${blueprintId} viewed by ${email}`,
+      text:    `${email} just unlocked the Blueprint at /${blueprintId}/.`,
+    }).catch(() => {});
+    if (ctx && ctx.waitUntil) ctx.waitUntil(notify);
+  }
 
   return json(200, { ok: true, token });
 }
@@ -159,8 +170,10 @@ async function handleNotify(request, env) {
   const sess = JSON.parse(raw);
 
   // Admins are us — don't spam denis@uncap.com with notifications on our
-  // own preview clicks.
-  if (sess.admin) return json(200, { ok: true, skipped: 'admin' });
+  // own preview clicks. Same for self-test sessions where the logged-in
+  // email is denis@uncap.com itself (mirrors the skip in handleVerify).
+  if (sess.admin)    return json(200, { ok: true, skipped: 'admin' });
+  if (sess.selfTest) return json(200, { ok: true, skipped: 'self-test' });
 
   const subject = event === 'approve'
     ? `[Blueprint] ${sess.blueprintId} APPROVED by ${sess.email}`
