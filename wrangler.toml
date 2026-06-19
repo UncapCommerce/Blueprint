@@ -34,7 +34,7 @@ name = "NOTIFY_MAIL"
 
 [vars]
 NOTIFY_EMAIL = "denis@uncap.com"
-EMAIL_FROM   = "Uncap Blueprint <noreply@uncap.com>"
+EMAIL_FROM   = "Uncap Blueprint <hey@uncap.com>"
 # Typing this string in the email field on any blueprint's login bypasses
 # the 6-digit code step. Plain-text on purpose so admins can edit it
 # without touching secrets; rotate by editing this line.
