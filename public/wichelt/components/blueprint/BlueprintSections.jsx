@@ -2384,13 +2384,24 @@ function BPWhy() {
 // persists for the tab session (sessionStorage), so a reload keeps the
 // confirmation visible. No email or external action is triggered. ──
 function BPApproveButton() {
-  const APPROVED_KEY = 'wichelt_approved_v1';
+  const APPROVED_KEY = 'wichelt_approved_v2';
   const [approved, setApproved] = React.useState(
     () => typeof window !== 'undefined' && window.sessionStorage.getItem(APPROVED_KEY) === '1'
   );
   const onClick = () => {
     try { window.sessionStorage.setItem(APPROVED_KEY, '1'); } catch (_) {}
     setApproved(true);
+    // Fire-and-forget approval notification to denis@uncap.com. Server
+    // skips silently for admin sessions; no-op when no session token is
+    // present (e.g. preview of a very old tab session).
+    const token = (typeof window !== 'undefined' && window.__bpToken) || '';
+    if (token) {
+      fetch('/api/auth/notify', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ token, event: 'approve' }),
+      }).catch(function(){});
+    }
   };
   if (approved) {
     return (
