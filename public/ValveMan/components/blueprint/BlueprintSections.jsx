@@ -2490,7 +2490,7 @@ function BPWhy() {
 // "{blueprintId} APPROVED" email. Server skips silently for admin
 // sessions; no-op when no token is present. ──
 function BPApproveButton() {
-  const APPROVED_KEY = 'valveman_approved_v1';
+  const APPROVED_KEY = 'valveman_approved_v2';
   const [approved, setApproved] = React.useState(
     () => typeof window !== 'undefined' && window.sessionStorage.getItem(APPROVED_KEY) === '1'
   );
