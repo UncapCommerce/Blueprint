@@ -2188,34 +2188,65 @@ function BPWhy() {
 
 }
 
-// ── Approve & kickoff CTA. Clicking flips the button to a disabled
-// "Approved" pill with a lime check-circle confirmation state that
-// persists for the tab session (sessionStorage), so a reload keeps the
-// confirmation visible. No email or external action is triggered — pure
-// UI affordance. The storage-key version (v2) was bumped so any prior
-// test-click in this tab is invalidated and the button reads its initial
-// state again. ──
+// ── Approve & kickoff CTA. Clicking opens an inline signature modal that
+// captures the signer's full name and title; submitting POSTs them to
+// /api/auth/sign which persists a record in KV (1-year TTL) and emails
+// denis@uncap.com with the signer + timestamp + IP + user-agent. The
+// button only flips to the disabled "Approved ✓" pill after the server
+// confirms the signature was recorded. ──
 function BPApproveButton() {
-  const APPROVED_KEY = 'elevateoralcare_approved_v4';
-  const [approved, setApproved] = React.useState(
-    () => typeof window !== 'undefined' && window.sessionStorage.getItem(APPROVED_KEY) === '1'
+  const APPROVED_KEY = 'elevateoralcare_approved_v5';
+  const [state, setState]       = React.useState(
+    () => (typeof window !== 'undefined' && window.sessionStorage.getItem(APPROVED_KEY) === '1') ? 'approved' : 'idle'
   );
-  const onClick = () => {
-    try { window.sessionStorage.setItem(APPROVED_KEY, '1'); } catch (_) {}
-    setApproved(true);
-    // Fire-and-forget approval notification to denis@uncap.com. Server
-    // skips silently for admin sessions; no-op when no session token is
-    // present (e.g. preview of a very old tab session).
-    const token = (typeof window !== 'undefined' && window.__bpToken) || '';
-    if (token) {
-      fetch('/api/auth/notify', {
+  const [name, setName]         = React.useState('');
+  const [title, setTitle]       = React.useState('');
+  const [error, setError]       = React.useState('');
+  const nameRef                 = React.useRef(null);
+
+  React.useEffect(() => {
+    if (state === 'signing' && nameRef.current) nameRef.current.focus();
+  }, [state]);
+
+  // Esc closes the modal.
+  React.useEffect(() => {
+    if (state !== 'signing' && state !== 'submitting') return;
+    const onKey = (e) => { if (e.key === 'Escape' && state === 'signing') closeModal(); };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [state]);
+
+  const openModal = () => { setError(''); setState('signing'); };
+  const closeModal = () => { setState('idle'); setError(''); };
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    const n = name.trim();
+    const t = title.trim();
+    if (!n || !t) { setError('Both fields required'); return; }
+    setState('submitting');
+    try {
+      const token = (typeof window !== 'undefined' && window.__bpToken) || '';
+      const resp = await fetch('/api/auth/sign', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ token, event: 'approve' }),
-      }).catch(function(){});
+        body: JSON.stringify({ token, name: n, title: t }),
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok || !data.ok) {
+        setError(data.error || 'Could not record signature');
+        setState('signing');
+        return;
+      }
+      try { window.sessionStorage.setItem(APPROVED_KEY, '1'); } catch (_) {}
+      setState('approved');
+    } catch (_) {
+      setError('Network error — try again.');
+      setState('signing');
     }
   };
-  if (approved) {
+
+  if (state === 'approved') {
     return (
       <button
         type="button"
@@ -2247,15 +2278,154 @@ function BPApproveButton() {
       </button>
     );
   }
+
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="uc-btn b-signal"
-      style={{ padding: '16px 26px', fontSize: 15, border: 'none', cursor: 'pointer' }}
-    >
-      Approve &amp; kickoff <span>→</span>
-    </button>
+    <React.Fragment>
+      <button
+        type="button"
+        onClick={openModal}
+        className="uc-btn b-signal"
+        style={{ padding: '16px 26px', fontSize: 15, border: 'none', cursor: 'pointer' }}
+      >
+        Approve &amp; kickoff <span>→</span>
+      </button>
+
+      {(state === 'signing' || state === 'submitting') && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Sign to approve"
+          onClick={(e) => { if (e.target === e.currentTarget && state === 'signing') closeModal(); }}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 1000,
+            background: 'rgba(10,10,10,0.55)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: 20, fontFamily: 'var(--font-sans)', color: 'var(--fg-1)'
+          }}
+        >
+          <form
+            onSubmit={onSubmit}
+            style={{
+              width: '100%', maxWidth: 460,
+              background: 'var(--uc-paper)',
+              border: '1px solid var(--uc-black)',
+              borderRadius: 8, padding: 32,
+              boxShadow: '0 24px 60px -28px rgba(10,10,10,0.45)'
+            }}
+          >
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 20,
+              fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700,
+              letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--fg-3)'
+            }}>
+              <span style={{ width: 14, height: 2, background: 'var(--uc-signal)' }}/>
+              Sign to approve
+            </div>
+            <h2 style={{
+              margin: '0 0 8px',
+              fontFamily: 'var(--font-hero)', fontWeight: 800,
+              fontSize: 'clamp(24px, 3.4vw, 30px)', lineHeight: 1.04,
+              letterSpacing: '-0.025em'
+            }}>Approve &amp; kickoff.</h2>
+            <p style={{
+              margin: '0 0 22px',
+              fontFamily: 'var(--font-serif)', fontStyle: 'italic',
+              fontSize: 14.5, lineHeight: 1.5, color: 'var(--fg-2)'
+            }}>
+              Your name and title are recorded as the authorising signer on
+              this Blueprint and timestamped to your IP.
+            </p>
+
+            <label style={{
+              display: 'block', marginBottom: 6,
+              fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700,
+              letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--fg-3)'
+            }}>Full name</label>
+            <input
+              ref={nameRef}
+              type="text"
+              value={name}
+              onChange={(e) => { setName(e.target.value); if (error) setError(''); }}
+              placeholder="Jane Doe"
+              autoComplete="name"
+              disabled={state === 'submitting'}
+              style={{
+                width: '100%', boxSizing: 'border-box',
+                padding: '12px 14px', marginBottom: 14,
+                fontFamily: 'var(--font-sans)', fontSize: 17, fontWeight: 500,
+                color: 'var(--fg-1)', background: 'var(--uc-cream)',
+                border: '1px solid ' + (error ? 'var(--uc-error)' : 'var(--line-1)'),
+                borderRadius: 5, outline: 'none',
+                transition: 'border-color .15s var(--ease-out)'
+              }}
+              onFocus={(e) => { if (!error) e.currentTarget.style.borderColor = 'var(--uc-black)'; }}
+              onBlur={(e)  => { if (!error) e.currentTarget.style.borderColor = 'var(--line-1)'; }}
+            />
+
+            <label style={{
+              display: 'block', marginBottom: 6,
+              fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700,
+              letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--fg-3)'
+            }}>Title</label>
+            <input
+              type="text"
+              value={title}
+              onChange={(e) => { setTitle(e.target.value); if (error) setError(''); }}
+              placeholder="VP of Commerce"
+              autoComplete="organization-title"
+              disabled={state === 'submitting'}
+              style={{
+                width: '100%', boxSizing: 'border-box',
+                padding: '12px 14px',
+                fontFamily: 'var(--font-sans)', fontSize: 17, fontWeight: 500,
+                color: 'var(--fg-1)', background: 'var(--uc-cream)',
+                border: '1px solid ' + (error ? 'var(--uc-error)' : 'var(--line-1)'),
+                borderRadius: 5, outline: 'none',
+                transition: 'border-color .15s var(--ease-out)'
+              }}
+              onFocus={(e) => { if (!error) e.currentTarget.style.borderColor = 'var(--uc-black)'; }}
+              onBlur={(e)  => { if (!error) e.currentTarget.style.borderColor = 'var(--line-1)'; }}
+            />
+
+            {error && (
+              <div style={{
+                marginTop: 12, fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700,
+                letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--uc-error)'
+              }}>{error}</div>
+            )}
+
+            <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
+              <button
+                type="button"
+                onClick={closeModal}
+                disabled={state === 'submitting'}
+                style={{
+                  flex: '0 0 auto',
+                  padding: '12px 18px', fontSize: 14, fontFamily: 'var(--font-sans)',
+                  fontWeight: 600, letterSpacing: '-0.005em', lineHeight: 1,
+                  background: 'transparent', color: 'var(--fg-2)',
+                  border: '1px solid var(--line-1)', borderRadius: 'var(--radius)',
+                  cursor: state === 'submitting' ? 'default' : 'pointer'
+                }}
+              >Cancel</button>
+              <button
+                type="submit"
+                disabled={state === 'submitting' || !name.trim() || !title.trim()}
+                className="uc-btn b-signal"
+                style={{
+                  flex: 1, justifyContent: 'center',
+                  padding: '12px 18px', fontSize: 14, border: 'none',
+                  cursor: (state === 'submitting' || !name.trim() || !title.trim()) ? 'default' : 'pointer',
+                  opacity: state === 'submitting' ? 0.7 : 1
+                }}
+              >
+                {state === 'submitting' ? 'Recording…' : 'Sign & approve'} <span>→</span>
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+    </React.Fragment>
   );
 }
 

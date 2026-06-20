@@ -13,6 +13,14 @@
 //
 //   POST /api/auth/notify  →  { token, event: 'view' | 'approve' }
 //     Sends a notification to denis@uncap.com. Admin sessions skip.
+//
+//   POST /api/auth/sign  →  { token, name, title }
+//     Records an Approve & kickoff signature. Persists a record to KV
+//     under signature:<blueprintId>:<token> with a 1-year TTL, and emails
+//     denis@uncap.com with the signer's name, title, email, timestamp,
+//     IP, and user-agent. Admin sessions skip both the KV write and the
+//     email; self-test sessions (logged-in email = NOTIFY_EMAIL) write
+//     the record but skip the email.
 
 import { EmailMessage } from "cloudflare:email";
 
@@ -31,6 +39,9 @@ export default {
     }
     if (url.pathname === '/api/auth/notify' && request.method === 'POST') {
       return handleNotify(request, env);
+    }
+    if (url.pathname === '/api/auth/sign' && request.method === 'POST') {
+      return handleSign(request, env, ctx);
     }
 
     return env.ASSETS.fetch(request);
@@ -187,6 +198,80 @@ async function handleNotify(request, env) {
     return json(200, { ok: true });
   } catch (err) {
     return json(502, { ok: false, error: err.message || 'send failed' });
+  }
+}
+
+// Records an Approve & kickoff signature. Writes a permanent KV record
+// (1-year TTL) under signature:<blueprintId>:<token> and sends a richer
+// notification email to denis@uncap.com that includes the signer's name,
+// title, email, timestamp, IP, and user-agent.
+//
+// Skip rules:
+//   - admin sessions   → no KV write, no email (we don't want admin
+//                        previews polluting the audit log either).
+//   - self-test session → KV record IS written, no email. Lets denis
+//                        rehearse the full flow and verify the record
+//                        without inbox spam.
+async function handleSign(request, env, ctx) {
+  let body;
+  try { body = await request.json(); }
+  catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+
+  const token = (body.token || '').toString().trim();
+  const name  = (body.name  || '').toString().trim().slice(0, 200);
+  const title = (body.title || '').toString().trim().slice(0, 200);
+  if (!token)        return json(400, { ok: false, error: 'Missing token' });
+  if (!name || !title) return json(400, { ok: false, error: 'Both fields required' });
+
+  const raw = await env.BLUEPRINT_AUTH.get(`session:${token}`);
+  if (!raw) return json(401, { ok: false, error: 'Session expired' });
+  const sess = JSON.parse(raw);
+
+  if (sess.admin) return json(200, { ok: true, skipped: 'admin' });
+
+  const ip        = request.headers.get('CF-Connecting-IP') || '';
+  const userAgent = request.headers.get('User-Agent') || '';
+  const signedAt  = new Date().toISOString();
+
+  const record = {
+    blueprintId: sess.blueprintId,
+    email:       sess.email,
+    name, title,
+    signedAt, ip, userAgent,
+  };
+
+  // Persist the signature record. 1-year TTL is long enough for any
+  // contract follow-up; KV will lazily evict it after that.
+  try {
+    await env.BLUEPRINT_AUTH.put(
+      `signature:${sess.blueprintId}:${token}`,
+      JSON.stringify(record),
+      { expirationTtl: 60 * 60 * 24 * 365 }
+    );
+  } catch (err) {
+    return json(502, { ok: false, error: `Could not record signature: ${err.message || 'unknown'}` });
+  }
+
+  // Self-test sessions write the record but never email.
+  if (sess.selfTest) return json(200, { ok: true, skipped: 'self-test' });
+
+  const subject = `[Blueprint] ${sess.blueprintId} APPROVED by ${name} (${sess.email})`;
+  const text =
+    `Approval recorded for /${sess.blueprintId}/.\n\n` +
+    `Signer: ${name}\n` +
+    `Title:  ${title}\n` +
+    `Email:  ${sess.email}\n` +
+    `Time:   ${signedAt}\n` +
+    `IP:     ${ip}\n` +
+    `Agent:  ${userAgent}\n`;
+
+  try {
+    await notifyAdmin(env, { subject, text });
+    return json(200, { ok: true });
+  } catch (err) {
+    // Record is already in KV; treat email failure as a 200 with a soft
+    // warning so the client still gets confirmation. The signature stays.
+    return json(200, { ok: true, emailError: err.message || 'send failed' });
   }
 }
 
