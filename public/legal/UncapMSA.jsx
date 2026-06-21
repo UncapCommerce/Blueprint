@@ -22,8 +22,16 @@
   // ── Once-only stylesheet for the MSA body. Scoped under .uncap-msa so it
   //    can't bleed into the rest of the modal. ────────────────────────────
   const STYLE_ID = 'uncap-msa-styles';
+  const FONT_ID  = 'uncap-msa-signature-font';
   function ensureStyles() {
     if (typeof document === 'undefined') return;
+    if (!document.getElementById(FONT_ID)) {
+      const link = document.createElement('link');
+      link.id  = FONT_ID;
+      link.rel = 'stylesheet';
+      link.href = 'https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap';
+      document.head.appendChild(link);
+    }
     if (document.getElementById(STYLE_ID)) return;
     const s = document.createElement('style');
     s.id = STYLE_ID;
@@ -49,10 +57,15 @@
       .uncap-msa .msa-nb .msa-ln { line-height: 1.6; font-size: 12.5px; color: var(--fg-2); }
       .uncap-msa .msa-foot { margin-top: 26px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--fg-3); }
       .uncap-msa .msa-sig { margin-top: 24px; padding-top: 22px; border-top: 1px solid var(--line-1); }
+      .uncap-msa .msa-sig.msa-sig-top { margin-top: 0; padding-top: 0; border-top: none; }
+      .uncap-msa .msa-terms-header { margin-top: 36px; padding-top: 28px; border-top: 1px solid var(--line-1); margin-bottom: 18px; }
+      .uncap-msa .msa-terms-header h2 { margin-bottom: 0; }
       .uncap-msa .msa-sig-intro { font-family: var(--font-serif); font-style: italic; color: var(--fg-2); font-size: 13px; margin: 0 0 18px; }
       .uncap-msa .msa-sig-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
-      .uncap-msa .msa-sigbox .msa-co { font-weight: 700; color: var(--fg-1); margin-bottom: 32px; font-size: 14px; }
-      .uncap-msa .msa-sigbox .msa-sign-on { font-family: var(--font-mono); font-size: 10.5px; color: var(--fg-3); margin-bottom: 6px; }
+      .uncap-msa .msa-sigbox .msa-co { font-weight: 700; color: var(--fg-1); margin-bottom: 18px; font-size: 14px; }
+      .uncap-msa .msa-sigbox .msa-sign-on { font-family: var(--font-mono); font-size: 10.5px; color: var(--fg-3); margin-bottom: 4px; }
+      .uncap-msa .msa-sigbox .msa-signature { font-family: 'Caveat', 'Brush Script MT', cursive; font-weight: 700; font-size: 30px; line-height: 1; color: var(--fg-1); min-height: 36px; padding: 2px 0 4px; }
+      .uncap-msa .msa-sigbox .msa-signature.placeholder { color: var(--fg-3); font-style: italic; font-family: var(--font-serif); font-size: 13px; line-height: 1.4; padding-top: 10px; }
       .uncap-msa .msa-sigbox .msa-rule { border-top: 1.5px solid var(--fg-1); padding-top: 6px; }
       .uncap-msa .msa-sigbox .msa-fld { font-size: 12.5px; color: var(--fg-1); margin-bottom: 2px; min-height: 1.4em; }
       .uncap-msa .msa-sigbox .msa-fld .msa-k { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-3); margin-right: 8px; }
@@ -193,11 +206,10 @@
 
     return (
       React.createElement('div', { className: 'uncap-msa' },
-        React.createElement('div', { className: 'msa-eyebrow' }, 'Terms'),
-        React.createElement('h2', null, 'Services Agreement'),
+        React.createElement('div', { className: 'msa-eyebrow' }, 'Signature'),
+        React.createElement('h2', null, 'Sign to bind this Agreement.'),
         React.createElement('div', { className: 'msa-dt' }, 'Effective ' + effective),
-        React.createElement('div', { dangerouslySetInnerHTML: { __html: MSA_BODY_HTML(effective) } }),
-        React.createElement('div', { className: 'msa-sig' },
+        React.createElement('div', { className: 'msa-sig msa-sig-top' },
           React.createElement('p', { className: 'msa-sig-intro' },
             'IN WITNESS WHEREOF, the parties hereto have caused this Agreement to be executed as of the Effective Date by their respective duly authorized officers.'
           ),
@@ -205,6 +217,10 @@
             React.createElement('div', { className: 'msa-sigbox' },
               React.createElement('div', { className: 'msa-co' }, company),
               React.createElement('div', { className: 'msa-sign-on' }, 'Signature'),
+              React.createElement('div',
+                { className: 'msa-signature' + (name ? '' : ' placeholder') },
+                name || 'Type your name above to sign'
+              ),
               React.createElement('div', { className: 'msa-rule' },
                 React.createElement('div', { className: 'msa-fld' },
                   React.createElement('span', { className: 'msa-k' }, 'Name'),
@@ -223,6 +239,7 @@
             React.createElement('div', { className: 'msa-sigbox' },
               React.createElement('div', { className: 'msa-co' }, 'Uncap, Inc'),
               React.createElement('div', { className: 'msa-sign-on' }, 'Signature'),
+              React.createElement('div', { className: 'msa-signature' }, 'Denis Dyli'),
               React.createElement('div', { className: 'msa-rule' },
                 React.createElement('div', { className: 'msa-fld' },
                   React.createElement('span', { className: 'msa-k' }, 'Name'),
@@ -234,12 +251,17 @@
                 ),
                 React.createElement('div', { className: 'msa-fld' },
                   React.createElement('span', { className: 'msa-k' }, 'Date'),
-                  ''
+                  effective
                 )
               )
             )
           )
-        )
+        ),
+        React.createElement('div', { className: 'msa-terms-header' },
+          React.createElement('div', { className: 'msa-eyebrow' }, 'Terms'),
+          React.createElement('h2', null, 'Services Agreement')
+        ),
+        React.createElement('div', { dangerouslySetInnerHTML: { __html: MSA_BODY_HTML(effective) } })
       )
     );
   }

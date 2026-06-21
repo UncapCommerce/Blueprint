@@ -2634,56 +2634,61 @@ function BPApproveButton() {
               this Blueprint and timestamped to your IP.
             </p>
 
-            <label style={{
-              display: 'block', marginBottom: 6,
-              fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700,
-              letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--fg-3)'
-            }}>Full name</label>
-            <input
-              ref={nameRef}
-              type="text"
-              value={name}
-              onChange={(e) => { setName(e.target.value); if (error) setError(''); }}
-              placeholder="Jane Doe"
-              autoComplete="name"
-              disabled={state === 'submitting'}
-              style={{
-                width: '100%', boxSizing: 'border-box',
-                padding: '12px 14px', marginBottom: 14,
-                fontFamily: 'var(--font-sans)', fontSize: 17, fontWeight: 500,
-                color: 'var(--fg-1)', background: 'var(--uc-cream)',
-                border: '1px solid ' + (error ? 'var(--uc-error)' : 'var(--line-1)'),
-                borderRadius: 5, outline: 'none',
-                transition: 'border-color .15s var(--ease-out)'
-              }}
-              onFocus={(e) => { if (!error) e.currentTarget.style.borderColor = 'var(--uc-black)'; }}
-              onBlur={(e)  => { if (!error) e.currentTarget.style.borderColor = 'var(--line-1)'; }}
-            />
-
-            <label style={{
-              display: 'block', marginBottom: 6,
-              fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700,
-              letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--fg-3)'
-            }}>Title</label>
-            <input
-              type="text"
-              value={title}
-              onChange={(e) => { setTitle(e.target.value); if (error) setError(''); }}
-              placeholder="VP of Commerce"
-              autoComplete="organization-title"
-              disabled={state === 'submitting'}
-              style={{
-                width: '100%', boxSizing: 'border-box',
-                padding: '12px 14px',
-                fontFamily: 'var(--font-sans)', fontSize: 17, fontWeight: 500,
-                color: 'var(--fg-1)', background: 'var(--uc-cream)',
-                border: '1px solid ' + (error ? 'var(--uc-error)' : 'var(--line-1)'),
-                borderRadius: 5, outline: 'none',
-                transition: 'border-color .15s var(--ease-out)'
-              }}
-              onFocus={(e) => { if (!error) e.currentTarget.style.borderColor = 'var(--uc-black)'; }}
-              onBlur={(e)  => { if (!error) e.currentTarget.style.borderColor = 'var(--line-1)'; }}
-            />
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 12 }}>
+              <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+                <label style={{
+                  display: 'block', marginBottom: 6,
+                  fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700,
+                  letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--fg-3)'
+                }}>Full name</label>
+                <input
+                  ref={nameRef}
+                  type="text"
+                  value={name}
+                  onChange={(e) => { setName(e.target.value); if (error) setError(''); }}
+                  placeholder="Jane Doe"
+                  autoComplete="name"
+                  disabled={state === 'submitting'}
+                  style={{
+                    width: '100%', boxSizing: 'border-box',
+                    padding: '12px 14px',
+                    fontFamily: 'var(--font-sans)', fontSize: 17, fontWeight: 500,
+                    color: 'var(--fg-1)', background: 'var(--uc-cream)',
+                    border: '1px solid ' + (error ? 'var(--uc-error)' : 'var(--line-1)'),
+                    borderRadius: 5, outline: 'none',
+                    transition: 'border-color .15s var(--ease-out)'
+                  }}
+                  onFocus={(e) => { if (!error) e.currentTarget.style.borderColor = 'var(--uc-black)'; }}
+                  onBlur={(e)  => { if (!error) e.currentTarget.style.borderColor = 'var(--line-1)'; }}
+                />
+              </div>
+              <div style={{ flex: '1 1 200px', minWidth: 0 }}>
+                <label style={{
+                  display: 'block', marginBottom: 6,
+                  fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700,
+                  letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--fg-3)'
+                }}>Title</label>
+                <input
+                  type="text"
+                  value={title}
+                  onChange={(e) => { setTitle(e.target.value); if (error) setError(''); }}
+                  placeholder="VP of Commerce"
+                  autoComplete="organization-title"
+                  disabled={state === 'submitting'}
+                  style={{
+                    width: '100%', boxSizing: 'border-box',
+                    padding: '12px 14px',
+                    fontFamily: 'var(--font-sans)', fontSize: 17, fontWeight: 500,
+                    color: 'var(--fg-1)', background: 'var(--uc-cream)',
+                    border: '1px solid ' + (error ? 'var(--uc-error)' : 'var(--line-1)'),
+                    borderRadius: 5, outline: 'none',
+                    transition: 'border-color .15s var(--ease-out)'
+                  }}
+                  onFocus={(e) => { if (!error) e.currentTarget.style.borderColor = 'var(--uc-black)'; }}
+                  onBlur={(e)  => { if (!error) e.currentTarget.style.borderColor = 'var(--line-1)'; }}
+                />
+              </div>
+            </div>
 
             {error && (
               <div style={{
