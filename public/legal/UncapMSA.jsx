@@ -210,9 +210,6 @@
         React.createElement('h2', null, 'Sign to bind this Agreement.'),
         React.createElement('div', { className: 'msa-dt' }, 'Effective ' + effective),
         React.createElement('div', { className: 'msa-sig msa-sig-top' },
-          React.createElement('p', { className: 'msa-sig-intro' },
-            'IN WITNESS WHEREOF, the parties hereto have caused this Agreement to be executed as of the Effective Date by their respective duly authorized officers.'
-          ),
           React.createElement('div', { className: 'msa-sig-grid' },
             React.createElement('div', { className: 'msa-sigbox' },
               React.createElement('div', { className: 'msa-co' }, company),
