@@ -2203,22 +2203,12 @@ function BPApproveButton() {
   const [title, setTitle]       = React.useState('');
   const [error, setError]       = React.useState('');
   const nameRef                 = React.useRef(null);
-  const msaRef                  = React.useRef(null);
   const BRAND_NAME              = 'Elevate Oral Care';
+  const MSA                     = (typeof window !== 'undefined' && window.UncapMSA) || null;
 
   React.useEffect(() => {
     if (state === 'signing' && nameRef.current) nameRef.current.focus();
   }, [state]);
-
-  // Live-update the MSA preview's signature block as the signer types.
-  React.useEffect(() => {
-    if (state !== 'signing' && state !== 'submitting') return;
-    const win = msaRef.current && msaRef.current.contentWindow;
-    if (!win) return;
-    try {
-      win.postMessage({ type: 'msa:update', name: name.trim(), title: title.trim() }, '*');
-    } catch (_) {}
-  }, [name, title, state]);
 
   // Esc closes the modal.
   React.useEffect(() => {
@@ -2408,32 +2398,15 @@ function BPApproveButton() {
             )}
 
             <div style={{ marginTop: 26, paddingTop: 22, borderTop: '1px solid var(--line-1)' }}>
-              <div style={{
-                display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 8,
-                fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700,
-                letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--fg-3)'
-              }}>
-                <span style={{ width: 14, height: 2, background: 'var(--uc-signal)' }}/>
-                Master Services Agreement
-              </div>
               <p style={{
-                margin: '0 0 12px',
+                margin: '0 0 18px',
                 fontFamily: 'var(--font-serif)', fontStyle: 'italic',
                 fontSize: 13.5, lineHeight: 1.5, color: 'var(--fg-2)'
               }}>
                 Review the agreement below. Signing &amp; approving binds {BRAND_NAME} to
                 these terms as the Effective Date.
               </p>
-              <iframe
-                ref={msaRef}
-                src={`/legal/services-agreement.html?company=${encodeURIComponent(BRAND_NAME)}`}
-                title="Uncap Services Agreement"
-                style={{
-                  width: '100%', height: 460,
-                  border: '1px solid var(--line-1)', borderRadius: 5,
-                  background: '#fafafb', display: 'block'
-                }}
-              />
+              {MSA ? <MSA company={BRAND_NAME} name={name.trim()} title={title.trim()}/> : null}
             </div>
 
             <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>

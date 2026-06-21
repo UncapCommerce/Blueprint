@@ -24,6 +24,34 @@ React, ReactDOM, and `@babel/standalone` (vendored under `/vendor/`) from
   files. `wrangler.toml` only declares vars that are safe in plaintext
   (e.g. `STRIPE_PUBLISHABLE_KEY`)
 
+## Standard for every Blueprint proposal page
+
+Every per-client Blueprint under `public/<Brand>/` follows the same
+contract — match this when adding a new one:
+
+- **Auth gate** in `index.html`: email → 6-digit code → 24-hour token,
+  with admin passcode `Uncap#CH` and `denis@uncap.com` as a no-email
+  self-test. Token is exposed on `window.__bpToken` for the approve
+  button to read
+- **Blueprint number**: assign the next sequential ID (`001` Mitutoyo,
+  `002` wichelt, `003` ElevateOralCare, `004` ValveMan, etc.) and put it
+  in the page header. Number is by creation order, not alphabetical
+- **Approve & kickoff button**: use the `BPApproveButton` pattern that
+  opens a signature modal collecting full name + title, POSTs to
+  `/api/auth/sign`, and only flips to "Approved ✓" after the server
+  confirms. Bump the `APPROVED_KEY` version (`<brand>_approved_vN`) any
+  time the flow changes so stale `sessionStorage` flags don't keep old
+  testers stuck on "Approved"
+- **Master Services Agreement inline in the modal**: the popup must show
+  the full Uncap MSA text below the name/title fields. Load
+  `<script type="text/babel" src="/legal/UncapMSA.jsx?v=DEPLOY_HASH"></script>`
+  BEFORE `BlueprintSections.jsx` in `index.html`, then render
+  `{MSA ? <MSA company={BRAND_NAME} name={name.trim()} title={title.trim()}/> : null}`
+  inside the modal. Do NOT iframe a standalone HTML — the MSA component
+  is the single source of truth for legal terms
+- **Cache-bust** the new `public/<Brand>/index.html` by adding it to the
+  `files` array in `scripts/stamp-deploy.js`
+
 ## Default workflow for every change
 
 For any change Denis asks for, follow this loop without asking:
