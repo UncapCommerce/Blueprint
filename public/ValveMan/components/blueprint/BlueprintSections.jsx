@@ -2706,36 +2706,41 @@ function BPApproveButton() {
                 Review the agreement below. Signing &amp; approving binds {BRAND_NAME} to
                 these terms as the Effective Date.
               </p>
-              {MSA ? <MSA company={BRAND_NAME} name={name.trim()} title={title.trim()}/> : null}
-            </div>
-
-            <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
-              <button
-                type="button"
-                onClick={closeModal}
-                disabled={state === 'submitting'}
-                style={{
-                  flex: '0 0 auto',
-                  padding: '12px 18px', fontSize: 14, fontFamily: 'var(--font-sans)',
-                  fontWeight: 600, letterSpacing: '-0.005em', lineHeight: 1,
-                  background: 'transparent', color: 'var(--fg-2)',
-                  border: '1px solid var(--line-1)', borderRadius: 'var(--radius)',
-                  cursor: state === 'submitting' ? 'default' : 'pointer'
-                }}
-              >Cancel</button>
-              <button
-                type="submit"
-                disabled={state === 'submitting' || !name.trim() || !title.trim()}
-                className="uc-btn b-signal"
-                style={{
-                  flex: 1, justifyContent: 'center',
-                  padding: '12px 18px', fontSize: 14, border: 'none',
-                  cursor: (state === 'submitting' || !name.trim() || !title.trim()) ? 'default' : 'pointer',
-                  opacity: state === 'submitting' ? 0.7 : 1
-                }}
-              >
-                {state === 'submitting' ? 'Recording…' : 'Sign & approve'} <span>→</span>
-              </button>
+              {MSA ? <MSA
+                company={BRAND_NAME}
+                name={name.trim()}
+                title={title.trim()}
+                actions={
+                  <div style={{ display: 'flex', gap: 10 }}>
+                    <button
+                      type="button"
+                      onClick={closeModal}
+                      disabled={state === 'submitting'}
+                      style={{
+                        flex: '0 0 auto',
+                        padding: '12px 18px', fontSize: 14, fontFamily: 'var(--font-sans)',
+                        fontWeight: 600, letterSpacing: '-0.005em', lineHeight: 1,
+                        background: 'transparent', color: 'var(--fg-2)',
+                        border: '1px solid var(--line-1)', borderRadius: 'var(--radius)',
+                        cursor: state === 'submitting' ? 'default' : 'pointer'
+                      }}
+                    >Cancel</button>
+                    <button
+                      type="submit"
+                      disabled={state === 'submitting' || !name.trim() || !title.trim()}
+                      className="uc-btn b-signal"
+                      style={{
+                        flex: 1, justifyContent: 'center',
+                        padding: '12px 18px', fontSize: 14, border: 'none',
+                        cursor: (state === 'submitting' || !name.trim() || !title.trim()) ? 'default' : 'pointer',
+                        opacity: state === 'submitting' ? 0.7 : 1
+                      }}
+                    >
+                      {state === 'submitting' ? 'Recording…' : 'Sign & approve'} <span>→</span>
+                    </button>
+                  </div>
+                }
+              /> : null}
             </div>
           </form>
         </div>

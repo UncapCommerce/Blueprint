@@ -58,6 +58,7 @@
       .uncap-msa .msa-foot { margin-top: 26px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--fg-3); }
       .uncap-msa .msa-sig { margin-top: 24px; padding-top: 22px; border-top: 1px solid var(--line-1); }
       .uncap-msa .msa-sig.msa-sig-top { margin-top: 0; padding-top: 0; border-top: none; }
+      .uncap-msa .msa-actions { margin-top: 22px; }
       .uncap-msa .msa-terms-header { margin-top: 36px; padding-top: 28px; border-top: 1px solid var(--line-1); margin-bottom: 18px; }
       .uncap-msa .msa-terms-header h2 { margin-bottom: 0; }
       .uncap-msa .msa-sig-intro { font-family: var(--font-serif); font-style: italic; color: var(--fg-2); font-size: 13px; margin: 0 0 18px; }
@@ -202,6 +203,7 @@
     const company = (props && props.company) || '[Client Company]';
     const name    = (props && props.name)    || '';
     const title   = (props && props.title)   || '';
+    const actions = (props && props.actions) || null;
     const effective = todayString();
 
     return (
@@ -254,6 +256,7 @@
             )
           )
         ),
+        actions ? React.createElement('div', { className: 'msa-actions' }, actions) : null,
         React.createElement('div', { className: 'msa-terms-header' },
           React.createElement('div', { className: 'msa-eyebrow' }, 'Terms'),
           React.createElement('h2', null, 'Services Agreement')
