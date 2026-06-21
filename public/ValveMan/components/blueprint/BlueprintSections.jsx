@@ -2498,10 +2498,22 @@ function BPApproveButton() {
   const [title, setTitle]       = React.useState('');
   const [error, setError]       = React.useState('');
   const nameRef                 = React.useRef(null);
+  const msaRef                  = React.useRef(null);
+  const BRAND_NAME              = 'ValveMan';
 
   React.useEffect(() => {
     if (state === 'signing' && nameRef.current) nameRef.current.focus();
   }, [state]);
+
+  // Live-update the MSA preview's signature block as the signer types.
+  React.useEffect(() => {
+    if (state !== 'signing' && state !== 'submitting') return;
+    const win = msaRef.current && msaRef.current.contentWindow;
+    if (!win) return;
+    try {
+      win.postMessage({ type: 'msa:update', name: name.trim(), title: title.trim() }, '*');
+    } catch (_) {}
+  }, [name, title, state]);
 
   // Esc closes the modal.
   React.useEffect(() => {
@@ -2601,7 +2613,8 @@ function BPApproveButton() {
           <form
             onSubmit={onSubmit}
             style={{
-              width: '100%', maxWidth: 460,
+              width: '100%', maxWidth: 720,
+              maxHeight: '90vh', overflowY: 'auto',
               background: 'var(--uc-paper)',
               border: '1px solid var(--uc-black)',
               borderRadius: 8, padding: 32,
@@ -2688,6 +2701,35 @@ function BPApproveButton() {
                 letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--uc-error)'
               }}>{error}</div>
             )}
+
+            <div style={{ marginTop: 26, paddingTop: 22, borderTop: '1px solid var(--line-1)' }}>
+              <div style={{
+                display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 8,
+                fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700,
+                letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--fg-3)'
+              }}>
+                <span style={{ width: 14, height: 2, background: 'var(--uc-signal)' }}/>
+                Master Services Agreement
+              </div>
+              <p style={{
+                margin: '0 0 12px',
+                fontFamily: 'var(--font-serif)', fontStyle: 'italic',
+                fontSize: 13.5, lineHeight: 1.5, color: 'var(--fg-2)'
+              }}>
+                Review the agreement below. Signing &amp; approving binds {BRAND_NAME} to
+                these terms as the Effective Date.
+              </p>
+              <iframe
+                ref={msaRef}
+                src={`/legal/services-agreement.html?company=${encodeURIComponent(BRAND_NAME)}`}
+                title="Uncap Services Agreement"
+                style={{
+                  width: '100%', height: 460,
+                  border: '1px solid var(--line-1)', borderRadius: 5,
+                  background: '#fafafb', display: 'block'
+                }}
+              />
+            </div>
 
             <div style={{ display: 'flex', gap: 10, marginTop: 22 }}>
               <button
