@@ -2672,7 +2672,7 @@ function BPApproveButton() {
                   type="text"
                   value={title}
                   onChange={(e) => { setTitle(e.target.value); if (error) setError(''); }}
-                  placeholder="VP of Commerce"
+                  placeholder="Director of Operations"
                   autoComplete="organization-title"
                   disabled={state === 'submitting'}
                   style={{
