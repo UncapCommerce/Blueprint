@@ -205,62 +205,74 @@
     const actions = (props && props.actions) || null;
     const effective = todayString();
 
+    // The two-column signature grid (Client + Uncap). Rendered at the top
+    // and again at the bottom of the MSA so the document reads like a
+    // proper execution page after the terms.
+    const sigGrid = () =>
+      React.createElement('div', { className: 'msa-sig-grid' },
+        React.createElement('div', { className: 'msa-sigbox' },
+          React.createElement('div', { className: 'msa-co' }, company),
+          React.createElement('div', { className: 'msa-sign-on' }, 'Signature'),
+          React.createElement('div',
+            { className: 'msa-signature' + (name ? '' : ' placeholder') },
+            name || 'Type your name above to sign'
+          ),
+          React.createElement('div', { className: 'msa-rule' },
+            React.createElement('div', { className: 'msa-fld' },
+              React.createElement('span', { className: 'msa-k' }, 'Name'),
+              name
+            ),
+            React.createElement('div', { className: 'msa-fld' },
+              React.createElement('span', { className: 'msa-k' }, 'Title'),
+              title
+            ),
+            React.createElement('div', { className: 'msa-fld' },
+              React.createElement('span', { className: 'msa-k' }, 'Date'),
+              effective
+            )
+          )
+        ),
+        React.createElement('div', { className: 'msa-sigbox' },
+          React.createElement('div', { className: 'msa-co' }, 'Uncap, Inc'),
+          React.createElement('div', { className: 'msa-sign-on' }, 'Signature'),
+          React.createElement('div', { className: 'msa-signature' }, 'Denis Dyli'),
+          React.createElement('div', { className: 'msa-rule' },
+            React.createElement('div', { className: 'msa-fld' },
+              React.createElement('span', { className: 'msa-k' }, 'Name'),
+              'Denis Dyli'
+            ),
+            React.createElement('div', { className: 'msa-fld' },
+              React.createElement('span', { className: 'msa-k' }, 'Title'),
+              'CEO'
+            ),
+            React.createElement('div', { className: 'msa-fld' },
+              React.createElement('span', { className: 'msa-k' }, 'Date'),
+              effective
+            )
+          )
+        )
+      );
+
     return (
       React.createElement('div', { className: 'uncap-msa' },
         React.createElement('div', { className: 'msa-eyebrow' }, 'Signature'),
         React.createElement('h2', null, 'Sign to bind this Agreement.'),
         React.createElement('div', { className: 'msa-dt' }, 'Effective ' + effective),
-        React.createElement('div', { className: 'msa-sig msa-sig-top' },
-          React.createElement('div', { className: 'msa-sig-grid' },
-            React.createElement('div', { className: 'msa-sigbox' },
-              React.createElement('div', { className: 'msa-co' }, company),
-              React.createElement('div', { className: 'msa-sign-on' }, 'Signature'),
-              React.createElement('div',
-                { className: 'msa-signature' + (name ? '' : ' placeholder') },
-                name || 'Type your name above to sign'
-              ),
-              React.createElement('div', { className: 'msa-rule' },
-                React.createElement('div', { className: 'msa-fld' },
-                  React.createElement('span', { className: 'msa-k' }, 'Name'),
-                  name
-                ),
-                React.createElement('div', { className: 'msa-fld' },
-                  React.createElement('span', { className: 'msa-k' }, 'Title'),
-                  title
-                ),
-                React.createElement('div', { className: 'msa-fld' },
-                  React.createElement('span', { className: 'msa-k' }, 'Date'),
-                  effective
-                )
-              )
-            ),
-            React.createElement('div', { className: 'msa-sigbox' },
-              React.createElement('div', { className: 'msa-co' }, 'Uncap, Inc'),
-              React.createElement('div', { className: 'msa-sign-on' }, 'Signature'),
-              React.createElement('div', { className: 'msa-signature' }, 'Denis Dyli'),
-              React.createElement('div', { className: 'msa-rule' },
-                React.createElement('div', { className: 'msa-fld' },
-                  React.createElement('span', { className: 'msa-k' }, 'Name'),
-                  'Denis Dyli'
-                ),
-                React.createElement('div', { className: 'msa-fld' },
-                  React.createElement('span', { className: 'msa-k' }, 'Title'),
-                  'CEO'
-                ),
-                React.createElement('div', { className: 'msa-fld' },
-                  React.createElement('span', { className: 'msa-k' }, 'Date'),
-                  effective
-                )
-              )
-            )
-          )
-        ),
+        React.createElement('div', { className: 'msa-sig msa-sig-top' }, sigGrid()),
         actions ? React.createElement('div', { className: 'msa-actions' }, actions) : null,
         React.createElement('div', { className: 'msa-terms-header' },
           React.createElement('div', { className: 'msa-eyebrow' }, 'Terms'),
           React.createElement('h2', null, 'Services Agreement')
         ),
-        React.createElement('div', { dangerouslySetInnerHTML: { __html: MSA_BODY_HTML(effective) } })
+        React.createElement('div', { dangerouslySetInnerHTML: { __html: MSA_BODY_HTML(effective) } }),
+        React.createElement('div', { className: 'msa-sig msa-sig-bottom' },
+          React.createElement('div', { className: 'msa-eyebrow', style: { marginBottom: 6 } }, 'Signature'),
+          React.createElement('h2', { style: { marginBottom: 14 } }, 'Sign to bind this Agreement.'),
+          React.createElement('p', { className: 'msa-sig-intro' },
+            'IN WITNESS WHEREOF, the parties hereto have caused this Agreement to be executed as of the Effective Date by their respective duly authorized officers.'
+          ),
+          sigGrid()
+        )
       )
     );
   }
