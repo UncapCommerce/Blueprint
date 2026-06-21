@@ -195,7 +195,6 @@
 
     <div class="msa-clause h"><span class="msa-num">25.</span><p class="msa-body"><span class="msa-ctitle u">Counterparts.</span> This Agreement may be executed in counterparts, each of which is deemed an original, but all of which together are deemed to be one and the same agreement.</p></div>
 
-    <div class="msa-foot">Uncap · Master Services Agreement</div>
   `;
 
   function UncapMSA(props) {
