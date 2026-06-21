@@ -124,7 +124,7 @@ function BPIntro() {
           <span style={{ display: 'inline-flex', alignItems: 'center' }}>
             <img src={window.__resources.shopifyBadge} alt="Shopify Platinum Partner" style={{ height: 30, width: 'auto', display: 'block', filter: 'brightness(0) invert(1)' }}/>
           </span>
-          <span>BLUEPRINT 001 · PREPARED JUNE 2026 · CONFIDENTIAL</span>
+          <span>BLUEPRINT 004 · PREPARED JUNE 2026 · CONFIDENTIAL</span>
         </div>
 
         {/* Big title */}
