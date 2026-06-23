@@ -29,14 +29,12 @@ const SESSION_TTL_SECONDS = 24 * 60 * 60;  // 24 hours
 
 // Per-blueprint email allowlists. If a blueprintId appears here, only the
 // listed addresses can request a passcode. Anyone else gets a 403. The
-// admin passcode and any email matching env.NOTIFY_EMAIL still bypass via
-// their own dedicated paths above, but we also include denis@uncap.com
-// here explicitly so the self-test email flow still works end-to-end.
+// admin passcode bypass and the @uncap.com team override apply above this
+// check, so internal team members can still see every blueprint.
 const BLUEPRINT_ALLOWLISTS = {
   benami: [
     'matthewlevy00@gmail.com',
     'benami67@gmail.com',
-    'denis@uncap.com',
   ],
 };
 
@@ -120,11 +118,16 @@ async function handleRequestCode(request, env) {
   }
   const email = emailRaw.toLowerCase();
 
+  // Uncap team override: anyone with an @uncap.com email can view every
+  // Blueprint, regardless of per-blueprint allowlists below. Same flow
+  // as any other client (6-digit code, etc.) — they just aren't gated.
+  const isUncapTeam = email.endsWith('@uncap.com');
+
   // Per-blueprint allowlist enforcement. If this blueprint is private to a
   // named list of clients, reject any other email up front so we never even
-  // generate a code for an unauthorised address.
+  // generate a code for an unauthorised address. Uncap team always passes.
   const allowlist = BLUEPRINT_ALLOWLISTS[blueprintId];
-  if (allowlist && !allowlist.includes(email)) {
+  if (allowlist && !isUncapTeam && !allowlist.includes(email)) {
     return json(403, { ok: false, error: 'This proposal is restricted. Use the email it was sent to.' });
   }
 
@@ -160,13 +163,13 @@ async function handleVerify(request, env, ctx) {
   }
   await env.BLUEPRINT_AUTH.delete(key);
 
-  // "Self-test" sessions: when the logged-in email IS the notification
-  // recipient (e.g. denis@uncap.com testing the customer flow), we want
-  // the full code-delivery experience but no notifications about himself
-  // viewing or approving. Marks the session so handleNotify can short-
-  // circuit too.
+  // "Self-test" sessions: any @uncap.com address (the internal team) gets
+  // the full code-delivery experience but no notifications about itself
+  // viewing or approving. Mirrors the previous NOTIFY_EMAIL-only check
+  // and extends it to the rest of the team. Marks the session so
+  // handleNotify and handleSign can short-circuit emails too.
   const notifyEmail = (env.NOTIFY_EMAIL || '').trim().toLowerCase();
-  const selfTest    = notifyEmail && email === notifyEmail;
+  const selfTest    = email.endsWith('@uncap.com') || (notifyEmail && email === notifyEmail);
 
   const token = genToken();
   await env.BLUEPRINT_AUTH.put(
