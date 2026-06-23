@@ -191,7 +191,15 @@ function BPIntro() {
           }}>
             {[
             { k: 'Prepared by', v: 'Denis Dyli', s: 'Principal' },
-            { k: 'Client', v: 'Steven Levy & Matthew Lavy', s: 'Owner · Head of Ecommerce' },
+            { k: 'Client',
+              v: <React.Fragment>
+                <span style={{ display: 'block' }}>Steven Levy</span>
+                <span style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 500, color: 'var(--uc-stone-500)', marginTop: 2 }}>Owner</span>
+                <span style={{ display: 'block', borderTop: '1px solid #2A2A2A', margin: '10px 0 0 auto', width: 60 }}/>
+                <span style={{ display: 'block', marginTop: 10 }}>Matthew Lavy</span>
+                <span style={{ display: 'block', fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 500, color: 'var(--uc-stone-500)', marginTop: 2 }}>Head of Ecommerce</span>
+              </React.Fragment>,
+              s: null },
             { k: 'Company', v: 'Ben-Ami Auto Care', s: '41 Hicks Street, Lindenhurst, NY 11757' },
             { k: 'Valid through', v: 'Jun 30, 2026', s: '7 days' }].
             map((c, i) =>
