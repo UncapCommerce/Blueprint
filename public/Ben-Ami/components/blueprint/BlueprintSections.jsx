@@ -191,7 +191,7 @@ function BPIntro() {
           }}>
             {[
             { k: 'Prepared by', v: 'Denis Dyli', s: 'Principal' },
-            { k: 'Client lead', v: 'Steven Levy', s: 'CEO' },
+            { k: 'Client lead', v: 'Matthew Lavy', s: 'Head of Ecommerce' },
             { k: 'Company', v: 'Ben-Ami Auto Care', s: '41 Hicks Street, Lindenhurst, NY 11757' },
             { k: 'Valid through', v: 'Jul 31, 2026', s: '30 days' }].
             map((c, i) =>
