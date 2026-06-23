@@ -27,6 +27,19 @@ import { EmailMessage } from "cloudflare:email";
 const CODE_TTL_SECONDS    = 10 * 60;       // 10 minutes
 const SESSION_TTL_SECONDS = 24 * 60 * 60;  // 24 hours
 
+// Per-blueprint email allowlists. If a blueprintId appears here, only the
+// listed addresses can request a passcode. Anyone else gets a 403. The
+// admin passcode and any email matching env.NOTIFY_EMAIL still bypass via
+// their own dedicated paths above, but we also include denis@uncap.com
+// here explicitly so the self-test email flow still works end-to-end.
+const BLUEPRINT_ALLOWLISTS = {
+  benami: [
+    'matthewlevy00@gmail.com',
+    'benami67@gmail.com',
+    'denis@uncap.com',
+  ],
+};
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -106,6 +119,15 @@ async function handleRequestCode(request, env) {
     return json(400, { ok: false, error: 'Enter a valid email' });
   }
   const email = emailRaw.toLowerCase();
+
+  // Per-blueprint allowlist enforcement. If this blueprint is private to a
+  // named list of clients, reject any other email up front so we never even
+  // generate a code for an unauthorised address.
+  const allowlist = BLUEPRINT_ALLOWLISTS[blueprintId];
+  if (allowlist && !allowlist.includes(email)) {
+    return json(403, { ok: false, error: 'This proposal is restricted. Use the email it was sent to.' });
+  }
+
   const code  = genCode();
   await env.BLUEPRINT_AUTH.put(
     `code:${blueprintId}:${email}`,
