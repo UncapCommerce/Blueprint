@@ -1826,7 +1826,7 @@ function BPIntegrations() {
             <span style={{ fontFamily: pFont, fontSize: 11, color: '#9A9A9A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>businesscentral.dynamics.com</span>
           </span>
         </div>
-        <img src={window.__resources && window.__resources.businessCentral || 'assets/business-central.png'} alt="Dynamics 365 Business Central dashboard" style={{ display: 'block', width: '100%', height: 'auto' }} />
+        <img src={window.__resources && window.__resources.businessCentral || 'assets/business-central.png'} alt="Dynamics 365 Business Central dashboard" loading="lazy" decoding="async" width="1600" height="900" style={{ display: 'block', width: '100%', height: 'auto' }} />
       </div>
 
       <div style={{ marginTop: 20, fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--fg-3)', letterSpacing: '0.06em' }}>
@@ -2023,7 +2023,7 @@ function BPTeam() {
         {team.map((p, i) =>
         <div key={i} style={{ background: 'var(--uc-paper)', border: '1px solid var(--line-2)', borderRadius: 5, padding: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div style={{ aspectRatio: '1/1', background: 'var(--uc-stone-200)', borderRadius: 4, overflow: 'hidden', border: '1px solid var(--line-1)' }}>
-              <img src={p.img} alt={p.n} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              <img src={p.img} alt={p.n} loading="lazy" decoding="async" width="300" height="300" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
             </div>
             <div>
               <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14, letterSpacing: '-0.012em', color: 'var(--fg-1)' }}>{p.n}</div>
@@ -2296,7 +2296,7 @@ function BPWhy() {
           &ldquo;Ultra professional, receptive, and helpful during the entire process. The personal touch, and constant communication is what separates them from other companies with a 50+ person team where the attention to detail may be lost.&rdquo;
         </blockquote>
         <div style={{ marginTop: 18, display: 'flex', alignItems: 'center', gap: 14 }}>
-          <img src={window.__resources.reviewBrandt} alt="Brandt DeVries" style={{ width: 44, height: 44, borderRadius: 999, objectFit: 'cover', flexShrink: 0, border: '1px solid #2B2B2B' }} />
+          <img src={window.__resources.reviewBrandt} alt="Brandt DeVries" loading="lazy" decoding="async" width="44" height="44" style={{ width: 44, height: 44, borderRadius: 999, objectFit: 'cover', flexShrink: 0, border: '1px solid #2B2B2B' }} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: 3, fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.06em' }}>
             <span style={{ color: 'var(--uc-paper)', fontWeight: 700 }}>Brandt DeVries</span>
             <span style={{ color: 'var(--uc-stone-500)' }}>VP of Operations, WeldingStore</span>
