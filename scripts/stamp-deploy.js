@@ -31,6 +31,7 @@ const files = [
   'public/wichelt/index.html',
   'public/ElevateOralCare/index.html',
   'public/ValveMan/index.html',
+  'public/Ben-Ami/index.html',
   'public/demo/blueprint/index.html',
 ];
 
