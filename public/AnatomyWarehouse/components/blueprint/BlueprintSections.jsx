@@ -1533,10 +1533,10 @@ function BPTechStack() {
     { name: 'Shopify Knowledge Base',    fn: 'Help center + product docs',        pri: 'start',  cost: 'Free' },
     { name: 'Google & Facebook Apps',    fn: 'Free Shopify channels for catalog + ads',pri: 'start',  cost: '$0' },
     { name: 'Uncap Quotes',              fn: 'Quote management + B2B sales',      pri: 'start',  cost: '$99/mo' },
-    { name: 'Judge.me Product Reviews',  fn: 'Reviews + social proof',            pri: 'launch', cost: '~$15–40/mo' },
-    { name: 'Rewind Backups',            fn: 'Store backup + restore',            pri: 'launch', cost: '~$39–49/mo' },
+    { name: 'JudgeMe',                   fn: 'Reviews + social proof',            pri: 'launch', cost: '$15/mo' },
+    { name: 'Rewind Backups',            fn: 'Store backup + restore',            pri: 'launch', cost: '$80/mo' },
     { name: 'Brightpearl Plugin',        fn: 'ERP + inventory sync',              pri: 'launch', cost: '~$75/mo' },
-    { name: 'Affiliatly',                fn: 'Affiliate marketing',               pri: 'launch', cost: '~$50/mo' },
+    { name: 'Affiliatly',                fn: 'Affiliate marketing',               pri: 'launch', cost: '$40/mo' },
     { name: 'HubSpot',                   fn: 'CRM + marketing automation',        pri: 'launch', cost: 'Varies' },
     { name: 'Matrixify',                 fn: 'Data import + migration',           pri: 'optional', cost: '~$20/mo' },
     { name: 'TaxCloud Plugin',           fn: 'Tax compliance',                    pri: 'optional', cost: '~$19/mo' }
@@ -1567,7 +1567,7 @@ function BPTechStack() {
 
         {(() => {
           const layers = [
-            { tier:'04', name:'Growth & Retention', note:'After launch', tools:[['Judge.me Reviews','launch'],['Rewind Backups','launch'],['Affiliatly','future'],['HubSpot','future']] },
+            { tier:'04', name:'Growth & Retention', note:'After launch', tools:[['JudgeMe','launch'],['Rewind Backups','launch'],['Affiliatly','future'],['HubSpot','future']] },
             { tier:'03', name:'Data & Integrations', note:'Operations', tools:[['Brightpearl Plugin','launch'],['TaxCloud','launch']] },
             { tier:'02', name:'Commerce Tools', note:'Built on Shopify', tools:[['Shopify B2B','start'],['Uncap Quotes','start'],['Google & Facebook Apps','start'],['Search & Discovery','start'],['Checkout Blocks','start'],['Flow','start']] },
             { tier:'01', name:'Commerce Core', note:'Foundation', tools:[['Shopify Plus','start']], core:true }
