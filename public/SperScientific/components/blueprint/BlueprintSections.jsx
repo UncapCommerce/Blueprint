@@ -2421,7 +2421,7 @@ function BPInvestment() {
             <div style={{ marginTop: 'clamp(14px, 1.6vw, 20px)', fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 'clamp(17px, 1.6vw, 24px)', lineHeight: 1.25, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>Your store and your integrated systems, working as one.</div>
           </div>
           <p style={{ margin: 0, maxWidth: 460, fontFamily: 'var(--font-serif)', fontSize: 'clamp(14.5px, 1.2vw, 17px)', lineHeight: 1.55, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>
-            A modern unified B2C/B2B storefront on Shopify Plus with a tech stack and customer
+            A modern unified storefront on Shopify Plus with a tech stack and customer
             experience — everything {brandName()} needs to launch and scale.
           </p>
 
