@@ -32,6 +32,7 @@ const files = [
   'public/ElevateOralCare/index.html',
   'public/ValveMan/index.html',
   'public/Ben-Ami/index.html',
+  'public/AnatomyWarehouse/index.html',
   'public/demo/blueprint/index.html',
 ];
 

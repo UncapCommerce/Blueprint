@@ -36,6 +36,10 @@ const BLUEPRINT_ALLOWLISTS = {
     'matthewlevy00@gmail.com',
     'benami67@gmail.com',
   ],
+  anatomywarehouse: [
+    'liz@anatomicalworldwide.com',
+    'stuart@anatomywarehouse.com',
+  ],
 };
 
 export default {
