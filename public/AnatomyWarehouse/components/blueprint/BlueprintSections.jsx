@@ -1845,8 +1845,8 @@ function BPB2B() {
   return (
     <BPSection id="b2b" n="09" label="Unified" paper tail="ONE OPERATION">
       <BPHeadline>
-        Shopify &amp; Brightpearl,{' '}
-        <BPSerif>fully connected.</BPSerif>
+        One experience{' '}
+        <BPSerif>across every channel.</BPSerif>
       </BPHeadline>
       <p style={{ marginTop:'clamp(20px, 2.4vw, 28px)', maxWidth:640, fontFamily:'var(--font-serif)', fontSize:'clamp(15px, 1.3vw, 18px)', lineHeight:1.5, color:'var(--fg-2)' }}>
         Native Shopify B2B primitives, configured for your accounts, terms, and sales motion — no bolt-on platform required.
