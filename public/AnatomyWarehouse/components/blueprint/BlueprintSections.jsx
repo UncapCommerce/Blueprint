@@ -2180,7 +2180,7 @@ function BPDelivery() {
   return (
     <BPSection id="delivery" n="13" label="Delivery" paper tail="TIMELINE">
       <BPHeadline>
-        Twenty weeks,{' '}
+        Sixteen weeks,{' '}
         <BPSerif>phase by phase.</BPSerif>
       </BPHeadline>
 
