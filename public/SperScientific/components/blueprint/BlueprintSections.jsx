@@ -2392,7 +2392,6 @@ function BPInvestment() {
     'Shopify theme-based design, configured and branded for ' + brandName(),
     'Front and back-end Shopify development',
     'Essential integrations: payments, shipping, core tools',
-    'Shopify-side ERP integration guidance',
     'Full B2B enablement: companies, catalogs, checkout',
     'Enriched customer account experience',
     'Workflow automation across your systems',
