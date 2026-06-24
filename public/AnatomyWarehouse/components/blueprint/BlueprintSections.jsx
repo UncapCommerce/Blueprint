@@ -192,7 +192,7 @@ function BPIntro() {
               { k: 'Prepared by', v: 'Denis Dyli', s: 'CEO, Principal' },
               { k: 'Client lead',  v: 'Liz Huff',   s: 'CEO' },
               { k: 'Company',      v: 'Anatomy Warehouse', s: null, a: '8047 Monticello Ave\nSkokie, IL 60076' },
-              { k: 'Valid through', v: 'Jun 30, 2026',    s: '30 days' }
+              { k: 'Valid through', v: 'Jun 30, 2026',    s: '7 days' }
             ].map((c, i) => (
               <div key={i} style={{
                 padding: '14px 0', borderBottom: '1px solid #1F1F1F',
