@@ -1531,12 +1531,12 @@ function BPTechStack() {
     { name: 'Shopify Flow',              fn: 'Automation + workflows',             pri: 'start',  cost: 'Free' },
     { name: 'Shopify Digital Downloads', fn: 'Digital product delivery',          pri: 'start',  cost: 'Free' },
     { name: 'Shopify Knowledge Base',    fn: 'Help center + product docs',        pri: 'start',  cost: 'Free' },
+    { name: 'Google & Facebook Apps',    fn: 'Free Shopify channels for catalog + ads',pri: 'start',  cost: '$0' },
     { name: 'Uncap Quotes',              fn: 'Quote management + B2B sales',      pri: 'start',  cost: '$99/mo' },
     { name: 'Yotpo Product Reviews',     fn: 'Reviews + social proof',            pri: 'launch', cost: '~$119–199/mo' },
     { name: 'ShipperHQ',                 fn: 'Shipping rates + rules',            pri: 'launch', cost: '~$200/mo' },
     { name: 'Rewind Backups',            fn: 'Store backup + restore',            pri: 'launch', cost: '~$39–49/mo' },
     { name: 'Brightpearl Plugin',        fn: 'ERP + inventory sync',              pri: 'launch', cost: '~$75/mo' },
-    { name: 'Google & Facebook Apps',    fn: 'Free Shopify channels for catalog + ads',pri: 'launch', cost: '$0' },
     { name: 'Affiliatly',                fn: 'Affiliate marketing',               pri: 'launch', cost: '~$50/mo' },
     { name: 'HubSpot',                   fn: 'CRM + marketing automation',        pri: 'launch', cost: 'Varies' },
     { name: 'Matrixify',                 fn: 'Data import + migration',           pri: 'optional', cost: '~$20/mo' },
@@ -1569,8 +1569,8 @@ function BPTechStack() {
         {(() => {
           const layers = [
             { tier:'04', name:'Growth & Retention', note:'After launch', tools:[['Yotpo Reviews','launch'],['Rewind Backups','launch'],['Affiliatly','future'],['HubSpot','future']] },
-            { tier:'03', name:'Data & Integrations', note:'Operations', tools:[['Brightpearl Plugin','launch'],['Google & Facebook Apps','launch'],['ShipperHQ','launch'],['TaxCloud','launch']] },
-            { tier:'02', name:'Commerce Tools', note:'Built on Shopify', tools:[['Shopify B2B','start'],['Uncap Quotes','start'],['Search & Discovery','start'],['Checkout Blocks','start'],['Flow','start']] },
+            { tier:'03', name:'Data & Integrations', note:'Operations', tools:[['Brightpearl Plugin','launch'],['ShipperHQ','launch'],['TaxCloud','launch']] },
+            { tier:'02', name:'Commerce Tools', note:'Built on Shopify', tools:[['Shopify B2B','start'],['Uncap Quotes','start'],['Google & Facebook Apps','start'],['Search & Discovery','start'],['Checkout Blocks','start'],['Flow','start']] },
             { tier:'01', name:'Commerce Core', note:'Foundation', tools:[['Shopify Plus','start']], core:true }
           ];
           const chip = { start:{ bg:'var(--uc-signal)', fg:'var(--uc-black)' }, launch:{ bg:'#FF8B37', fg:'var(--uc-black)' }, future:{ bg:'transparent', fg:'var(--uc-stone-300)', outline:true } };
