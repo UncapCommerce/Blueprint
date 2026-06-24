@@ -1532,7 +1532,7 @@ function BPTechStack() {
     { name: 'Shopify Digital Downloads', fn: 'Digital product delivery',          pri: 'start',  cost: 'Free' },
     { name: 'Shopify Knowledge Base',    fn: 'Help center + product docs',        pri: 'start',  cost: 'Free' },
     { name: 'Google & Facebook Apps',    fn: 'Free Shopify channels for catalog + ads',pri: 'start',  cost: '$0' },
-    { name: 'Uncap Quotes',              fn: 'Quote management + B2B sales',      pri: 'start',  cost: '$99/mo' },
+    { name: 'Uncap Quotes',              fn: 'Quote management + B2B sales',      pri: 'start',  cost: '$100/mo' },
     { name: 'JudgeMe',                   fn: 'Reviews + social proof',            pri: 'launch', cost: '$15/mo' },
     { name: 'Rewind Backups',            fn: 'Store backup + restore',            pri: 'launch', cost: '$80/mo' },
     { name: 'Brightpearl App',           fn: 'ERP + inventory sync',              pri: 'launch', cost: 'Free' },
