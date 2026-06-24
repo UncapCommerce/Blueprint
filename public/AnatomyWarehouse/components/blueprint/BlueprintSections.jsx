@@ -2658,7 +2658,7 @@ function BPProof() {
     { v: 'dark', q: 'The team communicated consistently and efficiently — internal stakeholders were impressed with Uncap\u2019s vast technical expertise.', stat: '60 Days', statL: 'Migrating to Shopify after Blueprint', n: 'Todd Arey', c: 'E3 Spark Plugs' },
     { v: 'dotted', q: 'The integration of our platforms created an easy solution that even our complex systems sales teams can use.', stat: '83% Lower TCO', statL: 'Total cost of ownership on Shopify', n: 'Bryan Snyder', c: 'Canon Medical' },
     { v: 'paper', q: 'During the Blueprint, Uncap walked through every requirement — what was native, what needed an app, and what was custom.', stat: '1M SKUs', statL: 'Mapped to sync from Epicor to Shopify', n: 'Denise Foley', c: 'ULE Group' },
-    { v: 'dotted', q: 'The professionalism, high quality of the design, timely communication and responsiveness have been greatly appreciated (especially compared to our previous dev agency partner).', stat: 'BigCommerce', statL: 'Migrated to Shopify with Uncap', n: 'Kiki Fischer', c: 'Rescue Essentials' },
+    { v: 'dotted', q: 'The professionalism, high quality of the design, timely communication and responsiveness have been greatly appreciated (especially compared to our previous dev agency partner).', stat: 'BigCommerce\nMigration', statL: 'Migrated to Shopify with Uncap', n: 'Kiki Fischer', c: 'Rescue Essentials' },
     { v: 'signal', q: 'They are brilliant and very knowledgeable of all that Shopify can do.', stat: 'Product Config', statL: 'Custom product ordering for manufacturing', n: 'Peggy Farabaugh', c: 'Vermont Woods' },
     { v: 'paper', q: 'Uncap demonstrated a deep understanding of the Shopify ecosystem from the get-go.', stat: 'Custom ERP', statL: 'Integration data mapping for Shopify', n: 'Andy Morgan', c: 'ScooterWorks' },
     { v: 'paper', q: 'The personal touch and constant communication is what separates them from other companies with a 50+ person team where the attention to detail may be lost.', n: 'Brandt DeVries', c: 'WeldingStore' },
@@ -2696,9 +2696,9 @@ function BPProof() {
               <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 'clamp(15px, 1.4vw, 18px)', lineHeight: 1.35, letterSpacing: '-0.01em', color: t.fg, textWrap: 'pretty' }}>&ldquo;{card.q}&rdquo;</div>
 
               {card.stat && (
-                <div style={{ paddingTop: 14, borderTop: '1px solid ' + t.line, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 0.9fr)', gap: 12, alignItems: 'start' }}>
-                  <span style={{ fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(22px, 2.2vw, 30px)', letterSpacing: '-0.04em', lineHeight: 0.95, color: t.fg, textTransform: 'uppercase' }}>{card.stat}</span>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.faint, textAlign: 'right', lineHeight: 1.4 }}>{card.statL}</span>
+                <div style={{ paddingTop: 14, borderTop: '1px solid ' + t.line, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <span style={{ fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(22px, 2.2vw, 30px)', letterSpacing: '-0.04em', lineHeight: 0.95, color: t.fg, textTransform: 'uppercase', overflowWrap: 'anywhere', whiteSpace: 'pre-line' }}>{card.stat}</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.faint, lineHeight: 1.4 }}>{card.statL}</span>
                 </div>
               )}
 
