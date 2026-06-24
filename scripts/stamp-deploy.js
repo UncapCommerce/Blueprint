@@ -33,6 +33,7 @@ const files = [
   'public/ValveMan/index.html',
   'public/Ben-Ami/index.html',
   'public/AnatomyWarehouse/index.html',
+  'public/SperScientific/index.html',
   'public/demo/blueprint/index.html',
 ];
 

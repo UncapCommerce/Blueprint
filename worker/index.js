@@ -40,6 +40,9 @@ const BLUEPRINT_ALLOWLISTS = {
     'liz@anatomicalworldwide.com',
     'stuart@anatomywarehouse.com',
   ],
+  sperscientific: [
+    'henry@sperscientific.com',
+  ],
 };
 
 export default {
