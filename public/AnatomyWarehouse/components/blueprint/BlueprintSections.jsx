@@ -1651,7 +1651,7 @@ function BPTechStack() {
           <span style={{ fontFamily:'var(--font-mono)', fontSize:10, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'var(--uc-signal)' }}>Est. monthly</span>
           <span style={{ fontFamily:'var(--font-serif)', fontSize:13, color:'var(--uc-stone-500)' }}>Start + launch stack, before optional &amp; future phases</span>
           <span/>
-          <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:'clamp(18px,1.8vw,24px)', letterSpacing:'-0.03em', color:'var(--uc-paper)', textAlign:'right' }}>~$3,100/mo</span>
+          <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:'clamp(18px,1.8vw,24px)', letterSpacing:'-0.03em', color:'var(--uc-paper)', textAlign:'right' }}>~$2,600/mo</span>
         </div>
       </div>
       <div style={{ marginTop:16, display:'flex', gap:18, flexWrap:'wrap', fontFamily:'var(--font-mono)', fontSize:10, color:'var(--uc-stone-500)', letterSpacing:'0.06em' }}>
