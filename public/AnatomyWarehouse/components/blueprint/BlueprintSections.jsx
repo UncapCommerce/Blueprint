@@ -1533,13 +1533,13 @@ function BPTechStack() {
     { name: 'Shopify Knowledge Base',    fn: 'Help center + product docs',        pri: 'start',  cost: 'Free' },
     { name: 'Google & Facebook Apps',    fn: 'Free Shopify channels for catalog + ads',pri: 'start',  cost: '$0' },
     { name: 'Uncap Quotes',              fn: 'Quote management + B2B sales',      pri: 'start',  cost: '$100/mo' },
+    { name: 'TaxCloud App',              fn: 'Tax compliance',                    pri: 'launch', cost: 'Free' },
+    { name: 'Brightpearl App',           fn: 'ERP + inventory sync',              pri: 'launch', cost: 'Free' },
+    { name: 'HubSpot App',               fn: 'CRM + marketing automation',        pri: 'launch', cost: 'Free' },
     { name: 'JudgeMe',                   fn: 'Reviews + social proof',            pri: 'launch', cost: '$15/mo' },
     { name: 'Rewind Backups',            fn: 'Store backup + restore',            pri: 'launch', cost: '$80/mo' },
-    { name: 'Brightpearl App',           fn: 'ERP + inventory sync',              pri: 'launch', cost: 'Free' },
     { name: 'Affiliatly',                fn: 'Affiliate marketing',               pri: 'launch', cost: '$40/mo' },
-    { name: 'HubSpot App',               fn: 'CRM + marketing automation',        pri: 'launch', cost: 'Free' },
-    { name: 'Matrixify',                 fn: 'Data import + migration',           pri: 'optional', cost: '~$20/mo' },
-    { name: 'TaxCloud App',              fn: 'Tax compliance',                    pri: 'optional', cost: 'Free' }
+    { name: 'Matrixify',                 fn: 'Data import + migration',           pri: 'optional', cost: '~$20/mo' }
   ];
   const priMeta = {
     start:  { l: 'Needed to start',  c: 'var(--uc-signal)', fg: 'var(--uc-black)' },
