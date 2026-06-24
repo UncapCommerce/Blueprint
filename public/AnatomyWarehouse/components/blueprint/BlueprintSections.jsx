@@ -1535,11 +1535,11 @@ function BPTechStack() {
     { name: 'Uncap Quotes',              fn: 'Quote management + B2B sales',      pri: 'start',  cost: '$99/mo' },
     { name: 'JudgeMe',                   fn: 'Reviews + social proof',            pri: 'launch', cost: '$15/mo' },
     { name: 'Rewind Backups',            fn: 'Store backup + restore',            pri: 'launch', cost: '$80/mo' },
-    { name: 'Brightpearl Plugin',        fn: 'ERP + inventory sync',              pri: 'launch', cost: '~$75/mo' },
+    { name: 'Brightpearl App',           fn: 'ERP + inventory sync',              pri: 'launch', cost: 'Free' },
     { name: 'Affiliatly',                fn: 'Affiliate marketing',               pri: 'launch', cost: '$40/mo' },
-    { name: 'HubSpot',                   fn: 'CRM + marketing automation',        pri: 'launch', cost: 'Varies' },
+    { name: 'HubSpot App',               fn: 'CRM + marketing automation',        pri: 'launch', cost: 'Free' },
     { name: 'Matrixify',                 fn: 'Data import + migration',           pri: 'optional', cost: '~$20/mo' },
-    { name: 'TaxCloud Plugin',           fn: 'Tax compliance',                    pri: 'optional', cost: '~$19/mo' }
+    { name: 'TaxCloud App',              fn: 'Tax compliance',                    pri: 'optional', cost: 'Free' }
   ];
   const priMeta = {
     start:  { l: 'Needed to start',  c: 'var(--uc-signal)', fg: 'var(--uc-black)' },
@@ -1567,8 +1567,8 @@ function BPTechStack() {
 
         {(() => {
           const layers = [
-            { tier:'04', name:'Growth & Retention', note:'After launch', tools:[['JudgeMe','launch'],['Rewind Backups','launch'],['Affiliatly','future'],['HubSpot','future']] },
-            { tier:'03', name:'Data & Integrations', note:'Operations', tools:[['Brightpearl Plugin','launch'],['TaxCloud','launch']] },
+            { tier:'04', name:'Growth & Retention', note:'After launch', tools:[['JudgeMe','launch'],['Rewind Backups','launch'],['Affiliatly','future'],['HubSpot App','future']] },
+            { tier:'03', name:'Data & Integrations', note:'Operations', tools:[['Brightpearl App','launch'],['TaxCloud App','launch']] },
             { tier:'02', name:'Commerce Tools', note:'Built on Shopify', tools:[['Shopify B2B','start'],['Uncap Quotes','start'],['Google & Facebook Apps','start'],['Search & Discovery','start'],['Checkout Blocks','start'],['Flow','start']] },
             { tier:'01', name:'Commerce Core', note:'Foundation', tools:[['Shopify Plus','start']], core:true }
           ];
@@ -1651,7 +1651,7 @@ function BPTechStack() {
           <span style={{ fontFamily:'var(--font-mono)', fontSize:10, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'var(--uc-signal)' }}>Est. monthly</span>
           <span style={{ fontFamily:'var(--font-serif)', fontSize:13, color:'var(--uc-stone-500)' }}>Start + launch stack, before optional &amp; future phases</span>
           <span/>
-          <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:'clamp(18px,1.8vw,24px)', letterSpacing:'-0.03em', color:'var(--uc-paper)', textAlign:'right' }}>~$2,600/mo</span>
+          <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:'clamp(18px,1.8vw,24px)', letterSpacing:'-0.03em', color:'var(--uc-paper)', textAlign:'right' }}>~$2,535/mo</span>
         </div>
       </div>
       <div style={{ marginTop:16, display:'flex', gap:18, flexWrap:'wrap', fontFamily:'var(--font-mono)', fontSize:10, color:'var(--uc-stone-500)', letterSpacing:'0.06em' }}>
