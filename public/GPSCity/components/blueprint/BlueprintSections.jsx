@@ -132,14 +132,17 @@ function BPIntro() {
           <div style={{
             fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700,
             letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--uc-stone-500)',
-            marginBottom: 18, display: 'flex', alignItems: 'center', gap: 18, flexWrap: 'wrap'
-          }}>
-            <span>Prepared for</span>
-            {window.__brand && window.__brand.logoSrc && (
-              <img src={window.__brand.logoSrc} alt={brandName()} loading="lazy" decoding="async"
-                style={{ height: 36, width: 'auto', display: 'block', objectFit: 'contain', filter: 'brightness(0) invert(1)' }}/>
-            )}
-          </div>
+            marginBottom: 18
+          }}>Prepared for</div>
+          {window.__brand && window.__brand.logoSrc && (
+            <img src={window.__brand.logoSrc} alt={brandName()} decoding="async" fetchpriority="high"
+              style={{
+                height: 'clamp(64px, 8vw, 96px)', width: 'auto', maxWidth: '100%',
+                display: 'block', objectFit: 'contain',
+                marginBottom: 'clamp(20px, 2.4vw, 32px)',
+                filter: 'brightness(0) invert(1)'
+              }}/>
+          )}
           <h1 style={{
             margin: 0,
             fontFamily: 'var(--font-hero)', fontWeight: 700,
