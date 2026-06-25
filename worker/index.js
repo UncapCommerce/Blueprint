@@ -43,6 +43,10 @@ const BLUEPRINT_ALLOWLISTS = {
   sperscientific: [
     'henry@sperscientific.com',
   ],
+  gpscity: [
+    'brian@gpscity.com',
+    'jordan@gpscity.com',
+  ],
 };
 
 export default {
