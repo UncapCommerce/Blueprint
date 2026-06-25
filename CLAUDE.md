@@ -58,8 +58,9 @@ contract — match this when adding a new one:
 
 For any change Denis asks for, follow this loop without asking:
 
-1. **Branch** off latest `main` (`git checkout main && git pull --ff-only
-   origin main && git checkout -b claude/<short-slug>`)
+1. **Stay on `main`**. Don't create feature/session branches, don't
+   open PRs. Edit, commit, push to `main` directly. Cloudflare's
+   GitHub integration auto-deploys on push.
 2. **Make the change** — edit files, no need to add a build step
 3. **Smoke-test locally** before pushing for any non-trivial change:
    - For JSX/CSS/HTML edits: `wrangler dev` (or `npx wrangler dev`),
@@ -72,20 +73,12 @@ For any change Denis asks for, follow this loop without asking:
    *what* (the diff already shows the what). Match the existing repo
    style: lowercase prefix, em-dashes are banned site-wide and in commit
    messages (PR #66 stripped them as an "AI tell"), keep it concise
-5. **Push** the branch with `git push -u origin <branch>`
-6. **Open a PR** via `mcp__github__create_pull_request` against `main`
-   with a summary + a test plan checklist
-7. **Squash-merge** via `mcp__github__merge_pull_request` (method:
-   `squash`) once the PR's `mergeable_state` is `clean`. The merge
-   triggers the Deploy workflow automatically
-8. **Confirm deploy kicked off** by linking to the Actions tab. Don't
-   poll — Denis will tell you if something looks off
+5. **Push to `main`** with `git push origin main`. Cloudflare's
+   GitHub integration deploys automatically on push.
 
-The user has pre-authorized this loop. Don't ask before any of:
-branching, committing, pushing, opening a PR, squash-merging, or
-deploying. Do still ask before destructive ops (force push, branch
-deletes that touch shared history, anything that rewrites already-pushed
-commits).
+The user has pre-authorized this loop. Don't ask before committing or
+pushing to `main`. Do still ask before destructive ops (force push,
+anything that rewrites already-pushed commits).
 
 ## When to pause and ask
 
