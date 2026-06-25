@@ -134,15 +134,6 @@ function BPIntro() {
             letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--uc-stone-500)',
             marginBottom: 18
           }}>Prepared for</div>
-          {window.__brand && window.__brand.logoSrc && (
-            <img src={window.__brand.logoSrc} alt={brandName()} decoding="async" fetchpriority="high"
-              style={{
-                height: 'clamp(64px, 8vw, 96px)', width: 'auto', maxWidth: '100%',
-                display: 'block', objectFit: 'contain',
-                marginBottom: 'clamp(20px, 2.4vw, 32px)',
-                filter: 'brightness(0) invert(1)'
-              }}/>
-          )}
           <h1 style={{
             margin: 0,
             fontFamily: 'var(--font-hero)', fontWeight: 700,
