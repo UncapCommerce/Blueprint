@@ -1509,7 +1509,7 @@ function BPTechStack() {
     { name: 'Shopify Bundles',             fn: 'Product bundles & grouped orders',     pri: 'start',  cost: 'Included' },
     { name: 'Uncap Quotes',               fn: 'Quotes & tier price requests',          pri: 'start',  cost: '$100/mo' },
     { name: 'Yotpo',                       fn: 'Reviews, loyalty & referral programs', pri: 'launch', cost: 'Usage based' },
-    { name: 'Klaviyo',                     fn: 'Retention & email marketing',          pri: 'launch', cost: 'Usage based' },
+    { name: 'Mailchimp',                   fn: 'Retention & email marketing',          pri: 'launch', cost: 'Usage based' },
     { name: 'Gorgias',                     fn: 'Customer support & AI helpdesk',       pri: 'launch', cost: 'Usage based' },
     { name: 'Aftership',                   fn: 'Shipping tracking, returns & exchanges', pri: 'launch', cost: 'Usage based' },
     { name: 'Shopify Knowledge Base',      fn: 'Self-serve help center',               pri: 'postlaunch', cost: 'Included' },
@@ -1543,7 +1543,7 @@ function BPTechStack() {
 
         {(() => {
           const layers = [
-            { tier:'04', name:'Growth & Retention', note:'After launch', tools:[['Yotpo','launch'],['Klaviyo','launch'],['Gorgias','launch']] },
+            { tier:'04', name:'Growth & Retention', note:'After launch', tools:[['Yotpo','launch'],['Mailchimp','launch'],['Gorgias','launch']] },
             { tier:'03', name:'Experience & Engagement', note:'Customer-facing', tools:[['Shopify Search & Discovery','start'],['Shopify Bundles','start'],['Shopify Checkout Blocks','start'],['Aftership','launch'],['Shopify Marketplace Connect','postlaunch']] },
             { tier:'02', name:'Data & Integration', note:'System of record', tools:[['NetSuite Connector','start'],['Uncap Quotes','start'],['Shopify Flow','start']] },
             { tier:'01', name:'Commerce Core', note:'Foundation', tools:[['Shopify Plus','start']], core:true }
