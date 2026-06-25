@@ -35,9 +35,9 @@ contract — match this when adding a new one:
   button to read
 - **Blueprint number**: assign the next sequential ID (`001` Mitutoyo,
   `002` wichelt, `003` ElevateOralCare, `004` ValveMan, `005` Ben-Ami,
-  `006` AnatomyWarehouse, `007` SperScientific, `008` GPSCity, etc.)
-  and put it in the page header. Number is by creation order, not
-  alphabetical
+  `006` AnatomyWarehouse, `007` SperScientific, `008` GPSCity,
+  `009` TucsonAlternator, etc.) and put it in the page header. Number
+  is by creation order, not alphabetical
 - **Approve & kickoff button**: use the `BPApproveButton` pattern that
   opens a signature modal collecting full name + title, POSTs to
   `/api/auth/sign`, and only flips to "Approved ✓" after the server
