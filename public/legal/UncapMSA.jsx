@@ -117,10 +117,11 @@
         .uncap-msa .msa-clause,
         .uncap-msa .msa-sub { grid-template-columns: 30px 1fr; column-gap: 8px; }
       }
-      .uncap-msa .msa-print-row { display: flex; justify-content: flex-end; margin-bottom: 16px; }
-      .uncap-msa .msa-print-btn { display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg-1); background: transparent; border: 1px solid var(--line-1); border-radius: 999px; cursor: pointer; transition: border-color .15s var(--ease-out), background .15s var(--ease-out); }
-      .uncap-msa .msa-print-btn:hover { border-color: var(--fg-1); background: var(--uc-cream); }
-      .uncap-msa .msa-print-btn svg { width: 13px; height: 13px; }
+      /* Floating print row teleported to the very top of the modal form. */
+      .msa-print-row { display: flex; justify-content: flex-end; margin: -8px -8px 18px; padding: 8px; position: sticky; top: -8px; z-index: 6; background: linear-gradient(180deg, var(--uc-paper) 70%, rgba(255,255,255,0) 100%); }
+      .msa-print-btn { display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg-1); background: var(--uc-paper); border: 1px solid var(--line-1); border-radius: 999px; cursor: pointer; transition: border-color .15s var(--ease-out), background .15s var(--ease-out); box-shadow: 0 8px 22px -16px rgba(10,10,10,0.5); }
+      .msa-print-btn:hover { border-color: var(--fg-1); background: var(--uc-cream); }
+      .msa-print-btn svg { width: 13px; height: 13px; }
       /* Print mode: handlePrintMSA clones the rendered .uncap-msa to a
          direct child of <body> tagged with .uncap-msa-print-clone, so
          the agreement renders in normal flow (no fixed/absolute modal
@@ -266,6 +267,34 @@
     const actions = (props && props.actions) || null;
     const effective = todayString();
 
+    // Teleport the Print button to the very top of the modal form so it
+    // sits in the top-right corner of the popup card, above the Name +
+    // Title row, with sticky positioning so it stays pinned while the
+    // signer scrolls through the agreement.
+    React.useEffect(() => {
+      const dialog = document.querySelector('[role="dialog"][aria-label="Sign to approve"]');
+      if (!dialog) return undefined;
+      const form = dialog.querySelector('form');
+      if (!form) return undefined;
+      if (form.querySelector(':scope > .msa-print-row')) return undefined;
+
+      const row = document.createElement('div');
+      row.className = 'msa-print-row';
+      row.innerHTML =
+        '<button type="button" class="msa-print-btn" title="Print the Master Services Agreement">' +
+          '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+            '<polyline points="6 9 6 2 18 2 18 9"></polyline>' +
+            '<path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path>' +
+            '<rect x="6" y="14" width="12" height="8"></rect>' +
+          '</svg>' +
+          'Print agreement' +
+        '</button>';
+      row.querySelector('button').addEventListener('click', handlePrintMSA);
+      form.insertBefore(row, form.firstChild);
+
+      return () => { if (row.parentNode) row.parentNode.removeChild(row); };
+    }, []);
+
     // The two-column signature grid (Client + Uncap). Rendered at the top
     // and again at the bottom of the MSA so the document reads like a
     // proper execution page after the terms.
@@ -316,17 +345,6 @@
 
     return (
       React.createElement('div', { className: 'uncap-msa' },
-        React.createElement('div', { className: 'msa-print-row' },
-          React.createElement('button',
-            { type: 'button', className: 'msa-print-btn', onClick: handlePrintMSA, title: 'Print the Master Services Agreement' },
-            React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' },
-              React.createElement('polyline', { points: '6 9 6 2 18 2 18 9' }),
-              React.createElement('path', { d: 'M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2' }),
-              React.createElement('rect', { x: 6, y: 14, width: 12, height: 8 })
-            ),
-            'Print agreement'
-          )
-        ),
         React.createElement('div', { className: 'msa-eyebrow' }, 'Signature'),
         React.createElement('h2', null, 'Sign to bind this Agreement.'),
         React.createElement('div', { className: 'msa-dt' }, 'Effective ' + effective),
