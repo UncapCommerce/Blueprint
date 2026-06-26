@@ -19,6 +19,47 @@
   const todayString = () =>
     new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
+  // Print handler. Clones the currently-rendered .uncap-msa to the top
+  // of <body> with class .uncap-msa-print-clone. The print stylesheet
+  // hides every other body child and lets the clone paginate naturally.
+  // Cleans up the clone after window.print() returns (or after a
+  // generous timeout — Safari fires print synchronously, Chrome/Firefox
+  // asynchronously via afterprint).
+  function handlePrintMSA() {
+    try {
+      const live = document.querySelector('.uncap-msa');
+      if (!live) { window.print(); return; }
+      // Remove any orphan clones from a previous print that was aborted.
+      document.querySelectorAll('body > .uncap-msa-print-clone').forEach((n) => n.remove());
+
+      const clone = live.cloneNode(true);
+      clone.classList.remove('uncap-msa');
+      clone.classList.add('uncap-msa', 'uncap-msa-print-clone');
+
+      // Drop the print button + action buttons from the clone — they
+      // shouldn't appear on the printed page.
+      clone.querySelectorAll('.msa-print-row, .msa-actions').forEach((n) => n.remove());
+
+      document.body.appendChild(clone);
+
+      const cleanup = () => {
+        if (clone && clone.parentNode) clone.parentNode.removeChild(clone);
+        window.removeEventListener('afterprint', cleanup);
+      };
+      window.addEventListener('afterprint', cleanup);
+      // Belt-and-suspenders: if afterprint doesn't fire (rare), drop the
+      // clone after a generous delay so the screen view goes back to normal.
+      setTimeout(cleanup, 60_000);
+
+      // Yield a frame so the browser parses the new node before printing.
+      requestAnimationFrame(() => {
+        try { window.print(); } catch (_) { cleanup(); }
+      });
+    } catch (_) {
+      try { window.print(); } catch (__) {}
+    }
+  }
+
   // ── Once-only stylesheet for the MSA body. Scoped under .uncap-msa so it
   //    can't bleed into the rest of the modal. ────────────────────────────
   const STYLE_ID = 'uncap-msa-styles';
@@ -80,15 +121,21 @@
       .uncap-msa .msa-print-btn { display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg-1); background: transparent; border: 1px solid var(--line-1); border-radius: 999px; cursor: pointer; transition: border-color .15s var(--ease-out), background .15s var(--ease-out); }
       .uncap-msa .msa-print-btn:hover { border-color: var(--fg-1); background: var(--uc-cream); }
       .uncap-msa .msa-print-btn svg { width: 13px; height: 13px; }
+      /* Print mode: handlePrintMSA clones the rendered .uncap-msa to a
+         direct child of <body> tagged with .uncap-msa-print-clone, so
+         the agreement renders in normal flow (no fixed/absolute modal
+         wrapper, no 90vh scroll container) and paginates across pages.
+         Everything that ISN'T the clone is display:none'd at print time. */
+      .uncap-msa-print-clone { display: none; }
       @media print {
-        body * { visibility: hidden !important; }
-        .uncap-msa, .uncap-msa * { visibility: visible !important; }
-        .uncap-msa { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; padding: 14mm !important; background: white !important; color: black !important; }
-        .uncap-msa .msa-print-row,
-        .uncap-msa .msa-actions { display: none !important; }
-        [role="dialog"] { position: static !important; max-height: none !important; overflow: visible !important; padding: 0 !important; background: white !important; }
-        [role="dialog"] form { max-width: none !important; max-height: none !important; overflow: visible !important; border: none !important; box-shadow: none !important; padding: 0 !important; background: white !important; }
-        @page { size: A4; margin: 0; }
+        body > *:not(.uncap-msa-print-clone) { display: none !important; }
+        body > .uncap-msa-print-clone { display: block !important; background: white !important; color: black !important; padding: 14mm 14mm 20mm !important; font-family: var(--font-sans), Inter, -apple-system, sans-serif; font-size: 12px; line-height: 1.55; }
+        body > .uncap-msa-print-clone .msa-print-row,
+        body > .uncap-msa-print-clone .msa-actions { display: none !important; }
+        body > .uncap-msa-print-clone .msa-clause,
+        body > .uncap-msa-print-clone .msa-sub,
+        body > .uncap-msa-print-clone .msa-sigbox { page-break-inside: avoid; break-inside: avoid; }
+        @page { size: A4; margin: 12mm 0; }
       }
     `;
     document.head.appendChild(s);
@@ -271,7 +318,7 @@
       React.createElement('div', { className: 'uncap-msa' },
         React.createElement('div', { className: 'msa-print-row' },
           React.createElement('button',
-            { type: 'button', className: 'msa-print-btn', onClick: () => { try { window.print(); } catch (_) {} }, title: 'Print the Master Services Agreement' },
+            { type: 'button', className: 'msa-print-btn', onClick: handlePrintMSA, title: 'Print the Master Services Agreement' },
             React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' },
               React.createElement('polyline', { points: '6 9 6 2 18 2 18 9' }),
               React.createElement('path', { d: 'M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2' }),
