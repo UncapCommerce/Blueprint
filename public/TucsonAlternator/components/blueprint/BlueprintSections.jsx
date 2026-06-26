@@ -697,7 +697,7 @@ function BPGantt() {
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-3)'
       }}>
-        <span>WK 01 → WK 16 · ~4 Months</span>
+        <span>WK 01 → WK 12 · ~3 Months</span>
         <span>Overlapping phases · single team</span>
       </div>
     </div>
@@ -2086,7 +2086,7 @@ function BPDelivery() {
   return (
     <BPSection id="delivery" n="12" label="Delivery" paper tail="TIMELINE">
       <BPHeadline>
-        Sixteen weeks,{' '}
+        Twelve weeks,{' '}
         <BPSerif>phase by phase.</BPSerif>
       </BPHeadline>
 
@@ -2881,7 +2881,7 @@ function BPNext() {
   const steps = [
     { n: '01', t: 'Approve this Blueprint', d: 'Sign off on scope, timeline, and investment.' },
     { n: '02', t: 'Onboard within 2 weeks', d: 'Discovery session + access to systems.' },
-    { n: '03', t: 'Ship in 16 weeks', d: 'Launch live, then move into Growth.' }
+    { n: '03', t: 'Ship in 12 weeks', d: 'Launch live, then move into Growth.' }
   ];
   return (
     <BPSection id="next" n="19" label="Next" paper tail="LET'S GO">
