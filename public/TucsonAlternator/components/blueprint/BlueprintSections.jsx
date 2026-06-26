@@ -1674,14 +1674,6 @@ function ShopAdminNav({ activeApp }) {
         <Child label="Accounts"/>
         <Child label="Settings"/>
       </>}
-      {/* Uncap Connect — expandable */}
-      <AppParent label="Uncap Connect" glyph="⌖" open={activeApp==='connect'}/>
-      {activeApp==='connect' && <>
-        <Child label="Overview" active/>
-        <Child label="Field mapping"/>
-        <Child label="Sync logs"/>
-        <Child label="Settings"/>
-      </>}
     </div>
   );
 }
@@ -2145,7 +2137,7 @@ function BPRiskAssessment() {
   const risks = [
     { t: 'Integration complexity', sev: 'High',
       d: 'Bidirectional ERP sync is the hardest dependency — mismatches can block orders.',
-      m: 'Field-level mapping validated early via Uncap Connect, with a live sync log.' },
+      m: 'Field-level mapping validated early in a staging environment, with a live sync log.' },
     { t: 'Scope creep mid-build', sev: 'Medium',
       d: 'New requests surface once the build is underway and pull at budget and timeline.',
       m: 'Fixed scope up front, with a pre-approved buffer allowance for out-of-scope asks.' }
