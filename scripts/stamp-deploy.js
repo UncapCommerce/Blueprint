@@ -36,6 +36,7 @@ const files = [
   'public/SperScientific/index.html',
   'public/GPSCity/index.html',
   'public/TucsonAlternator/index.html',
+  'public/ElyCattleman/index.html',
   'public/demo/blueprint/index.html',
 ];
 

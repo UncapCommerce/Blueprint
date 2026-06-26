@@ -47,6 +47,10 @@ const BLUEPRINT_ALLOWLISTS = {
     'brian@gpscity.com',
     'jordan@gpscity.com',
   ],
+  elycattleman: [
+    'cstein@elyandwalker.com',
+    'mdavis@elyandwalker.com',
+  ],
 };
 
 export default {
