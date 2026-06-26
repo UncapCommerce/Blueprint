@@ -76,6 +76,20 @@
         .uncap-msa .msa-clause,
         .uncap-msa .msa-sub { grid-template-columns: 30px 1fr; column-gap: 8px; }
       }
+      .uncap-msa .msa-print-row { display: flex; justify-content: flex-end; margin-bottom: 16px; }
+      .uncap-msa .msa-print-btn { display: inline-flex; align-items: center; gap: 8px; padding: 9px 14px; font-family: var(--font-mono); font-size: 10.5px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: var(--fg-1); background: transparent; border: 1px solid var(--line-1); border-radius: 999px; cursor: pointer; transition: border-color .15s var(--ease-out), background .15s var(--ease-out); }
+      .uncap-msa .msa-print-btn:hover { border-color: var(--fg-1); background: var(--uc-cream); }
+      .uncap-msa .msa-print-btn svg { width: 13px; height: 13px; }
+      @media print {
+        body * { visibility: hidden !important; }
+        .uncap-msa, .uncap-msa * { visibility: visible !important; }
+        .uncap-msa { position: absolute !important; left: 0 !important; top: 0 !important; width: 100% !important; padding: 14mm !important; background: white !important; color: black !important; }
+        .uncap-msa .msa-print-row,
+        .uncap-msa .msa-actions { display: none !important; }
+        [role="dialog"] { position: static !important; max-height: none !important; overflow: visible !important; padding: 0 !important; background: white !important; }
+        [role="dialog"] form { max-width: none !important; max-height: none !important; overflow: visible !important; border: none !important; box-shadow: none !important; padding: 0 !important; background: white !important; }
+        @page { size: A4; margin: 0; }
+      }
     `;
     document.head.appendChild(s);
   }
@@ -255,6 +269,17 @@
 
     return (
       React.createElement('div', { className: 'uncap-msa' },
+        React.createElement('div', { className: 'msa-print-row' },
+          React.createElement('button',
+            { type: 'button', className: 'msa-print-btn', onClick: () => { try { window.print(); } catch (_) {} }, title: 'Print the Master Services Agreement' },
+            React.createElement('svg', { viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' },
+              React.createElement('polyline', { points: '6 9 6 2 18 2 18 9' }),
+              React.createElement('path', { d: 'M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2' }),
+              React.createElement('rect', { x: 6, y: 14, width: 12, height: 8 })
+            ),
+            'Print agreement'
+          )
+        ),
         React.createElement('div', { className: 'msa-eyebrow' }, 'Signature'),
         React.createElement('h2', null, 'Sign to bind this Agreement.'),
         React.createElement('div', { className: 'msa-dt' }, 'Effective ' + effective),

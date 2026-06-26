@@ -69,6 +69,12 @@ export default {
     if (url.pathname === '/api/auth/sign' && request.method === 'POST') {
       return handleSign(request, env, ctx);
     }
+    if (url.pathname === '/api/auth/session' && request.method === 'POST') {
+      return handleSession(request, env);
+    }
+    if (url.pathname === '/api/auth/admin/access-log' && request.method === 'POST') {
+      return handleAccessLog(request, env);
+    }
 
     return env.ASSETS.fetch(request);
   },
@@ -193,6 +199,31 @@ async function handleVerify(request, env, ctx) {
     { expirationTtl: SESSION_TTL_SECONDS }
   );
 
+  // Persist an access-log record so the admin toolbar can show every
+  // login, with timestamp + IP + Cloudflare-derived location + UA.
+  // 1-year TTL is plenty for audit purposes. Key shape lets us list
+  // by blueprintId prefix and sort by timestamp descending.
+  const ts        = Date.now();
+  const accessKey = `access:${blueprintId}:${(9_999_999_999_999 - ts).toString(36).padStart(10, '0')}:${genRandSlug()}`;
+  const cf        = request.cf || {};
+  const accessRec = {
+    email,
+    blueprintId,
+    verifiedAt: new Date(ts).toISOString(),
+    ip:        request.headers.get('CF-Connecting-IP') || '',
+    country:   cf.country || '',
+    city:      cf.city    || '',
+    region:    cf.region  || '',
+    userAgent: request.headers.get('User-Agent') || '',
+    selfTest, admin: false,
+  };
+  const accessWrite = env.BLUEPRINT_AUTH.put(
+    accessKey,
+    JSON.stringify(accessRec),
+    { expirationTtl: 60 * 60 * 24 * 365 }
+  ).catch(() => {});
+  if (ctx && ctx.waitUntil) ctx.waitUntil(accessWrite);
+
   // Fire-and-forget admin notification — don't block the response on the
   // email send so the client unlocks even if the SMTP path is slow. Skip
   // entirely for self-test sessions so we don't notify ourselves.
@@ -205,6 +236,84 @@ async function handleVerify(request, env, ctx) {
   }
 
   return json(200, { ok: true, token });
+}
+
+function genRandSlug() {
+  const bytes = new Uint8Array(4);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+// Lightweight session lookup — the admin toolbar polls this on mount to
+// decide whether to render itself, and to know what to call /admin
+// endpoints with. Returns the session record minus internal fields.
+async function handleSession(request, env) {
+  let body;
+  try { body = await request.json(); }
+  catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  const token = (body.token || '').toString().trim();
+  if (!token) return json(400, { ok: false, error: 'Missing token' });
+
+  const raw = await env.BLUEPRINT_AUTH.get(`session:${token}`);
+  if (!raw) return json(401, { ok: false, error: 'Session expired' });
+  const sess = JSON.parse(raw);
+  return json(200, {
+    ok: true,
+    email:       sess.email || '',
+    admin:       !!sess.admin,
+    selfTest:    !!sess.selfTest,
+    blueprintId: sess.blueprintId || '',
+  });
+}
+
+// Returns the access log for a given blueprintId — verification events
+// and signature events sorted newest-first. Only callable by admin or
+// self-test sessions (the @uncap.com team override). Anyone else
+// gets a 403.
+async function handleAccessLog(request, env) {
+  let body;
+  try { body = await request.json(); }
+  catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  const token       = (body.token || '').toString().trim();
+  const blueprintId = normalizeBlueprintId(body.blueprintId);
+  if (!token) return json(400, { ok: false, error: 'Missing token' });
+
+  const raw = await env.BLUEPRINT_AUTH.get(`session:${token}`);
+  if (!raw) return json(401, { ok: false, error: 'Session expired' });
+  const sess = JSON.parse(raw);
+  if (!sess.admin && !sess.selfTest) return json(403, { ok: false, error: 'Not authorised' });
+
+  // List up to 200 events of each type. KV keys for access events are
+  // prefixed with the inverted timestamp so a plain prefix scan returns
+  // them already sorted newest-first. Signature events don't carry the
+  // inverted prefix (we want to keep the existing key shape stable for
+  // audit), so we sort them in-memory.
+  const [accessList, signList] = await Promise.all([
+    env.BLUEPRINT_AUTH.list({ prefix: `access:${blueprintId}:`, limit: 200 }),
+    env.BLUEPRINT_AUTH.list({ prefix: `signature:${blueprintId}:`, limit: 200 }),
+  ]);
+
+  const accessEvents = await Promise.all(
+    accessList.keys.map((k) => env.BLUEPRINT_AUTH.get(k.name).then((v) => {
+      if (!v) return null;
+      try { return { type: 'view', ...JSON.parse(v) }; } catch { return null; }
+    }))
+  );
+  const signEvents = await Promise.all(
+    signList.keys.map((k) => env.BLUEPRINT_AUTH.get(k.name).then((v) => {
+      if (!v) return null;
+      try { return { type: 'sign', ...JSON.parse(v) }; } catch { return null; }
+    }))
+  );
+
+  const events = [...accessEvents.filter(Boolean), ...signEvents.filter(Boolean)]
+    .sort((a, b) => {
+      const ta = new Date(a.verifiedAt || a.signedAt || 0).getTime();
+      const tb = new Date(b.verifiedAt || b.signedAt || 0).getTime();
+      return tb - ta;
+    });
+
+  return json(200, { ok: true, blueprintId, events });
 }
 
 async function handleNotify(request, env) {

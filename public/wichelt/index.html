@@ -53,6 +53,7 @@
 <script type="text/babel" src="/legal/UncapMSA.jsx?v=DEPLOY_HASH"></script>
 <script type="text/babel" src="components/poster/Posters.jsx?v=DEPLOY_HASH"></script>
 <script type="text/babel" src="components/blueprint/BlueprintSections.jsx?v=DEPLOY_HASH"></script>
+<script type="text/babel" src="/admin/AdminToolbar.jsx?v=DEPLOY_HASH"></script>
 
 <script type="text/babel">
   // ── Auth gate: email → 6-digit code → 24-hour session token.
@@ -62,6 +63,7 @@
   // BPApproveButton (in BlueprintSections.jsx) can read it and POST the
   // approve notification when clicked. ──
   const BLUEPRINT_ID = 'wichelt';
+  window.__blueprintId = BLUEPRINT_ID;
   const STORAGE_KEY  = 'bp_token_wichelt';
 
   function Gate({ children }) {

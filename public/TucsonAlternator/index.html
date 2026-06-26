@@ -51,9 +51,11 @@
 <script type="text/babel" src="/legal/UncapMSA.jsx?v=DEPLOY_HASH"></script>
 <script type="text/babel" src="components/poster/Posters.jsx?v=DEPLOY_HASH"></script>
 <script type="text/babel" src="components/blueprint/BlueprintSections.jsx?v=DEPLOY_HASH"></script>
+<script type="text/babel" src="/admin/AdminToolbar.jsx?v=DEPLOY_HASH"></script>
 
 <script type="text/babel">
   const BLUEPRINT_ID = 'tucsonalternator';
+  window.__blueprintId = BLUEPRINT_ID;
   const STORAGE_KEY  = 'bp_token_tucsonalternator';
 
   function Gate({ children }) {
