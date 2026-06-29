@@ -541,7 +541,7 @@ function BPScope() {
     { code: '05', t: 'Launch & Hypercare Support',  d: 'QA, a go-live runbook, and 30-day post-launch care.', kind: 'base' }
   ];
   return (
-    <BPSection id="scope" n="05" label="Scope of Work" tail="THE SYSTEM">
+    <BPSection id="scope" n="04" label="Scope of Work" tail="THE SYSTEM">
       <div style={{ maxWidth: 720 }}>
         <BPHeadline>
           What&rsquo;s in{' '}
@@ -1271,7 +1271,7 @@ function BPPerformance() {
     }
   ];
   return (
-    <BPSection id="performance" n="06" label="Commerce" paper tail="DESIGNED FOR KPI">
+    <BPSection id="performance" n="05" label="Commerce" paper tail="DESIGNED FOR KPI">
       <BPHeadline>
         Designed for the{' '}
         <BPSerif>numbers that matter.</BPSerif>
@@ -1440,7 +1440,7 @@ function BPContent() {
     { kind: 'blog',  label: 'Guides & Resources', d: 'How-to and spec content engineered for SEO, GEO, and paid landing — each guide a destination that routes to product.' }
   ];
   return (
-    <BPSection id="content" n="07" label="Content" paper tail="STORY · SEO · GEO · PAID">
+    <BPSection id="content" n="06" label="Content" paper tail="STORY · SEO · GEO · PAID">
       <BPHeadline>
         Content that{' '}
         <BPSerif>does the selling.</BPSerif>
@@ -1565,7 +1565,7 @@ function BPTechStack() {
     future:   { l: 'Future phase',  c: 'transparent',      fg: 'var(--fg-3)', outline: true }
   };
   return (
-    <BPSection id="techstack" n="08" label="Architecture" dark grid tail="WHAT IT RUNS ON">
+    <BPSection id="techstack" n="07" label="Architecture" dark grid tail="WHAT IT RUNS ON">
       <BPHeadline dark>
         A stack chosen for{' '}
         <BPSerif>longevity.</BPSerif>
@@ -1857,7 +1857,7 @@ function BPB2B() {
   ];
   const channels = ['DTC Storefront', 'B2B Portal', 'Point of Sale', 'Sales Reps'];
   return (
-    <BPSection id="b2b" n="09" label="Unified" paper tail="ONE OPERATION">
+    <BPSection id="b2b" n="08" label="Unified" paper tail="ONE OPERATION">
       <BPHeadline>
         One experience{' '}
         <BPSerif>across every channel.</BPSerif>
@@ -1948,7 +1948,7 @@ function BPAgentic() {
     { who: 'buyer', text: 'Add all three, ship to our Chicago office, NET-30.' }
   ];
   return (
-    <BPSection id="agentic" n="10" label="Agentic" dark tail="THE AI-ENABLED STORE">
+    <BPSection id="agentic" n="09" label="Agentic" dark tail="THE AI-ENABLED STORE">
       <BPHeadline dark>
         Built for the{' '}
         <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, color: 'var(--uc-stone-300)' }}>agentic web.</span>
@@ -2041,7 +2041,7 @@ function BPDelivery() {
     { wk: 'MO 3+', t: 'Post Launch Optimizations', s: 'Ongoing improvements, performance tuning, and growth iterations — 12 weeks / 3 months.' }
   ];
   return (
-    <BPSection id="delivery" n="13" label="Delivery" paper tail="TIMELINE">
+    <BPSection id="delivery" n="10" label="Delivery" paper tail="TIMELINE">
       <BPHeadline>
         Sixteen weeks,{' '}
         <BPSerif>phase by phase.</BPSerif>
@@ -2094,7 +2094,7 @@ function BPTeam() {
     { n: 'Jo Tan', r: 'Head of Design', img: 'assets/team-jo.png' }
   ];
   return (
-    <BPSection id="team" n="17" label="Team" tail="WHO DOES THE WORK">
+    <BPSection id="team" n="13" label="Team" tail="WHO DOES THE WORK">
       <BPHeadline>
         Senior from{' '}
         <BPSerif>day one.</BPSerif>
@@ -2202,7 +2202,7 @@ function BPInvestment() {
     { n: '03', amount: '$11,500', due: 'Due at project completion' }
   ];
   return (
-    <BPSection id="investment" n="15" label="Investment" dark tail="FIXED · NO SURPRISES">
+    <BPSection id="investment" n="11" label="Investment" dark tail="FIXED · NO SURPRISES">
       {/* One package — split panel */}
       <div style={{
         position: 'relative', overflow: 'hidden',
@@ -2254,7 +2254,7 @@ function BPGrowth() {
     { t: 'Performance Optimization', d: 'Constantly optimizing experience, speed, conversion, and the tech stack behind it.' }
   ];
   return (
-    <BPSection id="growth" n="16" label="Growth" paper tail="AFTER LAUNCH">
+    <BPSection id="growth" n="12" label="Growth" paper tail="AFTER LAUNCH">
       <BPHeadline>
         Launch is the start.{' '}
         <BPSerif>Growth is the work.</BPSerif>
@@ -2307,7 +2307,7 @@ function BPWhy() {
   ];
   const clients = ['blueroot','canon','e3sparkplugs','eea','farmers','garrison','genuinescooter','industryrailway','kbs','microfiberwholesale','pawstruck','phoenixmecano','sanitaire','signwarehouse','thermosoft','ulegroup','vermontwoods','vosges','weldingstore','warehouselighting'];
   return (
-    <BPSection id="why" n="18" label="Uncap" dark tail="THE CASE">
+    <BPSection id="why" n="14" label="Uncap" dark tail="THE CASE">
       <BPHeadline dark>
         Uncap Commerce.{' '}
         <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, color: 'var(--uc-stone-300)' }}>Unified.</span>
@@ -2412,7 +2412,7 @@ function BPProof() {
   );
   const initials = (n) => n.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
   return (
-    <BPSection id="proof" n="19" label="Proof" paper tail="ON THE RECORD">
+    <BPSection id="proof" n="15" label="Proof" paper tail="ON THE RECORD">
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr)', gap: 'clamp(28px, 5vw, 80px)', alignItems: 'end' }}>
         <BPHeadline>
           Don&rsquo;t take{' '}
@@ -2733,7 +2733,7 @@ function BPNext() {
     { n: '03', t: 'Ship in 12 weeks', d: 'Launch live, then move into Growth.' }
   ];
   return (
-    <BPSection id="next" n="20" label="Next" paper tail="LET'S GO">
+    <BPSection id="next" n="16" label="Next" paper tail="LET'S GO">
       <BPHeadline>
         Three steps{' '}
         <BPSerif>to start.</BPSerif>
@@ -2778,19 +2778,19 @@ function BPNav() {
     { id: 'summary',     n: '01', l: 'Summary' },
     { id: 'where',       n: '02', l: 'Today' },
     { id: 'objectives',  n: '03', l: 'Objectives' },
-    { id: 'scope',       n: '05', l: 'Scope' },
-    { id: 'performance', n: '06', l: 'Commerce' },
-    { id: 'content',     n: '07', l: 'Content' },
-    { id: 'techstack',   n: '08', l: 'Architecture' },
-    { id: 'b2b',         n: '09', l: 'Unified' },
-    { id: 'agentic',     n: '10', l: 'Agentic' },
-    { id: 'delivery',    n: '13', l: 'Delivery' },
-    { id: 'investment',  n: '15', l: 'Investment' },
-    { id: 'growth',      n: '16', l: 'Growth' },
-    { id: 'team',        n: '17', l: 'Team' },
-    { id: 'why',         n: '18', l: 'Uncap' },
-    { id: 'proof',       n: '19', l: 'Proof' },
-    { id: 'next',        n: '20', l: 'Next' }
+    { id: 'scope',       n: '04', l: 'Scope' },
+    { id: 'performance', n: '05', l: 'Commerce' },
+    { id: 'content',     n: '06', l: 'Content' },
+    { id: 'techstack',   n: '07', l: 'Architecture' },
+    { id: 'b2b',         n: '08', l: 'Unified' },
+    { id: 'agentic',     n: '09', l: 'Agentic' },
+    { id: 'delivery',    n: '10', l: 'Delivery' },
+    { id: 'investment',  n: '11', l: 'Investment' },
+    { id: 'growth',      n: '12', l: 'Growth' },
+    { id: 'team',        n: '13', l: 'Team' },
+    { id: 'why',         n: '14', l: 'Uncap' },
+    { id: 'proof',       n: '15', l: 'Proof' },
+    { id: 'next',        n: '16', l: 'Next' }
   ];
   const [active, setActive] = React.useState('intro');
   const [open, setOpen] = React.useState(false);
