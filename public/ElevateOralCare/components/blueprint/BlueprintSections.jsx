@@ -340,7 +340,7 @@ function BPWhere() {
   { n: '01', t: 'Aging storefront', tag: 'Storefront', impact: 'High', pct: 82, d: 'Duct-taped, patched for years, costing more every renewal cycle.' },
   { n: '02', t: 'Complex management', tag: 'Systems', impact: 'Critical', pct: 94, d: 'Difficult, costly, and time-consuming store management.' },
   { n: '03', t: 'Outdated experience', tag: 'Trade', impact: 'Medium', pct: 64, d: 'Slow, unfriendly on desktop and mobile, and very difficult to navigate.' },
-  { n: '04', t: 'Not designed for growth', tag: 'Data', impact: 'High', pct: 78, d: 'Conversion, AOV, B2B automation, and retention built as afterthoughts.' }];
+  { n: '04', t: 'Limiting growth', tag: 'Data', impact: 'High', pct: 78, d: 'Conversion, AOV, B2B automation, and retention built as afterthoughts.' }];
 
   return (
     <BPSection id="where" n="02" label="Today" tail="CURRENT STATE">
