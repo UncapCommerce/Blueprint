@@ -180,8 +180,9 @@ function BPIntro() {
               fontSize: 'clamp(20px, 2.2vw, 32px)', lineHeight: 1.25,
               letterSpacing: '-0.015em', color: 'var(--uc-paper)', textWrap: 'pretty'
             }}>
-              A plan to unify {brandName()}&rsquo;s commerce operation on Shopify, integrated
-              with NetSuite — same caliber of technology, without the enterprise drag.
+              A comprehensive plan to replatform {brandName()} on Shopify and unify commerce
+              operations for B2C and B2B — with an exceptional customer experience designed
+              for growth.
             </div>
           </div>
 
