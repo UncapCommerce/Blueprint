@@ -455,10 +455,35 @@ async function sendCodeEmail(env, { to, code, blueprintId }) {
   await sendViaCloudflareEmail(env, { to, subject, text, html });
 }
 
+// Internal recipients for every Blueprint notification (view + sign).
+// Hardcoded here rather than read from env because the deploy runs with
+// `wrangler deploy --keep-vars`, so wrangler.toml var edits don't take
+// effect — the dashboard vars win. Any addresses set in env.NOTIFY_EMAIL
+// (comma-separated) are merged in on top, deduped.
+const NOTIFY_RECIPIENTS = ['denis@uncap.com', 'ryan@uncap.com'];
+
+function notifyRecipients(env) {
+  const fromEnv = (env.NOTIFY_EMAIL || '')
+    .split(',')
+    .map((s) => s.trim().toLowerCase())
+    .filter(Boolean);
+  const all = [...NOTIFY_RECIPIENTS.map((s) => s.toLowerCase()), ...fromEnv];
+  return [...new Set(all)];
+}
+
 async function notifyAdmin(env, { subject, text }) {
-  const to   = env.NOTIFY_EMAIL || 'denis@uncap.com';
   const html = `<p>${escapeHtml(text).replace(/\n/g, '<br>')}</p>`;
-  await sendViaCloudflareEmail(env, { to, subject, text, html });
+  const recipients = notifyRecipients(env);
+  // Cloudflare's send_email binding delivers to one envelope recipient
+  // per message, so fan out one email per recipient. Use allSettled so a
+  // single failed/unverified destination doesn't suppress the others.
+  const results = await Promise.allSettled(
+    recipients.map((to) => sendViaCloudflareEmail(env, { to, subject, text, html }))
+  );
+  // If every send failed, surface the first error so the caller can react.
+  if (results.length && results.every((r) => r.status === 'rejected')) {
+    throw results[0].reason || new Error('All notification sends failed');
+  }
 }
 
 async function sendViaCloudflareEmail(env, { to, subject, text, html }) {
