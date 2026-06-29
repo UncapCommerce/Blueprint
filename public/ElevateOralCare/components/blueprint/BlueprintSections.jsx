@@ -1085,6 +1085,249 @@ function GfxPortal() {
 
 }
 
+
+function GfxQuotes() {
+  const pFont = '-apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+  const tabs = [['All','22'],['Drafts','1'],['Sent','1'],['Viewed','3'],['Commented','4'],['Approved','5'],['Paid','7']];
+  const rows = [
+    { id:'Q-2087', dt:'2026-05-28', co:'Midwest Fabrication LLC', cu:'Dale Wojcik',     it:'509',  tot:'$2,406.06', exp:'2026-06-12', st:'Viewed',   cm:true },
+    { id:'Q-2086', dt:'2026-05-28', co:'Rust Belt Welding Supply', cu:'Stan Petryk',     it:'20',   tot:'$2,182.80', exp:'2026-06-15', st:'Draft' },
+    { id:'Q-2085', dt:'2026-05-27', co:'Great Lakes Industrial',  cu:'Sandra Liu',      it:'1230', tot:'$5,074.55', exp:'2026-06-22', st:'Approved' },
+    { id:'Q-2084', dt:'2026-05-27', co:'Allegheny Iron & Forge',  cu:'Carl Bregović',   it:'12',   tot:'$1,536.52', exp:'2026-06-20', st:'Viewed',   cm:true },
+    { id:'Q-2083', dt:'2026-05-27', co:'Harbor Steel Works',      cu:'Erik Lindqvist',  it:'4',    tot:'$1,060.25', exp:'2026-06-09', st:'Paid',     arch:true },
+    { id:'Q-2082', dt:'2026-05-08', co:'Cascade Machine Tooling', cu:'Jen Park',        it:'4',    tot:'$2,708.16', exp:'2026-05-20', st:'Expired',  arch:true },
+    { id:'Q-2081', dt:'2026-05-27', co:'Birch Run Manufacturing', cu:'Travis McCready', it:'259',  tot:'$1,244.44', exp:'2026-06-14', st:'Paid',     arch:true }
+  ];
+  const initials = (n) => n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
+  const StatusBadge = ({ st }) => {
+    const map = {
+      Viewed:   { bg:'#ECE6FF', fg:'#4A26A8', dot:'#7B57D6' },
+      Draft:    { bg:'#EBEBEB', fg:'#616161', dot:null },
+      Approved: { bg:'#CDFEE1', fg:'#014B40', dot:'#29845A' },
+      Paid:     { bg:'#F1F1F1', fg:'#616161', dot:'#8A8A8A' },
+      Expired:  { bg:'#FFF1E3', fg:'#5E3B00', dot:'#B98900' },
+      Declined: { bg:'#FDD9D6', fg:'#8E1F0B', dot:'#D72C0D' }
+    };
+    const t = map[st] || map.Draft;
+    return <span style={{ display:'inline-flex', alignItems:'center', gap:5, fontFamily:pFont, fontSize:11, fontWeight:600, color:t.fg, background:t.bg, borderRadius:8, padding:'2px 8px', whiteSpace:'nowrap' }}>{t.dot && <span style={{ width:6, height:6, borderRadius:999, background:t.dot }}/>}{st}</span>;
+  };
+  const gridCols = 'minmax(0,72px) minmax(0,84px) minmax(0,1.3fr) minmax(0,1.1fr) minmax(0,46px) minmax(0,84px) minmax(0,84px) minmax(0,86px)';
+  return (
+    <div style={{ border:'1px solid var(--line-2)', borderRadius:12, overflow:'hidden', boxShadow:'0 24px 60px -32px rgba(10,10,10,0.45)' }}>
+      {/* Shopify admin top bar */}
+      <div style={{ display:'flex', alignItems:'center', gap:12, padding:'9px 14px', background:'#1A1A1A' }}>
+        <span style={{ display:'inline-flex', alignItems:'center', gap:7 }}>
+          <span style={{ width:20, height:20, borderRadius:5, background:'#95BF47', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:pFont, fontSize:12, fontWeight:800, color:'#1A1A1A' }}>S</span>
+          <span style={{ fontFamily:pFont, fontSize:11.5, fontWeight:600, color:'#E3E3E3' }}>{brandHandle()}-supply</span>
+        </span>
+        <span style={{ flex:1, maxWidth:360, margin:'0 auto', display:'flex', alignItems:'center', gap:7, background:'#303030', borderRadius:8, padding:'6px 11px' }}>
+          <span style={{ color:'#8A8A8A', fontSize:11 }}>⌕</span>
+          <span style={{ fontFamily:pFont, fontSize:11, color:'#8A8A8A' }}>Search</span>
+        </span>
+        <span style={{ width:22, height:22, borderRadius:999, background:'linear-gradient(135deg,#5C6AC4,#202E78)', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:pFont, fontSize:10, fontWeight:700, color:'#fff' }}>D</span>
+      </div>
+
+      <div style={{ display:'flex', background:'#F1F1F1' }}>
+        {/* Shopify left navigation */}
+        <ShopAdminNav activeApp="quotes"/>
+
+        {/* Polaris page */}
+        <div style={{ flex:1, minWidth:0, padding:'clamp(16px,2vw,24px)', display:'flex', flexDirection:'column', gap:14 }}>
+          {/* page header */}
+          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:14, flexWrap:'wrap' }}>
+            <span style={{ fontFamily:pFont, fontSize:'clamp(18px,1.8vw,22px)', fontWeight:700, color:'#1A1A1A', letterSpacing:'-0.01em' }}>Quotes</span>
+            <div style={{ display:'flex', gap:8 }}>
+              <span style={{ fontFamily:pFont, fontSize:12, fontWeight:600, color:'#303030', background:'#FFFFFF', border:'1px solid #E3E3E3', borderRadius:8, padding:'7px 13px', boxShadow:'0 1px 0 rgba(0,0,0,0.05)' }}>Export</span>
+              <span style={{ fontFamily:pFont, fontSize:12, fontWeight:600, color:'#FFFFFF', background:'#303030', borderRadius:8, padding:'7px 13px' }}>＋ Create quote</span>
+            </div>
+          </div>
+
+          {/* card: tabs + filters + table */}
+          <div style={{ background:'#FFFFFF', border:'1px solid #E3E3E3', borderRadius:12, boxShadow:'0 1px 0 rgba(0,0,0,0.05)', overflow:'hidden' }}>
+            {/* tabs */}
+            <div style={{ display:'flex', alignItems:'center', gap:2, padding:'8px 10px', borderBottom:'1px solid #F1F1F1', flexWrap:'wrap' }}>
+              {tabs.map(([l,c],i)=>(
+                <span key={l} style={{ display:'inline-flex', alignItems:'center', gap:5, fontFamily:pFont, fontSize:12, fontWeight: i===0?700:500, color: i===0?'#1A1A1A':'#616161', background: i===0?'#F1F1F1':'transparent', borderRadius:8, padding:'5px 10px' }}>{l}<span style={{ color:'#8A8A8A', fontWeight:400 }}>{c}</span></span>
+              ))}
+            </div>
+            {/* filter row */}
+            <div style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 12px', borderBottom:'1px solid #F1F1F1' }}>
+              <span style={{ flex:1, maxWidth:300, display:'flex', alignItems:'center', gap:7, background:'#FFFFFF', border:'1px solid #E3E3E3', borderRadius:8, padding:'6px 11px' }}>
+                <span style={{ color:'#8A8A8A', fontSize:11 }}>⌕</span>
+                <span style={{ fontFamily:pFont, fontSize:12, color:'#8A8A8A' }}>Search quotes</span>
+              </span>
+              <span style={{ fontFamily:pFont, fontSize:11.5, fontWeight:600, color:'#303030', background:'#FFFFFF', border:'1px solid #E3E3E3', borderRadius:8, padding:'6px 11px' }}>⚲ Filter</span>
+              <span style={{ fontFamily:pFont, fontSize:11.5, fontWeight:600, color:'#303030', background:'#FFFFFF', border:'1px solid #E3E3E3', borderRadius:8, padding:'6px 11px' }}>⇅ Sort</span>
+            </div>
+            {/* table header */}
+            <div style={{ display:'grid', gridTemplateColumns:gridCols, gap:'clamp(6px,1vw,12px)', padding:'9px 16px', background:'#FAFAFA', borderBottom:'1px solid #E3E3E3' }}>
+              {[['Quote','left'],['Created','left'],['Company','left'],['Customer','left'],['Items','right'],['Total','right'],['Expires','left'],['Status','right']].map(([h,a],i)=>(<span key={i} style={{ fontFamily:pFont, fontSize:10.5, fontWeight:600, color:'#616161', textAlign:a }}>{h}</span>))}
+            </div>
+            {/* rows */}
+            {rows.map((r,i)=>(
+              <div key={r.id} style={{ display:'grid', gridTemplateColumns:gridCols, gap:'clamp(6px,1vw,12px)', padding:'10px 16px', borderBottom: i<rows.length-1?'1px solid #F1F1F1':'none', alignItems:'center', opacity: r.arch?0.62:1 }}>
+                <span style={{ fontFamily:pFont, fontSize:12, fontWeight:500, color:'#1A1A1A', display:'inline-flex', alignItems:'center', gap:5 }}>{r.id}{r.cm && <span style={{ color:'#8A8A8A', fontSize:11 }}>💬</span>}</span>
+                <span style={{ fontFamily:pFont, fontSize:11.5, color:'#8A8A8A', whiteSpace:'nowrap' }}>{r.dt}</span>
+                <span style={{ fontFamily:pFont, fontSize:12, fontWeight:500, color:'#1A1A1A', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{r.co}</span>
+                <span style={{ display:'inline-flex', alignItems:'center', gap:7, minWidth:0 }}>
+                  <span style={{ width:20, height:20, borderRadius:999, background:'#E0E7F5', color:'#3F5CA8', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:pFont, fontSize:8.5, fontWeight:700 }}>{initials(r.cu)}</span>
+                  <span style={{ fontFamily:pFont, fontSize:12, fontWeight:500, color:'#1A1A1A', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{r.cu}</span>
+                </span>
+                <span style={{ fontFamily:pFont, fontSize:12, color:'#303030', textAlign:'right' }}>{r.it}</span>
+                <span style={{ fontFamily:pFont, fontSize:12, fontWeight:600, color:'#1A1A1A', textAlign:'right' }}>{r.tot}</span>
+                <span style={{ fontFamily:pFont, fontSize:11.5, color:'#8A8A8A', whiteSpace:'nowrap' }}>{r.exp}</span>
+                <span style={{ justifySelf:'end' }}><StatusBadge st={r.st}/></span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function GfxHomepage() {
+  const nav = ['Shop','Brands','Deals','New','Trade'];
+  const mega = [
+    { h: 'By Category', items: ['Anatomical Models','Simulators','Anatomy Charts','Specimens','Custom Products','Simulated Meds'] },
+    { h: 'By Audience', items: ['Medical Schools','Nursing Programs','Veterinary','Hospitals'] },
+    { h: 'Quick Links', items: ['New Arrivals','Deals','Institution Pricing','Bulk Orders'] }
+  ];
+  const brands = ['3B SCI','AXIS','ERLER','SOMSO','NASCO','VATA'];
+  const feat = [['Human Skull','$89.00','#B0C4D4','NEW'],['3B Heart','$124.00','#C4AEAD',null],['IV Training Arm','$159.00','#C8B89A','PRO'],['Brain Model','$72.00','#1B5272',null]];
+  return (
+    <div style={{ background:'var(--uc-paper)', border:'1px solid var(--line-1)', borderRadius:5, overflow:'hidden' }}>
+      {/* announcement */}
+      <div style={{ background:'#1B5272', color:'#fff', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>FREE SHIPPING OVER $100 · UNIVERSITY & HOSPITAL PRICING</div>
+      {/* header */}
+      <div style={{ display:'flex', alignItems:'center', gap:11, padding:'8px 14px', borderBottom:'1px solid var(--line-1)' }}>
+        <BrandMark fontSize={12}/>
+        <div style={{ display:'flex', gap:11, marginLeft:6 }}>{nav.map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:i===0?'var(--fg-1)':'var(--fg-3)', position:'relative' }}>{x}{i===0 && <span style={{ position:'absolute', left:0, right:0, bottom:-9, height:2, background:'var(--uc-black)' }}/>}</span>))}</div>
+        <span style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:7 }}>
+          <span style={{ width:120, height:18, borderRadius:999, border:'1px solid var(--line-2)', display:'flex', alignItems:'center', gap:4, padding:'0 9px', fontFamily:'var(--font-mono)', fontSize:7, color:'var(--fg-3)', whiteSpace:'nowrap', overflow:'hidden' }}><span style={{ fontSize:8 }}>⌕</span>Search anatomy & medical models…</span>
+          <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'#fff', background:'#1B5272', padding:'3px 8px', borderRadius:3, display:'inline-flex', alignItems:'center' }}><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{display:'inline-block',verticalAlign:'middle',marginRight:2}}><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>Cart 6</span>
+        </span>
+      </div>
+
+      {/* hero + mega menu overlay */}
+      <div style={{ position:'relative', height:188, background:'linear-gradient(100deg, #0D2034 0%, #1B5272 55%, #2E7EB8 135%)', overflow:'hidden' }}>
+        <svg viewBox="0 0 200 90" preserveAspectRatio="none" style={{ position:'absolute', right:-10, bottom:-10, width:220, opacity:0.16 }}><path d="M5 85 L5 34 L52 34 L52 12 L104 12 L104 34 L195 34 L195 85 Z" fill="none" stroke="#fff" strokeWidth="1.6"/><path d="M28 85 L28 52 M78 85 L78 34 M150 85 L150 50" stroke="#fff" strokeWidth="1"/></svg>
+        {/* hero copy (right 1/3) */}
+        <div style={{ position:'absolute', right:18, top:0, bottom:0, width:'34%', display:'flex', flexDirection:'column', justifyContent:'center', gap:7 }}>
+          <span style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.16em', color:'var(--uc-signal)' }}>40,000+ EDUCATORS TRUST US</span>
+          <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:24, letterSpacing:'-0.04em', lineHeight:0.9, color:'#fff' }}>Medical education<br/><span style={{ fontFamily:'var(--font-serif)', fontWeight:400 }}>at scale.</span></span>
+          <span style={{ alignSelf:'flex-start', marginTop:2, padding:'5px 13px', background:'#1B5272', color:'#fff', borderRadius:999, fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:800 }}>Shop models →</span>
+        </div>
+        {/* mega menu over 2/3 */}
+        <div style={{ position:'absolute', left:0, top:0, bottom:0, width:'64%', background:'rgba(248,246,240,0.97)', borderRight:'1px solid var(--line-2)', boxShadow:'10px 0 30px -16px rgba(0,0,0,0.5)', padding:'14px 16px', display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:14 }}>
+          {mega.map((col,ci)=>(
+            <div key={ci} style={{ display:'flex', flexDirection:'column', gap:6 }}>
+              <div style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', paddingBottom:4, borderBottom:'1px solid var(--line-1)' }}>{col.h.toUpperCase()}</div>
+              {col.items.map((it,ii)=>(<span key={ii} style={{ fontFamily:'var(--font-display)', fontWeight:ii===0&&ci===0?700:500, fontSize:8.5, letterSpacing:'-0.01em', color:ii===0&&ci===0?'var(--fg-1)':'var(--fg-2)' }}>{it}</span>))}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Year / Make / Model fitment */}
+      <div style={{ background:'var(--uc-black)', padding:'10px 14px', display:'flex', alignItems:'center', gap:8 }}>
+        <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, letterSpacing:'0.08em', color:'#B8D4E8', whiteSpace:'nowrap' }}>FIND YOUR FIT</span>
+        {['Product','Brand','Profession'].map((f,i)=>(<span key={f} style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'space-between', height:22, background:'var(--uc-paper)', borderRadius:4, padding:'0 9px', fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--fg-2)' }}>{f}<span style={{ color:'var(--fg-3)' }}>▾</span></span>))}
+        <span style={{ display:'inline-flex', alignItems:'center', height:22, padding:'0 12px', background:'#1B5272', color:'#fff', borderRadius:4, fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:800, whiteSpace:'nowrap' }}>Find Now →</span>
+      </div>
+
+      {/* brand strip */}
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', padding:'11px 16px', borderBottom:'1px solid var(--line-1)' }}>{brands.map(b=>(<span key={b} style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:12, letterSpacing:'-0.02em', color:'var(--fg-3)' }}>{b}</span>))}</div>
+
+      {/* featured products */}
+      <div style={{ padding:'12px 14px 6px', display:'flex', alignItems:'baseline', justifyContent:'space-between' }}>
+        <span style={{ fontFamily:'var(--font-hero)', fontWeight:700, fontSize:14, letterSpacing:'-0.03em', color:'var(--fg-1)' }}>Featured products</span>
+        <span style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, color:'var(--fg-3)' }}>View all →</span>
+      </div>
+      <div style={{ padding:'0 14px 14px', display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:9 }}>
+        {feat.map((p,i)=>(
+          <div key={i} style={{ display:'flex', flexDirection:'column', gap:4 }}>
+            <div style={{ aspectRatio:'1/0.9', borderRadius:4, background:`linear-gradient(150deg, ${p[2]}, var(--uc-bone))`, position:'relative' }}>{p[3] && <span style={{ position:'absolute', top:5, left:5, padding:'1px 6px', background:p[3]==='DEAL'?'var(--uc-brand)':(p[3]==='NEW'?'var(--uc-black)':(p[3]==='PRO'?'var(--uc-black)':'#3F8B5D')), color:'#fff', borderRadius:2, fontFamily:'var(--font-mono)', fontSize:5.5, fontWeight:800 }}>{p[3]}</span>}<span style={{ position:'absolute', bottom:5, right:5, width:16, height:16, borderRadius:999, background:'var(--uc-paper)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, color:'var(--fg-1)', boxShadow:'0 1px 3px rgba(0,0,0,0.18)' }}>＋</span></div>
+            <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:8.5, color:'var(--fg-1)', letterSpacing:'-0.01em' }}>{p[0]}</span>
+            <span style={{ fontFamily:'var(--font-mono)', fontSize:8.5, fontWeight:700, color:'var(--fg-1)' }}>{p[1]}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* brand story — image + text */}
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:0, borderTop:'1px solid var(--line-1)' }}>
+        <div style={{ background:'linear-gradient(150deg, #1B5272, #0D2034)', minHeight:96, position:'relative' }}><span style={{ position:'absolute', bottom:8, left:10, padding:'2px 7px', background:'var(--uc-paper)', borderRadius:3, fontFamily:'var(--font-mono)', fontSize:5.5, fontWeight:800, letterSpacing:'0.1em', color:'var(--fg-3)' }}>SKOKIE, IL</span></div>
+        <div style={{ padding:'16px 16px', display:'flex', flexDirection:'column', justifyContent:'center', gap:7, background:'var(--uc-bone)' }}>
+          <span style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, letterSpacing:'0.14em', color:'var(--fg-3)' }}>OUR STORY</span>
+          <span style={{ fontFamily:'var(--font-serif)', fontStyle:'italic', fontSize:14, lineHeight:1.3, letterSpacing:'-0.01em', color:'var(--fg-1)' }}>Serving universities, hospitals and medical schools with the best anatomy education tools.</span>
+          <span style={{ alignSelf:'flex-start', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, color:'var(--fg-1)', borderBottom:'1.5px solid var(--uc-signal)', paddingBottom:1 }}>Read our story →</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ShopAdminNav({ activeApp }) {
+  const pFont = '-apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+  const I = (p) => <svg viewBox="0 0 18 18" width="15" height="15" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink:0 }}>{p}</svg>;
+  const main = [
+    ['Home', I(<><path d="M3 8 L9 3 L15 8"/><path d="M5 8 V15 H13 V8"/></>)],
+    ['Orders', I(<><path d="M5 6 V5.5 a4 4 0 0 1 8 0 V6"/><path d="M4 6 H14 L13.2 15 H4.8 Z"/></>)],
+    ['Products', I(<><path d="M4 5 H14 V14 H4 Z"/><path d="M4 8 H14"/></>)],
+    ['Customers', I(<><circle cx="9" cy="7" r="2.6"/><path d="M4 15 c0-3 10-3 10 0"/></>)],
+    ['Marketing', I(<><path d="M4 8 L12 4 V14 L4 10 Z"/><path d="M4 8 v3"/></>)],
+    ['Discounts', I(<><path d="M5 11 L12 4"/><circle cx="6.2" cy="5.6" r=".8"/><circle cx="11" cy="10.4" r=".8"/></>)],
+    ['Content', I(<><path d="M5 3 H11 L14 6 V15 H5 Z"/><path d="M7 9 H12 M7 12 H11"/></>)],
+    ['Analytics', I(<><path d="M4 14 V9 M9 14 V4 M14 14 V10"/></>)]
+  ];
+  const channels = [
+    ['Online Store', I(<><circle cx="9" cy="9" r="6"/><path d="M3 9 H15"/><path d="M9 3 a8 8 0 0 1 0 12 a8 8 0 0 1 0 -12"/></>)],
+    ['Point of Sale', I(<><path d="M4 4 H14 V11 H4 Z"/><path d="M6 14 H12"/></>)]
+  ];
+  const NavItem = ({ label, icon, active, badge }) => (
+    <div style={{ display:'flex', alignItems:'center', gap:9, padding:'6px 9px', borderRadius:8, fontFamily:pFont, fontSize:12, fontWeight: active?700:500, color: active?'#1A1A1A':'#4A4A4A', background: active?'#FFFFFF':'transparent', boxShadow: active?'0 1px 0 rgba(0,0,0,0.06)':'none' }}>
+      {icon}
+      <span style={{ flex:1, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{label}</span>
+      {badge && <span style={{ fontFamily:pFont, fontSize:9.5, fontWeight:700, color:'#4A4A4A', background:'#DADADA', borderRadius:6, padding:'1px 6px' }}>{badge}</span>}
+    </div>
+  );
+  const Group = ({ children }) => <span style={{ fontFamily:pFont, fontSize:10, fontWeight:600, letterSpacing:'0.02em', color:'#8A8A8A', padding:'4px 9px', marginTop:8 }}>{children}</span>;
+  const Child = ({ label, active }) => (
+    <div style={{ display:'flex', alignItems:'center', padding:'5px 9px 5px 33px', borderRadius:8, fontFamily:pFont, fontSize:12, fontWeight: active?700:500, color: active?'#1A1A1A':'#4A4A4A', background: active?'#FFFFFF':'transparent', boxShadow: active?'0 1px 0 rgba(0,0,0,0.06)':'none' }}>{label}</div>
+  );
+  const AppParent = ({ label, glyph, open, active }) => (
+    <div style={{ display:'flex', alignItems:'center', gap:9, padding:'6px 9px', borderRadius:8, fontFamily:pFont, fontSize:12, fontWeight: (open||active)?700:500, color: (open||active)?'#1A1A1A':'#4A4A4A', background: active?'#FFFFFF':'transparent', boxShadow: active?'0 1px 0 rgba(0,0,0,0.06)':'none' }}>
+      <span style={{ width:15, height:15, borderRadius:4, background:'#1A1A1A', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:pFont, fontSize:9, fontWeight:800, color:'#95BF47', flexShrink:0 }}>{glyph}</span>
+      <span style={{ flex:1, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{label}</span>
+      <span style={{ color:'#8A8A8A', fontSize:10 }}>{open ? '▾' : '›'}</span>
+    </div>
+  );
+  return (
+    <div style={{ flexShrink:0, width:'clamp(132px, 15vw, 174px)', background:'#EBEBEB', borderRight:'1px solid #DEDEDE', padding:'12px 10px', display:'flex', flexDirection:'column', gap:1 }}>
+      {main.map(([l,ic]) => <NavItem key={l} label={l} icon={ic} badge={l==='Orders'?'6':null}/>)}
+      <Group>Sales channels</Group>
+      {channels.map(([l,ic]) => <NavItem key={l} label={l} icon={ic}/>)}
+      <Group>Apps</Group>
+      {/* Uncap Quotes — expandable */}
+      <AppParent label="Uncap Quotes" glyph="▤" open={activeApp==='quotes'}/>
+      {activeApp==='quotes' && <>
+        <Child label="Requests"/>
+        <Child label="Quotes" active/>
+        <Child label="Accounts"/>
+        <Child label="Settings"/>
+      </>}
+      {/* Uncap Connect — expandable */}
+      <AppParent label="Uncap Connect" glyph="⌖" open={activeApp==='connect'}/>
+      {activeApp==='connect' && <>
+        <Child label="Overview" active/>
+        <Child label="Field mapping"/>
+        <Child label="Sync logs"/>
+        <Child label="Settings"/>
+      </>}
+    </div>
+  );
+}
+
 function BPPerformance() {
   const groups = [
     {
