@@ -267,7 +267,7 @@ function BPSummary() {
         {[
         { v: '20 wk', l: 'Estimated timeline to launch on Shopify' },
         { v: 'Unified', l: 'Shopify B2B storefront integrated with NetSuite ERP' },
-        { v: '−38%', l: 'Projected cost of ownership' },
+        { v: 'Speed', l: 'Sidekick enabled for management' },
         { v: '+22%', l: 'Targeted increase across KPIs' }].
         map((s, i) =>
         <div key={i} style={{
