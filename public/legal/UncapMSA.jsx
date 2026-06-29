@@ -41,9 +41,11 @@
       clone.querySelectorAll('.msa-print-row, .msa-actions').forEach((n) => n.remove());
 
       document.body.appendChild(clone);
+      document.body.classList.add('bp-print-msa-only');
 
       const cleanup = () => {
         if (clone && clone.parentNode) clone.parentNode.removeChild(clone);
+        document.body.classList.remove('bp-print-msa-only');
         window.removeEventListener('afterprint', cleanup);
       };
       window.addEventListener('afterprint', cleanup);
@@ -123,20 +125,23 @@
       .msa-print-btn:hover { border-color: var(--fg-1); background: var(--uc-cream); }
       .msa-print-btn svg { width: 13px; height: 13px; }
       /* Print mode: handlePrintMSA clones the rendered .uncap-msa to a
-         direct child of <body> tagged with .uncap-msa-print-clone, so
-         the agreement renders in normal flow (no fixed/absolute modal
-         wrapper, no 90vh scroll container) and paginates across pages.
-         Everything that ISN'T the clone is display:none'd at print time. */
+         direct child of <body> tagged with .uncap-msa-print-clone, sets
+         body class .bp-print-msa-only for the duration of the print,
+         and lets the agreement paginate across pages in normal flow.
+         The body class is what arms the @media print rules below; that
+         keeps unrelated window.print() calls (admin toolbar Print menu,
+         browser Cmd-P, etc.) from accidentally hiding the page. */
       .uncap-msa-print-clone { display: none; }
       @media print {
-        body > *:not(.uncap-msa-print-clone) { display: none !important; }
-        body > .uncap-msa-print-clone { display: block !important; background: white !important; color: black !important; padding: 14mm 14mm 20mm !important; font-family: var(--font-sans), Inter, -apple-system, sans-serif; font-size: 12px; line-height: 1.55; }
-        body > .uncap-msa-print-clone .msa-print-row,
-        body > .uncap-msa-print-clone .msa-actions { display: none !important; }
-        body > .uncap-msa-print-clone .msa-clause,
-        body > .uncap-msa-print-clone .msa-sub,
-        body > .uncap-msa-print-clone .msa-sigbox { page-break-inside: avoid; break-inside: avoid; }
-        @page { size: A4; margin: 12mm 0; }
+        body.bp-print-msa-only > *:not(.uncap-msa-print-clone) { display: none !important; }
+        body.bp-print-msa-only > .uncap-msa-print-clone { display: block !important; background: white !important; color: black !important; padding: 14mm 14mm 20mm !important; font-family: var(--font-sans), Inter, -apple-system, sans-serif; font-size: 12px; line-height: 1.55; }
+        body.bp-print-msa-only > .uncap-msa-print-clone .msa-print-row,
+        body.bp-print-msa-only > .uncap-msa-print-clone .msa-actions { display: none !important; }
+        body.bp-print-msa-only > .uncap-msa-print-clone .msa-clause,
+        body.bp-print-msa-only > .uncap-msa-print-clone .msa-sub,
+        body.bp-print-msa-only > .uncap-msa-print-clone .msa-sigbox { page-break-inside: avoid; break-inside: avoid; }
+        body.bp-print-msa-only { background: white !important; }
+        body.bp-print-msa-only @page { size: A4; margin: 12mm 0; }
       }
     `;
     document.head.appendChild(s);

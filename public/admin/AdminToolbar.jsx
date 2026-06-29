@@ -28,8 +28,16 @@
       .bp-adm-bar .bp-adm-label { font-weight: 700; }
       .bp-adm-bar .bp-adm-action { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 999px; background: #E8FF52; color: #0A0A0A; font-weight: 700; border: none; cursor: pointer; font-family: inherit; font-size: inherit; letter-spacing: inherit; text-transform: inherit; }
       .bp-adm-bar .bp-adm-action:hover { background: #FFFFFF; }
+      .bp-adm-bar .bp-adm-action.is-secondary { background: transparent; color: #FFFFFF; border: 1px solid rgba(255,255,255,0.3); }
+      .bp-adm-bar .bp-adm-action.is-secondary:hover { border-color: #FFFFFF; background: rgba(255,255,255,0.08); }
       .bp-adm-bar .bp-adm-close { background: transparent; color: rgba(255,255,255,0.55); border: none; cursor: pointer; padding: 2px 6px; font-family: inherit; font-size: 13px; line-height: 1; }
       .bp-adm-bar .bp-adm-close:hover { color: #FFFFFF; }
+
+      .bp-adm-print-wrap { position: relative; }
+      .bp-adm-print-menu { position: absolute; top: calc(100% + 8px); right: 0; min-width: 240px; background: #0A0A0A; color: #FFFFFF; border: 1px solid #2B2B2B; border-radius: 10px; padding: 6px; box-shadow: 0 18px 40px -18px rgba(0,0,0,0.7); display: flex; flex-direction: column; gap: 2px; font-family: var(--font-mono, ui-monospace, SFMono-Regular, Menlo, monospace); font-size: 10.5px; letter-spacing: 0.08em; text-transform: uppercase; }
+      .bp-adm-print-menu button { background: transparent; border: none; color: #FFFFFF; text-align: left; padding: 9px 11px; border-radius: 6px; cursor: pointer; font-family: inherit; font-size: inherit; letter-spacing: inherit; text-transform: inherit; display: flex; flex-direction: column; gap: 3px; align-items: flex-start; }
+      .bp-adm-print-menu button:hover { background: rgba(232,255,82,0.12); color: #E8FF52; }
+      .bp-adm-print-menu button .bp-adm-print-sub { font-size: 9px; letter-spacing: 0.04em; text-transform: none; opacity: 0.6; font-weight: 500; }
 
       .bp-adm-modal { position: fixed; inset: 0; z-index: 9001; background: rgba(10,10,10,0.6); display: flex; align-items: flex-start; justify-content: center; padding: 56px 20px 24px; overflow-y: auto; }
       .bp-adm-modal .bp-adm-card { width: 100%; max-width: 920px; background: #FFFFFF; color: #15161B; border-radius: 12px; border: 1px solid #0A0A0A; box-shadow: 0 36px 80px -36px rgba(10,10,10,0.55); overflow: hidden; }
@@ -50,7 +58,43 @@
       .bp-adm-card .bp-adm-empty { padding: 48px 22px; text-align: center; color: #6A6E7A; }
       .bp-adm-card .bp-adm-loading { padding: 28px 22px; text-align: center; color: #6A6E7A; }
       .bp-adm-card .bp-adm-ua { font-size: 11px; color: #6A6E7A; max-width: 320px; word-break: break-word; }
-      @media print { .bp-adm-bar, .bp-adm-modal { display: none !important; } }
+
+      /* Print pages injected by the admin toolbar Print menu. The injected
+         MSA block (.bp-adm-msa-injected) is hidden on screen and only
+         revealed in the relevant print mode. */
+      .bp-adm-msa-injected { display: none; }
+
+      @media print {
+        /* Always strip the toolbar + activity modal during print. */
+        .bp-adm-bar, .bp-adm-modal { display: none !important; }
+
+        /* Mode A — Delivery Team: print the whole document. Hide nav,
+           the signature popup (if open), and any orphan MSA terms
+           injected by the Shopify Partner mode. */
+        body.bp-print-delivery nav[style*="position: fixed"],
+        body.bp-print-delivery [role="dialog"],
+        body.bp-print-delivery .bp-adm-msa-injected,
+        body.bp-print-delivery .uncap-msa-print-clone { display: none !important; }
+        body.bp-print-delivery section[data-bp-section] { page-break-inside: auto; break-inside: auto; }
+
+        /* Mode B — Shopify Partner Program: only the named sections +
+           the Master Services Agreement at the end. */
+        body.bp-print-shopify nav[style*="position: fixed"],
+        body.bp-print-shopify [role="dialog"],
+        body.bp-print-shopify .uncap-msa-print-clone { display: none !important; }
+        body.bp-print-shopify section[data-bp-section] { display: none !important; }
+        body.bp-print-shopify section[data-bp-section="intro"],
+        body.bp-print-shopify section[data-bp-section="scope"],
+        body.bp-print-shopify section[data-bp-section="techstack"],
+        body.bp-print-shopify section[data-bp-section="b2b"],
+        body.bp-print-shopify section[data-bp-section="integrations"],
+        body.bp-print-shopify section[data-bp-section="migration"],
+        body.bp-print-shopify section[data-bp-section="delivery"],
+        body.bp-print-shopify section[data-bp-section="investment"] { display: block !important; page-break-after: always; }
+        body.bp-print-shopify .bp-adm-msa-injected { display: block !important; padding: 14mm 14mm 20mm !important; background: white !important; color: black !important; }
+
+        @page { size: A4; margin: 12mm 10mm; }
+      }
     `;
     document.head.appendChild(s);
   }
@@ -166,36 +210,136 @@
     };
   }
 
+  // ── Print helpers ─────────────────────────────────────────────────────
+  // Two print modes triggered from the toolbar's Print dropdown:
+  //  - 'delivery' : print everything except nav, signature popup, toolbar
+  //  - 'shopify'  : print only the named sections + the Master Services
+  //                 Agreement appended as the last page set
+  function printDeliveryDocument() {
+    document.body.classList.add('bp-print-delivery');
+    const cleanup = () => {
+      document.body.classList.remove('bp-print-delivery');
+      window.removeEventListener('afterprint', cleanup);
+    };
+    window.addEventListener('afterprint', cleanup);
+    setTimeout(cleanup, 60_000);
+    requestAnimationFrame(() => { try { window.print(); } catch (_) { cleanup(); } });
+  }
+
+  function printShopifyPartnerDocument() {
+    if (!(window.React && window.ReactDOM && window.UncapMSA)) {
+      alert('Could not load the Master Services Agreement. Try the Print agreement button inside the Approve & kickoff popup instead.');
+      return;
+    }
+    // Render UncapMSA into a hidden block we'll append to body — print
+    // CSS reveals it in Shopify-partner mode.
+    const wrap = document.createElement('div');
+    wrap.className = 'bp-adm-msa-injected';
+    document.body.appendChild(wrap);
+
+    const brand = (window.__brand && window.__brand.name) || '';
+    const el = window.React.createElement(window.UncapMSA, { company: brand, name: '', title: '' });
+    const root = window.ReactDOM.createRoot(wrap);
+    root.render(el);
+
+    document.body.classList.add('bp-print-shopify');
+
+    const cleanup = () => {
+      document.body.classList.remove('bp-print-shopify');
+      try { root.unmount(); } catch (_) {}
+      if (wrap.parentNode) wrap.parentNode.removeChild(wrap);
+      window.removeEventListener('afterprint', cleanup);
+    };
+    window.addEventListener('afterprint', cleanup);
+    setTimeout(cleanup, 60_000);
+    // Wait a paint so React has actually mounted the MSA before printing.
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      try { window.print(); } catch (_) { cleanup(); }
+    }));
+  }
+
   function renderToolbar(session, token, blueprintId) {
     ensureStyles();
     const bar = document.createElement('div');
     bar.className = 'bp-adm-bar';
-    bar.innerHTML = `
-      <span class="bp-adm-dot"></span>
-      <span class="bp-adm-label">Uncap team</span>
-      <button type="button" class="bp-adm-action">Activity</button>
-      <button type="button" class="bp-adm-close" aria-label="Hide toolbar">×</button>`;
+    bar.innerHTML =
+      '<span class="bp-adm-dot"></span>' +
+      '<span class="bp-adm-label">Internal</span>' +
+      '<button type="button" class="bp-adm-action" data-act="activity">Activity</button>' +
+      '<span class="bp-adm-print-wrap">' +
+        '<button type="button" class="bp-adm-action is-secondary" data-act="print" aria-haspopup="true" aria-expanded="false">Print ▾</button>' +
+      '</span>' +
+      '<button type="button" class="bp-adm-close" aria-label="Hide toolbar">×</button>';
     document.body.appendChild(bar);
 
-    let cleanup = null;
-    bar.querySelector('.bp-adm-action').addEventListener('click', async () => {
-      const action = bar.querySelector('.bp-adm-action');
-      const original = action.textContent;
-      action.textContent = 'Loading…';
-      action.disabled = true;
+    const activityBtn = bar.querySelector('[data-act="activity"]');
+    const printBtn    = bar.querySelector('[data-act="print"]');
+    const printWrap   = bar.querySelector('.bp-adm-print-wrap');
+    const closeBtn    = bar.querySelector('.bp-adm-close');
+
+    let modalCleanup = null;
+    let printMenuEl  = null;
+
+    function closePrintMenu() {
+      if (printMenuEl && printMenuEl.parentNode) printMenuEl.parentNode.removeChild(printMenuEl);
+      printMenuEl = null;
+      printBtn.setAttribute('aria-expanded', 'false');
+      document.removeEventListener('click', onDocClickOutside, true);
+      window.removeEventListener('keydown', onEsc);
+    }
+    function onDocClickOutside(e) {
+      if (printWrap.contains(e.target)) return;
+      closePrintMenu();
+    }
+    function onEsc(e) { if (e.key === 'Escape') closePrintMenu(); }
+    function openPrintMenu() {
+      if (printMenuEl) { closePrintMenu(); return; }
+      printMenuEl = document.createElement('div');
+      printMenuEl.className = 'bp-adm-print-menu';
+      printMenuEl.innerHTML =
+        '<button type="button" data-mode="delivery">For Delivery Team' +
+          '<span class="bp-adm-print-sub">Whole document · no terms · no nav</span>' +
+        '</button>' +
+        '<button type="button" data-mode="shopify">For Shopify Partner Program' +
+          '<span class="bp-adm-print-sub">Intro · Scope · Architecture · Unified · Integrated · Migration · Delivery · Investment + MSA</span>' +
+        '</button>';
+      printMenuEl.querySelector('[data-mode="delivery"]').addEventListener('click', () => {
+        closePrintMenu();
+        printDeliveryDocument();
+      });
+      printMenuEl.querySelector('[data-mode="shopify"]').addEventListener('click', () => {
+        closePrintMenu();
+        printShopifyPartnerDocument();
+      });
+      printWrap.appendChild(printMenuEl);
+      printBtn.setAttribute('aria-expanded', 'true');
+      // Defer the click listener so the click that opened the menu doesn't
+      // immediately close it.
+      setTimeout(() => document.addEventListener('click', onDocClickOutside, true), 0);
+      window.addEventListener('keydown', onEsc);
+    }
+
+    activityBtn.addEventListener('click', async () => {
+      const original = activityBtn.textContent;
+      activityBtn.textContent = 'Loading…';
+      activityBtn.disabled = true;
       try {
         const events = await fetchAccessLog(token, blueprintId);
-        if (cleanup) cleanup();
-        cleanup = renderModal(events, blueprintId, () => { if (cleanup) cleanup(); cleanup = null; });
+        if (modalCleanup) modalCleanup();
+        modalCleanup = renderModal(events, blueprintId, () => { if (modalCleanup) modalCleanup(); modalCleanup = null; });
       } catch (err) {
         alert('Could not load activity: ' + (err && err.message || 'unknown error'));
       } finally {
-        action.textContent = original;
-        action.disabled = false;
+        activityBtn.textContent = original;
+        activityBtn.disabled = false;
       }
     });
-    bar.querySelector('.bp-adm-close').addEventListener('click', () => {
-      if (cleanup) cleanup();
+
+    printBtn.addEventListener('click', (e) => { e.stopPropagation(); openPrintMenu(); });
+
+    closeBtn.addEventListener('click', () => {
+      if (modalCleanup) modalCleanup();
+      closePrintMenu();
       if (bar.parentNode) bar.parentNode.removeChild(bar);
     });
   }
