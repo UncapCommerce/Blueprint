@@ -193,6 +193,7 @@ function BPIntro() {
             {[
             { k: 'Prepared by', v: 'Denis Dyli', t: 'CEO & Principal', s: 'denis@uncap.com' },
             { k: 'Client lead', v: 'Steve Pardue', t: 'Managing Member', s: 'spardue@elevateoralcare.com' },
+            { k: 'Company', v: 'Elevate Oral Care, LLC', t: '', s: <React.Fragment>346 Pike Road, Suite 5<br/>West Palm Beach, FL 33411</React.Fragment> },
             { k: 'Valid through', v: 'Jul 15, 2026', t: '', s: '15 days' }].
             map((c, i) =>
             <div key={i} style={{
