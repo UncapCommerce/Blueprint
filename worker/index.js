@@ -51,6 +51,12 @@ const BLUEPRINT_ALLOWLISTS = {
     'cstein@elyandwalker.com',
     'mdavis@elyandwalker.com',
   ],
+  vivo: [
+    'codyh@vivo-us.com',
+    'jon.orns@vivo-us.com',
+    'nick.stoner@vivo-us.com',
+    'kristina.velpel@cknappsales.com',
+  ],
 };
 
 export default {
