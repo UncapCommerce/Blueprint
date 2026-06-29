@@ -1667,7 +1667,7 @@ function BPTechStack() {
   { name: 'Shopify Checkout Blocks', fn: 'Customized, higher-converting checkout', pri: 'launch', cost: 'Included' },
   { name: 'Shopify Flow', fn: 'Workflow & operations automation', pri: 'launch', cost: 'Included' },
   { name: 'Shopify Forms', fn: 'Lead capture & account requests', pri: 'launch', cost: 'Included' },
-  { name: 'Shopify Messaging', fn: 'Customer chat & conversations', pri: 'future', cost: 'Included' },
+  { name: 'Shopify Inbox', fn: 'Chat & Conversations', pri: 'launch', cost: 'Included' },
   { name: 'Shopify Bundles', fn: 'Product bundles & combinations', pri: 'launch', cost: 'Included' },
   { name: 'Uncap Quotes', fn: 'Quote requests & sales enablement', pri: 'launch', cost: '$99/mo' }];
 
@@ -1696,7 +1696,7 @@ function BPTechStack() {
 
         {(() => {
           const layers = [
-          { tier: '04', name: 'Growth & Automation', note: 'After launch', tools: [['Shopify Flow', 'launch'], ['Uncap Quotes', 'launch'], ['Shopify Messaging', 'future']] },
+          { tier: '04', name: 'Growth & Automation', note: 'After launch', tools: [['Shopify Flow', 'launch'], ['Uncap Quotes', 'launch'], ['Shopify Inbox', 'launch']] },
           { tier: '03', name: 'Experience & Engagement', note: 'Customer-facing', tools: [['Search & Discovery', 'launch'], ['Checkout Blocks', 'launch'], ['Bundles', 'launch'], ['Forms', 'launch']] },
           { tier: '02', name: 'Data & Integration', note: 'System of record', tools: [['NetSuite Connector', 'start']] },
           { tier: '01', name: 'Commerce Core', note: 'Foundation', tools: [['Shopify Plus', 'start']], core: true }];
