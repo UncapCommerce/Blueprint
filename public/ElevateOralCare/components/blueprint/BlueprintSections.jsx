@@ -912,7 +912,7 @@ function GfxCart() {
         <div style={{ padding: '10px 13px', background: 'var(--uc-black)', color: 'var(--uc-paper)', borderBottom: '1px solid var(--line-1)', display: 'flex', gap: 9, alignItems: 'center' }}>
           <span style={{ width: 18, height: 18, borderRadius: 999, border: '2px solid var(--uc-signal)', flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}><span style={{ width: 7, height: 7, borderRadius: 999, background: 'var(--uc-signal)' }} /></span>
           <div style={{ flex: 1 }}><div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 9.5, color: 'var(--uc-paper)' }}>Upgrade to Practice+ <span style={{ color: 'var(--uc-signal)' }}>−15%</span></div><div style={{ fontFamily: 'var(--font-mono)', fontSize: 7, color: 'var(--uc-stone-300)' }}>$49/mo · free shipping · priority support</div></div>
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 7.5, fontWeight: 800, color: 'var(--uc-black)', background: 'var(--uc-signal)', padding: '4px 8px', borderRadius: 3 }}>ADD</span>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 7.5, fontWeight: 800, color: 'var(--uc-paper)', background: 'var(--uc-black)', padding: '4px 8px', borderRadius: 3 }}>ADD</span>
         </div>
         {/* totals + checkout */}
         <div style={{ marginTop: 'auto', padding: '10px 13px', borderTop: '1px solid var(--line-1)' }}>
@@ -962,6 +962,8 @@ function GfxPDP() {
             <div style={{ fontFamily: 'var(--font-mono)', fontSize: 6.5, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--fg-3)', marginBottom: 4 }}>CONFIGURATION</div>
             <div style={{ display: 'flex', gap: 4 }}>{[['Bottle', false], ['GEL Syringe', true], ['Unit-dose', false]].map(([l, on], i) => <span key={i} style={{ flex: 1, padding: '5px 2px', textAlign: 'center', border: '1px solid', borderColor: on ? 'var(--uc-black)' : 'var(--line-1)', borderRadius: 3, fontFamily: 'var(--font-mono)', fontSize: 6, fontWeight: 700, color: on ? 'var(--uc-paper)' : 'var(--fg-2)', background: on ? 'var(--uc-black)' : 'transparent', whiteSpace: 'nowrap' }}>{l}</span>)}</div>
           </div>
+          {/* request a quote — fast path for bulk + institutional buyers */}
+          <span style={{ marginTop: 3, display: 'block', padding: '8px', textAlign: 'center', background: 'var(--uc-black)', color: 'var(--uc-paper)', borderRadius: 3, fontFamily: 'var(--font-display)', fontSize: 9.5, fontWeight: 800, letterSpacing: '-0.005em' }}>Request a quote →</span>
           {/* locked pricing — gated to registered accounts */}
           <div style={{ marginTop: 3, border: '1px solid var(--line-2)', borderRadius: 4, background: 'var(--uc-cream)', padding: '10px 11px', display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -971,7 +973,7 @@ function GfxPDP() {
               <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 10, letterSpacing: '-0.01em', color: 'var(--fg-1)', lineHeight: 1.2 }}>Register to see your prices and order</span>
             </div>
             <div style={{ display: 'flex', gap: 6 }}>
-              <span style={{ flex: 1, padding: '8px', textAlign: 'center', background: 'var(--uc-signal)', color: 'var(--uc-black)', borderRadius: 3, fontFamily: 'var(--font-display)', fontSize: 9.5, fontWeight: 800 }}>Register</span>
+              <span style={{ flex: 1, padding: '8px', textAlign: 'center', background: 'var(--uc-black)', color: 'var(--uc-paper)', borderRadius: 3, fontFamily: 'var(--font-display)', fontSize: 9.5, fontWeight: 800 }}>Register</span>
               <span style={{ flex: 1, padding: '8px', textAlign: 'center', border: '1px solid var(--uc-black)', borderRadius: 3, fontFamily: 'var(--font-display)', fontSize: 9.5, fontWeight: 700, color: 'var(--fg-1)' }}>Log in</span>
             </div>
           </div>
@@ -1062,7 +1064,7 @@ function GfxPortal() {
               <div style={{ fontFamily: 'var(--font-mono)', fontSize: 7, letterSpacing: '0.1em', color: 'var(--fg-3)' }}>WELCOME BACK</div>
               <div style={{ fontFamily: 'var(--font-hero)', fontWeight: 700, fontSize: 17, letterSpacing: '-0.035em', color: 'var(--fg-1)' }}>Dana</div>
             </div>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 7.5, fontWeight: 800, color: 'var(--uc-black)', background: 'var(--uc-signal)', padding: '4px 9px', borderRadius: 3 }}>+ New order</span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 7.5, fontWeight: 800, color: 'var(--uc-paper)', background: 'var(--uc-black)', padding: '4px 9px', borderRadius: 3 }}>+ New order</span>
           </div>
           {/* stat tiles */}
           <div style={{ padding: '0 14px 10px', display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
@@ -1075,7 +1077,7 @@ function GfxPortal() {
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 600, color: 'var(--fg-1)' }}>{r[0]}</span>
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: 8.5, color: 'var(--fg-3)' }}>{r[1]}</span>
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: 7.5, fontWeight: 700, color: r[2] === 'Approved' ? 'var(--uc-paper)' : 'var(--fg-3)', background: r[2] === 'Approved' ? 'var(--uc-black)' : 'transparent', border: r[2] === 'Approved' ? 'none' : '1px solid var(--line-1)', padding: '2px 6px', borderRadius: 2 }}>{r[2]}</span>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 8, fontWeight: 700, color: 'var(--uc-black)', background: 'var(--uc-signal)', padding: '2px 7px', borderRadius: 2 }}>Reorder</span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 8, fontWeight: 700, color: 'var(--uc-paper)', background: 'var(--uc-black)', padding: '2px 7px', borderRadius: 2 }}>Reorder</span>
             </div>)}
           </div>
         </div>
@@ -1239,7 +1241,7 @@ function GfxHomepage() {
       <div style={{ background:'var(--uc-black)', padding:'10px 14px', display:'flex', alignItems:'center', gap:8 }}>
         <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, letterSpacing:'0.08em', color:'#B8D8CE', whiteSpace:'nowrap' }}>SHOP BY</span>
         {['Category','Brand','Use case'].map((f,i)=>(<span key={f} style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'space-between', height:22, background:'var(--uc-paper)', borderRadius:4, padding:'0 9px', fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--fg-2)' }}>{f}<span style={{ color:'var(--fg-3)' }}>▾</span></span>))}
-        <span style={{ display:'inline-flex', alignItems:'center', height:22, padding:'0 12px', background:'var(--uc-signal)', color:'var(--uc-black)', borderRadius:4, fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:800, whiteSpace:'nowrap' }}>Find Now →</span>
+        <span style={{ display:'inline-flex', alignItems:'center', height:22, padding:'0 12px', background:'var(--uc-black)', color:'var(--uc-paper)', borderRadius:4, fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:800, whiteSpace:'nowrap' }}>Find Now →</span>
       </div>
 
       {/* brand strip */}
@@ -1462,7 +1464,7 @@ function GfxPhone({ kind }) {
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, height: 30, border: '1.5px solid var(--uc-black)', borderRadius: 5, padding: '0 4px 0 10px' }}>
               <span style={{ fontSize: 10, color: 'var(--fg-2)' }}>⌕</span>
               <span style={{ flex: 1, fontFamily: 'var(--font-mono)', fontSize: 8, color: 'var(--fg-3)' }}>Search products & protocols…</span>
-              <span style={{ alignSelf: 'stretch', display: 'flex', alignItems: 'center', padding: '0 9px', margin: '3px 0', background: 'var(--uc-signal)', color: 'var(--uc-black)', borderRadius: 3, fontFamily: 'var(--font-mono)', fontSize: 7, fontWeight: 800 }}>GO</span>
+              <span style={{ alignSelf: 'stretch', display: 'flex', alignItems: 'center', padding: '0 9px', margin: '3px 0', background: 'var(--uc-black)', color: 'var(--uc-paper)', borderRadius: 3, fontFamily: 'var(--font-mono)', fontSize: 7, fontWeight: 800 }}>GO</span>
             </div>
           </div>
         </div>
