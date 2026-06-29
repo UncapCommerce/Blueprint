@@ -16,6 +16,64 @@
   if (window.__bpAdminToolbarMounted) return;
   window.__bpAdminToolbarMounted = true;
 
+  // ── Print-quality stylesheet (runs for every visitor, not just admins) ──
+  // The blueprint pages rely heavily on full-bleed dark backgrounds, lime
+  // signal accents, and grid mesh overlays — all of which Chrome/Safari
+  // strip by default when printing because backgrounds are off unless you
+  // explicitly opt in. -webkit-print-color-adjust:exact reverses that.
+  // Beyond colour preservation we also collapse viewport-anchored heights
+  // (the 78vh hero, the section min-heights) and ask common header-and-
+  // card patterns not to split across page breaks. Result: a printed PDF
+  // that looks close to what you see on screen.
+  const PRINT_STYLE_ID = 'bp-print-quality-styles';
+  function ensurePrintStyles() {
+    if (document.getElementById(PRINT_STYLE_ID)) return;
+    const s = document.createElement('style');
+    s.id = PRINT_STYLE_ID;
+    s.textContent = `
+      @media print {
+        /* Preserve every fill, gradient, background-image, and pattern
+           through the print pipeline. Without this Chrome paints the
+           dark sections white. */
+        * {
+          -webkit-print-color-adjust: exact !important;
+          print-color-adjust: exact !important;
+          color-adjust: exact !important;
+        }
+
+        /* Sections that anchored their height in viewport units (78vh
+           on the hero, min-height: 100vh elsewhere) leave half-empty
+           pages when printed. Let content size them naturally. */
+        html, body { background: var(--uc-cream, #F2EFE7) !important; min-height: 0 !important; }
+        section, section[data-bp-section], section#intro {
+          min-height: 0 !important;
+        }
+
+        /* The fixed left-rail nav and the floating admin toolbar
+           shouldn't be in the printed document. The signature popup is
+           also hidden unless the Print agreement button explicitly armed
+           the MSA-only mode (handled by UncapMSA's own rules). */
+        body:not(.bp-print-msa-only) nav[style*="position: fixed"],
+        body:not(.bp-print-msa-only) [role="dialog"],
+        body:not(.bp-print-msa-only) .bp-adm-bar,
+        body:not(.bp-print-msa-only) .bp-adm-modal {
+          display: none !important;
+        }
+
+        /* Don't split headlines from the paragraphs that follow them,
+           and don't split signature boxes or stat cards across pages. */
+        h1, h2, h3, h4 { break-after: avoid; page-break-after: avoid; }
+        .msa-sigbox, .msa-clause.h, .msa-sub { break-inside: avoid; page-break-inside: avoid; }
+
+        /* Letter is the predictable default for proposals on this side
+           of the Atlantic; modest margins so dark sections breathe. */
+        @page { size: Letter; margin: 8mm; }
+      }
+    `;
+    document.head.appendChild(s);
+  }
+  ensurePrintStyles();
+
   const STYLE_ID = 'bp-admin-toolbar-styles';
   function ensureStyles() {
     if (document.getElementById(STYLE_ID)) return;
