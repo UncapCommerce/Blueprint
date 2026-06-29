@@ -1188,36 +1188,41 @@ function GfxQuotes() {
 }
 
 function GfxHomepage() {
-  const nav = ['Shop','Brands','Deals','New','Trade'];
+  const nav = ['SDF','Varnish','Toothpaste','Dry Mouth'];
   const mega = [
-    { h: 'By Category', items: ['Anatomical Models','Simulators','Anatomy Charts','Specimens','Custom Products','Simulated Meds'] },
-    { h: 'By Audience', items: ['Medical Schools','Nursing Programs','Veterinary','Hospitals'] },
-    { h: 'Quick Links', items: ['New Arrivals','Deals','Institution Pricing','Bulk Orders'] }
+    { h: 'By Category', items: ['Silver Diamine Fluoride','Fluoride Varnish','Prescription Toothpaste','Dry Mouth Relief','Debridement','Rinses & Mouthwash'] },
+    { h: 'By Audience', items: ['Dental Offices','Hygienists','Pediatric Practices','Group Buying'] },
+    { h: 'Quick Links', items: ['New Arrivals','Promotions','Professional Pricing','Bulk Orders'] }
   ];
-  const brands = ['3B SCI','AXIS','ERLER','SOMSO','NASCO','VATA'];
-  const feat = [['Human Skull','$89.00','#B0C4D4','NEW'],['3B Heart','$124.00','#C4AEAD',null],['IV Training Arm','$159.00','#C8B89A','PRO'],['Brain Model','$72.00','#1B5272',null]];
+  const brands = ['ADVANTAGE','FLUORIMAX','ALLDAY','PAPACARIE','STANCE','ELEVATE'];
+  const feat = [
+    ['Advantage Arrest 38%', '$135.00', '#2F6E6A', 'BEST'],
+    ['FluoriMax Varnish',    '$48.00',  '#8FBFB2', 'NEW'],
+    ['Allday Dry Mouth',     '$12.00',  '#9FCAC4', null],
+    ['Papacarie Duo',        '$89.00',  '#6FA88C', 'PRO']
+  ];
   return (
     <div style={{ background:'var(--uc-paper)', border:'1px solid var(--line-1)', borderRadius:5, overflow:'hidden' }}>
       {/* announcement */}
-      <div style={{ background:'#1B5272', color:'#fff', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>FREE SHIPPING OVER $100 · UNIVERSITY & HOSPITAL PRICING</div>
+      <div style={{ background:'var(--uc-black)', color:'var(--uc-paper)', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>BUY ANY 3, GET ONE FREE · PROFESSIONAL PRICING</div>
       {/* header */}
       <div style={{ display:'flex', alignItems:'center', gap:11, padding:'8px 14px', borderBottom:'1px solid var(--line-1)' }}>
         <BrandMark fontSize={12}/>
         <div style={{ display:'flex', gap:11, marginLeft:6 }}>{nav.map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:i===0?'var(--fg-1)':'var(--fg-3)', position:'relative' }}>{x}{i===0 && <span style={{ position:'absolute', left:0, right:0, bottom:-9, height:2, background:'var(--uc-black)' }}/>}</span>))}</div>
         <span style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:7 }}>
-          <span style={{ width:120, height:18, borderRadius:999, border:'1px solid var(--line-2)', display:'flex', alignItems:'center', gap:4, padding:'0 9px', fontFamily:'var(--font-mono)', fontSize:7, color:'var(--fg-3)', whiteSpace:'nowrap', overflow:'hidden' }}><span style={{ fontSize:8 }}>⌕</span>Search anatomy & medical models…</span>
-          <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'#fff', background:'#1B5272', padding:'3px 8px', borderRadius:3, display:'inline-flex', alignItems:'center' }}><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{display:'inline-block',verticalAlign:'middle',marginRight:2}}><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>Cart 6</span>
+          <span style={{ width:120, height:18, borderRadius:999, border:'1px solid var(--line-2)', display:'flex', alignItems:'center', gap:4, padding:'0 9px', fontFamily:'var(--font-mono)', fontSize:7, color:'var(--fg-3)', whiteSpace:'nowrap', overflow:'hidden' }}><span style={{ fontSize:8 }}>⌕</span>Search SDF, varnish, rinses…</span>
+          <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--uc-paper)', background:'var(--uc-black)', padding:'3px 8px', borderRadius:3, display:'inline-flex', alignItems:'center' }}><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{display:'inline-block',verticalAlign:'middle',marginRight:2}}><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>Cart 6</span>
         </span>
       </div>
 
       {/* hero + mega menu overlay */}
-      <div style={{ position:'relative', height:188, background:'linear-gradient(100deg, #0D2034 0%, #1B5272 55%, #2E7EB8 135%)', overflow:'hidden' }}>
+      <div style={{ position:'relative', height:188, background:'linear-gradient(100deg, #1F4E48 0%, #2F6E6A 55%, #6FA88C 135%)', overflow:'hidden' }}>
         <svg viewBox="0 0 200 90" preserveAspectRatio="none" style={{ position:'absolute', right:-10, bottom:-10, width:220, opacity:0.16 }}><path d="M5 85 L5 34 L52 34 L52 12 L104 12 L104 34 L195 34 L195 85 Z" fill="none" stroke="#fff" strokeWidth="1.6"/><path d="M28 85 L28 52 M78 85 L78 34 M150 85 L150 50" stroke="#fff" strokeWidth="1"/></svg>
         {/* hero copy (right 1/3) */}
         <div style={{ position:'absolute', right:18, top:0, bottom:0, width:'34%', display:'flex', flexDirection:'column', justifyContent:'center', gap:7 }}>
-          <span style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.16em', color:'var(--uc-signal)' }}>40,000+ EDUCATORS TRUST US</span>
-          <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:24, letterSpacing:'-0.04em', lineHeight:0.9, color:'#fff' }}>Medical education<br/><span style={{ fontFamily:'var(--font-serif)', fontWeight:400 }}>at scale.</span></span>
-          <span style={{ alignSelf:'flex-start', marginTop:2, padding:'5px 13px', background:'#1B5272', color:'#fff', borderRadius:999, fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:800 }}>Shop models →</span>
+          <span style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.16em', color:'var(--uc-signal)' }}>TRUSTED BY DENTAL PROS</span>
+          <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:24, letterSpacing:'-0.04em', lineHeight:0.9, color:'#fff' }}>Preventive care,<br/><span style={{ fontFamily:'var(--font-serif)', fontWeight:400 }}>delivered.</span></span>
+          <span style={{ alignSelf:'flex-start', marginTop:2, padding:'5px 13px', background:'var(--uc-black)', color:'var(--uc-paper)', borderRadius:999, fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:800 }}>Shop products →</span>
         </div>
         {/* mega menu over 2/3 */}
         <div style={{ position:'absolute', left:0, top:0, bottom:0, width:'64%', background:'rgba(248,246,240,0.97)', borderRight:'1px solid var(--line-2)', boxShadow:'10px 0 30px -16px rgba(0,0,0,0.5)', padding:'14px 16px', display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:14 }}>
@@ -1230,11 +1235,11 @@ function GfxHomepage() {
         </div>
       </div>
 
-      {/* Year / Make / Model fitment */}
+      {/* Category quick-pick */}
       <div style={{ background:'var(--uc-black)', padding:'10px 14px', display:'flex', alignItems:'center', gap:8 }}>
-        <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, letterSpacing:'0.08em', color:'#B8D4E8', whiteSpace:'nowrap' }}>FIND YOUR FIT</span>
-        {['Product','Brand','Profession'].map((f,i)=>(<span key={f} style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'space-between', height:22, background:'var(--uc-paper)', borderRadius:4, padding:'0 9px', fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--fg-2)' }}>{f}<span style={{ color:'var(--fg-3)' }}>▾</span></span>))}
-        <span style={{ display:'inline-flex', alignItems:'center', height:22, padding:'0 12px', background:'#1B5272', color:'#fff', borderRadius:4, fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:800, whiteSpace:'nowrap' }}>Find Now →</span>
+        <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, letterSpacing:'0.08em', color:'#B8D8CE', whiteSpace:'nowrap' }}>SHOP BY</span>
+        {['Category','Brand','Use case'].map((f,i)=>(<span key={f} style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'space-between', height:22, background:'var(--uc-paper)', borderRadius:4, padding:'0 9px', fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--fg-2)' }}>{f}<span style={{ color:'var(--fg-3)' }}>▾</span></span>))}
+        <span style={{ display:'inline-flex', alignItems:'center', height:22, padding:'0 12px', background:'var(--uc-signal)', color:'var(--uc-black)', borderRadius:4, fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:800, whiteSpace:'nowrap' }}>Find Now →</span>
       </div>
 
       {/* brand strip */}
@@ -1257,10 +1262,10 @@ function GfxHomepage() {
 
       {/* brand story — image + text */}
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:0, borderTop:'1px solid var(--line-1)' }}>
-        <div style={{ background:'linear-gradient(150deg, #1B5272, #0D2034)', minHeight:96, position:'relative' }}><span style={{ position:'absolute', bottom:8, left:10, padding:'2px 7px', background:'var(--uc-paper)', borderRadius:3, fontFamily:'var(--font-mono)', fontSize:5.5, fontWeight:800, letterSpacing:'0.1em', color:'var(--fg-3)' }}>SKOKIE, IL</span></div>
+        <div style={{ background:'linear-gradient(150deg, #2F6E6A, #1F4E48)', minHeight:96, position:'relative' }}><span style={{ position:'absolute', bottom:8, left:10, padding:'2px 7px', background:'var(--uc-paper)', borderRadius:3, fontFamily:'var(--font-mono)', fontSize:5.5, fontWeight:800, letterSpacing:'0.1em', color:'var(--fg-3)' }}>WEST PALM BEACH, FL</span></div>
         <div style={{ padding:'16px 16px', display:'flex', flexDirection:'column', justifyContent:'center', gap:7, background:'var(--uc-bone)' }}>
           <span style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, letterSpacing:'0.14em', color:'var(--fg-3)' }}>OUR STORY</span>
-          <span style={{ fontFamily:'var(--font-serif)', fontStyle:'italic', fontSize:14, lineHeight:1.3, letterSpacing:'-0.01em', color:'var(--fg-1)' }}>Serving universities, hospitals and medical schools with the best anatomy education tools.</span>
+          <span style={{ fontFamily:'var(--font-serif)', fontStyle:'italic', fontSize:14, lineHeight:1.3, letterSpacing:'-0.01em', color:'var(--fg-1)' }}>Helping dental teams deliver better preventive care to every patient, every visit.</span>
           <span style={{ alignSelf:'flex-start', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, color:'var(--fg-1)', borderBottom:'1.5px solid var(--uc-signal)', paddingBottom:1 }}>Read our story →</span>
         </div>
       </div>
@@ -2231,9 +2236,6 @@ function BPRiskAssessment() {
     { t: 'Third party vendor delays', sev: 'High',
       d: 'When other third parties involved delay what’s needed for the project, our delivery will get delayed.',
       m: 'Constant communication to all stakeholders throughout the project.' },
-    { t: 'ERP Integration', sev: 'Medium',
-      d: 'Depending on how ERP data is set up, the ERP consultant may delay the integration and postpone launch.',
-      m: 'Loop them in the process as early as the kickoff day.' },
     { t: 'Product information changes', sev: 'Medium',
       d: 'If there are product information sections that change during this migration, or product linking updates, this will affect the timeline.',
       m: 'Identify these during the deep dive workshops.' },
