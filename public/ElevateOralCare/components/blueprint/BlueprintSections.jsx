@@ -194,7 +194,7 @@ function BPIntro() {
             {[
             { k: 'Prepared by', v: 'Denis Dyli', t: 'CEO & Principal', s: 'denis@uncap.com' },
             { k: 'Client lead', v: 'Steve Pardue', t: 'Managing Member', s: 'spardue@elevateoralcare.com' },
-            { k: 'Valid through', v: 'Jul 31, 2026', t: '', s: '30 days' }].
+            { k: 'Valid through', v: 'Jul 15, 2026', t: '', s: '15 days' }].
             map((c, i) =>
             <div key={i} style={{
               padding: '14px 0', borderBottom: '1px solid #1F1F1F',
