@@ -37,6 +37,7 @@ const files = [
   'public/GPSCity/index.html',
   'public/TucsonAlternator/index.html',
   'public/ElyCattleman/index.html',
+  'public/VIVO/index.html',
   'public/demo/blueprint/index.html',
 ];
 
