@@ -2421,7 +2421,7 @@ function BPGrowth() {
         lineHeight: 1.5, color: 'var(--fg-2)'
       }}>
         Post-launch, we stay embedded as your growth team — turning a live store into a
-        compounding revenue operation. Managed monthly, measured every quarter.
+        compounding revenue operation. Month-to-month, measured every quarter.
       </p>
       <div style={{ marginTop: 'clamp(32px, 4vw, 48px)', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
         {services.map((s, i) =>
@@ -2443,10 +2443,10 @@ function BPGrowth() {
         display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap'
       }}>
         <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 15, color: 'var(--fg-1)' }}>
-          Uncap Growth Retainer Plan: Core · <span style={{ fontFamily: 'var(--font-hero)', fontWeight: 800 }}>$2,500 / mo</span>
+          Uncap Growth Managed Service: Core · <span style={{ fontFamily: 'var(--font-hero)', fontWeight: 800 }}>$2,500 / mo</span>
         </div>
         <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--fg-3)', letterSpacing: '0.06em' }}>
-          12-MONTH TERM
+          MONTH-TO-MONTH
         </div>
       </div>
     </BPSection>);
