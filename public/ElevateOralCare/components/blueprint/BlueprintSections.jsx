@@ -367,7 +367,7 @@ function BPObjectives() {
   { n: '01', t: 'Unify commerce', d: 'One platform for storefront, B2B, and back-office. No reconciling.', metric: 'One', unit: 'system of record', tag: 'Revenue' },
   { n: '02', t: 'Simplify management', d: 'Reduce the complexity of store and content management significantly.', metric: 'Simpler', unit: 'store + content', tag: 'Marketing' },
   { n: '03', t: 'Cut cost of ownership', d: 'Lower the cost of development, support, and tools. One partner, fewer renewals.', metric: 'Lower', unit: 'total cost', tag: 'Finance' },
-  { n: '04', t: 'Grow revenue', d: 'Conversion, AOV, retention — engineered in, not bolted on.', metric: 'Higher', unit: 'AOV + LTV', tag: 'Growth' },
+  { n: '04', t: 'Build for growth', d: 'Conversion, AOV, retention — engineered in, not bolted on.', metric: 'Higher', unit: 'AOV + LTV', tag: 'Growth' },
   { n: '05', t: 'Free the team', d: 'Automate the robot work. Let people do the work that grows the business.', metric: 'Faster', unit: 'daily ops', tag: 'Operations' }];
 
   return (
