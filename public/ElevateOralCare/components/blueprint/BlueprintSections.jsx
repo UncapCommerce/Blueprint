@@ -1087,90 +1087,100 @@ function GfxPortal() {
 
 function BPPerformance() {
   const groups = [
-  {
-    kpi: 'Search & Discovery',
-    sub: 'Get buyers to the right product, fast.',
-    points: [
-    { t: 'Information Architecture', d: 'Mega navigation built around how buyers actually browse.' },
-    { t: 'Discovery & Merchandising', d: 'Smart collections and curated merchandising that surface the right products.' },
-    { t: 'AI Insight Search', d: 'Natural-language search that understands intent, not just keywords.' }],
-
-    gfx: <GfxCollection />
-  },
-  {
-    kpi: 'Optimized Order Value',
-    sub: 'Lift AOV without raising prices.',
-    points: [
-    { t: 'Upsells & Cross-sells', d: 'Relevant add-ons surfaced in cart and on the product page.' },
-    { t: 'Prices & Discounts', d: 'Volume pricing, tier discounts, and promotions native to checkout.' },
-    { t: 'Promotions & Offers', d: 'Site-wide sales, BOGO, and coupon codes that run themselves.' }],
-
-    gfx: <GfxCart />
-  },
-  {
-    kpi: 'Elevated Conversion Rate',
-    sub: 'Turn more visits into orders.',
-    points: [
-    { t: 'Robust Product Page', d: 'Rich, tailored sections with comparisons, spec tables, and assets.' },
-    { t: 'Bundles & Combinations', d: 'Curated kits and build-your-own bundles checked out as one order.' },
-    { t: 'Customer Engagement', d: 'Social proof, reviews, how-to videos, and proprietary instructions.' }],
-
-    gfx: <GfxPDP />
-  },
-  {
-    kpi: 'Retention & Loyalty',
-    sub: 'Make the second order easier than the first.',
-    points: [
-    { t: 'Self-Serve Ordering Portal', d: 'A logged-in account experience for reorders, quotes, and team management.' },
-    { t: 'Quick Orders & Reorders', d: 'One-click reorders, saved lists, and recurring orders that run themselves.' },
-    { t: 'Quote Management', d: 'Quote requests and management for sales team enablement.' }],
-
-    gfx: <GfxPortal />
-  }];
-
+    {
+      kpi: 'Shopping Experience',
+      sub: 'A considered path from landing to checkout.',
+      points: [
+        { t: 'Customer Journey', d: 'Streamlined and tailored paths from landing to checkout, for both retail and trade buyers.' },
+        { t: 'Information Architecture', d: 'Mega navigation with multi-level menus built around how shops actually browse.' },
+        { t: 'Product Finding', d: 'Product, Brand, Profession fitment, quizzes, and creative ways to find products.' }
+      ],
+      gfx: <GfxHomepage/>
+    },
+    {
+      kpi: 'Search & Discovery',
+      sub: 'Get buyers to the right product, fast.',
+      points: [
+        { t: 'Product Merchandising', d: 'Assortment sorting, highlighting, and spotlighting key products with badges.' },
+        { t: 'Faceted Filters', d: 'Smart collections with attribute filtering to help buyers find exactly what they’re looking for.' },
+        { t: 'AI Insight Search', d: 'Shopify-built natural-language search that understands intent, not just keywords.' }
+      ],
+      gfx: <GfxCollection/>
+    },
+    {
+      kpi: 'Optimized Order Value',
+      sub: 'Lift AOV without raising prices.',
+      points: [
+        { t: 'Upsells & Cross-sells', d: 'Relevant add-ons and complementary products surfaced in cart and on the product page to grow basket size.' },
+        { t: 'Prices & Discounts', d: 'Volume pricing, tiered trade discounts, and automatic promotions applied natively at checkout.' },
+        { t: 'Promotions & Offers', d: 'Site-wide sales, BOGO deals, and scheduled coupon codes that launch and expire on their own.' }
+      ],
+      gfx: <GfxCart/>
+    },
+    {
+      kpi: 'Elevated Conversion Rate',
+      sub: 'Turn more visits into orders.',
+      points: [
+        { t: 'Robust Product Page', d: 'Rich, tailored sections with side-by-side comparisons, detailed spec tables, and downloadable assets.' },
+        { t: 'Bundles & Grouped Products', d: 'Curated product linking and configured products bundled and checked out together as one seamless order.' },
+        { t: 'Customer Engagement', d: 'Social proof, verified reviews, how-to videos, and proprietary installation instructions that build buyer confidence.' }
+      ],
+      gfx: <GfxPDP/>
+    },
+    {
+      kpi: 'Retention & Loyalty',
+      sub: 'Make the second order easier than the first.',
+      points: [
+        { t: 'Self-Serve Ordering Portal', d: 'A logged-in account experience for reorders, quotes, and team management.' },
+        { t: 'Quick Order & Reorder', d: 'One-click reorders, saved lists, bulk SKU upload, and easy orders that run themselves.' },
+        { t: 'Quote Requests', d: 'Review quote requests and statuses, negotiate prices and rates, approve and check out.' }
+      ],
+      gfx: <GfxPortal/>
+    }
+  ];
   return (
     <BPSection id="performance" n="06" label="Commerce" paper tail="DESIGNED FOR KPI">
       <BPHeadline>
         Designed for the{' '}
         <BPSerif>numbers that matter.</BPSerif>
       </BPHeadline>
-      <p style={{ marginTop: 'clamp(20px, 2.4vw, 28px)', maxWidth: 640, fontFamily: 'var(--font-serif)', fontSize: 'clamp(15px, 1.3vw, 18px)', lineHeight: 1.5, color: 'var(--fg-2)' }}>
-        Every design decision maps back to a KPI. Three levers, engineered into the build from day one.
+      <p style={{ marginTop:'clamp(20px, 2.4vw, 28px)', maxWidth:640, fontFamily:'var(--font-serif)', fontSize:'clamp(15px, 1.3vw, 18px)', lineHeight:1.5, color:'var(--fg-2)' }}>
+        Every design decision maps back to a KPI. Five levers, engineered into the build from day one.
       </p>
-      <div style={{ marginTop: 'clamp(36px, 4.5vw, 64px)', display: 'flex', flexDirection: 'column', gap: 0 }}>
-        {groups.map((g, i) =>
-        <div key={i} style={{
-          display: 'grid',
-          gridTemplateColumns: i % 2 === 0 ? 'minmax(0, 1fr) minmax(0, 1.05fr)' : 'minmax(0, 1.05fr) minmax(0, 1fr)',
-          gap: 'clamp(28px, 4vw, 64px)', alignItems: 'center',
-          padding: 'clamp(32px, 4vw, 56px) 0',
-          borderTop: '1px solid var(--line-1)'
-        }}>
+      <div style={{ marginTop:'clamp(36px, 4.5vw, 64px)', display:'flex', flexDirection:'column', gap:0 }}>
+        {groups.map((g, i) => (
+          <div key={i} style={{
+            display:'grid',
+            gridTemplateColumns: i % 2 === 0 ? 'minmax(0, 1fr) minmax(0, 1.05fr)' : 'minmax(0, 1.05fr) minmax(0, 1fr)',
+            gap:'clamp(28px, 4vw, 64px)', alignItems:'center',
+            padding:'clamp(32px, 4vw, 56px) 0',
+            borderTop:'1px solid var(--line-1)'
+          }}>
             <div style={{ order: i % 2 === 0 ? 1 : 2 }}>
-              <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--fg-3)', marginBottom: 14, display: 'flex', alignItems: 'center', gap: 12 }}>
-                <span style={{ color: 'var(--uc-black)', background: 'var(--uc-signal)', padding: '3px 8px', borderRadius: 3 }}>{String(i + 1).padStart(2, '0')}</span>
+              <div style={{ fontFamily:'var(--font-mono)', fontSize:10, fontWeight:700, letterSpacing:'0.16em', textTransform:'uppercase', color:'var(--fg-3)', marginBottom:14, display:'flex', alignItems:'center', gap:12 }}>
+                <span style={{ color:'var(--uc-black)', background:'var(--uc-signal)', padding:'3px 8px', borderRadius:3 }}>{String(i+1).padStart(2,'0')}</span>
                 KPI
               </div>
-              <h3 style={{ margin: 0, fontFamily: 'var(--font-hero)', fontWeight: 700, fontSize: 'clamp(26px, 3vw, 44px)', letterSpacing: '-0.035em', lineHeight: 0.98, color: 'var(--fg-1)' }}>{g.kpi}</h3>
-              <div style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(15px, 1.3vw, 18px)', color: 'var(--fg-2)', marginTop: 10 }}>{g.sub}</div>
-              <ul style={{ listStyle: 'none', padding: 0, margin: '20px 0 0', display: 'flex', flexDirection: 'column', gap: 14 }}>
-                {g.points.map((p) =>
-              <li key={p.t} style={{ display: 'grid', gridTemplateColumns: '16px minmax(0,1fr)', gap: 12, alignItems: 'start' }}>
-                    <span style={{ width: 14, height: 14, borderRadius: 999, background: 'var(--uc-signal)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', marginTop: 3, flexShrink: 0 }}><svg width="8" height="8" viewBox="0 0 12 12" fill="none"><path d="M2 6 L5 9 L10 3" stroke="var(--uc-black)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg></span>
+              <h3 style={{ margin:0, fontFamily:'var(--font-hero)', fontWeight:700, fontSize:'clamp(26px, 3vw, 44px)', letterSpacing:'-0.035em', lineHeight:0.98, color:'var(--fg-1)' }}>{g.kpi}</h3>
+              <div style={{ fontFamily:'var(--font-serif)', fontSize:'clamp(15px, 1.3vw, 18px)', color:'var(--fg-2)', marginTop:10 }}>{g.sub}</div>
+              <ul style={{ listStyle:'none', padding:0, margin:'20px 0 0', display:'flex', flexDirection:'column', gap:14 }}>
+                {g.points.map(p => (
+                  <li key={p.t} style={{ display:'grid', gridTemplateColumns:'16px minmax(0,1fr)', gap:12, alignItems:'start' }}>
+                    <span style={{ width:14, height:14, borderRadius:999, background:'var(--uc-signal)', display:'inline-flex', alignItems:'center', justifyContent:'center', marginTop:3, flexShrink:0 }}><svg width="8" height="8" viewBox="0 0 12 12" fill="none"><path d="M2 6 L5 9 L10 3" stroke="var(--uc-black)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></span>
                     <div>
-                      <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'clamp(15px, 1.3vw, 18px)', letterSpacing: '-0.012em', color: 'var(--fg-1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.t}</div>
-                      <div style={{ fontFamily: 'var(--font-serif)', fontSize: 14, color: 'var(--fg-2)', marginTop: 3, lineHeight: 1.45, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', minHeight: '2.9em' }}>{p.d}</div>
+                      <div style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:'clamp(15px, 1.3vw, 18px)', letterSpacing:'-0.012em', color:'var(--fg-1)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{p.t}</div>
+                      <div style={{ fontFamily:'var(--font-serif)', fontSize:14, color:'var(--fg-2)', marginTop:3, lineHeight:1.45, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden', minHeight:'2.9em' }}>{p.d}</div>
                     </div>
                   </li>
-              )}
+                ))}
               </ul>
             </div>
-            <div style={{ order: i % 2 === 0 ? 2 : 1, '--uc-signal': '#93C2D9', '--uc-signal-soft': '#DCEDF4', '--uc-brand': '#00688E' }}>{g.gfx}</div>
+            <div style={{ order: i % 2 === 0 ? 2 : 1 }}>{g.gfx}</div>
           </div>
-        )}
+        ))}
       </div>
-    </BPSection>);
-
+    </BPSection>
+  );
 }
 
 // ── 06b CONTENT ──────────────────────────────────────────────────────────────
@@ -1298,7 +1308,7 @@ function BPContent() {
   { kind: 'blog', label: 'Guides & Resources', d: 'Clinical protocols and CE content engineered for SEO, GEO, and paid landing — each guide a destination that routes to product.' }];
 
   return (
-    <BPSection id="content" n="06b" label="Content" paper tail="STORY · SEO · GEO · PAID">
+    <BPSection id="content" n="07" label="Content" paper tail="STORY · SEO · GEO · PAID">
       <BPHeadline>
         Content that{' '}
         <BPSerif>does the selling.</BPSerif>
@@ -1416,7 +1426,7 @@ function BPTechStack() {
     future: { l: 'Future phase', c: 'transparent', fg: 'var(--fg-3)', outline: true }
   };
   return (
-    <BPSection id="techstack" n="07" label="Architecture" dark grid tail="WHAT IT RUNS ON">
+    <BPSection id="techstack" n="08" label="Architecture" dark grid tail="WHAT IT RUNS ON">
       <BPHeadline dark>
         A stack chosen for{' '}
         <BPSerif>longevity.</BPSerif>
@@ -1537,66 +1547,87 @@ function BPTechStack() {
 // ── 08 B2B ENABLEMENT ───────────────────────────────────────────────────────
 function BPB2B() {
   const caps = [
-  { t: 'Company accounts & roles', d: 'Multi-buyer companies, permissions, and spend limits per seat.' },
-  { t: 'Catalog & price lists', d: 'Customer-specific catalogs, contract pricing, and volume breaks.' },
-  { t: 'Quotes & approvals', d: 'Request, negotiate, and convert quotes to orders inside Shopify.' },
-  { t: 'Payment terms', d: 'NET-30/45/60, PO numbers, and credit limits at checkout.' },
-  { t: 'Quick & Reorder', d: 'Easy quick orders and saved lists for fast reorders.' },
-  { t: 'Sales rep tools', d: 'Order on behalf of, account dashboards, and assisted selling.' }];
-
-  const channels = ['Storefront', 'B2B Portal', 'Sales Reps'];
+    { t: 'Company accounts & roles', d: 'Multi-buyer companies, permissions, and spend limits per seat.' },
+    { t: 'Catalog & price lists', d: 'Customer-specific catalogs, contract pricing, and volume breaks.' },
+    { t: 'Quotes & approvals', d: 'Request, negotiate, and convert quotes to orders inside Shopify.' },
+    { t: 'Payment terms', d: 'NET-30/45/60, PO numbers, and credit limits at checkout.' },
+    { t: 'Quick order & reorder', d: 'One-click reorders, saved lists, and fast repeat ordering.' },
+    { t: 'Sales rep tools', d: 'Order on behalf of, account dashboards, and assisted selling.' },
+    { t: 'Quote request management', d: 'Capture, review, negotiate, and convert quote requests into orders — powered by the Uncap Quotes Shopify app.' }
+  ];
+  const channels = ['DTC Storefront', 'B2B Portal', 'Quote Management', 'Sales Reps'];
   return (
-    <BPSection id="b2b" n="08" label="Unified" paper tail="ONE OPERATION">
+    <BPSection id="b2b" n="09" label="Unified" paper tail="ONE OPERATION">
       <BPHeadline>
         One experience{' '}
         <BPSerif>across every channel.</BPSerif>
       </BPHeadline>
-      <p style={{ marginTop: 'clamp(20px, 2.4vw, 28px)', maxWidth: 640, fontFamily: 'var(--font-serif)', fontSize: 'clamp(15px, 1.3vw, 18px)', lineHeight: 1.5, color: 'var(--fg-2)' }}>
+      <p style={{ marginTop:'clamp(20px, 2.4vw, 28px)', maxWidth:640, fontFamily:'var(--font-serif)', fontSize:'clamp(15px, 1.3vw, 18px)', lineHeight:1.5, color:'var(--fg-2)' }}>
         Native Shopify B2B primitives, configured for your accounts, terms, and sales motion — no bolt-on platform required.
       </p>
 
       {/* Convergence diagram + capability list */}
-      <div style={{ marginTop: 'clamp(32px, 4vw, 56px)', display: 'grid', gridTemplateColumns: 'minmax(0, 0.85fr) minmax(0, 1.15fr)', gap: 'clamp(28px, 4vw, 64px)', alignItems: 'center' }}>
+      <div style={{ marginTop:'clamp(32px, 4vw, 56px)', display:'grid', gridTemplateColumns:'minmax(0, 0.85fr) minmax(0, 1.15fr)', gap:'clamp(28px, 4vw, 64px)', alignItems:'center' }}>
         {/* Channels → one core */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,auto) minmax(0,auto)', gap: 'clamp(10px,1.4vw,18px)', alignItems: 'center' }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {channels.map((c, i) =>
-            <div key={i} style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.04em', color: 'var(--fg-1)', padding: '10px 12px', border: '1px solid var(--line-2)', borderRadius: 5, background: 'var(--uc-paper)', textAlign: 'center', whiteSpace: 'nowrap' }}>{c}</div>
-            )}
+        <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1fr) minmax(0,auto) minmax(0,auto)', gap:'clamp(10px,1.4vw,18px)', alignItems:'center' }}>
+          <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+            {channels.map((c, i) => (
+              <div key={i} style={{ fontFamily:'var(--font-mono)', fontSize:11, fontWeight:700, letterSpacing:'0.04em', color:'var(--fg-1)', padding:'10px 12px', border:'1px solid var(--line-2)', borderRadius:5, background:'var(--uc-paper)', textAlign:'center', whiteSpace:'nowrap' }}>{c}</div>
+            ))}
           </div>
           {/* connectors */}
-          <svg viewBox="0 0 60 200" preserveAspectRatio="none" style={{ width: 'clamp(36px,5vw,60px)', height: '100%', alignSelf: 'stretch' }}>
-            {[33, 100, 167].map((y, i) =>
-            <path key={i} d={`M0 ${y} C 30 ${y}, 30 100, 60 100`} fill="none" stroke="var(--uc-stone-500)" strokeWidth="1.4" />
-            )}
-            <circle cx="58" cy="100" r="3" fill="var(--uc-signal)" stroke="var(--uc-black)" strokeWidth="1" />
+          <svg viewBox="0 0 60 200" preserveAspectRatio="none" style={{ width:'clamp(36px,5vw,60px)', height:'100%', alignSelf:'stretch' }}>
+            {[28, 76, 124, 172].map((y, i) => (
+              <path key={i} d={`M0 ${y} C 30 ${y}, 30 100, 60 100`} fill="none" stroke="var(--uc-stone-500)" strokeWidth="1.4"/>
+            ))}
+            <circle cx="58" cy="100" r="3" fill="var(--uc-signal)" stroke="var(--uc-black)" strokeWidth="1"/>
           </svg>
           {/* one core */}
-          <div style={{ width: 'clamp(78px,9vw,116px)', aspectRatio: '1/1', borderRadius: 999, background: 'var(--uc-black)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2, boxShadow: '0 0 0 6px rgba(232,255,82,0.14)' }}>
-            <span style={{ fontFamily: 'var(--font-hero)', fontWeight: 700, fontSize: 'clamp(15px,1.6vw,20px)', letterSpacing: '-0.03em', color: 'var(--uc-paper)' }}>One</span>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 8, letterSpacing: '0.16em', color: 'var(--uc-signal)' }}>SHOPIFY CORE</span>
+          <div style={{ width:'clamp(78px,9vw,116px)', aspectRatio:'1/1', borderRadius:999, background:'var(--uc-black)', display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', gap:2, boxShadow:'0 0 0 6px rgba(232,255,82,0.14)' }}>
+            <span style={{ fontFamily:'var(--font-hero)', fontWeight:700, fontSize:'clamp(15px,1.6vw,20px)', letterSpacing:'-0.03em', color:'var(--uc-paper)' }}>One</span>
+            <span style={{ fontFamily:'var(--font-mono)', fontSize:8, letterSpacing:'0.16em', color:'var(--uc-signal)' }}>SHOPIFY CORE</span>
           </div>
         </div>
 
         {/* Capability list */}
-        <div style={{ display: 'flex', flexDirection: 'column', borderTop: '1px solid var(--line-1)' }}>
-          {caps.map((x, i) =>
-          <div key={i} style={{ display: 'grid', gridTemplateColumns: 'minmax(0,40px) minmax(0,1fr)', gap: 16, alignItems: 'baseline', padding: 'clamp(13px,1.5vw,18px) 0', borderBottom: '1px solid var(--line-1)', position: 'relative' }}>
-              <span aria-hidden="true" style={{ position: 'absolute', top: 0, left: 0, width: 16, height: 2, background: 'var(--uc-signal)' }} />
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--fg-3)' }}>{String(i + 1).padStart(2, '0')}</span>
+        <div style={{ display:'flex', flexDirection:'column', borderTop:'1px solid var(--line-1)' }}>
+          {caps.map((x, i) => (
+            <div key={i} style={{ display:'grid', gridTemplateColumns:'minmax(0,40px) minmax(0,1fr)', gap:16, alignItems:'baseline', padding:'clamp(13px,1.5vw,18px) 0', borderBottom:'1px solid var(--line-1)', position:'relative' }}>
+              <span aria-hidden="true" style={{ position:'absolute', top:0, left:0, width:16, height:2, background:'var(--uc-signal)' }}/>
+              <span style={{ fontFamily:'var(--font-mono)', fontSize:11, color:'var(--fg-3)' }}>{String(i+1).padStart(2,'0')}</span>
               <div>
-                <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'clamp(15px,1.4vw,19px)', letterSpacing: '-0.015em', color: 'var(--fg-1)' }}>{x.t}</span>
-                <span style={{ fontFamily: 'var(--font-serif)', fontSize: 14, lineHeight: 1.4, color: 'var(--fg-2)', display: 'block', marginTop: 3 }}>{x.d}</span>
+                <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:'clamp(15px,1.4vw,19px)', letterSpacing:'-0.015em', color:'var(--fg-1)' }}>{x.t}</span>
+                <span style={{ fontFamily:'var(--font-serif)', fontSize:14, lineHeight:1.4, color:'var(--fg-2)', display:'block', marginTop:3 }}>{x.d}</span>
               </div>
             </div>
-          )}
+          ))}
         </div>
       </div>
-      <div style={{ marginTop: 20, fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--fg-3)', letterSpacing: '0.06em' }}>
+      {/* Uncap Quotes app — Quotes tab */}
+      <div style={{ marginTop:'clamp(44px, 5.5vw, 80px)' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:'clamp(16px, 1.8vw, 22px)' }}>
+          <span aria-hidden="true" style={{ width:16, height:2, background:'var(--uc-signal)' }}/>
+          <span style={{ fontFamily:'var(--font-mono)', fontSize:11, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'var(--fg-3)' }}>Uncap Quotes · Shopify admin</span>
+        </div>
+        <BPHeadline>
+          Quote management,{' '}
+          <BPSerif>start to signed.</BPSerif>
+        </BPHeadline>
+        <p style={{ marginTop:'clamp(16px, 2vw, 24px)', maxWidth:680, fontFamily:'var(--font-serif)', fontSize:'clamp(15px, 1.3vw, 18px)', lineHeight:1.5, color:'var(--fg-2)', textWrap:'pretty' }}>
+          Capture requests, build and send quotes, run approvals, negotiate line by line with threaded comments, collect payment against invoices, and collaborate with your team and buyers — every quote, end to end, inside Shopify.
+        </p>
+        <div style={{ marginTop:'clamp(24px, 3vw, 40px)' }}>
+          <GfxQuotes/>
+        </div>
+      </div>
+
+      <div style={{ marginTop:20, fontFamily:'var(--font-mono)', fontSize:11, color:'var(--fg-3)', letterSpacing:'0.06em' }}>
         ↳ Built on Shopify B2B (Plus) · extended by Uncap products where needed
       </div>
-    </BPSection>);
 
+
+    </BPSection>
+  );
 }
 
 // ── 09 AGENTIC ──────────────────────────────────────────────────────────────
@@ -1618,7 +1649,7 @@ function BPAgentic() {
   { who: 'buyer', text: 'Add both, ship to the Adams St. yard, NET-30.' }];
 
   return (
-    <BPSection id="agentic" n="09" label="Agentic" dark tail="THE AI-ENABLED STORE">
+    <BPSection id="agentic" n="10" label="Agentic" dark tail="THE AI-ENABLED STORE">
       <BPHeadline dark>
         Built for the{' '}
         <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, color: 'var(--uc-stone-300)' }}>agentic web.</span>
@@ -1722,7 +1753,7 @@ function BPIntegrations() {
     return <span style={{ display: 'inline-flex', alignItems: 'center', gap: 5, fontFamily: pFont, fontSize: 11, fontWeight: 600, color: t.fg, background: t.bg, borderRadius: 8, padding: '2px 8px', whiteSpace: 'nowrap' }}>{children}</span>;
   };
   return (
-    <BPSection id="integrations" n="09" label="Integrated" tail="HOW IT CONNECTS">
+    <BPSection id="integrations" n="11" label="Integrated" tail="HOW IT CONNECTS">
       <BPHeadline>
         One operation,{' '}
         <BPSerif>not five silos.</BPSerif>
@@ -1747,19 +1778,14 @@ function BPIntegrations() {
 
 function BPMigration() {
   const steps = [
-  { t: 'Audit & map', s: 'Catalogue every record — products, customers, orders, content, redirects.' },
-  { t: 'Transform', s: 'Clean, dedupe, and re-map data to the new model. Nothing copied blind.' },
-  { t: 'Stage & verify', s: 'Dry-run into staging. Reconcile counts, spot-check edge cases.' },
-  { t: 'Cutover', s: 'Final delta sync, 301 redirect map, DNS switch with zero lost orders.' }];
-
-  const stats = [
-  { v: '23,100', l: 'Orders' },
-  { v: '2,234', l: 'Customers' },
-  { v: '8,342', l: 'Products' },
-  { v: '342', l: 'Collections' }];
-
+    { t: 'Audit & map', s: 'Catalogue every record — products, customers, orders, content, redirects.' },
+    { t: 'Transform', s: 'Clean, dedupe, and re-map data to the new model. Nothing copied blind.' },
+    { t: 'Stage & verify', s: 'Dry-run into staging. Reconcile counts, spot-check edge cases.' },
+    { t: 'Cutover', s: 'Final delta sync, 301 redirect map, DNS switch with zero lost orders.' }
+  ];
+  const items = ['Products', 'Collections', 'Orders', 'Customers', 'Pages', 'Blogs'];
   return (
-    <BPSection id="migration" n="10" label="Migration" paper tail="MOVE WITHOUT LOSS" vec="bgVector2">
+    <BPSection id="migration" n="12" label="Migration" paper tail="MOVE WITHOUT LOSS" vec="bgVector2">
       <BPHeadline>
         Replatform{' '}
         <BPSerif>without losing a thing.</BPSerif>
@@ -1772,79 +1798,89 @@ function BPMigration() {
 
       {/* cart-to-cart field crosswalk */}
       {(() => {
-        const source = [['Title', 'text'], ['SKU', 'text'], ['Price', 'money'], ['Brand', 'text'], ['Categories', 'list'], ['spec_sheet', 'custom'], ['install_guide', 'custom'], ['Legacy URL', 'url']];
-        const target = [['Title', 'text', '1:1'], ['SKU / Variant', 'text', '1:1'], ['Price', 'money', '1:1'], ['Vendor', 'text', 'from Brand'], ['Tags', 'list', 'merged'], ['spec_sheet', 'metafield', 'metafield'], ['install_guide', 'metafield', 'metafield'], ['Redirect', 'url', '301']];
-        const links = [[0, 0, 1], [1, 1, 1], [2, 2, 1], [3, 3, 0], [3, 4, 0], [4, 4, 0], [5, 5, 0], [6, 6, 0], [7, 7, 0]];
+        const source = [['Title','text'],['SKU','text'],['Price','money'],['Brand','text'],['Categories','list'],['spec_sheet','custom'],['install_guide','custom'],['Legacy URL','url']];
+        const target = [['Title','text','1:1'],['SKU / Variant','text','1:1'],['Price','money','1:1'],['Vendor','text','from Brand'],['Tags','list','merged'],['spec_sheet','metafield','metafield'],['install_guide','metafield','metafield'],['Redirect','url','301']];
+        const links = [[0,0,1],[1,1,1],[2,2,1],[3,3,0],[3,4,0],[4,4,0],[5,5,0],[6,6,0],[7,7,0]];
         const cols = '1fr clamp(54px,8vw,108px) 1fr';
-        const tBadge = (t) => <span style={{ fontFamily: 'var(--font-mono)', fontSize: 8.5, fontWeight: 700, letterSpacing: '0.04em', textTransform: 'uppercase', color: 'var(--fg-3)', background: 'var(--uc-bone)', border: '1px solid var(--line-1)', borderRadius: 3, padding: '1px 5px', whiteSpace: 'nowrap' }}>{t}</span>;
+        const tBadge = (t) => <span style={{ fontFamily:'var(--font-mono)', fontSize:8.5, fontWeight:700, letterSpacing:'0.04em', textTransform:'uppercase', color:'var(--fg-3)', background:'var(--uc-bone)', border:'1px solid var(--line-1)', borderRadius:3, padding:'1px 5px', whiteSpace:'nowrap' }}>{t}</span>;
         return (
-          <div style={{ marginTop: 'clamp(30px, 4vw, 48px)', border: '1px solid var(--line-2)', borderRadius: 10, overflow: 'hidden', background: 'var(--uc-paper)', boxShadow: '0 24px 60px -34px rgba(10,10,10,0.4)' }}>
+          <div style={{ marginTop:'clamp(30px, 4vw, 48px)', border:'1px solid var(--line-2)', borderRadius:10, overflow:'hidden', background:'var(--uc-paper)', boxShadow:'0 24px 60px -34px rgba(10,10,10,0.4)' }}>
             {/* platform header */}
-            <div style={{ display: 'grid', gridTemplateColumns: cols, alignItems: 'center', borderBottom: '1px solid var(--line-1)', background: 'var(--uc-bone)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px' }}>
-                <span style={{ width: 26, height: 26, borderRadius: 6, background: '#101A2B', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-hero)', fontSize: 10.5, fontWeight: 800, color: '#9FB4FF' }}>NS</span>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                  <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14, letterSpacing: '-0.01em', color: 'var(--fg-1)' }}>NetSuite Commerce</span>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--fg-3)' }}>Legacy store · catalog + history</span>
+            <div style={{ display:'grid', gridTemplateColumns:cols, alignItems:'center', borderBottom:'1px solid var(--line-1)', background:'var(--uc-bone)' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 16px' }}>
+                <span style={{ width:26, height:26, borderRadius:6, background:'#121118', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'var(--font-hero)', fontSize:12, fontWeight:800, color:'#8FA0FF' }}>B</span>
+                <div style={{ display:'flex', flexDirection:'column', gap:1 }}>
+                  <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:14, letterSpacing:'-0.01em', color:'var(--fg-1)' }}>BigCommerce</span>
+                  <span style={{ fontFamily:'var(--font-mono)', fontSize:9, color:'var(--fg-3)' }}>Legacy store · 12,480 records</span>
                 </div>
               </div>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 8.5, fontWeight: 700, letterSpacing: '0.14em', color: 'var(--fg-3)' }}>MIGRATE</span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 14, fontWeight: 800, color: 'var(--uc-signal)', background: 'var(--uc-black)', borderRadius: 4, padding: '1px 9px' }}>→</span>
+              <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:2 }}>
+                <span style={{ fontFamily:'var(--font-mono)', fontSize:8.5, fontWeight:700, letterSpacing:'0.14em', color:'var(--fg-3)' }}>MIGRATE</span>
+                <span style={{ fontFamily:'var(--font-mono)', fontSize:14, fontWeight:800, color:'var(--uc-signal)', background:'var(--uc-black)', borderRadius:4, padding:'1px 9px' }}>→</span>
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 10, padding: '12px 16px' }}>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 1, alignItems: 'flex-end' }}>
-                  <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14, letterSpacing: '-0.01em', color: 'var(--fg-1)' }}>Shopify Plus</span>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, color: 'var(--fg-3)' }}>New store · mapped & verified</span>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'flex-end', gap:10, padding:'12px 16px' }}>
+                <div style={{ display:'flex', flexDirection:'column', gap:1, alignItems:'flex-end' }}>
+                  <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:14, letterSpacing:'-0.01em', color:'var(--fg-1)' }}>Shopify Plus</span>
+                  <span style={{ fontFamily:'var(--font-mono)', fontSize:9, color:'var(--fg-3)' }}>New store · mapped & verified</span>
                 </div>
-                <span style={{ width: 26, height: 26, borderRadius: 6, background: '#1A1A1A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-hero)', fontSize: 12, fontWeight: 800, color: '#95BF47' }}>S</span>
+                <span style={{ width:26, height:26, borderRadius:6, background:'#1A1A1A', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'var(--font-hero)', fontSize:12, fontWeight:800, color:'#95BF47' }}>S</span>
               </div>
             </div>
             {/* record type tabs */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '9px 16px', borderBottom: '1px solid var(--line-1)', flexWrap: 'wrap' }}>
-              {['Products', 'Customers', 'Orders', 'Content'].map((t, i) => <span key={t} style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 11.5, letterSpacing: '-0.01em', color: i === 0 ? 'var(--fg-1)' : 'var(--fg-3)', borderBottom: i === 0 ? '2px solid var(--uc-black)' : '2px solid transparent', paddingBottom: 3 }}>{t}</span>)}
-              <span style={{ marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: 'var(--font-mono)', fontSize: 9.5, fontWeight: 700, color: '#2F7D52' }}><span style={{ width: 6, height: 6, borderRadius: 999, background: '#3F8B5D' }} />Field map verified</span>
+            <div style={{ display:'flex', alignItems:'center', gap:16, padding:'9px 16px', borderBottom:'1px solid var(--line-1)', flexWrap:'wrap' }}>
+              {['Products','Customers','Orders','Content'].map((t,i)=>(<span key={t} style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:11.5, letterSpacing:'-0.01em', color:i===0?'var(--fg-1)':'var(--fg-3)', borderBottom:i===0?'2px solid var(--uc-black)':'2px solid transparent', paddingBottom:3 }}>{t}</span>))}
+              <span style={{ marginLeft:'auto', display:'inline-flex', alignItems:'center', gap:6, fontFamily:'var(--font-mono)', fontSize:9.5, fontWeight:700, color:'#2F7D52' }}><span style={{ width:6, height:6, borderRadius:999, background:'#3F8B5D' }}/>Field map verified</span>
             </div>
             {/* crosswalk */}
-            <div style={{ position: 'relative', display: 'grid', gridTemplateColumns: cols, minHeight: 'clamp(300px, 33vw, 392px)' }}>
+            <div style={{ position:'relative', display:'grid', gridTemplateColumns:cols, minHeight:'clamp(300px, 33vw, 392px)' }}>
               {/* left record */}
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                {source.map(([n, ty], i) =>
-                <div key={i} style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 9, padding: '0 16px', borderTop: i ? '1px solid var(--line-1)' : 'none' }}>
+              <div style={{ display:'flex', flexDirection:'column' }}>
+                {source.map(([n,ty],i)=>(
+                  <div key={i} style={{ position:'relative', flex:1, display:'flex', alignItems:'center', justifyContent:'flex-end', gap:9, padding:'0 16px', borderTop:i?'1px solid var(--line-1)':'none' }}>
                     {tBadge(ty)}
-                    <span style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 'clamp(12px,1.1vw,14.5px)', color: 'var(--fg-1)', whiteSpace: 'nowrap' }}>{n}</span>
-                    <span style={{ position: 'absolute', right: -4, top: '50%', transform: 'translateY(-50%)', width: 7, height: 7, borderRadius: 999, background: 'var(--uc-paper)', border: '1.5px solid var(--fg-3)' }} />
+                    <span style={{ fontFamily:'var(--font-display)', fontWeight:600, fontSize:'clamp(12px,1.1vw,14.5px)', color:'var(--fg-1)', whiteSpace:'nowrap' }}>{n}</span>
+                    <span style={{ position:'absolute', right:-4, top:'50%', transform:'translateY(-50%)', width:7, height:7, borderRadius:999, background:'var(--uc-paper)', border:'1.5px solid var(--fg-3)' }}/>
                   </div>
-                )}
+                ))}
               </div>
               {/* connectors */}
-              <div style={{ position: 'relative' }}>
-                <svg width="100%" height="100%" viewBox="0 0 100 1000" preserveAspectRatio="none" style={{ position: 'absolute', inset: 0, display: 'block' }}>
-                  {links.map(([sI, tI, k], j) => {const yL = (sI + 0.5) / source.length * 1000;const yR = (tI + 0.5) / target.length * 1000;return <path key={j} d={'M0 ' + yL + ' C 55 ' + yL + ' 45 ' + yR + ' 100 ' + yR} fill="none" stroke={k ? 'var(--uc-signal)' : 'var(--uc-brand)'} strokeWidth="2" strokeDasharray={k ? '0' : '7 5'} vectorEffect="non-scaling-stroke" />;})}
+              <div style={{ position:'relative' }}>
+                <svg width="100%" height="100%" viewBox="0 0 100 1000" preserveAspectRatio="none" style={{ position:'absolute', inset:0, display:'block' }}>
+                  {links.map(([sI,tI,k],j)=>{ const yL=(sI+0.5)/source.length*1000; const yR=(tI+0.5)/target.length*1000; return <path key={j} d={'M0 '+yL+' C 55 '+yL+' 45 '+yR+' 100 '+yR} fill="none" stroke={k?'var(--uc-signal)':'var(--uc-brand)'} strokeWidth="2" strokeDasharray={k?'0':'7 5'} vectorEffect="non-scaling-stroke"/>; })}
                 </svg>
               </div>
               {/* right record */}
-              <div style={{ display: 'flex', flexDirection: 'column' }}>
-                {target.map(([n, ty, tf], i) =>
-                <div key={i} style={{ position: 'relative', flex: 1, display: 'flex', alignItems: 'center', gap: 9, padding: '0 16px', borderTop: i ? '1px solid var(--line-1)' : 'none' }}>
-                    <span style={{ position: 'absolute', left: -4, top: '50%', transform: 'translateY(-50%)', width: 7, height: 7, borderRadius: 999, background: 'var(--uc-paper)', border: '1.5px solid var(--fg-3)' }} />
-                    <span style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 'clamp(12px,1.1vw,14.5px)', color: 'var(--fg-1)', whiteSpace: 'nowrap' }}>{n}</span>
-                    <span style={{ marginLeft: 'auto', fontFamily: 'var(--font-mono)', fontSize: 8.5, fontWeight: 700, letterSpacing: '0.03em', whiteSpace: 'nowrap', color: tf === '1:1' ? 'var(--fg-3)' : 'var(--uc-black)', background: tf === '1:1' ? 'transparent' : 'var(--uc-signal)', border: tf === '1:1' ? '1px solid var(--line-1)' : '1px solid var(--uc-signal)', borderRadius: 3, padding: '1px 6px' }}>{tf}</span>
+              <div style={{ display:'flex', flexDirection:'column' }}>
+                {target.map(([n,ty,tf],i)=>(
+                  <div key={i} style={{ position:'relative', flex:1, display:'flex', alignItems:'center', gap:9, padding:'0 16px', borderTop:i?'1px solid var(--line-1)':'none' }}>
+                    <span style={{ position:'absolute', left:-4, top:'50%', transform:'translateY(-50%)', width:7, height:7, borderRadius:999, background:'var(--uc-paper)', border:'1.5px solid var(--fg-3)' }}/>
+                    <span style={{ fontFamily:'var(--font-display)', fontWeight:600, fontSize:'clamp(12px,1.1vw,14.5px)', color:'var(--fg-1)', whiteSpace:'nowrap' }}>{n}</span>
+                    <span style={{ marginLeft:'auto', fontFamily:'var(--font-mono)', fontSize:8.5, fontWeight:700, letterSpacing:'0.03em', whiteSpace:'nowrap', color: tf==='1:1'?'var(--fg-3)':'var(--uc-black)', background: tf==='1:1'?'transparent':'var(--uc-signal)', border: tf==='1:1'?'1px solid var(--line-1)':'1px solid var(--uc-signal)', borderRadius:3, padding:'1px 6px' }}>{tf}</span>
                   </div>
-                )}
+                ))}
               </div>
             </div>
             {/* legend */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 18, padding: '11px 16px', borderTop: '1px solid var(--line-1)', background: 'var(--uc-bone)', flexWrap: 'wrap', fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--fg-3)' }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}><span style={{ width: 18, height: 2, background: 'var(--uc-signal)' }} />1:1 copy</span>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}><span style={{ width: 18, height: 2, background: 'repeating-linear-gradient(90deg, var(--uc-brand) 0 5px, transparent 5px 9px)' }} />Transformed — tags · metafields · 301s</span>
-              <span style={{ marginLeft: 'auto' }}>Tags, custom fields &amp; attributes preserved</span>
+            <div style={{ display:'flex', alignItems:'center', gap:18, padding:'11px 16px', borderTop:'1px solid var(--line-1)', background:'var(--uc-bone)', flexWrap:'wrap', fontFamily:'var(--font-mono)', fontSize:10, color:'var(--fg-3)' }}>
+              <span style={{ display:'inline-flex', alignItems:'center', gap:7 }}><span style={{ width:18, height:2, background:'var(--uc-signal)' }}/>1:1 copy</span>
+              <span style={{ display:'inline-flex', alignItems:'center', gap:7 }}><span style={{ width:18, height:2, background:'repeating-linear-gradient(90deg, var(--uc-brand) 0 5px, transparent 5px 9px)' }}/>Transformed — tags · metafields · 301s</span>
+              <span style={{ marginLeft:'auto' }}>Tags, custom fields &amp; attributes preserved</span>
             </div>
-          </div>);
-
+          </div>
+        );
       })()}
-    </BPSection>);
 
+      {/* what we migrate */}
+      <div style={{ marginTop: 'clamp(28px, 3vw, 40px)', display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 0, borderTop: '1px solid var(--line-1)', borderBottom: '1px solid var(--line-1)' }}>
+        {items.map((item, i) => (
+          <div key={i} style={{ padding: '24px 24px 24px 0', paddingLeft: i > 0 ? 24 : 0, borderLeft: i > 0 ? '1px solid var(--line-1)' : 'none', position: 'relative' }}>
+            <span aria-hidden="true" style={{ position: 'absolute', top: 0, left: i > 0 ? 24 : 0, width: 16, height: 2, background: 'var(--uc-signal)' }}/>
+            <div style={{ fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(20px, 2.2vw, 32px)', letterSpacing: '-0.035em', lineHeight: 1, color: 'var(--fg-1)' }}>{item}</div>
+          </div>
+        ))}
+      </div>
+    </BPSection>
+  );
 }
 window.BPMigration = BPMigration;
 
@@ -1858,7 +1894,7 @@ function BPDelivery() {
   { wk: 'WK 12', t: 'Launch', s: 'Go live + 30-day support begins.' }];
 
   return (
-    <BPSection id="delivery" n="10" label="Delivery" paper tail="TIMELINE">
+    <BPSection id="delivery" n="13" label="Delivery" paper tail="TIMELINE">
       <BPHeadline>
         Twenty weeks,{' '}
         <BPSerif>phase by phase.</BPSerif>
@@ -1911,7 +1947,7 @@ function BPTeam() {
   { n: 'Jo Tan', r: 'Head of Design', img: 'assets/team-jo.png' }];
 
   return (
-    <BPSection id="team" n="13" label="Team" tail="WHO DOES THE WORK">
+    <BPSection id="team" n="17" label="Team" tail="WHO DOES THE WORK">
       <BPHeadline>
         Senior from{' '}
         <BPSerif>day one.</BPSerif>
@@ -1941,55 +1977,68 @@ function BPTeam() {
 }
 
 // ── 08 INVESTMENT ───────────────────────────────────────────────────────────
-function BPInvestmentCard({ p }) {
-  const feat = p.feature;
-  const fg = feat ? 'var(--uc-paper)' : 'var(--fg-1)';
-  const sub = feat ? 'var(--uc-stone-300)' : 'var(--fg-2)';
-  const faint = feat ? 'var(--uc-stone-500)' : 'var(--fg-3)';
-  const line = feat ? '#1F1F1F' : 'var(--line-1)';
-  return (
-    <div style={{ position: 'relative', overflow: 'hidden', background: feat ? 'var(--uc-black)' : 'var(--uc-paper)', color: fg, border: '1px solid ' + (feat ? 'var(--uc-black)' : 'var(--line-2)'), borderRadius: 12, padding: 'clamp(24px, 3vw, 40px)', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 'clamp(28px, 4vw, 56px)' }}>
-      {(feat || p.accentBar) && <span aria-hidden="true" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 3, background: 'var(--uc-signal)' }} />}
-      {/* LEFT: identity + price + outcome */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(16px, 2vw, 22px)' }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 'clamp(12px, 1.6vw, 16px)' }}>
-          <div>
-            <div style={{ fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(30px, 3.4vw, 48px)', letterSpacing: '-0.04em', lineHeight: 0.92, color: fg }}>{p.name}</div>
-            <div style={{ marginTop: 8, fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 'clamp(15px, 1.3vw, 18px)', color: sub }}>{p.tagline}</div>
-          </div>
-          <p style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: 'clamp(13.5px, 1.1vw, 15px)', lineHeight: 1.5, color: sub, textWrap: 'pretty' }}>{p.who}</p>
-        </div>
-        <div style={{ paddingTop: 'clamp(14px, 1.8vw, 18px)', borderTop: '1px solid ' + line }}>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: faint }}>{p.priceLabel}</div>
-          <div style={{ marginTop: 6, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(40px, 5vw, 68px)', letterSpacing: '-0.045em', lineHeight: 0.9, color: fg }}>{p.price}</div>
-        </div>
-        <div style={{ marginTop: 'auto', padding: 'clamp(14px, 1.6vw, 18px)', background: feat ? '#141414' : 'var(--uc-bone)', border: '1px solid ' + line, borderRadius: 8 }}>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: faint, marginBottom: 7 }}>You walk away with</div>
-          <div style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(14px, 1.2vw, 16px)', lineHeight: 1.45, color: fg, textWrap: 'pretty' }}>{p.outcome}</div>
-        </div>
-      </div>
-      {/* RIGHT: the work */}
-      <div>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: faint, marginBottom: 14 }}>{p.workLabel}</div>
-        <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 'clamp(10px, 1.4vw, 14px)' }}>
-          {p.work.map((w, i) =>
-          <li key={i} style={{ display: 'grid', gridTemplateColumns: '15px 1fr', gap: 10, alignItems: 'start' }}>
-              <span style={{ marginTop: 2, width: 13, height: 13, borderRadius: 999, background: 'var(--uc-signal)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><svg width="7" height="7" viewBox="0 0 12 12" fill="none"><path d="M2 6 L5 9 L10 3" stroke="var(--uc-black)" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round" /></svg></span>
-              <span style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(13px, 1.05vw, 14.5px)', fontWeight: 500, lineHeight: 1.4, color: feat ? 'var(--uc-stone-300)' : 'var(--fg-1)' }}>{w}</span>
-            </li>
-          )}
-        </ul>
-      </div>
-    </div>);
+function BPRiskAssessment() {
+  const sev = {
+    Low:    { c: 'var(--uc-signal)', label: 'Low' },
+    Medium: { c: '#FF8B37',          label: 'Medium' },
+    High:   { c: 'var(--uc-error)',  label: 'High' }
+  };
+  const risks = [
+    { t: 'Third party vendor delays', sev: 'High',
+      d: 'When other third parties involved delay what’s needed for the project, our delivery will get delayed.',
+      m: 'Constant communication to all stakeholders throughout the project.' },
+    { t: 'ERP Integration', sev: 'Medium',
+      d: 'Depending on how ERP data is set up, the ERP consultant may delay the integration and postpone launch.',
+      m: 'Loop them in the process as early as the kickoff day.' },
+    { t: 'Product information changes', sev: 'Medium',
+      d: 'If there are product information sections that change during this migration, or product linking updates, this will affect the timeline.',
+      m: 'Identify these during the deep dive workshops.' },
 
+    { t: 'Scope creep mid-build', sev: 'Low',
+      d: 'New requests surface once the build is underway and pull at budget and timeline.',
+      m: 'Fixed scope up front, with a pre-approved buffer allowance for out-of-scope asks.' }
+  ];
+  return (
+    <BPSection id="risks" n="14" label="Risk Assessment" tail="EYES OPEN">
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr)', gap: 'clamp(28px, 5vw, 80px)', alignItems: 'end' }}>
+        <BPHeadline>
+          Named upfront,{' '}
+          <BPSerif>managed by design.</BPSerif>
+        </BPHeadline>
+        <p style={{ margin: 0, maxWidth: 380, fontFamily: 'var(--font-serif)', fontSize: 'clamp(15px, 1.3vw, 18px)', lineHeight: 1.5, color: 'var(--fg-2)', textWrap: 'pretty' }}>
+          Every replatform carries risk. Here are the ones we watch — each paired with how we manage it.
+        </p>
+      </div>
+
+      {/* Risk list */}
+      <div style={{ marginTop: 'clamp(30px, 4vw, 52px)', borderTop: '1px solid var(--line-1)' }}>
+        {risks.map((r, i) => (
+          <div key={i} style={{
+            display: 'grid', gridTemplateColumns: 'minmax(0, 1.1fr) minmax(0, 1fr)',
+            gap: 'clamp(20px, 4vw, 56px)', alignItems: 'baseline',
+            padding: 'clamp(20px, 2.4vw, 28px) 0', borderBottom: '1px solid var(--line-1)'
+          }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                <span style={{ width: 8, height: 8, borderRadius: 999, background: sev[r.sev].c, flexShrink: 0 }}/>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--fg-3)' }}>{sev[r.sev].label} severity</span>
+              </div>
+              <div style={{ fontFamily: 'var(--font-hero)', fontWeight: 700, fontSize: 'clamp(20px, 2vw, 28px)', letterSpacing: '-0.03em', lineHeight: 1.05, color: 'var(--fg-1)' }}>{r.t}</div>
+              <div style={{ marginTop: 8, fontFamily: 'var(--font-serif)', fontSize: 'clamp(14px, 1.2vw, 16px)', lineHeight: 1.5, color: 'var(--fg-2)', textWrap: 'pretty' }}>{r.d}</div>
+            </div>
+            <div>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--fg-1)', borderBottom: '2px solid var(--uc-signal)', paddingBottom: 1 }}>Mitigation</span>
+              <div style={{ marginTop: 10, fontFamily: 'var(--font-serif)', fontSize: 'clamp(14px, 1.2vw, 16px)', lineHeight: 1.5, color: 'var(--fg-1)', textWrap: 'pretty' }}>{r.m}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </BPSection>
+  );
 }
+
 function BPInvestment() {
-  const packages = [
-  {
-    n: '01', name: 'Investment', tagline: 'Your storefront and integrated systems, working as one.', feature: true,
-    who: 'A modern, unified B2B storefront on Shopify Plus, integrated with NetSuite — everything Elevate Oral Care needs to launch and scale.',
-    workLabel: 'The work',
-    work: [
+  const work = [
     'Tech stack architecture, scoped up front',
     'Shopify theme-based design, customized and branded',
     'Front and back-end Shopify development',
@@ -2000,52 +2049,111 @@ function BPInvestment() {
     'Enriched customer account experience',
     'Workflow automation across your systems',
     'SEO and GEO, so you launch findable',
-    'Go live, a clean handoff, and a 30-day warranty'],
-
-    outcome: 'Your successful commerce implementation on Shopify, built for growth.',
-    priceLabel: 'Fixed price', price: '$68k'
-  }];
-
+    'Go live, a clean handoff, and a 30-day warranty'
+  ];
+  const schedule = [
+    { n: '01', amount: '$34,000', due: 'Due at signup' },
+    { n: '02', amount: '$17,000', due: 'Due at design approval' },
+    { n: '03', amount: '$17,000', due: 'Due at project completion' }
+  ];
   return (
-    <BPSection id="investment" n="11" label="Investment" tail="FIXED · NO SURPRISES">
-      <BPHeadline>
-        Priced up front.{' '}
-        <BPSerif>No surprise invoices.</BPSerif>
-      </BPHeadline>
-      <p style={{ marginTop: 'clamp(18px, 2.2vw, 26px)', maxWidth: 620, fontFamily: 'var(--font-serif)', fontSize: 'clamp(15px, 1.3vw, 18px)', lineHeight: 1.5, color: 'var(--fg-2)' }}>
-        One fixed-scope, fixed-price package — everything Elevate Oral Care needs to launch and scale, yours to keep.
-      </p>
-      <div style={{ marginTop: 'clamp(30px, 4vw, 52px)', display: 'grid', gridTemplateColumns: 'minmax(0, 1fr)', gap: 14, alignItems: 'stretch' }}>
-        {packages.map((p) => <BPInvestmentCard key={p.n} p={p} />)}
+    <BPSection id="investment" n="15" label="Investment" dark tail="FIXED · NO SURPRISES">
+      {/* One package — split panel */}
+      <div style={{
+        position: 'relative', overflow: 'hidden',
+        background: '#0F0F0F', color: 'var(--uc-paper)',
+        border: '1px solid #1F1F1F', borderRadius: 12,
+        display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)'
+      }}>
+        <span aria-hidden="true" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 3, background: 'var(--uc-signal)', zIndex: 2 }}/>
+
+        {/* LEFT — identity + price */}
+        <div style={{ padding: 'clamp(28px, 3.4vw, 52px)', display: 'flex', flexDirection: 'column', gap: 'clamp(18px, 2vw, 26px)' }}>
+          <div>
+            <h3 style={{ margin: 0, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(40px, 5vw, 76px)', letterSpacing: '-0.045em', lineHeight: 0.9, color: 'var(--uc-paper)' }}>Growth <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, fontSize: '0.62em', letterSpacing: '-0.02em' }}>Package</span></h3>
+            <div style={{ marginTop: 'clamp(14px, 1.6vw, 20px)', fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 'clamp(17px, 1.6vw, 24px)', lineHeight: 1.25, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>Your store and your integrated systems, working as one.</div>
+          </div>
+          <p style={{ margin: 0, maxWidth: 460, fontFamily: 'var(--font-serif)', fontSize: 'clamp(14.5px, 1.2vw, 17px)', lineHeight: 1.55, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>
+            A modern unified B2C/B2B storefront on Shopify Plus with a tech stack and customer
+            experience — everything {brandName()} needs to launch and scale.
+          </p>
+
+          {/* price — standout box */}
+          <div style={{ padding: 'clamp(18px, 2vw, 26px) clamp(20px, 2.2vw, 28px)', background: 'var(--uc-signal)', borderRadius: 12, boxShadow: '0 22px 60px -26px rgba(232,255,82,0.45)' }}>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--uc-black)' }}>Fixed price</div>
+            <div style={{ marginTop: 4, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(52px, 6vw, 88px)', letterSpacing: '-0.05em', lineHeight: 0.85, color: 'var(--uc-black)' }}>$68k</div>
+          </div>
+
+          {/* walk away */}
+          <div style={{ marginTop: 'auto', padding: 'clamp(16px, 1.8vw, 22px)', background: '#141414', border: '1px solid #1F1F1F', borderRadius: 10 }}>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--uc-stone-500)', marginBottom: 8 }}>You walk away with</div>
+            <div style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(15px, 1.3vw, 18px)', lineHeight: 1.4, color: 'var(--uc-paper)', textWrap: 'pretty' }}>Your successful commerce implementation on Shopify, built for growth.</div>
+          </div>
+        </div>
+
+        {/* RIGHT — the work */}
+        <div style={{ padding: 'clamp(28px, 3.4vw, 52px)', borderLeft: '1px solid #1F1F1F' }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--uc-stone-500)', marginBottom: 'clamp(18px, 2vw, 26px)' }}>The work</div>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 'clamp(13px, 1.5vw, 18px)' }}>
+            {work.map((w, i) => (
+              <li key={i} style={{ display: 'grid', gridTemplateColumns: '20px 1fr', gap: 14, alignItems: 'start' }}>
+                <span style={{ marginTop: 1, width: 18, height: 18, borderRadius: 999, background: 'var(--uc-signal)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M2 6 L5 9 L10 3" stroke="var(--uc-black)" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"/></svg></span>
+                <span style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(14px, 1.15vw, 16.5px)', fontWeight: 500, lineHeight: 1.35, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>{w}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </div>
+
+      {/* Payment schedule */}
+      <div style={{ marginTop: 'clamp(28px, 3.2vw, 44px)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 'clamp(16px, 1.8vw, 22px)' }}>
+          <span aria-hidden="true" style={{ width: 16, height: 2, background: 'var(--uc-signal)' }}/>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--uc-stone-500)' }}>Payment schedule</span>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+          {schedule.map((s, i) => (
+            <div key={i} style={{
+              position: 'relative', overflow: 'hidden',
+              background: 'var(--uc-paper)', border: '1px solid var(--line-2)', borderRadius: 10,
+              padding: 'clamp(20px, 2.2vw, 28px)', display: 'flex', flexDirection: 'column', gap: 'clamp(18px, 2.4vw, 30px)'
+            }}>
+              {i === 0 && <span aria-hidden="true" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 3, background: 'var(--uc-signal)' }}/>}
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-2)' }}>Installment {i + 1}</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.1em', color: 'var(--fg-3)' }}>{s.n} / 03</span>
+              </div>
+              <div style={{ fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(30px, 3.4vw, 46px)', letterSpacing: '-0.04em', lineHeight: 0.9, color: 'var(--fg-1)' }}>{s.amount}</div>
+              <div style={{ paddingTop: 'clamp(12px, 1.4vw, 16px)', borderTop: '1px solid var(--line-1)', fontFamily: 'var(--font-mono)', fontSize: 12, letterSpacing: '0.04em', color: 'var(--fg-2)' }}>{s.due}</div>
+            </div>
+          ))}
+        </div>
       </div>
 
       {/* Buffer allowance */}
       <div style={{
         marginTop: 16, padding: 'clamp(22px, 2.6vw, 32px)',
-        border: '1px dashed var(--line-2)', borderRadius: 12, background: 'var(--uc-bone)',
+        border: '1px dashed #2B2B2B', borderRadius: 12, background: '#0F0F0F',
         display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, auto)',
         gap: 'clamp(20px, 4vw, 48px)', alignItems: 'center'
       }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-            <span aria-hidden="true" style={{ width: 16, height: 2, background: 'var(--uc-signal)' }} />
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--fg-3)' }}>Buffer Allowance</span>
+            <span aria-hidden="true" style={{ width: 16, height: 2, background: 'var(--uc-signal)' }}/>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--uc-stone-500)' }}>Buffer Allowance</span>
           </div>
-          <div style={{ fontFamily: 'var(--font-hero)', fontWeight: 700, fontSize: 'clamp(20px, 2vw, 28px)', letterSpacing: '-0.03em', lineHeight: 1.05, color: 'var(--fg-1)' }}>A reserve for what comes up mid-build.</div>
-          <p style={{ margin: '10px 0 0', maxWidth: 560, fontFamily: 'var(--font-serif)', fontSize: 'clamp(14px, 1.2vw, 16px)', lineHeight: 1.5, color: 'var(--fg-2)', textWrap: 'pretty' }}>
+          <div style={{ fontFamily: 'var(--font-hero)', fontWeight: 700, fontSize: 'clamp(20px, 2vw, 28px)', letterSpacing: '-0.03em', lineHeight: 1.05, color: 'var(--uc-paper)' }}>A reserve for what comes up mid-build.</div>
+          <p style={{ margin: '10px 0 0', maxWidth: 560, fontFamily: 'var(--font-serif)', fontSize: 'clamp(14px, 1.2vw, 16px)', lineHeight: 1.5, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>
             A pre-agreed pool for out-of-scope requests and wishlist items before launch — so new ideas don&rsquo;t derail budget or timeline. Only charged if you actually use it.
           </p>
         </div>
         <div style={{ textAlign: 'right' }}>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--fg-3)' }}>If needed</div>
-          <div style={{ marginTop: 6, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(34px, 3.6vw, 52px)', letterSpacing: '-0.045em', lineHeight: 0.9, color: 'var(--fg-1)' }}>$14k</div>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--uc-stone-500)' }}>If needed</div>
+          <div style={{ marginTop: 6, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(34px, 3.6vw, 52px)', letterSpacing: '-0.045em', lineHeight: 0.9, color: 'var(--uc-paper)' }}>$14k</div>
         </div>
       </div>
-      <div style={{ marginTop: 22, fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 15, color: 'var(--fg-3)' }}>
-        We&rsquo;ll confirm the final figure after discovery.
-      </div>
-    </BPSection>);
-
+    </BPSection>
+  );
 }
 
 // ── 11 GROWTH ───────────────────────────────────────────────────────────────
@@ -2055,7 +2163,7 @@ function BPGrowth() {
   { t: 'Performance Optimization', d: 'Constantly optimizing experience, speed, conversion, and the tech stack behind it.' }];
 
   return (
-    <BPSection id="growth" n="12" label="Growth" paper tail="AFTER LAUNCH">
+    <BPSection id="growth" n="16" label="Growth" paper tail="AFTER LAUNCH">
       <BPHeadline>
         Launch is the start.{' '}
         <BPSerif>Growth is the work.</BPSerif>
@@ -2101,22 +2209,24 @@ function BPGrowth() {
 // ── 09 WHY UNCAP ────────────────────────────────────────────────────────────
 function BPWhy() {
   const reviews = [
-  { name: 'Clutch', score: '4.9' },
-  { name: 'Google', score: '4.9' },
-  { name: 'Shopify', score: '5.0' },
-  { name: 'Trustpilot', score: '4.9' }];
-
-  const clients = ['blueroot', 'canon', 'e3sparkplugs', 'eea', 'farmers', 'garrison', 'genuinescooter', 'industryrailway', 'kbs', 'microfiberwholesale', 'pawstruck', 'phoenixmecano', 'sanitaire', 'signwarehouse', 'thermosoft', 'ulegroup', 'vermontwoods', 'vosges', 'weldingstore', 'warehouselighting'];
+    { name: 'Clutch', score: '4.9' },
+    { name: 'Google', score: '4.9' },
+    { name: 'Shopify', score: '5.0' },
+    { name: 'Trustpilot', score: '4.9' }
+  ];
+  const clients = ['blueroot','canon','e3sparkplugs','eea','farmers','garrison','genuinescooter','industryrailway','kbs','microfiberwholesale','pawstruck','phoenixmecano','sanitaire','signwarehouse','thermosoft','ulegroup','vermontwoods','vosges','weldingstore','warehouselighting'];
   return (
-    <BPSection id="why" n="16" label="Uncap" dark tail="THE CASE">
+    <BPSection id="why" n="18" label="Uncap" dark tail="THE CASE">
       <BPHeadline dark>
         Uncap Commerce.{' '}
         <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, color: 'var(--uc-stone-300)' }}>Unified.</span>
       </BPHeadline>
 
       {/* Platinum partner badge */}
-      <div style={{ marginTop: 'clamp(28px, 3vw, 40px)', display: 'inline-flex', alignItems: 'center', gap: 14, padding: '12px 18px', background: 'var(--uc-paper)', borderRadius: 6 }}>
-        <img src="assets/shopify-platinum-partner-black.svg" alt="Shopify Platinum Partner" style={{ height: 26, display: 'block' }} />
+      <div style={{ marginTop: 'clamp(28px, 3vw, 40px)', display: 'inline-flex', alignItems: 'center', gap: 16, padding: '12px 20px', background: '#111', border: '1px solid #2B2B2B', borderRadius: 6 }}>
+        <img src={window.__resources.uncapLogoWhite} alt="Uncap" style={{ height: 22, display: 'block' }}/>
+        <span style={{ width: 1, height: 22, background: '#2B2B2B' }}/>
+        <img src={window.__resources.shopifyBadge} alt="Shopify Platinum Partner" style={{ height: 22, display: 'block', filter: 'brightness(0) invert(1)' }}/>
       </div>
 
       {/* About Uncap intro + stats */}
@@ -2130,14 +2240,14 @@ function BPWhy() {
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', borderTop: '1px solid #1F1F1F' }}>
           {[
-          { v: '2014', l: 'Shopify experts since' },
-          { v: '380+', l: 'Projects launched' }].
-          map((s, i) =>
-          <div key={i} style={{ padding: '16px 0', borderBottom: '1px solid #1F1F1F', display: 'flex', alignItems: 'baseline', gap: 16 }}>
+            { v: '2013', l: 'Shopify experts since' },
+            { v: '380+', l: 'Projects launched' }
+          ].map((s, i) => (
+            <div key={i} style={{ padding: '16px 0', borderBottom: '1px solid #1F1F1F', display: 'flex', alignItems: 'baseline', gap: 16 }}>
               <span style={{ fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(30px, 3.4vw, 48px)', letterSpacing: '-0.045em', lineHeight: 0.9, color: 'var(--uc-paper)', whiteSpace: 'nowrap' }}>{s.v}</span>
               <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--uc-stone-500)' }}>{s.l}</span>
             </div>
-          )}
+          ))}
         </div>
       </div>
 
@@ -2145,11 +2255,11 @@ function BPWhy() {
       <div style={{ marginTop: 'clamp(32px, 4vw, 48px)' }}>
         <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--uc-stone-500)', marginBottom: 14 }}>↳ Operators we&rsquo;ve shipped for</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: '8px' }}>
-          {clients.map((c, i) =>
-          <span key={i} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--uc-paper)', borderRadius: 6, padding: '8px 10px', height: 'clamp(38px, 3.4vw, 48px)' }}>
-              <img src={`assets/logos/${c}.svg`} alt={c} style={{ maxHeight: '100%', maxWidth: '100%', width: 'auto', display: 'block' }} />
+          {clients.map((c, i) => (
+            <span key={i} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--uc-paper)', borderRadius: 6, padding: '8px 10px', height: 'clamp(38px, 3.4vw, 48px)' }}>
+              <img src={`assets/logos/${c}.svg`} alt={c} style={{ maxHeight: '100%', maxWidth: '100%', width: 'auto', display: 'block' }}/>
             </span>
-          )}
+          ))}
         </div>
       </div>
 
@@ -2157,35 +2267,35 @@ function BPWhy() {
       <div style={{ marginTop: 'clamp(28px, 3vw, 40px)' }}>
         <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--uc-stone-500)', marginBottom: 16 }}>↳ Recognized by</div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 0, borderTop: '1px solid #1F1F1F', borderBottom: '1px solid #1F1F1F' }}>
-          {reviews.map((r, i) =>
-          <div key={i} style={{ padding: '20px 20px 20px 0', paddingLeft: i > 0 ? 20 : 0, borderLeft: i > 0 ? '1px solid #1F1F1F' : 'none', position: 'relative' }}>
-              <span aria-hidden="true" style={{ position: 'absolute', top: 0, left: i > 0 ? 20 : 0, width: 14, height: 2, background: 'var(--uc-signal)' }} />
+          {reviews.map((r, i) => (
+            <div key={i} style={{ padding: '20px 20px 20px 0', paddingLeft: i > 0 ? 20 : 0, borderLeft: i > 0 ? '1px solid #1F1F1F' : 'none', position: 'relative' }}>
+              <span aria-hidden="true" style={{ position: 'absolute', top: 0, left: i > 0 ? 20 : 0, width: 14, height: 2, background: 'var(--uc-signal)' }}/>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
                 <span style={{ fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(24px, 2.6vw, 38px)', letterSpacing: '-0.04em', color: 'var(--uc-paper)' }}>{r.score}</span>
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--uc-signal)' }}>★</span>
               </div>
               <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--uc-stone-500)', marginTop: 8 }}>{r.name}</div>
             </div>
-          )}
+          ))}
         </div>
       </div>
 
       {/* One review */}
       <div style={{ marginTop: 'clamp(32px, 4vw, 48px)', paddingTop: 'clamp(28px, 3vw, 40px)', borderTop: '1px solid #1F1F1F' }}>
         <blockquote style={{ margin: 0, fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontWeight: 400, fontSize: 'clamp(22px, 2.6vw, 38px)', letterSpacing: '-0.02em', lineHeight: 1.25, color: 'var(--uc-paper)', maxWidth: 900, textWrap: 'pretty', position: 'relative', paddingLeft: 22 }}>
-          <span aria-hidden="true" style={{ position: 'absolute', left: 0, top: 4, bottom: 4, width: 3, background: 'var(--uc-signal)' }} />
-          &ldquo;Ultra professional, receptive, and helpful during the entire process. The personal touch, and constant communication is what separates them from other companies with a 50+ person team where the attention to detail may be lost.&rdquo;
+          <span aria-hidden="true" style={{ position: 'absolute', left: 0, top: 4, bottom: 4, width: 3, background: 'var(--uc-signal)' }}/>
+          &ldquo;We earned Platinum Partner status along the way, but the thing we&rsquo;re proudest of is the trust. An unchallengeable reputation as a partner that delivers. And customers who came to us for one project and stayed for over ten years.&rdquo;
         </blockquote>
         <div style={{ marginTop: 18, display: 'flex', alignItems: 'center', gap: 14 }}>
-          <img src={window.__resources.reviewBrandt} alt="Brandt DeVries" style={{ width: 44, height: 44, borderRadius: 999, objectFit: 'cover', flexShrink: 0, border: '1px solid #2B2B2B' }} />
+          <img src="assets/team-denis.png" alt="Denis Dyli" style={{ width: 44, height: 44, borderRadius: 999, objectFit: 'cover', flexShrink: 0, border: '1px solid #2B2B2B' }}/>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 3, fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.06em' }}>
-            <span style={{ color: 'var(--uc-paper)', fontWeight: 700 }}>Brandt DeVries</span>
-            <span style={{ color: 'var(--uc-stone-500)' }}>VP of Operations, WeldingStore</span>
+            <span style={{ color: 'var(--uc-paper)', fontWeight: 700 }}>Denis Dyli</span>
+            <span style={{ color: 'var(--uc-stone-500)' }}>Founder</span>
           </div>
         </div>
       </div>
-    </BPSection>);
-
+    </BPSection>
+  );
 }
 
 // ── Approve & kickoff CTA. Clicking opens an inline signature modal that
@@ -2455,6 +2565,76 @@ function BPApproveButton() {
 }
 
 // ── 10 NEXT STEPS ───────────────────────────────────────────────────────────
+function BPProof() {
+  const variants = {
+    dark:   { bg: 'var(--uc-black)', border: 'var(--uc-black)', fg: 'var(--uc-paper)', sub: 'var(--uc-stone-300)', faint: 'var(--uc-stone-500)', line: '#1F1F1F', avBg: '#2B2B2B', avFg: 'var(--uc-paper)', avLine: '#3A3A3A', dashed: false },
+    signal: { bg: 'var(--uc-signal)', border: 'var(--uc-signal)', fg: 'var(--uc-black)', sub: 'rgba(10,10,10,0.78)', faint: 'rgba(10,10,10,0.55)', line: 'rgba(10,10,10,0.16)', avBg: 'rgba(10,10,10,0.08)', avFg: 'var(--uc-black)', avLine: 'rgba(10,10,10,0.2)', dashed: false },
+    paper:  { bg: 'var(--uc-paper)', border: 'var(--line-2)', fg: 'var(--fg-1)', sub: 'var(--fg-2)', faint: 'var(--fg-3)', line: 'var(--line-1)', avBg: 'var(--uc-bone)', avFg: 'var(--fg-1)', avLine: 'var(--line-1)', borderStyle: 'solid' },
+    dotted: { bg: 'var(--uc-bone)', border: 'var(--uc-stone-300)', fg: 'var(--fg-1)', sub: 'var(--fg-2)', faint: 'var(--fg-3)', line: 'var(--line-1)', avBg: 'var(--uc-paper)', avFg: 'var(--fg-1)', avLine: 'var(--line-1)', borderStyle: 'dotted' }
+  };
+  const cards = [
+    { v: 'dark', q: 'I cannot praise Uncap enough. They are a hell of a team.', n: 'Andy Blechschmidt', c: 'Jerico' },
+    { v: 'dotted', q: 'The integration of our platforms created an easy solution that even our complex systems sales teams can use.', stat: '83% Lower TCO', statL: 'Total cost of ownership on Shopify', n: 'Bryan Snyder', c: 'Canon Medical' },
+    { v: 'paper', q: 'During the Blueprint, Uncap walked through every requirement — what was native, what needed an app, and what was custom.', stat: '1M SKUs', statL: 'Mapped to sync from Epicor to Shopify', n: 'Denise Foley', c: 'ULE Group' },
+    { v: 'paper', q: 'The professionalism, high quality of the design, timely communication and responsiveness have been greatly appreciated (especially compared to our previous dev agency partner).', stat: 'BigCommerce\nMigration', statL: 'Migrated to Shopify with Uncap', n: 'Kiki Fischer', c: 'Rescue Essentials' },
+    { v: 'signal', q: 'They are brilliant and very knowledgeable of all that Shopify can do.', stat: 'Product Configurations', statL: 'Custom product ordering for manufacturing', n: 'Peggy Farabaugh', c: 'Vermont Woods' },
+    { v: 'dotted', q: 'Uncap demonstrated a deep understanding of the Shopify ecosystem from the get-go.', stat: 'Custom ERP', statL: 'Integration data mapping for Shopify', n: 'Andy Morgan', c: 'ScooterWorks' },
+    { v: 'paper', q: 'The personal touch and constant communication is what separates them from other companies with a 50+ person team where the attention to detail may be lost.', n: 'Brandt DeVries', c: 'WeldingStore' },
+    { v: 'dark', q: 'The team and internal stakeholders were impressed with Uncap\u2019s vast technical expertise.', stat: '60 Days', statL: 'Migrating to Shopify after Blueprint', n: 'Todd Arey', c: 'E3 Spark Plugs' }
+  ];
+  const Stars = ({ color }) => (
+    <div style={{ display: 'flex', gap: 3 }}>{[0,1,2,3,4].map(i => (<span key={i} style={{ color, fontSize: 12 }}>★</span>))}</div>
+  );
+  const initials = (n) => n.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
+  return (
+    <BPSection id="proof" n="19" label="Proof" paper tail="ON THE RECORD">
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr)', gap: 'clamp(28px, 5vw, 80px)', alignItems: 'end' }}>
+        <BPHeadline>
+          Don&rsquo;t take{' '}
+          <BPSerif>our word for it.</BPSerif>
+        </BPHeadline>
+        <p style={{ margin: 0, maxWidth: 380, fontFamily: 'var(--font-serif)', fontSize: 'clamp(15px, 1.3vw, 18px)', lineHeight: 1.5, color: 'var(--fg-2)', textWrap: 'pretty' }}>
+          Operators who ran the same play — replatformed, integrated, and grew on Shopify with Uncap.
+        </p>
+      </div>
+
+      {/* Masonry of testimonials */}
+      <div style={{ marginTop: 'clamp(28px, 3.5vw, 44px)', columnWidth: 300, columnGap: 14 }}>
+        {cards.map((card, i) => {
+          const t = variants[card.v];
+          return (
+            <div key={i} style={{
+              breakInside: 'avoid', marginBottom: 14, width: '100%',
+              background: t.bg, color: t.fg,
+              border: '1px ' + (t.borderStyle || 'solid') + ' ' + t.border,
+              borderRadius: 12, padding: 'clamp(20px, 2.2vw, 26px)',
+              display: 'flex', flexDirection: 'column', gap: 14
+            }}>
+              <Stars color={t.fg}/>
+              <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 'clamp(15px, 1.4vw, 18px)', lineHeight: 1.35, letterSpacing: '-0.01em', color: t.fg, textWrap: 'pretty' }}>&ldquo;{card.q}&rdquo;</div>
+
+              {card.stat && (
+                <div style={{ paddingTop: 14, borderTop: '1px solid ' + t.line, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <span style={{ fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(22px, 2.2vw, 30px)', letterSpacing: '-0.04em', lineHeight: 0.95, color: t.fg, textTransform: 'uppercase', overflowWrap: 'anywhere', whiteSpace: 'pre-line' }}>{card.stat}</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.faint, lineHeight: 1.4 }}>{card.statL}</span>
+                </div>
+              )}
+
+              <div style={{ marginTop: 'auto', paddingTop: 14, borderTop: '1px solid ' + t.line, display: 'flex', alignItems: 'center', gap: 11 }}>
+                <span style={{ width: 32, height: 32, borderRadius: 999, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, background: t.avBg, color: t.avFg, border: '1px solid ' + t.avLine }}>{initials(card.n)}</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 1, minWidth: 0 }}>
+                  <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13.5, letterSpacing: '-0.01em', color: t.fg, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{card.n}</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: t.faint, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{card.c}</span>
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </BPSection>
+  );
+}
+
 function BPNext() {
   const steps = [
   { n: '01', t: 'Approve this Blueprint', d: 'Sign off on scope, timeline, and investment.' },
@@ -2462,7 +2642,7 @@ function BPNext() {
   { n: '03', t: 'Ship in 20 weeks', d: 'Launch live, then move into Growth.' }];
 
   return (
-    <BPSection id="next" n="17" label="Next" paper tail="LET'S GO">
+    <BPSection id="next" n="20" label="Next" paper tail="LET'S GO">
       <BPHeadline>
         Three steps{' '}
         <BPSerif>to start.</BPSerif>
@@ -2517,11 +2697,13 @@ function BPNav() {
   { id: 'integrations', n: '11', l: 'Integrated' },
   { id: 'migration', n: '12', l: 'Migration' },
   { id: 'delivery', n: '13', l: 'Delivery' },
-  { id: 'investment', n: '14', l: 'Investment' },
-  { id: 'growth', n: '15', l: 'Growth' },
-  { id: 'team', n: '16', l: 'Team' },
-  { id: 'why', n: '17', l: 'Uncap' },
-  { id: 'next', n: '18', l: 'Next' }];
+  { id: 'risks', n: '14', l: 'Risks' },
+  { id: 'investment', n: '15', l: 'Investment' },
+  { id: 'growth', n: '16', l: 'Growth' },
+  { id: 'team', n: '17', l: 'Team' },
+  { id: 'why', n: '18', l: 'Uncap' },
+  { id: 'proof', n: '19', l: 'Proof' },
+  { id: 'next', n: '20', l: 'Next' }];
 
   const [active, setActive] = React.useState('intro');
   const [open, setOpen] = React.useState(false);
@@ -2630,3 +2812,5 @@ window.BPInvestment = BPInvestment;
 window.BPGrowth = BPGrowth;
 window.BPWhy = BPWhy;
 window.BPNext = BPNext;
+window.BPProof = BPProof;
+window.BPRiskAssessment = BPRiskAssessment;
