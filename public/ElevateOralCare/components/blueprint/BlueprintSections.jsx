@@ -2778,7 +2778,7 @@ function BPApproveButton() {
                   cureDays: 'thirty (30)',
                   ipCancellation: true,
                   governingState: 'Delaware',
-                  attorneyFees: 'Should any litigation or mediation be commenced between the parties, the party or parties substantially prevailing in the litigation or mediation shall be entitled to recover all costs and expenses, including without limitation, reasonable attorney’s fees and paralegal fees, incurred in connection with enforcing any of the rights and remedies under this Agreement and Statement of Work, as determined by the court or mediator, or in a separate action brought for that purpose.',
+                  attorneyFees: 'Should any litigation or mediation be commenced between the parties, the party or parties substantially prevailing in the litigation or mediation shall be entitled to recover all REASONABLE costs and expenses, including without limitation, reasonable attorney’s fees and paralegal fees, incurred in connection with enforcing any of the rights and remedies under this Agreement and Statement of Work, as determined by the court or mediator, or in a separate action brought for that purpose.',
                   forum: 'in any forum other than the state and federal courts located in the State of Delaware. Each Party irrevocably and unconditionally submits to the exclusive jurisdiction of such courts and agrees to bring any such action, litigation, or proceeding only in the state and federal courts located in the State of Delaware.'
                 }}
                 actions={
