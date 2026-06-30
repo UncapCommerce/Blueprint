@@ -198,7 +198,7 @@ function SolutionsMenu({ open, onEnter, onLeave }) {
     { name: 'Uncap Connect',      desc: 'Real-time sync between Shopify, ERP, and the floor.', icon: 'connect' },
     { name: 'Uncap Quotes',       desc: 'Quote-to-cash for catalogs built for self-serve.', icon: 'quotes' },
     { name: 'Uncap Garage',       desc: 'Stage and ship storefront changes without breaking prod.', icon: 'garage' },
-    { name: 'Uncap PartsDiagram', desc: 'Exploded diagrams that turn parts into orders.', icon: 'parts' },
+    { name: 'Uncap PartsDiagram', desc: 'Shop by diagram experience, convert pins to a BOM, built for OEM parts.', icon: 'parts' },
     { name: 'Uncap Portal',       desc: 'A B2B account portal reps and buyers actually use.', icon: 'portal' },
     { name: 'Uncap Dealroom',     desc: 'Quote, negotiate, and close large orders in one place.', icon: 'dealroom' }
   ];
