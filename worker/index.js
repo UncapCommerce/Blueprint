@@ -40,9 +40,10 @@ const BLUEPRINT_ALLOWLISTS = {
     'liz@anatomicalworldwide.com',
     'stuart@anatomywarehouse.com',
   ],
-  sperscientific: [
-    'henry@sperscientific.com',
-  ],
+  // Locked to the Uncap team only. An empty allowlist is still truthy, so
+  // every external address gets a 403 while the @uncap.com override and the
+  // admin passcode continue to bypass the check above.
+  sperscientific: [],
   gpscity: [
     'brian@gpscity.com',
     'jordan@gpscity.com',
