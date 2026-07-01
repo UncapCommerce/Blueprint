@@ -2374,9 +2374,11 @@ function BPInvestment() {
     'Go live, a clean handoff, and a 30-day warranty'
   ];
   const schedule = [
-    { n: '01', amount: '$47,000', due: 'Due at signup · 1⁄2' },
-    { n: '02', amount: '$23,500', due: 'Due at design approval · 1⁄4' },
-    { n: '03', amount: '$23,500', due: 'Due at project completion · 1⁄4' }
+    { n: '01', amount: '$18,800', due: 'Jul 1, 2026' },
+    { n: '02', amount: '$18,800', due: 'Aug 1, 2026' },
+    { n: '03', amount: '$18,800', due: 'Sep 1, 2026' },
+    { n: '04', amount: '$18,800', due: 'Oct 1, 2026' },
+    { n: '05', amount: '$18,800', due: 'Nov 1, 2026' }
   ];
   return (
     <BPSection id="investment" n="15" label="Investment" dark tail="FIXED · NO SURPRISES">
@@ -2433,7 +2435,7 @@ function BPInvestment() {
           <span aria-hidden="true" style={{ width: 16, height: 2, background: 'var(--uc-signal)' }}/>
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--uc-stone-500)' }}>Payment schedule</span>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 14 }}>
           {schedule.map((s, i) => (
             <div key={i} style={{
               position: 'relative', overflow: 'hidden',
@@ -2443,7 +2445,7 @@ function BPInvestment() {
               {i === 0 && <span aria-hidden="true" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 3, background: 'var(--uc-signal)' }}/>}
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 }}>
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-2)' }}>Installment {i + 1}</span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.1em', color: 'var(--fg-3)' }}>{s.n} / 03</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.1em', color: 'var(--fg-3)' }}>{s.n} / {String(schedule.length).padStart(2, '0')}</span>
               </div>
               <div style={{ fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(30px, 3.4vw, 46px)', letterSpacing: '-0.04em', lineHeight: 0.9, color: 'var(--fg-1)' }}>{s.amount}</div>
               <div style={{ paddingTop: 'clamp(12px, 1.4vw, 16px)', borderTop: '1px solid var(--line-1)', fontFamily: 'var(--font-mono)', fontSize: 12, letterSpacing: '0.04em', color: 'var(--fg-2)' }}>{s.due}</div>
