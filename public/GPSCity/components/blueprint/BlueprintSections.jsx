@@ -2515,16 +2515,30 @@ function BPGrowth() {
           </div>
         ))}
       </div>
-      <div style={{
-        marginTop: 24, padding: '18px 22px', background: 'var(--uc-bone)',
-        border: '1px solid var(--line-1)', borderRadius: 5,
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap'
-      }}>
-        <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 15, color: 'var(--fg-1)' }}>
-          Uncap Growth: Optimize Package · <span style={{ fontFamily: 'var(--font-hero)', fontWeight: 800 }}>$5k / mo</span>
+      <div style={{ marginTop: 24, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <div style={{
+          padding: '18px 22px', background: 'var(--uc-bone)',
+          border: '1px solid var(--line-1)', borderRadius: 5,
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap'
+        }}>
+          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 15, color: 'var(--fg-1)' }}>
+            Uncap Growth: Optimize Package · <span style={{ fontFamily: 'var(--font-hero)', fontWeight: 800 }}>$5k / mo</span>
+          </div>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--fg-3)', letterSpacing: '0.06em' }}>
+            12-MONTH CONTRACT · STARTING MARCH 1, 2027
+          </div>
         </div>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--fg-3)', letterSpacing: '0.06em' }}>
-          12-MONTH CONTRACT
+        <div style={{
+          padding: '18px 22px', background: 'var(--uc-bone)',
+          border: '1px solid var(--line-1)', borderRadius: 5,
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap'
+        }}>
+          <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 15, color: 'var(--fg-1)' }}>
+            Uncap Growth: Core Package · <span style={{ fontFamily: 'var(--font-hero)', fontWeight: 800, textDecoration: 'line-through', color: 'var(--fg-3)' }}>$2.5k / mo</span> <span style={{ fontFamily: 'var(--font-hero)', fontWeight: 800, background: 'var(--uc-signal)', color: 'var(--uc-black)', padding: '1px 8px', borderRadius: 4 }}>FREE</span>
+          </div>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--fg-3)', letterSpacing: '0.06em' }}>
+            JANUARY 1 - FEBRUARY 28
+          </div>
         </div>
       </div>
     </BPSection>
