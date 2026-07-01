@@ -2440,15 +2440,14 @@ function BPInvestment() {
             <div key={i} style={{
               position: 'relative', overflow: 'hidden',
               background: 'var(--uc-paper)', border: '1px solid var(--line-2)', borderRadius: 10,
-              padding: 'clamp(20px, 2.2vw, 28px)', display: 'flex', flexDirection: 'column', gap: 'clamp(18px, 2.4vw, 30px)'
+              padding: 'clamp(16px, 1.7vw, 20px)', display: 'flex', flexDirection: 'column', gap: 'clamp(11px, 1.3vw, 15px)'
             }}>
               {i === 0 && <span aria-hidden="true" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 3, background: 'var(--uc-signal)' }}/>}
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 }}>
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-2)' }}>Installment {i + 1}</span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.1em', color: 'var(--fg-3)' }}>{s.n} / {String(schedule.length).padStart(2, '0')}</span>
               </div>
-              <div style={{ fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(30px, 3.4vw, 46px)', letterSpacing: '-0.04em', lineHeight: 0.9, color: 'var(--fg-1)' }}>{s.amount}</div>
-              <div style={{ paddingTop: 'clamp(12px, 1.4vw, 16px)', borderTop: '1px solid var(--line-1)', fontFamily: 'var(--font-mono)', fontSize: 12, letterSpacing: '0.04em', color: 'var(--fg-2)' }}>{s.due}</div>
+              <div style={{ fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(24px, 2.6vw, 34px)', letterSpacing: '-0.04em', lineHeight: 0.9, color: 'var(--fg-1)' }}>{s.amount}</div>
+              <div style={{ paddingTop: 'clamp(9px, 1vw, 12px)', borderTop: '1px solid var(--line-1)', fontFamily: 'var(--font-mono)', fontSize: 12, letterSpacing: '0.04em', color: 'var(--fg-2)' }}>{s.due}</div>
             </div>
           ))}
         </div>
