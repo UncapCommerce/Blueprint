@@ -2975,7 +2975,7 @@ function BPApproveButton() {
 function BPNext() {
   const steps = [
     { n: '01', t: 'Approve this Blueprint', d: 'Sign off on scope, timeline, and investment.' },
-    { n: '02', t: 'Onboard within 2 weeks', d: 'Discovery session + access to systems.' },
+    { n: '02', t: 'Onboard this week', d: 'Discovery session + access to systems.' },
     { n: '03', t: 'Ship in 20 weeks', d: 'Launch live, then move into Growth.' }
   ];
   return (
