@@ -2770,7 +2770,7 @@ function BPApproveButton() {
                 these terms as the Effective Date.
               </p>
               {MSA ? <MSA
-                company={BRAND_NAME}
+                company="Elevate Oral Care, LLC"
                 name={name.trim()}
                 title={title.trim()}
                 terms={{
@@ -2779,7 +2779,30 @@ function BPApproveButton() {
                   ipCancellation: true,
                   governingState: 'Delaware',
                   attorneyFees: 'Should any litigation or mediation be commenced between the parties, the party or parties substantially prevailing in the litigation or mediation shall be entitled to recover all REASONABLE costs and expenses, including without limitation, reasonable attorney’s fees and paralegal fees, incurred in connection with enforcing any of the rights and remedies under this Agreement and Statement of Work, as determined by the court or mediator, or in a separate action brought for that purpose.',
-                  forum: 'in any forum other than the state and federal courts located in the State of Delaware. Each Party irrevocably and unconditionally submits to the exclusive jurisdiction of such courts and agrees to bring any such action, litigation, or proceeding only in the state and federal courts located in the State of Delaware.'
+                  forum: 'in any forum other than the state and federal courts located in the State of Delaware. Each Party irrevocably and unconditionally submits to the exclusive jurisdiction of such courts and agrees to bring any such action, litigation, or proceeding only in the state and federal courts located in the State of Delaware.',
+                  paymentDays: 'fifteen (15)',
+                  disputedQual: '',
+                  interestRate: '10% per annum',
+                  collectFees: `reasonable attorneys' fees and costs`,
+                  deliverableTail: 'from time to time only after Customer has paid off all payments, fees, and expenses related to the specific Deliverable.',
+                  cureCrossRef: ' (as stated in Section 8.2)',
+                  customerMaterials: 'Customer materials',
+                  ipGrantDuration: ' during the existence of this Agreement',
+                  confidLabeling: '',
+                  advisorsList: 'attorneys, accountants, consultants and financial advisors',
+                  terminationRefs: 'Section 8.2, Section 8.3 or Section 8.4',
+                  cureAction: 'fails to promptly take such actions needed to cure the breach or ',
+                  nonpaymentDays: 'ten (10)',
+                  liabParty1: 'EITHER PARTY',
+                  liabParty2: 'THE OTHER',
+                  indemnFeesReasonable: 'reasonable ',
+                  indemnReciprocal: `<div class="msa-clause"><span class="msa-num"></span><p class="msa-body">Service Provider hereby agrees to defend, indemnify, and hold Customer and its members, managers, officers, employees, and agents harmless from and against any and all claims, demands, losses, damages, costs, liabilities, claims, or other charges, absolute or contingent, matured or unmatured, known or unknown, and any and all expenses incurred (including, but not limited to, reasonable attorney's fees and court costs) by such party in connection with or arising out of (i) Service Provider's breach of this Agreement or alleged breach of any Statement of Work and (ii) any action, suit, or proceeding by a third party relating to the subject matter of this Agreement.</p></div>`,
+                  noticeMailConj: 'or',
+                  noticeCustomer: 'Elevate Oral Care, LLC<br>346 Pike Road, Suite 5<br>West Palm Beach, FL 33411',
+                  copyLeftHtml: 'M. Timothy Hanlon<br>340 Royal Poinciana Way, Suite 321<br>Palm Beach, FL 33480<br>E: tim.hanlon@amrl.com<br>P: (561) 659-1770',
+                  copyRightHtml: 'Genc Arifi<br>E: ga@gencarifi.com<br>P: (630) 636-1955',
+                  nonSolicit: `Each party understands and acknowledges that the other party has expended and continues to expend significant time and expense in recruiting and training its employees and that the loss of employees would cause significant and irreparable harm to such party. Both the Service Provider and the Customer agree and covenant not to directly or indirectly solicit, hire, or recruit for their own benefit or the benefit of any other person, or so attempt to solicit, hire, or recruit, any employee of the other party ("Covered Employee"), or induce any Covered Employee to terminate their employment for 24 months immediately following the termination of this Agreement, regardless of the reason for the termination, whether voluntary or involuntary ("Restricted Period").`,
+                  assignmentBody: 'Intentionally Omitted.'
                 }}
                 actions={
                   <div style={{ display: 'flex', gap: 10 }}>
