@@ -28,6 +28,40 @@
 /components/*
   Cache-Control: public, max-age=300, s-maxage=86400
 
+# The /components/* rule only matches the root landing page. The shared
+# legal + admin scripts and each blueprint's own components live under
+# other paths and were falling through to default caching, which could
+# keep a stale Master Services Agreement or blueprint after a deploy.
+# Force them to revalidate so a deploy always wins.
+/legal/*
+  Cache-Control: public, max-age=0, must-revalidate
+/admin/*
+  Cache-Control: public, max-age=0, must-revalidate
+/Mitutoyo/components/*
+  Cache-Control: public, max-age=0, must-revalidate
+/wichelt/components/*
+  Cache-Control: public, max-age=0, must-revalidate
+/ElevateOralCare/components/*
+  Cache-Control: public, max-age=0, must-revalidate
+/ValveMan/components/*
+  Cache-Control: public, max-age=0, must-revalidate
+/Ben-Ami/components/*
+  Cache-Control: public, max-age=0, must-revalidate
+/AnatomyWarehouse/components/*
+  Cache-Control: public, max-age=0, must-revalidate
+/SperScientific/components/*
+  Cache-Control: public, max-age=0, must-revalidate
+/GPSCity/components/*
+  Cache-Control: public, max-age=0, must-revalidate
+/TucsonAlternator/components/*
+  Cache-Control: public, max-age=0, must-revalidate
+/ElyCattleman/components/*
+  Cache-Control: public, max-age=0, must-revalidate
+/VIVO/components/*
+  Cache-Control: public, max-age=0, must-revalidate
+/demo/blueprint/components/*
+  Cache-Control: public, max-age=0, must-revalidate
+
 # HTML always revalidates. Every page served here must be listed so the
 # browser refetches it after a deploy and picks up the new ?v= cache-buster
 # on its JSX. Per-blueprint index pages (/<Brand>/) each need their own line
