@@ -28,7 +28,10 @@
 /components/*
   Cache-Control: public, max-age=300, s-maxage=86400
 
-# HTML always revalidates.
+# HTML always revalidates. Every page served here must be listed so the
+# browser refetches it after a deploy and picks up the new ?v= cache-buster
+# on its JSX. Per-blueprint index pages (/<Brand>/) each need their own line
+# the same way scripts/stamp-deploy.js lists them; add new blueprints here.
 /
   Cache-Control: public, max-age=0, must-revalidate
 /build
@@ -36,4 +39,28 @@
 /build/
   Cache-Control: public, max-age=0, must-revalidate
 /index.html
+  Cache-Control: public, max-age=0, must-revalidate
+/Mitutoyo/
+  Cache-Control: public, max-age=0, must-revalidate
+/wichelt/
+  Cache-Control: public, max-age=0, must-revalidate
+/ElevateOralCare/
+  Cache-Control: public, max-age=0, must-revalidate
+/ValveMan/
+  Cache-Control: public, max-age=0, must-revalidate
+/Ben-Ami/
+  Cache-Control: public, max-age=0, must-revalidate
+/AnatomyWarehouse/
+  Cache-Control: public, max-age=0, must-revalidate
+/SperScientific/
+  Cache-Control: public, max-age=0, must-revalidate
+/GPSCity/
+  Cache-Control: public, max-age=0, must-revalidate
+/TucsonAlternator/
+  Cache-Control: public, max-age=0, must-revalidate
+/ElyCattleman/
+  Cache-Control: public, max-age=0, must-revalidate
+/VIVO/
+  Cache-Control: public, max-age=0, must-revalidate
+/demo/blueprint/
   Cache-Control: public, max-age=0, must-revalidate
