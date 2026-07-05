@@ -286,30 +286,34 @@ async function handleVerify(request, env, ctx) {
     { expirationTtl: SESSION_TTL_SECONDS }
   );
 
-  // Persist an access-log record so the admin toolbar can show every
+  // Persist an access-log record so the admin app can show every client
   // login, with timestamp + IP + Cloudflare-derived location + UA.
   // 1-year TTL is plenty for audit purposes. Key shape lets us list
-  // by blueprintId prefix and sort by timestamp descending.
-  const ts        = Date.now();
-  const accessKey = `access:${blueprintId}:${(9_999_999_999_999 - ts).toString(36).padStart(10, '0')}:${genRandSlug()}`;
-  const cf        = request.cf || {};
-  const accessRec = {
-    email,
-    blueprintId,
-    verifiedAt: new Date(ts).toISOString(),
-    ip:        request.headers.get('CF-Connecting-IP') || '',
-    country:   cf.country || '',
-    city:      cf.city    || '',
-    region:    cf.region  || '',
-    userAgent: request.headers.get('User-Agent') || '',
-    selfTest, admin: false,
-  };
-  const accessWrite = env.BLUEPRINT_AUTH.put(
-    accessKey,
-    JSON.stringify(accessRec),
-    { expirationTtl: 60 * 60 * 24 * 365 }
-  ).catch(() => {});
-  if (ctx && ctx.waitUntil) ctx.waitUntil(accessWrite);
+  // by blueprintId prefix and sort by timestamp descending. Uncap team
+  // logins (selfTest) are not tracked — the activity log is for client
+  // views only.
+  if (!selfTest) {
+    const ts        = Date.now();
+    const accessKey = `access:${blueprintId}:${(9_999_999_999_999 - ts).toString(36).padStart(10, '0')}:${genRandSlug()}`;
+    const cf        = request.cf || {};
+    const accessRec = {
+      email,
+      blueprintId,
+      verifiedAt: new Date(ts).toISOString(),
+      ip:        request.headers.get('CF-Connecting-IP') || '',
+      country:   cf.country || '',
+      city:      cf.city    || '',
+      region:    cf.region  || '',
+      userAgent: request.headers.get('User-Agent') || '',
+      selfTest, admin: false,
+    };
+    const accessWrite = env.BLUEPRINT_AUTH.put(
+      accessKey,
+      JSON.stringify(accessRec),
+      { expirationTtl: 60 * 60 * 24 * 365 }
+    ).catch(() => {});
+    if (ctx && ctx.waitUntil) ctx.waitUntil(accessWrite);
+  }
 
   // Fire-and-forget admin notification — don't block the response on the
   // email send so the client unlocks even if the SMTP path is slow. Skip
@@ -389,7 +393,13 @@ async function listBlueprintEvents(env, blueprintId) {
   const accessEvents = await Promise.all(
     accessList.keys.map((k) => env.BLUEPRINT_AUTH.get(k.name).then((v) => {
       if (!v) return null;
-      try { return { type: 'view', ...JSON.parse(v) }; } catch { return null; }
+      try {
+        const rec = JSON.parse(v);
+        // Uncap team logins aren't tracked anymore; hide the ones
+        // recorded before that change too.
+        if (rec.selfTest || (rec.email || '').endsWith('@uncap.com')) return null;
+        return { type: 'view', ...rec };
+      } catch { return null; }
     }))
   );
   const signEvents = await Promise.all(
