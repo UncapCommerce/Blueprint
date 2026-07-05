@@ -102,6 +102,9 @@ export default {
     if (url.pathname === '/api/admin/blueprints' && request.method === 'POST') {
       return handleAdminCreateBlueprint(request, env);
     }
+    if (url.pathname === '/api/admin/blueprint-meta' && request.method === 'POST') {
+      return handleAdminBlueprintMeta(request, env);
+    }
     if (url.pathname === '/api/admin/access-log' && request.method === 'GET') {
       return handleAdminAccessLog(request, env);
     }
@@ -115,9 +118,40 @@ export default {
       return handleAdminCreateDiscovery(request, env);
     }
 
+    // Disabled blueprints: block the page document for anyone without an
+    // admin session. Only fires on the blueprint index paths themselves,
+    // so regular asset traffic never pays the KV lookup.
+    if (request.method === 'GET') {
+      const m = url.pathname.match(/^\/([A-Za-z0-9-]+)\/(?:index\.html)?$/);
+      const entry = m && BLUEPRINT_REGISTRY.find((b) => b.dir === m[1]);
+      if (entry) {
+        const meta = await getBpMeta(env, entry.id);
+        if (meta.disabled) {
+          const adminSess = await getAdminSession(request, env);
+          if (!adminSess) return disabledBlueprintPage();
+        }
+      }
+    }
+
     return env.ASSETS.fetch(request);
   },
 };
+
+function disabledBlueprintPage() {
+  const html = `<!doctype html><html lang="en"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="robots" content="noindex,nofollow"/><title>Uncap Blueprint</title>
+<style>html,body{margin:0;height:100%;background:#F2EFE7;-webkit-font-smoothing:antialiased}
+body{display:flex;align-items:center;justify-content:center;font-family:Inter,-apple-system,sans-serif;color:#0A0A0A}
+.card{max-width:420px;padding:40px 32px;text-align:center}
+.eyebrow{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:#8A8780;margin-bottom:14px}
+h1{font-size:24px;letter-spacing:-.02em;margin:0 0 10px}p{font-size:14.5px;line-height:1.55;color:#4A4A4A;margin:0}</style>
+</head><body><div class="card"><div class="eyebrow">Uncap Blueprint</div>
+<h1>This proposal is no longer available.</h1>
+<p>The link has been deactivated. If you believe this is a mistake, contact your Uncap lead or email hey@uncap.com.</p>
+</div></body></html>`;
+  return new Response(html, { status: 403, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } });
+}
 
 // ----------------------------------------------------------------------------
 // Helpers
@@ -183,6 +217,13 @@ async function handleRequestCode(request, env) {
   // as any other client (6-digit code, etc.) — they just aren't gated.
   const isUncapTeam = email.endsWith('@uncap.com');
 
+  // Disabled blueprints reject client logins outright (set from the
+  // admin app). The team can still get in to review.
+  const bpMeta = await getBpMeta(env, blueprintId);
+  if (bpMeta.disabled && !isUncapTeam) {
+    return json(403, { ok: false, error: 'This proposal is no longer available.' });
+  }
+
   // Per-blueprint allowlist enforcement. If this blueprint is private to a
   // named list of clients, reject any other email up front so we never even
   // generate a code for an unauthorised address. Uncap team always passes.
@@ -215,6 +256,13 @@ async function handleVerify(request, env, ctx) {
   const code        = (body.code  || '').toString().trim();
   const blueprintId = normalizeBlueprintId(body.blueprintId);
   if (!email || !code) return json(400, { ok: false, error: 'Enter your code' });
+
+  // Mirror the request-code disabled check: a code issued moments before
+  // the blueprint was disabled must not still mint a session.
+  const bpMeta = await getBpMeta(env, blueprintId);
+  if (bpMeta.disabled && !email.endsWith('@uncap.com')) {
+    return json(403, { ok: false, error: 'This proposal is no longer available.' });
+  }
 
   const key    = `code:${blueprintId}:${email}`;
   const stored = await env.BLUEPRINT_AUTH.get(key);
@@ -546,6 +594,53 @@ function handleAdminConfig(env) {
   return json(200, { ok: true, googleClientId: getGoogleClientId(env) });
 }
 
+// Per-blueprint operational metadata (bpmeta:<id>): expiration date and
+// the disabled switch. Applies to shipped blueprints and drafts alike.
+async function getBpMeta(env, id) {
+  const raw = await env.BLUEPRINT_AUTH.get(`bpmeta:${id}`);
+  if (!raw) return {};
+  try { return JSON.parse(raw); } catch { return {}; }
+}
+
+// expiresAt is a YYYY-MM-DD date; the blueprint stays valid through the
+// end of that day (UTC).
+function isBpExpired(meta) {
+  if (!meta || !meta.expiresAt) return false;
+  const t = Date.parse(meta.expiresAt + 'T23:59:59Z');
+  return Number.isFinite(t) && Date.now() > t;
+}
+
+async function handleAdminBlueprintMeta(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+
+  let body;
+  try { body = await request.json(); }
+  catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+
+  const id = normalizeBlueprintId(body.blueprintId);
+  const known = BLUEPRINT_REGISTRY.some((b) => b.id === id) || !!(await env.BLUEPRINT_AUTH.get(`bp:${id}`));
+  if (!known) return json(404, { ok: false, error: 'Unknown blueprint' });
+
+  const meta = await getBpMeta(env, id);
+  if (typeof body.expiresAt !== 'undefined') {
+    const expiresAt = (body.expiresAt || '').toString().trim();
+    if (expiresAt && !/^\d{4}-\d{2}-\d{2}$/.test(expiresAt)) {
+      return json(400, { ok: false, error: 'Expiration must be a YYYY-MM-DD date' });
+    }
+    meta.expiresAt = expiresAt;
+  }
+  if (typeof body.disabled !== 'undefined') {
+    meta.disabled = !!body.disabled;
+  }
+  meta.updatedAt = new Date().toISOString();
+  meta.updatedBy = sess.email;
+
+  await env.BLUEPRINT_AUTH.put(`bpmeta:${id}`, JSON.stringify(meta));
+  return json(200, { ok: true, meta: { expiresAt: meta.expiresAt || '', disabled: !!meta.disabled, expired: isBpExpired(meta) } });
+}
+
 // In-memory JWKS cache. Workers isolates live long enough that this saves
 // a Google fetch on most logins; a kid miss forces a refresh so key
 // rotation self-heals.
@@ -679,7 +774,13 @@ async function handleAdminBlueprints(request, env) {
     } catch { /* skip corrupt record */ }
   }
 
-  await Promise.all(items.filter((i) => i.kind === 'live').map(async (i) => {
+  await Promise.all(items.map(async (i) => {
+    const meta = await getBpMeta(env, i.id);
+    i.expiresAt = meta.expiresAt || '';
+    i.disabled  = !!meta.disabled;
+    i.expired   = isBpExpired(meta);
+
+    if (i.kind !== 'live') return;
     const rollup = await env.BLUEPRINT_AUTH.get(`bpsigned:${i.id}`);
     if (rollup) { try { i.signature = JSON.parse(rollup); return; } catch { /* fall through */ } }
     const list = await env.BLUEPRINT_AUTH.list({ prefix: `signature:${i.id}:`, limit: 10 });
@@ -711,8 +812,12 @@ async function handleAdminCreateBlueprint(request, env) {
   const website    = (body.website     || '').toString().trim().slice(0, 300);
   const leadClient = (body.leadClient  || '').toString().trim().slice(0, 200);
   const address    = (body.address     || '').toString().trim().slice(0, 300);
+  const expiresAt  = (body.expiresAt   || '').toString().trim();
   if (!name)    return json(400, { ok: false, error: 'Company name is required' });
   if (!website) return json(400, { ok: false, error: 'Client website is required' });
+  if (expiresAt && !/^\d{4}-\d{2}-\d{2}$/.test(expiresAt)) {
+    return json(400, { ok: false, error: 'Expiration must be a YYYY-MM-DD date' });
+  }
 
   const slug = normalizeBlueprintId(name);
   if (BLUEPRINT_REGISTRY.some((b) => b.id === slug)) {
@@ -729,6 +834,12 @@ async function handleAdminCreateBlueprint(request, env) {
     createdBy: sess.email,
   };
   await env.BLUEPRINT_AUTH.put(`bp:${slug}`, JSON.stringify(rec));
+  if (expiresAt) {
+    await env.BLUEPRINT_AUTH.put(`bpmeta:${slug}`, JSON.stringify({
+      expiresAt, disabled: false,
+      updatedAt: rec.createdAt, updatedBy: sess.email,
+    }));
+  }
   return json(200, { ok: true, blueprint: rec });
 }
 
