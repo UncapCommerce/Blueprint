@@ -84,6 +84,28 @@
       if (!token && inputRef.current) inputRef.current.focus();
     }, [token, step]);
 
+    // Uncap admins signed into the Blueprint app skip the email gate:
+    // the bp_admin cookie mints a preview session automatically. Clients
+    // without the cookie get a fast 401 and see the normal email form.
+    React.useEffect(() => {
+      if (token) return;
+      let dead = false;
+      fetch('/api/admin/bp-token', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        credentials: 'same-origin',
+        body: JSON.stringify({ blueprintId: BLUEPRINT_ID }),
+      })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((d) => {
+          if (dead || !d || !d.ok || !d.token) return;
+          try { window.sessionStorage.setItem(STORAGE_KEY, d.token); } catch (_) {}
+          setToken(d.token);
+        })
+        .catch(() => {});
+      return () => { dead = true; };
+    }, []);
+
     if (token) {
       // Expose the session token globally so the Approve button can POST it
       // to /api/auth/notify on click. Set inside render so it's available

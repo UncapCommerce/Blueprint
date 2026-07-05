@@ -10,16 +10,39 @@ Assets in `public/`. There is **no build step** — `index.html` loads
 React, ReactDOM, and `@babel/standalone` (vendored under `/vendor/`) from
 `<script>` tags, and Babel transpiles `.jsx` files in the browser.
 
-- Landing page: `public/index.html` + `public/components/*.jsx`
+- Root page: the **Blueprint admin app** (`public/index.html` +
+  `public/admin/AdminApp.jsx`). Google sign-in (Google Identity
+  Services), reserved for `@uncap.com` accounts. Sessions live in KV
+  (`admin_session:<token>`) behind an HttpOnly `bp_admin` cookie.
+  Sections: Home / Discoveries / Blueprints (Preview, Share, Activity,
+  Print per blueprint, plus draft creation)
+- Google OAuth Client ID: `GOOGLE_CLIENT_ID_FALLBACK` constant in
+  `worker/index.js` (a public value; hardcoded because `--keep-vars`
+  means wrangler.toml var edits never reach the worker). A
+  `GOOGLE_CLIENT_ID` dashboard var overrides it
+- Admin API: `/api/admin/*` in `worker/index.js` (google-login, me,
+  logout, blueprints, discoveries, access-log, bp-token). The
+  `BLUEPRINT_REGISTRY` const lists every shipped blueprint — append to
+  it when adding blueprint 012+
+- Blueprint pages no longer render a floating admin toolbar;
+  `public/admin/AdminToolbar.jsx` is print hooks only (print-quality CSS
+  for everyone + `?bpPrint=delivery|shopify` auto-print for admins,
+  triggered from the admin app). Each blueprint Gate silently mints a
+  preview session from the `bp_admin` cookie via `/api/admin/bp-token`,
+  so the team never types email codes
 - `/build` quiz: `public/build/index.html` + `public/components/QuizApp.jsx`
 - Worker handles `/api/checkout/*` (Stripe SetupIntents) and
   `/api/build/session/*` (KV-backed quiz resume), then falls through to
   the static assets binding for everything else
-- Production: `blueprint.uncap.com`. Deploy is **automatic** on push to
-  `main` via Cloudflare's GitHub integration (Workers Builds). Status
-  visible at Cloudflare dashboard → Workers & Pages →
-  `uncap-blueprint` → Builds. There is **no GitHub Actions
-  workflow** — Cloudflare's CI handles it
+- Production: `blueprint.uncap.com`. Deploys run on every push to
+  `main` via the GitHub Actions workflow
+  (`.github/workflows/deploy.yml`, `npm run deploy` with the
+  `CLOUDFLARE_API_TOKEN` repo secret). Cloudflare's Workers Builds
+  GitHub integration may also be connected as a second pipeline
+- `wrangler dev --local` cannot emulate the `cloudflare:email` module on
+  the pinned wrangler 3.x — local worker smoke tests fail at startup
+  with "No such module". Validate with `wrangler deploy --dry-run` plus
+  a babel-transform of changed JSX instead
 - Stripe + Resend secrets live in the Cloudflare dashboard, not in env
   files. `wrangler.toml` only declares vars that are safe in plaintext
   (e.g. `STRIPE_PUBLISHABLE_KEY`)

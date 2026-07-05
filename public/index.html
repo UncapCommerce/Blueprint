@@ -3,34 +3,26 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Uncap</title>
+<meta name="robots" content="noindex,nofollow"/>
+<title>Uncap Blueprint</title>
 <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png"/>
 <link rel="apple-touch-icon" href="favicon-32.png"/>
+<link rel="stylesheet" href="colors_and_type.css?v=DEPLOY_HASH"/>
 <style>
-  html, body {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    background: #F2EFE7; /* Uncap cream */
-    -webkit-font-smoothing: antialiased;
-  }
-  body {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-  img {
-    width: 240px;
-    max-width: 60vw;
-    height: auto;
-    display: block;
-  }
-  @media (prefers-color-scheme: dark) {
-    /* Optional: keep cream regardless of OS theme — Uncap brand is monochrome. */
-  }
+  html, body { margin: 0; padding: 0; background: var(--uc-cream, #F2EFE7); -webkit-font-smoothing: antialiased; }
+  #root { min-height: 100vh; }
 </style>
+<script src="/vendor/react.production.min.js"></script>
+<script src="/vendor/react-dom.production.min.js"></script>
+<script src="/vendor/babel.min.js"></script>
+<!-- Google Identity Services — powers the team sign-in button. -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script type="text/babel" src="admin/AdminApp.jsx?v=DEPLOY_HASH"></script>
 </head>
 <body>
-  <img src="assets/uncap-logo-black.svg" alt="Uncap"/>
+<div id="root"></div>
+<script type="text/babel">
+  ReactDOM.createRoot(document.getElementById('root')).render(<AdminApp/>);
+</script>
 </body>
 </html>

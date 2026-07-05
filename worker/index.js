@@ -83,6 +83,38 @@ export default {
       return handleAccessLog(request, env);
     }
 
+    // ── Admin application API (Google-authenticated Uncap team) ──────────
+    if (url.pathname === '/api/admin/config' && request.method === 'GET') {
+      return handleAdminConfig(env);
+    }
+    if (url.pathname === '/api/admin/google-login' && request.method === 'POST') {
+      return handleGoogleLogin(request, env);
+    }
+    if (url.pathname === '/api/admin/me' && request.method === 'GET') {
+      return handleAdminMe(request, env);
+    }
+    if (url.pathname === '/api/admin/logout' && request.method === 'POST') {
+      return handleAdminLogout(request, env);
+    }
+    if (url.pathname === '/api/admin/blueprints' && request.method === 'GET') {
+      return handleAdminBlueprints(request, env);
+    }
+    if (url.pathname === '/api/admin/blueprints' && request.method === 'POST') {
+      return handleAdminCreateBlueprint(request, env);
+    }
+    if (url.pathname === '/api/admin/access-log' && request.method === 'GET') {
+      return handleAdminAccessLog(request, env);
+    }
+    if (url.pathname === '/api/admin/bp-token' && request.method === 'POST') {
+      return handleAdminBpToken(request, env);
+    }
+    if (url.pathname === '/api/admin/discoveries' && request.method === 'GET') {
+      return handleAdminListDiscoveries(request, env);
+    }
+    if (url.pathname === '/api/admin/discoveries' && request.method === 'POST') {
+      return handleAdminCreateDiscovery(request, env);
+    }
+
     return env.ASSETS.fetch(request);
   },
 };
@@ -290,11 +322,17 @@ async function handleAccessLog(request, env) {
   const sess = JSON.parse(raw);
   if (!sess.admin && !sess.selfTest) return json(403, { ok: false, error: 'Not authorised' });
 
-  // List up to 200 events of each type. KV keys for access events are
-  // prefixed with the inverted timestamp so a plain prefix scan returns
-  // them already sorted newest-first. Signature events don't carry the
-  // inverted prefix (we want to keep the existing key shape stable for
-  // audit), so we sort them in-memory.
+  const events = await listBlueprintEvents(env, blueprintId);
+  return json(200, { ok: true, blueprintId, events });
+}
+
+// List up to 200 events of each type for a blueprint — verification
+// events and signature events merged, newest-first. KV keys for access
+// events are prefixed with the inverted timestamp so a plain prefix scan
+// returns them already sorted; signature events don't carry the inverted
+// prefix (the existing key shape stays stable for audit), so we sort
+// in-memory.
+async function listBlueprintEvents(env, blueprintId) {
   const [accessList, signList] = await Promise.all([
     env.BLUEPRINT_AUTH.list({ prefix: `access:${blueprintId}:`, limit: 200 }),
     env.BLUEPRINT_AUTH.list({ prefix: `signature:${blueprintId}:`, limit: 200 }),
@@ -313,14 +351,12 @@ async function handleAccessLog(request, env) {
     }))
   );
 
-  const events = [...accessEvents.filter(Boolean), ...signEvents.filter(Boolean)]
+  return [...accessEvents.filter(Boolean), ...signEvents.filter(Boolean)]
     .sort((a, b) => {
       const ta = new Date(a.verifiedAt || a.signedAt || 0).getTime();
       const tb = new Date(b.verifiedAt || b.signedAt || 0).getTime();
       return tb - ta;
     });
-
-  return json(200, { ok: true, blueprintId, events });
 }
 
 async function handleNotify(request, env) {
@@ -408,6 +444,15 @@ async function handleSign(request, env, ctx) {
     return json(502, { ok: false, error: `Could not record signature: ${err.message || 'unknown'}` });
   }
 
+  // Best-effort rollup so the admin app's blueprint list can show signed
+  // status with a single get instead of a prefix scan per blueprint.
+  const rollup = env.BLUEPRINT_AUTH.put(
+    `bpsigned:${sess.blueprintId}`,
+    JSON.stringify(record),
+    { expirationTtl: 60 * 60 * 24 * 365 }
+  ).catch(() => {});
+  if (ctx && ctx.waitUntil) ctx.waitUntil(rollup);
+
   // Self-test sessions write the record but never email.
   if (sess.selfTest) return json(200, { ok: true, skipped: 'self-test' });
 
@@ -429,6 +474,338 @@ async function handleSign(request, env, ctx) {
     // warning so the client still gets confirmation. The signature stays.
     return json(200, { ok: true, emailError: err.message || 'send failed' });
   }
+}
+
+// ----------------------------------------------------------------------------
+// Admin application — Google-authenticated area for the Uncap team.
+//
+// The root page (blueprint.uncap.com/) is the admin app. Sign-in is Google
+// Identity Services: the page posts Google's ID token (a JWT) here, we
+// verify the signature against Google's JWKS, require a verified
+// @uncap.com address, and mint a KV-backed session carried by an HttpOnly
+// bp_admin cookie. Because the cookie is scoped to the whole origin, the
+// per-client blueprint gates can also mint preview sessions from it
+// (POST /api/admin/bp-token), letting the team open any blueprint without
+// the email-code step.
+// ----------------------------------------------------------------------------
+
+const ADMIN_SESSION_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
+
+// Google OAuth "Web application" Client ID. This is a public identifier
+// (it ships in the login page HTML anyway), so hardcoding is safe — and
+// necessary, because deploys run `wrangler deploy --keep-vars`, meaning
+// wrangler.toml var edits never reach the running worker. A
+// GOOGLE_CLIENT_ID var set in the Cloudflare dashboard wins over this.
+const GOOGLE_CLIENT_ID_FALLBACK = '';
+
+function getGoogleClientId(env) {
+  return ((env.GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID_FALLBACK) + '').trim();
+}
+
+// Registry of shipped blueprints (the static folders under public/).
+// Drafts created from the admin app live in KV under bp:<slug> and are
+// appended to this list by handleAdminBlueprints.
+const BLUEPRINT_REGISTRY = [
+  { id: 'mitutoyo',         dir: 'Mitutoyo',         name: 'Mitutoyo',          num: '001' },
+  { id: 'wichelt',          dir: 'wichelt',          name: 'Wichelt Imports',   num: '002' },
+  { id: 'elevateoralcare',  dir: 'ElevateOralCare',  name: 'Elevate Oral Care', num: '003' },
+  { id: 'valveman',         dir: 'ValveMan',         name: 'ValveMan',          num: '004' },
+  { id: 'benami',           dir: 'Ben-Ami',          name: 'Ben-Ami',           num: '005' },
+  { id: 'anatomywarehouse', dir: 'AnatomyWarehouse', name: 'Anatomy Warehouse', num: '006' },
+  { id: 'sperscientific',   dir: 'SperScientific',   name: 'Sper Scientific',   num: '007' },
+  { id: 'gpscity',          dir: 'GPSCity',          name: 'GPS City',          num: '008' },
+  { id: 'tucsonalternator', dir: 'TucsonAlternator', name: 'Tucson Alternator', num: '009' },
+  { id: 'elycattleman',     dir: 'ElyCattleman',     name: 'Ely Cattleman',     num: '010' },
+  { id: 'vivo',             dir: 'VIVO',             name: 'VIVO',              num: '011' },
+];
+
+function getCookie(request, name) {
+  const header = request.headers.get('Cookie') || '';
+  const m = header.match(new RegExp('(?:^|;\\s*)' + name + '=([^;]+)'));
+  return m ? m[1] : '';
+}
+
+// Cheap CSRF guard for cookie-authenticated mutations: browsers attach an
+// Origin header to cross-site POSTs, so reject anything not from our host.
+function sameOrigin(request) {
+  const origin = request.headers.get('Origin');
+  if (!origin) return true;
+  try { return new URL(origin).host === new URL(request.url).host; }
+  catch { return false; }
+}
+
+async function getAdminSession(request, env) {
+  const token = getCookie(request, 'bp_admin');
+  if (!/^[a-f0-9]{48}$/.test(token)) return null;
+  const raw = await env.BLUEPRINT_AUTH.get(`admin_session:${token}`);
+  if (!raw) return null;
+  try { return { token, ...JSON.parse(raw) }; } catch { return null; }
+}
+
+function handleAdminConfig(env) {
+  return json(200, { ok: true, googleClientId: getGoogleClientId(env) });
+}
+
+// In-memory JWKS cache. Workers isolates live long enough that this saves
+// a Google fetch on most logins; a kid miss forces a refresh so key
+// rotation self-heals.
+let googleJwks = { keys: null, fetchedAt: 0 };
+
+function b64urlToBytes(s) {
+  s = s.replace(/-/g, '+').replace(/_/g, '/');
+  const pad = s.length % 4 ? '='.repeat(4 - (s.length % 4)) : '';
+  const bin = atob(s + pad);
+  const bytes = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return bytes;
+}
+
+async function verifyGoogleIdToken(credential, clientId) {
+  const parts = (credential || '').split('.');
+  if (parts.length !== 3) throw new Error('Malformed credential');
+  const dec = new TextDecoder();
+  const header  = JSON.parse(dec.decode(b64urlToBytes(parts[0])));
+  const payload = JSON.parse(dec.decode(b64urlToBytes(parts[1])));
+
+  const now = Date.now();
+  const stale = !googleJwks.keys || now - googleJwks.fetchedAt > 60 * 60 * 1000;
+  const kidMissing = googleJwks.keys && !googleJwks.keys.some((k) => k.kid === header.kid);
+  if (stale || kidMissing) {
+    const resp = await fetch('https://www.googleapis.com/oauth2/v3/certs');
+    if (!resp.ok) throw new Error('Could not fetch Google signing keys');
+    const jwks = await resp.json();
+    googleJwks = { keys: jwks.keys || [], fetchedAt: now };
+  }
+  const jwk = googleJwks.keys.find((k) => k.kid === header.kid);
+  if (!jwk) throw new Error('Unknown signing key');
+
+  const key = await crypto.subtle.importKey(
+    'jwk', jwk,
+    { name: 'RSASSA-PKCS1-v1_5', hash: 'SHA-256' },
+    false, ['verify']
+  );
+  const valid = await crypto.subtle.verify(
+    'RSASSA-PKCS1-v1_5', key,
+    b64urlToBytes(parts[2]),
+    new TextEncoder().encode(parts[0] + '.' + parts[1])
+  );
+  if (!valid) throw new Error('Invalid signature');
+
+  if (payload.aud !== clientId) throw new Error('Token audience mismatch');
+  if (payload.iss !== 'https://accounts.google.com' && payload.iss !== 'accounts.google.com') {
+    throw new Error('Unexpected token issuer');
+  }
+  if ((payload.exp || 0) * 1000 < now - 60_000) throw new Error('Token expired');
+  if (!payload.email || payload.email_verified !== true) throw new Error('Email not verified');
+  return payload;
+}
+
+async function handleGoogleLogin(request, env) {
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+  const clientId = getGoogleClientId(env);
+  if (!clientId) return json(503, { ok: false, error: 'Google login is not configured yet' });
+
+  let body;
+  try { body = await request.json(); }
+  catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+
+  let payload;
+  try { payload = await verifyGoogleIdToken((body.credential || '').toString(), clientId); }
+  catch (err) { return json(401, { ok: false, error: err.message || 'Could not verify Google sign-in' }); }
+
+  const email = payload.email.toLowerCase();
+  if (!email.endsWith('@uncap.com')) {
+    return json(403, { ok: false, error: 'Reserved for the Uncap team (@uncap.com).' });
+  }
+
+  const token = genToken();
+  await env.BLUEPRINT_AUTH.put(
+    `admin_session:${token}`,
+    JSON.stringify({ email, name: payload.name || '', picture: payload.picture || '', ts: Date.now() }),
+    { expirationTtl: ADMIN_SESSION_TTL_SECONDS }
+  );
+
+  return new Response(JSON.stringify({ ok: true, email, name: payload.name || '', picture: payload.picture || '' }), {
+    status: 200,
+    headers: {
+      'content-type': 'application/json; charset=utf-8',
+      'set-cookie': `bp_admin=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${ADMIN_SESSION_TTL_SECONDS}`,
+    },
+  });
+}
+
+async function handleAdminMe(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  return json(200, { ok: true, email: sess.email, name: sess.name || '', picture: sess.picture || '' });
+}
+
+async function handleAdminLogout(request, env) {
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+  const token = getCookie(request, 'bp_admin');
+  if (/^[a-f0-9]{48}$/.test(token)) {
+    await env.BLUEPRINT_AUTH.delete(`admin_session:${token}`).catch(() => {});
+  }
+  return new Response(JSON.stringify({ ok: true }), {
+    status: 200,
+    headers: {
+      'content-type': 'application/json; charset=utf-8',
+      'set-cookie': 'bp_admin=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0',
+    },
+  });
+}
+
+// List every blueprint (shipped registry + KV drafts) with its signature
+// status. Signature status prefers the bpsigned:<id> rollup that
+// handleSign maintains; older signatures that predate the rollup fall
+// back to a prefix scan.
+async function handleAdminBlueprints(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+
+  const items = BLUEPRINT_REGISTRY.map((bp) => ({ ...bp, kind: 'live', signature: null }));
+
+  const draftList = await env.BLUEPRINT_AUTH.list({ prefix: 'bp:', limit: 100 });
+  const draftRecs = await Promise.all(draftList.keys.map((k) => env.BLUEPRINT_AUTH.get(k.name)));
+  for (const raw of draftRecs) {
+    if (!raw) continue;
+    try {
+      const rec = JSON.parse(raw);
+      items.push({
+        id: rec.id, dir: '', name: rec.name, num: '', kind: 'draft', signature: null,
+        website: rec.website || '', leadClient: rec.leadClient || '', address: rec.address || '',
+        createdAt: rec.createdAt || '', createdBy: rec.createdBy || '',
+      });
+    } catch { /* skip corrupt record */ }
+  }
+
+  await Promise.all(items.filter((i) => i.kind === 'live').map(async (i) => {
+    const rollup = await env.BLUEPRINT_AUTH.get(`bpsigned:${i.id}`);
+    if (rollup) { try { i.signature = JSON.parse(rollup); return; } catch { /* fall through */ } }
+    const list = await env.BLUEPRINT_AUTH.list({ prefix: `signature:${i.id}:`, limit: 10 });
+    if (!list.keys.length) return;
+    const recs = (await Promise.all(list.keys.slice(0, 5).map((k) => env.BLUEPRINT_AUTH.get(k.name))))
+      .filter(Boolean)
+      .map((v) => { try { return JSON.parse(v); } catch { return null; } })
+      .filter(Boolean)
+      .sort((a, b) => new Date(b.signedAt || 0) - new Date(a.signedAt || 0));
+    i.signature = recs[0] || null;
+  }));
+
+  return json(200, { ok: true, blueprints: items });
+}
+
+// Save a new-blueprint request. Phase 1 records it as a draft in KV; the
+// template generator that clones AnatomyWarehouse into a live page is the
+// next phase and will consume these records.
+async function handleAdminCreateBlueprint(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+
+  let body;
+  try { body = await request.json(); }
+  catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+
+  const name       = (body.companyName || '').toString().trim().slice(0, 200);
+  const website    = (body.website     || '').toString().trim().slice(0, 300);
+  const leadClient = (body.leadClient  || '').toString().trim().slice(0, 200);
+  const address    = (body.address     || '').toString().trim().slice(0, 300);
+  if (!name)    return json(400, { ok: false, error: 'Company name is required' });
+  if (!website) return json(400, { ok: false, error: 'Client website is required' });
+
+  const slug = normalizeBlueprintId(name);
+  if (BLUEPRINT_REGISTRY.some((b) => b.id === slug)) {
+    return json(409, { ok: false, error: `A blueprint with the id "${slug}" already exists` });
+  }
+  if (await env.BLUEPRINT_AUTH.get(`bp:${slug}`)) {
+    return json(409, { ok: false, error: `A draft with the id "${slug}" already exists` });
+  }
+
+  const rec = {
+    id: slug, name, website, leadClient, address,
+    status: 'draft',
+    createdAt: new Date().toISOString(),
+    createdBy: sess.email,
+  };
+  await env.BLUEPRINT_AUTH.put(`bp:${slug}`, JSON.stringify(rec));
+  return json(200, { ok: true, blueprint: rec });
+}
+
+// Cookie-authenticated variant of the access log for the admin app.
+async function handleAdminAccessLog(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  const blueprintId = normalizeBlueprintId(new URL(request.url).searchParams.get('bp'));
+  const events = await listBlueprintEvents(env, blueprintId);
+  return json(200, { ok: true, blueprintId, events });
+}
+
+// Mint a blueprint preview session from the admin cookie so the team can
+// open any blueprint without the email gate. admin:true means the session
+// writes no signature records and fires no notifications — previews stay
+// out of the audit trail, matching the old passcode behaviour.
+async function handleAdminBpToken(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+
+  let body;
+  try { body = await request.json(); }
+  catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  const blueprintId = normalizeBlueprintId(body.blueprintId);
+
+  const token = genToken();
+  await env.BLUEPRINT_AUTH.put(
+    `session:${token}`,
+    JSON.stringify({ email: sess.email, admin: true, selfTest: true, blueprintId, ts: Date.now() }),
+    { expirationTtl: SESSION_TTL_SECONDS }
+  );
+  return json(200, { ok: true, token });
+}
+
+async function handleAdminListDiscoveries(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+
+  // discovery:<inverted-ts>:<rand> — the inverted timestamp makes a plain
+  // prefix scan return newest-first.
+  const list = await env.BLUEPRINT_AUTH.list({ prefix: 'discovery:', limit: 200 });
+  const discoveries = (await Promise.all(list.keys.map(async (k) => {
+    const raw = await env.BLUEPRINT_AUTH.get(k.name);
+    if (!raw) return null;
+    try { return { id: k.name.slice('discovery:'.length), ...JSON.parse(raw) }; }
+    catch { return null; }
+  }))).filter(Boolean);
+
+  return json(200, { ok: true, discoveries });
+}
+
+async function handleAdminCreateDiscovery(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+
+  let body;
+  try { body = await request.json(); }
+  catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+
+  const company = (body.company || '').toString().trim().slice(0, 200);
+  const client  = (body.client  || '').toString().trim().slice(0, 200);
+  const address = (body.address || '').toString().trim().slice(0, 300);
+  const website = (body.website || '').toString().trim().slice(0, 300);
+  if (!company) return json(400, { ok: false, error: 'Company is required' });
+
+  const ts = Date.now();
+  const id = `${(9_999_999_999_999 - ts).toString(36).padStart(10, '0')}:${genRandSlug()}`;
+  const rec = {
+    company, client, address, website,
+    status: 'new',
+    createdAt: new Date(ts).toISOString(),
+    createdBy: sess.email,
+  };
+  await env.BLUEPRINT_AUTH.put(`discovery:${id}`, JSON.stringify(rec));
+  return json(200, { ok: true, discovery: { id, ...rec } });
 }
 
 // ----------------------------------------------------------------------------
