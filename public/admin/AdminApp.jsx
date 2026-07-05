@@ -338,11 +338,11 @@
     );
   }
 
-  function Field({ label, value, onChange, placeholder, autoFocus }) {
+  function Field({ label, value, onChange, placeholder, autoFocus, type }) {
     return (
       <div>
         <label style={S.label}>{label}</label>
-        <input style={S.input} value={value} placeholder={placeholder || ''} autoFocus={!!autoFocus}
+        <input style={S.input} type={type || 'text'} value={value} placeholder={placeholder || ''} autoFocus={!!autoFocus}
           onChange={(e) => onChange(e.target.value)}/>
       </div>
     );
@@ -467,6 +467,7 @@
     const [rows, setRows] = useState(null);
     const [showNew, setShowNew] = useState(() => window.location.hash.includes('new=1'));
     const [activityBp, setActivityBp] = useState(null); // {id, name}
+    const [editExpiryBp, setEditExpiryBp] = useState(null);
     const [printFor, setPrintFor] = useState(null);     // id of row with open print menu
     const [copied, setCopied] = useState('');
     const [error, setError] = useState('');
@@ -492,7 +493,21 @@
       setTimeout(() => setCopied(''), 1600);
     };
 
+    const toggleDisabled = async (bp) => {
+      if (!bp.disabled && !window.confirm(`Disable "${bp.name}"?\n\nClients will no longer be able to open or sign in to this blueprint. The team keeps access, and you can re-enable it any time.`)) return;
+      try {
+        await api('/api/admin/blueprint-meta', {
+          method: 'POST',
+          body: JSON.stringify({ blueprintId: bp.id, disabled: !bp.disabled }),
+        });
+        load();
+      } catch (err) { setError(err.message); }
+    };
+
     const statusChip = (bp) => {
+      if (bp.disabled) return (
+        <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 999, fontFamily: T.mono, fontSize: 9.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', background: T.black, color: '#fff', border: `1px solid ${T.black}` }}>Disabled</span>
+      );
       if (bp.kind === 'draft') return (
         <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 999, fontFamily: T.mono, fontSize: 9.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', background: '#FFF6E0', color: '#6A4E00', border: '1px solid #E8C36A' }}>Draft</span>
       );
@@ -504,10 +519,25 @@
           </span>
         </span>
       );
+      if (bp.expired) return (
+        <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 999, fontFamily: T.mono, fontSize: 9.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', background: '#FDE8E8', color: '#8A1C1C', border: '1px solid #F0A9A9' }}>Expired</span>
+      );
       return (
         <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 999, fontFamily: T.mono, fontSize: 9.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', background: '#EEF0F4', color: T.fg2, border: `1px solid ${T.line}` }}>Not signed</span>
       );
     };
+
+    // Expiration date + inline edit button, shared by table and cards.
+    const expiresCell = (bp) => (
+      <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
+        <span style={{ fontFamily: T.mono, fontSize: 12, color: bp.expired ? '#B3261E' : (bp.expiresAt ? T.fg1 : T.fg3) }}>
+          {bp.expiresAt || '—'}
+        </span>
+        <button type="button" aria-label="Edit expiration" title="Edit expiration"
+          onClick={() => setEditExpiryBp(bp)}
+          style={{ background: 'transparent', border: `1px solid ${T.line}`, borderRadius: 999, width: 24, height: 24, cursor: 'pointer', fontSize: 11, lineHeight: 1, color: T.fg3, flexShrink: 0 }}>✎</button>
+      </span>
+    );
 
     // One actions row, shared by the desktop table and the mobile cards.
     const rowActions = (bp) => (
@@ -515,6 +545,10 @@
         <a href={'/' + bp.dir + '/'} target="_blank" rel="noreferrer" style={{ ...S.btnGhost, textDecoration: 'none' }}>Preview</a>
         <button type="button" style={S.btnGhost} onClick={() => copyShare(bp)}>{copied === bp.id ? 'Copied ✓' : 'Share'}</button>
         <button type="button" style={S.btnGhost} onClick={() => setActivityBp(bp)}>Activity</button>
+        <button type="button" onClick={() => toggleDisabled(bp)}
+          style={{ ...S.btnGhost, color: bp.disabled ? '#064E2E' : '#B3261E', borderColor: bp.disabled ? '#9BDDB0' : '#F0A9A9' }}>
+          {bp.disabled ? 'Enable' : 'Disable'}
+        </button>
         <span style={{ position: 'relative' }}>
           <button type="button" style={S.btnGhost} onClick={(e) => { e.stopPropagation(); setPrintFor(printFor === bp.id ? null : bp.id); }}>Print ▾</button>
           {printFor === bp.id && (
@@ -557,6 +591,9 @@
                     <span style={{ fontFamily: T.mono, fontSize: 10.5, color: T.fg3, flexShrink: 0 }}>{bp.num || 'draft'}</span>
                   </div>
                   <div style={{ marginTop: 7 }}>{statusChip(bp)}</div>
+                  <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={S.eyebrow}>Expires</span>{expiresCell(bp)}
+                  </div>
                   {bp.kind === 'live' ? (
                     <div style={{ marginTop: 11 }}>{rowActions(bp)}</div>
                   ) : (
@@ -571,7 +608,7 @@
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead><tr>
-                  <th style={S.th}>#</th><th style={S.th}>Blueprint</th><th style={S.th}>Status</th><th style={{ ...S.th, textAlign: 'right' }}>Actions</th>
+                  <th style={S.th}>#</th><th style={S.th}>Blueprint</th><th style={S.th}>Status</th><th style={S.th}>Expires</th><th style={{ ...S.th, textAlign: 'right' }}>Actions</th>
                 </tr></thead>
                 <tbody>
                   {rows.map((bp) => (
@@ -584,6 +621,7 @@
                         </div>
                       </td>
                       <td style={S.td}>{statusChip(bp)}</td>
+                      <td style={{ ...S.td, whiteSpace: 'nowrap' }}>{expiresCell(bp)}</td>
                       <td style={{ ...S.td, textAlign: 'right', whiteSpace: 'nowrap' }}>
                         {bp.kind === 'live'
                           ? rowActions(bp)
@@ -599,8 +637,42 @@
         {error && <div style={{ marginTop: 12, color: '#B3261E', fontFamily: T.sans, fontSize: 13 }}>{error}</div>}
 
         {activityBp && <ActivityModal bp={activityBp} onClose={() => setActivityBp(null)}/>}
+        {editExpiryBp && <ExpiryModal bp={editExpiryBp} onClose={() => setEditExpiryBp(null)} onSaved={() => { setEditExpiryBp(null); load(); }}/>}
         {showNew && <NewBlueprintModal onClose={() => setShowNew(false)} onSaved={() => { setShowNew(false); load(); }}/>}
       </Page>
+    );
+  }
+
+  function ExpiryModal({ bp, onClose, onSaved }) {
+    const [date, setDate] = useState(bp.expiresAt || '');
+    const [busy, setBusy] = useState(false);
+    const [error, setError] = useState('');
+
+    const save = async (clear) => {
+      setBusy(true); setError('');
+      try {
+        await api('/api/admin/blueprint-meta', {
+          method: 'POST',
+          body: JSON.stringify({ blueprintId: bp.id, expiresAt: clear ? '' : date }),
+        });
+        onSaved();
+      } catch (err) { setError(err.message); setBusy(false); }
+    };
+
+    return (
+      <Modal title={'Expiration · ' + bp.name} sub="Valid through the selected day" onClose={onClose}>
+        <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <Field label="Expiration date" type="date" value={date} onChange={setDate} autoFocus/>
+          {error && <div style={{ color: '#B3261E', fontFamily: T.sans, fontSize: 13 }}>{error}</div>}
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', flexWrap: 'wrap', paddingTop: 4 }}>
+            {bp.expiresAt ? (
+              <button type="button" style={{ ...S.btnGhost, marginRight: 'auto', color: '#B3261E', borderColor: '#F0A9A9' }} onClick={() => save(true)} disabled={busy}>Remove expiration</button>
+            ) : null}
+            <button type="button" style={S.btnGhost} onClick={onClose} disabled={busy}>Cancel</button>
+            <button type="button" style={{ ...S.btnLime, opacity: busy || !date ? 0.7 : 1 }} onClick={() => save(false)} disabled={busy || !date}>{busy ? 'Saving…' : 'Save'}</button>
+          </div>
+        </div>
+      </Modal>
     );
   }
 
@@ -691,6 +763,7 @@
     const [website, setWebsite]         = useState('');
     const [leadClient, setLeadClient]   = useState('');
     const [address, setAddress]         = useState('');
+    const [expiresAt, setExpiresAt]     = useState('');
     const [busy, setBusy]               = useState(false);
     const [error, setError]             = useState('');
 
@@ -704,6 +777,7 @@
           body: JSON.stringify({
             companyName: companyName.trim(), website: website.trim(),
             leadClient: leadClient.trim(), address: address.trim(),
+            expiresAt,
           }),
         });
         onSaved();
@@ -717,6 +791,7 @@
           <Field label="Client website" value={website} onChange={setWebsite} placeholder="acme.com"/>
           <Field label="Lead client" value={leadClient} onChange={setLeadClient} placeholder="Jane Doe, Head of Ecommerce"/>
           <Field label="Company address" value={address} onChange={setAddress} placeholder="100 Main St, Chicago, IL"/>
+          <Field label="Expiration date (valid through)" type="date" value={expiresAt} onChange={setExpiresAt}/>
           {error && <div style={{ color: '#B3261E', fontFamily: T.sans, fontSize: 13 }}>{error}</div>}
           <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', paddingTop: 4 }}>
             <button type="button" style={S.btnGhost} onClick={onClose} disabled={busy}>Cancel</button>
