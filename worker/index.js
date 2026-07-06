@@ -3,9 +3,7 @@
 //
 //   POST /api/auth/request-code  →  { email, blueprintId }
 //     Generates a 6-digit code, stashes it in KV with a 10-minute TTL,
-//     emails it via Cloudflare's send_email binding. If the email field
-//     contains the admin passcode, returns an admin session token
-//     immediately (no code step, no notification).
+//     emails it via Cloudflare's send_email binding.
 //
 //   POST /api/auth/verify  →  { email, code, blueprintId }
 //     Checks the stored code, deletes it, mints a 24-hour session token,
@@ -29,8 +27,8 @@ const SESSION_TTL_SECONDS = 24 * 60 * 60;  // 24 hours
 
 // Per-blueprint email allowlists. If a blueprintId appears here, only the
 // listed addresses can request a passcode. Anyone else gets a 403. The
-// admin passcode bypass and the @uncap.com team override apply above this
-// check, so internal team members can still see every blueprint.
+// @uncap.com team override applies above this check, so internal team
+// members can still see every blueprint.
 const BLUEPRINT_ALLOWLISTS = {
   benami: [
     'matthewlevy00@gmail.com',
@@ -41,8 +39,8 @@ const BLUEPRINT_ALLOWLISTS = {
     'stuart@anatomywarehouse.com',
   ],
   // Locked to the Uncap team only. An empty allowlist is still truthy, so
-  // every external address gets a 403 while the @uncap.com override and the
-  // admin passcode continue to bypass the check above.
+  // every external address gets a 403 while the @uncap.com override
+  // continues to bypass the check above.
   sperscientific: [],
   gpscity: [
     'brian@gpscity.com',
@@ -194,18 +192,6 @@ async function handleRequestCode(request, env) {
   const emailRaw    = (body.email || '').toString().trim();
   const blueprintId = normalizeBlueprintId(body.blueprintId);
   if (!emailRaw) return json(400, { ok: false, error: 'Enter an email' });
-
-  // Admin bypass: typing the admin passcode where the email goes returns
-  // a session token straight away. No 6-digit code step, no notification.
-  if (env.ADMIN_PASSCODE && emailRaw === env.ADMIN_PASSCODE) {
-    const token = genToken();
-    await env.BLUEPRINT_AUTH.put(
-      `session:${token}`,
-      JSON.stringify({ email: 'admin@uncap.com', admin: true, blueprintId, ts: Date.now() }),
-      { expirationTtl: SESSION_TTL_SECONDS }
-    );
-    return json(200, { ok: true, admin: true, token });
-  }
 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailRaw)) {
     return json(400, { ok: false, error: 'Enter a valid email' });

@@ -53,9 +53,11 @@ Every per-client Blueprint under `public/<Brand>/` follows the same
 contract — match this when adding a new one:
 
 - **Auth gate** in `index.html`: email → 6-digit code → 24-hour token,
-  with admin passcode `Uncap#CH` and `denis@uncap.com` as a no-email
-  self-test. Token is exposed on `window.__bpToken` for the approve
-  button to read
+  with `denis@uncap.com` as a no-email self-test. Team/admin access
+  comes from the admin dashboard (each Gate mints a preview session from
+  the `bp_admin` cookie via `/api/admin/bp-token`), not a passcode typed
+  into the email field. Token is exposed on `window.__bpToken` for the
+  approve button to read
 - **Blueprint number**: assign the next sequential ID (`001` Mitutoyo,
   `002` wichelt, `003` ElevateOralCare, `004` ValveMan, `005` Ben-Ami,
   `006` AnatomyWarehouse, `007` SperScientific, `008` GPSCity,

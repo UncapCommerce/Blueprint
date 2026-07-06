@@ -59,11 +59,10 @@
 
 <script type="text/babel">
   // ── Auth gate: email → 6-digit code → 24-hour session token.
-  // Admins type the admin passcode (Uncap#CH) in the email field and skip
-  // the code step entirely; server returns an admin token immediately and
-  // doesn't send any notification. Token is held in window.__bpToken so the
-  // BPApproveButton (in BlueprintSections.jsx) can read it and POST the
-  // approve notification when clicked. ──
+  // Team/admin access comes from the admin dashboard, which silently
+  // mints a preview session via /api/admin/bp-token. Token is held in
+  // window.__bpToken so the BPApproveButton (in BlueprintSections.jsx)
+  // can read it and POST the approve notification when clicked. ──
   const BLUEPRINT_ID = 'anatomywarehouse';
   window.__blueprintId = BLUEPRINT_ID;
   const STORAGE_KEY  = 'bp_token_anatomywarehouse';
