@@ -30,6 +30,11 @@ import { EmailMessage } from "cloudflare:email";
 const CODE_TTL_SECONDS    = 10 * 60;       // 10 minutes
 const SESSION_TTL_SECONDS = 24 * 60 * 60;  // 24 hours
 
+// The master Terms of Service template every newly created blueprint
+// seeds from (see handleAdminCreateBlueprint). Edited the same way as any
+// other blueprint's TOS, via the dashboard's TOS button.
+const TOS_TEMPLATE_BLUEPRINT_ID = 'anatomywarehouse';
+
 // Per-blueprint email allowlists. If a blueprintId appears here, only the
 // listed addresses can request a passcode. Anyone else gets a 403. The
 // @uncap.com team override applies above this check, so internal team
@@ -922,6 +927,14 @@ async function handleAdminCreateBlueprint(request, env) {
       updatedAt: rec.createdAt, updatedBy: sess.email,
     }));
   }
+  // Seed the new blueprint's Terms of Service from Anatomy Warehouse's —
+  // the designated master template (edited via the same TOS button any
+  // other blueprint uses). From here each copy is fully independent;
+  // editing this new blueprint's TOS never touches the template or any
+  // other blueprint. No-op if the template itself hasn't been set yet.
+  const templateTos = await env.BLUEPRINT_AUTH.get(`bptos:${TOS_TEMPLATE_BLUEPRINT_ID}`);
+  if (templateTos) await env.BLUEPRINT_AUTH.put(`bptos:${slug}`, templateTos);
+
   return json(200, { ok: true, blueprint: rec });
 }
 

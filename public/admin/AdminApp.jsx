@@ -66,7 +66,24 @@
     label: { fontFamily: T.mono, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.fg3, display: 'block', marginBottom: 6 },
     th: { textAlign: 'left', padding: '10px 14px', borderBottom: `1px solid ${T.line}`, fontFamily: T.mono, fontSize: 9.5, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.fg3, background: '#FAFAF7', whiteSpace: 'nowrap' },
     td: { textAlign: 'left', padding: '12px 14px', borderBottom: `1px solid ${T.line}`, fontFamily: T.sans, fontSize: 13.5, color: T.fg1, verticalAlign: 'top' },
+    // Square icon-only variant of btnGhost — Preview/Share/Activity don't
+    // need a text label, just a tooltip (title attr) for a11y/clarity.
+    btnIcon: { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 34, height: 34, padding: 0, flexShrink: 0, background: T.paper, color: T.fg1, border: `1px solid ${T.line}`, borderRadius: 999, cursor: 'pointer' },
   };
+
+  const iconProps = { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' };
+  const IconEye = () => (
+    <svg {...iconProps}><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8Z"/><circle cx="12" cy="12" r="3"/></svg>
+  );
+  const IconShare = () => (
+    <svg {...iconProps}><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+  );
+  const IconActivity = () => (
+    <svg {...iconProps}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+  );
+  const IconCheck = () => (
+    <svg {...iconProps} strokeWidth={2.5}><polyline points="20 6 9 17 4 12"/></svg>
+  );
 
   // ── path router ───────────────────────────────────────────────────────
   // Real paths (/blueprints, /discoveries) instead of #/ hash routes, so
@@ -587,9 +604,12 @@
     // One actions row, shared by the desktop table and the mobile cards.
     const rowActions = (bp) => (
       <span style={{ display: 'inline-flex', gap: 8, flexWrap: 'wrap', justifyContent: isMobile ? 'flex-start' : 'flex-end' }}>
-        <a href={'/' + bp.dir + '/'} target="_blank" rel="noreferrer" style={{ ...S.btnGhost, textDecoration: 'none' }}>Preview</a>
-        <button type="button" style={S.btnGhost} onClick={() => copyShare(bp)}>{copied === bp.id ? 'Copied ✓' : 'Share'}</button>
-        <button type="button" style={S.btnGhost} onClick={() => setActivityBp(bp)}>Activity</button>
+        <a href={'/' + bp.dir + '/'} target="_blank" rel="noreferrer" title="Preview" aria-label="Preview"
+          style={{ ...S.btnIcon, textDecoration: 'none' }}><IconEye/></a>
+        <button type="button" title={copied === bp.id ? 'Copied ✓' : 'Share'} aria-label="Share" style={S.btnIcon} onClick={() => copyShare(bp)}>
+          {copied === bp.id ? <IconCheck/> : <IconShare/>}
+        </button>
+        <button type="button" title="Activity" aria-label="Activity" style={S.btnIcon} onClick={() => setActivityBp(bp)}><IconActivity/></button>
         <button type="button" onClick={() => toggleDisabled(bp)}
           style={{ ...S.btnGhost, color: bp.disabled ? '#064E2E' : '#B3261E', borderColor: bp.disabled ? '#9BDDB0' : '#F0A9A9' }}>
           {bp.disabled ? 'Enable' : 'Disable'}
@@ -783,10 +803,20 @@
       } catch (err) { setError(err.message); setBusy(false); }
     };
 
+    const isTemplate = bp.id === 'anatomywarehouse';
+
     return (
       <Modal title={'Terms of Service · ' + bp.name}
-        sub="Plain text · leave blank to use the standard Master Services Agreement" onClose={onClose} width={720}>
+        sub={isTemplate
+          ? 'Plain text · master template — every new blueprint starts from a copy of this'
+          : 'Plain text · leave blank to use the standard Master Services Agreement'}
+        onClose={onClose} width={720}>
         <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {isTemplate && (
+            <div style={{ padding: '12px 14px', background: '#FFF6E0', border: '1px solid #E8C36A', borderRadius: 8, fontFamily: T.sans, fontSize: 13, color: '#6A4E00' }}>
+              This blueprint is the master TOS template. Whatever's saved here is copied into every newly created blueprint going forward — existing blueprints are unaffected.
+            </div>
+          )}
           {!loaded ? (
             <div style={{ padding: 20, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>Loading…</div>
           ) : (
