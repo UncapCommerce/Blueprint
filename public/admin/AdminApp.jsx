@@ -507,7 +507,8 @@
               boxShadow: '0 18px 40px -18px rgba(0,0,0,0.7)', textAlign: 'left',
             }}>
               {[['delivery', 'For Delivery Team', 'Whole document · no terms · no nav'],
-                ['shopify', 'For Shopify Partner Program', 'Key sections + Master Services Agreement']].map(([mode, l, sub]) => (
+                ['shopify', 'For Shopify Partner Program', 'Key sections + Master Services Agreement'],
+                ['client', 'For the Client', 'Whole document + terms + signature audit trail']].map(([mode, l, sub]) => (
                 <button key={mode} type="button"
                   onClick={() => { setPrintFor(null); window.open('/' + bp.dir + '/?bpPrint=' + mode, '_blank'); }}
                   style={{ background: 'transparent', border: 'none', color: '#fff', textAlign: 'left', padding: '9px 11px', borderRadius: 6, cursor: 'pointer', fontFamily: T.mono, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', display: 'flex', flexDirection: 'column', gap: 3 }}>

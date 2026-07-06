@@ -19,6 +19,11 @@
 //     IP, and user-agent. Admin sessions skip both the KV write and the
 //     email; self-test sessions (logged-in email = NOTIFY_EMAIL) write
 //     the record but skip the email.
+//
+//   POST /api/auth/my-signature  →  { token }
+//     Returns the caller's own signature record, if any, keyed by their
+//     exact session token — lets a client who just signed download their
+//     own signed copy without needing admin/self-test privileges.
 
 import { EmailMessage } from "cloudflare:email";
 
@@ -79,6 +84,9 @@ export default {
     }
     if (url.pathname === '/api/auth/admin/access-log' && request.method === 'POST') {
       return handleAccessLog(request, env);
+    }
+    if (url.pathname === '/api/auth/my-signature' && request.method === 'POST') {
+      return handleMySignature(request, env);
     }
 
     // ── Admin application API (Google-authenticated Uncap team) ──────────
@@ -362,6 +370,31 @@ async function handleAccessLog(request, env) {
 
   const events = await listBlueprintEvents(env, blueprintId);
   return json(200, { ok: true, blueprintId, events });
+}
+
+// Lets a signer fetch their own signature record so they can download a
+// signed copy without any admin privilege — the signature record is keyed
+// by the exact session token that signed it (signature:<blueprintId>:<token>),
+// so this can only ever return the caller's own signature, never anyone
+// else's.
+async function handleMySignature(request, env) {
+  let body;
+  try { body = await request.json(); }
+  catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  const token = (body.token || '').toString().trim();
+  if (!token) return json(400, { ok: false, error: 'Missing token' });
+
+  const raw = await env.BLUEPRINT_AUTH.get(`session:${token}`);
+  if (!raw) return json(401, { ok: false, error: 'Session expired' });
+  const sess = JSON.parse(raw);
+
+  const sigRaw = await env.BLUEPRINT_AUTH.get(`signature:${sess.blueprintId}:${token}`);
+  if (!sigRaw) return json(200, { ok: true, signature: null });
+  try {
+    return json(200, { ok: true, signature: JSON.parse(sigRaw) });
+  } catch {
+    return json(200, { ok: true, signature: null });
+  }
 }
 
 // List up to 200 events of each type for a blueprint — verification
