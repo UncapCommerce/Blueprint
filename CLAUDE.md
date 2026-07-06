@@ -3,6 +3,7 @@
 This file tells Claude how Denis prefers to work on this repo. Treat it as
 durable instruction across sessions.
 
+
 ## Architecture in 30 seconds
 
 Single Cloudflare Worker (`worker/index.js`) backed by Workers Static
