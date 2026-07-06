@@ -14,7 +14,7 @@
 // ──────────────────────────────────────────────────────────────────────────
 
 (function () {
-  const { useState, useEffect, useRef, useCallback } = React;
+  const { useState, useEffect, useRef, useCallback, useMemo } = React;
 
   // ── shared fetch helper ──────────────────────────────────────────────
   async function api(path, opts) {
@@ -68,16 +68,45 @@
     td: { textAlign: 'left', padding: '12px 14px', borderBottom: `1px solid ${T.line}`, fontFamily: T.sans, fontSize: 13.5, color: T.fg1, verticalAlign: 'top' },
   };
 
-  // ── hash router ──────────────────────────────────────────────────────
+  // ── path router ───────────────────────────────────────────────────────
+  // Real paths (/blueprints, /discoveries) instead of #/ hash routes, so
+  // the URL is bookmarkable and shareable. Workers Static Assets is
+  // configured with not_found_handling = single-page-application, so any
+  // path that isn't a real static asset (including these) falls back to
+  // this same index.html, which re-mounts AdminApp and this parses the
+  // pathname straight back to the right route.
+  function parseRoute() {
+    const seg = window.location.pathname.split('/').filter(Boolean)[0];
+    return seg === 'discoveries' ? 'discoveries' : 'blueprints';
+  }
+  // Client-side transition: pushState updates the URL without a reload,
+  // then a custom event nudges every useRoute() subscriber to re-parse
+  // (pushState alone doesn't fire popstate).
+  function navigate(path) {
+    if (window.location.pathname !== path) window.history.pushState({}, '', path);
+    window.dispatchEvent(new CustomEvent('bp:navigate'));
+  }
   function useRoute() {
-    const parse = () => (window.location.hash.replace(/^#\/?/, '') || 'blueprints').split('?')[0];
-    const [route, setRoute] = useState(parse);
+    const [route, setRoute] = useState(parseRoute);
     useEffect(() => {
-      const onHash = () => setRoute(parse());
-      window.addEventListener('hashchange', onHash);
-      return () => window.removeEventListener('hashchange', onHash);
+      const onChange = () => setRoute(parseRoute());
+      window.addEventListener('popstate', onChange);
+      window.addEventListener('bp:navigate', onChange);
+      return () => {
+        window.removeEventListener('popstate', onChange);
+        window.removeEventListener('bp:navigate', onChange);
+      };
     }, []);
     return route;
+  }
+  // Left-click-only nav handler so ctrl/cmd/shift/middle-click still open
+  // a new tab via the real href, instead of hijacking every click.
+  function navClick(path) {
+    return (e) => {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      e.preventDefault();
+      navigate(path);
+    };
   }
 
   // ── responsive helper ────────────────────────────────────────────────
@@ -195,7 +224,7 @@
       { id: 'blueprints',  l: 'Blueprints' },
     ];
     const pill = (it) => (
-      <a key={it.id} href={'#/' + it.id} style={{
+      <a key={it.id} href={'/' + it.id} onClick={navClick('/' + it.id)} style={{
         padding: '7px 14px', borderRadius: 999, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
         fontFamily: T.sans, fontSize: 13.5, fontWeight: 600, lineHeight: 1,
         color: route === it.id ? T.black : T.fg2,
@@ -213,7 +242,7 @@
           gap: isMobile ? 10 : 26,
           flexWrap: isMobile ? 'wrap' : 'nowrap',
         }}>
-          <a href="#/blueprints" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+          <a href="/blueprints" onClick={navClick('/blueprints')} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
             <img src="/assets/uncap-logo-black.svg" alt="Uncap" style={{ height: 20, width: 'auto', display: 'block' }}/>
             <span style={{ ...S.eyebrow, color: T.fg1 }}>Blueprint</span>
           </a>
@@ -249,9 +278,11 @@
     return (
       <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', gap: 16, marginBottom: 24, flexWrap: 'wrap' }}>
         <div>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 10, ...S.eyebrow }}>
-            <span style={{ width: 14, height: 2, background: T.signal }}/>{eyebrow}
-          </div>
+          {eyebrow ? (
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 10, ...S.eyebrow }}>
+              <span style={{ width: 14, height: 2, background: T.signal }}/>{eyebrow}
+            </div>
+          ) : null}
           <h1 style={{ margin: 0, fontFamily: T.hero, fontWeight: 800, fontSize: 'clamp(26px, 3.4vw, 40px)', letterSpacing: '-0.03em', lineHeight: 1, color: T.fg1 }}>{title}</h1>
         </div>
         {action || null}
@@ -299,7 +330,7 @@
   function Discoveries() {
     const isMobile = useIsMobile();
     const [rows, setRows] = useState(null);
-    const [showNew, setShowNew] = useState(() => window.location.hash.includes('new=1'));
+    const [showNew, setShowNew] = useState(() => new URLSearchParams(window.location.search).get('new') === '1');
     const [error, setError] = useState('');
 
     const load = useCallback(async () => {
@@ -409,21 +440,43 @@
   }
 
   // ── Blueprints ───────────────────────────────────────────────────────
+  const BP_PAGE_SIZE = 10;
+
+  // Newest first. Drafts carry a real createdAt; the fixed live-blueprint
+  // registry doesn't (they predate that field), so anything with a real
+  // timestamp sorts above them, and the legacy live entries fall back to
+  // `num` (assigned in creation order) descending.
+  function sortBlueprintsNewestFirst(list) {
+    return [...list].sort((a, b) => {
+      const ad = a.createdAt ? new Date(a.createdAt).getTime() : null;
+      const bd = b.createdAt ? new Date(b.createdAt).getTime() : null;
+      if (ad != null && bd != null) return bd - ad;
+      if (ad != null) return -1;
+      if (bd != null) return 1;
+      return (parseInt(b.num, 10) || 0) - (parseInt(a.num, 10) || 0);
+    });
+  }
+
   function Blueprints() {
     const isMobile = useIsMobile();
     const [rows, setRows] = useState(null);
-    const [showNew, setShowNew] = useState(() => window.location.hash.includes('new=1'));
+    const [showNew, setShowNew] = useState(() => new URLSearchParams(window.location.search).get('new') === '1');
     const [activityBp, setActivityBp] = useState(null); // {id, name}
     const [editExpiryBp, setEditExpiryBp] = useState(null);
     const [printFor, setPrintFor] = useState(null);     // id of row with open print menu
     const [copied, setCopied] = useState('');
     const [error, setError] = useState('');
+    const [search, setSearch] = useState('');
+    const [statusFilter, setStatusFilter] = useState('all');
+    const [page, setPage] = useState(1);
 
     const load = useCallback(async () => {
-      try { setRows((await api('/api/admin/blueprints')).blueprints); }
+      try { setRows(sortBlueprintsNewestFirst((await api('/api/admin/blueprints')).blueprints)); }
       catch (err) { setError(err.message); setRows([]); }
     }, []);
     useEffect(() => { load(); }, [load]);
+
+    useEffect(() => { setPage(1); }, [search, statusFilter]);
 
     useEffect(() => {
       if (!printFor) return;
@@ -473,6 +526,29 @@
         <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 999, fontFamily: T.mono, fontSize: 9.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', background: '#EEF0FE', color: '#3A44C4', border: '1px solid #C3C9F5' }}>Open</span>
       );
     };
+
+    // Same precedence as statusChip, as a plain value for filtering.
+    const rowStatus = (bp) => {
+      if (bp.disabled) return 'disabled';
+      if (bp.kind === 'draft') return 'draft';
+      if (bp.signature) return 'signed';
+      if (bp.expired) return 'expired';
+      return 'open';
+    };
+
+    const filteredRows = useMemo(() => {
+      if (!rows) return null;
+      const q = search.trim().toLowerCase();
+      return rows.filter((bp) => {
+        if (statusFilter !== 'all' && rowStatus(bp) !== statusFilter) return false;
+        if (q && !(bp.name || '').toLowerCase().includes(q)) return false;
+        return true;
+      });
+    }, [rows, search, statusFilter]);
+
+    const totalPages = filteredRows ? Math.max(1, Math.ceil(filteredRows.length / BP_PAGE_SIZE)) : 1;
+    const pageSafe = Math.min(page, totalPages);
+    const pageRows = filteredRows ? filteredRows.slice((pageSafe - 1) * BP_PAGE_SIZE, pageSafe * BP_PAGE_SIZE) : null;
 
     // Expiration date + inline edit button, shared by table and cards.
     const expiresCell = (bp) => (
@@ -524,15 +600,34 @@
 
     return (
       <Page>
-        <PageHead eyebrow="Proposals" title="Blueprints"
+        <PageHead title="Blueprints"
           action={<button type="button" style={S.btnLime} onClick={() => setShowNew(true)}>+ New blueprint</button>}/>
+
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 14 }}>
+          <input type="text" value={search} onChange={(e) => setSearch(e.target.value)}
+            placeholder="Search by name…"
+            style={{ ...S.input, width: 'auto', flex: '1 1 240px', maxWidth: 320, padding: '9px 12px', fontSize: 14 }}/>
+          <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
+            style={{ ...S.input, width: 'auto', flex: '0 0 auto', padding: '9px 12px', fontSize: 14, cursor: 'pointer' }}>
+            <option value="all">All statuses</option>
+            <option value="open">Open</option>
+            <option value="signed">Signed</option>
+            <option value="draft">Draft</option>
+            <option value="expired">Expired</option>
+            <option value="disabled">Disabled</option>
+          </select>
+        </div>
 
         <div style={{ ...S.card, overflow: 'visible' }}>
           {rows === null ? (
             <div style={{ padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>Loading…</div>
+          ) : filteredRows.length === 0 ? (
+            <div style={{ padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>
+              {rows.length === 0 ? 'No blueprints yet.' : 'No blueprints match your search or filter.'}
+            </div>
           ) : isMobile ? (
             <div>
-              {rows.map((bp) => (
+              {pageRows.map((bp) => (
                 <div key={bp.id} style={{ padding: '16px 16px 15px', borderBottom: `1px solid ${T.line}` }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10 }}>
                     <div style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 15, color: T.fg1 }}>{bp.name}</div>
@@ -559,7 +654,7 @@
                   <th style={S.th}>#</th><th style={S.th}>Blueprint</th><th style={S.th}>Status</th><th style={S.th}>Expires</th><th style={{ ...S.th, textAlign: 'right' }}>Actions</th>
                 </tr></thead>
                 <tbody>
-                  {rows.map((bp) => (
+                  {pageRows.map((bp) => (
                     <tr key={bp.id}>
                       <td style={{ ...S.td, fontFamily: T.mono, fontSize: 12, color: T.fg3, whiteSpace: 'nowrap' }}>{bp.num || '—'}</td>
                       <td style={S.td}>
@@ -582,6 +677,16 @@
             </div>
           )}
         </div>
+
+        {filteredRows && filteredRows.length > BP_PAGE_SIZE && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, padding: '16px 0 4px' }}>
+            <button type="button" style={{ ...S.btnGhost, opacity: pageSafe <= 1 ? 0.5 : 1 }} disabled={pageSafe <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}>← Prev</button>
+            <span style={{ fontFamily: T.mono, fontSize: 11, color: T.fg3 }}>Page {pageSafe} of {totalPages}</span>
+            <button type="button" style={{ ...S.btnGhost, opacity: pageSafe >= totalPages ? 0.5 : 1 }} disabled={pageSafe >= totalPages}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>Next →</button>
+          </div>
+        )}
         {error && <div style={{ marginTop: 12, color: '#B3261E', fontFamily: T.sans, fontSize: 13 }}>{error}</div>}
 
         {activityBp && <ActivityModal bp={activityBp} onClose={() => setActivityBp(null)}/>}
