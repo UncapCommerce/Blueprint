@@ -464,6 +464,8 @@
     const [activityBp, setActivityBp] = useState(null); // {id, name}
     const [editExpiryBp, setEditExpiryBp] = useState(null);
     const [printFor, setPrintFor] = useState(null);     // id of row with open print menu
+    const [menuPos, setMenuPos] = useState(null);        // viewport position for the open print menu
+    const printBtnRefs = useRef({});                     // bp.id -> button DOM node
     const [copied, setCopied] = useState('');
     const [error, setError] = useState('');
     const [search, setSearch] = useState('');
@@ -478,12 +480,31 @@
 
     useEffect(() => { setPage(1); }, [search, statusFilter]);
 
+    // The print menu is rendered in a portal (see below) so it isn't
+    // clipped by the card's overflow:hidden, which is what keeps the
+    // table's corners rounded instead of squared-off. Its position is
+    // computed from the trigger button's own bounding box.
     useEffect(() => {
-      if (!printFor) return;
+      if (!printFor) { setMenuPos(null); return; }
+      const btn = printBtnRefs.current[printFor];
+      if (!btn) { setMenuPos(null); return; }
+      const rect = btn.getBoundingClientRect();
+      setMenuPos(
+        isMobile
+          ? { top: rect.bottom + 6, left: rect.left }
+          : { top: rect.bottom + 6, right: window.innerWidth - rect.right }
+      );
       const close = () => setPrintFor(null);
       setTimeout(() => document.addEventListener('click', close), 0);
-      return () => document.removeEventListener('click', close);
-    }, [printFor]);
+      const reposition = () => setPrintFor(null);
+      window.addEventListener('scroll', reposition, true);
+      window.addEventListener('resize', reposition);
+      return () => {
+        document.removeEventListener('click', close);
+        window.removeEventListener('scroll', reposition, true);
+        window.removeEventListener('resize', reposition);
+      };
+    }, [printFor, isMobile]);
 
     const shareUrl = (bp) => `${window.location.origin}/${bp.dir}/`;
     const copyShare = async (bp) => {
@@ -573,11 +594,12 @@
           {bp.disabled ? 'Enable' : 'Disable'}
         </button>
         <span style={{ position: 'relative' }}>
-          <button type="button" style={S.btnGhost} onClick={(e) => { e.stopPropagation(); setPrintFor(printFor === bp.id ? null : bp.id); }}>Print ▾</button>
-          {printFor === bp.id && (
-            <span style={{
-              position: 'absolute', top: 'calc(100% + 6px)', zIndex: 20, minWidth: 250,
-              ...(isMobile ? { left: 0 } : { right: 0 }),
+          <button type="button" ref={(el) => { printBtnRefs.current[bp.id] = el; }} style={S.btnGhost}
+            onClick={(e) => { e.stopPropagation(); setPrintFor(printFor === bp.id ? null : bp.id); }}>Print ▾</button>
+          {printFor === bp.id && menuPos && ReactDOM.createPortal(
+            <span onClick={(e) => e.stopPropagation()} style={{
+              position: 'fixed', top: menuPos.top, zIndex: 200, minWidth: 250,
+              ...(menuPos.left != null ? { left: menuPos.left } : { right: menuPos.right }),
               background: T.black, borderRadius: 10, padding: 6,
               display: 'flex', flexDirection: 'column', gap: 2,
               boxShadow: '0 18px 40px -18px rgba(0,0,0,0.7)', textAlign: 'left',
@@ -592,7 +614,8 @@
                   <span style={{ fontSize: 9, letterSpacing: '0.02em', textTransform: 'none', opacity: 0.6, fontWeight: 500 }}>{sub}</span>
                 </button>
               ))}
-            </span>
+            </span>,
+            document.body
           )}
         </span>
       </span>
@@ -618,7 +641,7 @@
           </select>
         </div>
 
-        <div style={{ ...S.card, overflow: 'visible' }}>
+        <div style={{ ...S.card, overflow: 'hidden' }}>
           {rows === null ? (
             <div style={{ padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>Loading…</div>
           ) : filteredRows.length === 0 ? (
