@@ -1,8 +1,8 @@
 // ── Blueprint admin application ───────────────────────────────────────────
 // Mounted by public/index.html at the site root. Google sign-in (Uncap team
-// only), then three areas: Home (overview), Discoveries (client discovery
-// records), Blueprints (every proposal with preview / share / activity /
-// print, plus new-blueprint drafts).
+// only), then two areas: Discoveries (client discovery records), Blueprints
+// (every proposal with preview / share / activity / print, plus
+// new-blueprint drafts).
 //
 // All state lives in the worker (KV) behind /api/admin/*; the bp_admin
 // HttpOnly cookie carries the session, so every fetch here uses
@@ -70,7 +70,7 @@
 
   // ── hash router ──────────────────────────────────────────────────────
   function useRoute() {
-    const parse = () => (window.location.hash.replace(/^#\/?/, '') || 'home').split('?')[0];
+    const parse = () => (window.location.hash.replace(/^#\/?/, '') || 'blueprints').split('?')[0];
     const [route, setRoute] = useState(parse);
     useEffect(() => {
       const onHash = () => setRoute(parse());
@@ -191,7 +191,6 @@
   function TopBar({ me, route, onLogout }) {
     const isMobile = useIsMobile();
     const items = [
-      { id: 'home',        l: 'Home' },
       { id: 'discoveries', l: 'Discoveries' },
       { id: 'blueprints',  l: 'Blueprints' },
     ];
@@ -214,7 +213,7 @@
           gap: isMobile ? 10 : 26,
           flexWrap: isMobile ? 'wrap' : 'nowrap',
         }}>
-          <a href="#/home" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+          <a href="#/blueprints" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
             <img src="/assets/uncap-logo-black.svg" alt="Uncap" style={{ height: 20, width: 'auto', display: 'block' }}/>
             <span style={{ ...S.eyebrow, color: T.fg1 }}>Blueprint</span>
           </a>
@@ -257,58 +256,6 @@
         </div>
         {action || null}
       </div>
-    );
-  }
-
-  // ── Home ─────────────────────────────────────────────────────────────
-  function Home({ me }) {
-    const isMobile = useIsMobile();
-    const [stats, setStats] = useState(null);
-    useEffect(() => {
-      let dead = false;
-      (async () => {
-        try {
-          const [bps, disc] = await Promise.all([api('/api/admin/blueprints'), api('/api/admin/discoveries')]);
-          if (dead) return;
-          const live = bps.blueprints.filter((b) => b.kind === 'live');
-          setStats({
-            blueprints: live.length,
-            signed: live.filter((b) => b.signature).length,
-            drafts: bps.blueprints.filter((b) => b.kind === 'draft').length,
-            discoveries: disc.discoveries.length,
-          });
-        } catch (_) { if (!dead) setStats({ blueprints: '—', signed: '—', drafts: '—', discoveries: '—' }); }
-      })();
-      return () => { dead = true; };
-    }, []);
-
-    const cards = [
-      { v: stats ? stats.blueprints : '…', l: 'Blueprints live', href: '#/blueprints' },
-      { v: stats ? stats.signed : '…', l: 'Signed', href: '#/blueprints' },
-      { v: stats ? stats.drafts : '…', l: 'Drafts pending', href: '#/blueprints' },
-      { v: stats ? stats.discoveries : '…', l: 'Discoveries', href: '#/discoveries' },
-    ];
-    const firstName = (me.name || me.email || '').split(/[ @]/)[0];
-    return (
-      <Page>
-        <PageHead eyebrow="Overview" title={`Welcome back, ${firstName ? firstName[0].toUpperCase() + firstName.slice(1) : 'team'}.`}/>
-        <div style={{ display: 'grid', gridTemplateColumns: isMobile ? 'repeat(2, 1fr)' : 'repeat(auto-fit, minmax(200px, 1fr))', gap: isMobile ? 10 : 14 }}>
-          {cards.map((c, i) => (
-            <a key={i} href={c.href} style={{ ...S.card, padding: isMobile ? '18px 16px 14px' : '22px 22px 18px', textDecoration: 'none', position: 'relative', overflow: 'hidden' }}>
-              {i === 0 && <span style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 3, background: T.signal }}/>}
-              <div style={{ fontFamily: T.hero, fontWeight: 800, fontSize: isMobile ? 32 : 44, letterSpacing: '-0.04em', lineHeight: 0.9, color: T.fg1 }}>{c.v}</div>
-              <div style={{ marginTop: 10, ...S.eyebrow }}>{c.l}</div>
-            </a>
-          ))}
-        </div>
-        <div style={{ marginTop: isMobile ? 16 : 26, ...S.card, padding: isMobile ? 18 : 24 }}>
-          <div style={{ ...S.eyebrow, marginBottom: 12 }}>Quick actions</div>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-            <a href="#/discoveries?new=1" style={{ ...S.btnLime, textDecoration: 'none' }}>+ New discovery</a>
-            <a href="#/blueprints?new=1" style={{ ...S.btn, textDecoration: 'none' }}>+ New blueprint</a>
-          </div>
-        </div>
-      </Page>
     );
   }
 
@@ -830,7 +777,7 @@
     return (
       <div style={{ minHeight: '100vh', background: T.cream }}>
         <TopBar me={me} route={route} onLogout={logout}/>
-        {route === 'discoveries' ? <Discoveries/> : route === 'blueprints' ? <Blueprints/> : <Home me={me}/>}
+        {route === 'discoveries' ? <Discoveries/> : <Blueprints/>}
       </div>
     );
   }
