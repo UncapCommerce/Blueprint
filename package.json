@@ -5,6 +5,7 @@
   "description": "Blueprint marketing site + /build reservation flow. Single Cloudflare Worker backed by Workers Static Assets. No build step — Babel transpiles JSX in the browser.",
   "scripts": {
     "stamp": "node scripts/stamp-deploy.js",
+    "build": "npm run stamp",
     "deploy": "npm run stamp && wrangler deploy --keep-vars",
     "dev": "wrangler dev"
   },
