@@ -105,6 +105,7 @@
       .uncap-msa .msa-terms-header { margin-top: 36px; padding-top: 28px; border-top: 1px solid var(--line-1); margin-bottom: 18px; }
       .uncap-msa .msa-terms-header h2 { margin-bottom: 0; }
       .uncap-msa .msa-sig-intro { font-family: var(--font-serif); font-style: italic; color: var(--fg-2); font-size: 13px; margin: 0 0 18px; }
+      .uncap-msa .msa-custom-terms { white-space: pre-wrap; font-size: 13.5px; line-height: 1.65; color: var(--fg-1); }
       .uncap-msa .msa-sig-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
       .uncap-msa .msa-sigbox .msa-co { font-weight: 700; color: var(--fg-1); margin-bottom: 18px; font-size: 14px; }
       .uncap-msa .msa-sigbox .msa-sign-on { font-family: var(--font-mono); font-size: 10.5px; color: var(--fg-3); margin-bottom: 4px; }
@@ -330,6 +331,11 @@
     const title   = (props && props.title)   || '';
     const actions = (props && props.actions) || null;
     const terms   = (props && props.terms)   || null;
+    // Per-blueprint plain-text override, edited from the admin dashboard's
+    // TOS button. When set, it replaces the standard clause list below
+    // entirely; when empty (the default for every blueprint), the
+    // standard MSA_BODY_HTML renders as before.
+    const customTerms = (props && props.customTerms) || '';
     const effective = todayString();
 
     // Teleport the Print button to the very top of the modal form so it
@@ -419,7 +425,9 @@
           React.createElement('div', { className: 'msa-eyebrow' }, 'Terms'),
           React.createElement('h2', null, 'Services Agreement')
         ),
-        React.createElement('div', { dangerouslySetInnerHTML: { __html: MSA_BODY_HTML(effective, terms) } }),
+        customTerms
+          ? React.createElement('div', { className: 'msa-custom-terms' }, customTerms)
+          : React.createElement('div', { dangerouslySetInnerHTML: { __html: MSA_BODY_HTML(effective, terms) } }),
         React.createElement('div', { className: 'msa-sig msa-sig-bottom' },
           React.createElement('div', { className: 'msa-eyebrow', style: { marginBottom: 6 } }, 'Signature'),
           React.createElement('h2', { style: { marginBottom: 14 } }, 'Sign to bind this Agreement.'),

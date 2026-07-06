@@ -123,6 +123,18 @@ export default {
     if (url.pathname === '/api/admin/discoveries' && request.method === 'POST') {
       return handleAdminCreateDiscovery(request, env);
     }
+    if (url.pathname === '/api/admin/blueprint-tos' && request.method === 'GET') {
+      return handleAdminGetTos(request, env);
+    }
+    if (url.pathname === '/api/admin/blueprint-tos' && request.method === 'POST') {
+      return handleAdminSaveTos(request, env);
+    }
+    // Public read so a blueprint page itself (sign modal, print modes) can
+    // pull the current custom Terms of Service text — not sensitive, just
+    // legal copy, so no session is required here.
+    if (url.pathname === '/api/blueprint-tos' && request.method === 'GET') {
+      return handlePublicTos(request, env);
+    }
 
     // Disabled blueprints: block the page document for anyone without an
     // admin session. Only fires on the blueprint index paths themselves,
@@ -668,6 +680,47 @@ async function handleAdminBlueprintMeta(request, env) {
 
   await env.BLUEPRINT_AUTH.put(`bpmeta:${id}`, JSON.stringify(meta));
   return json(200, { ok: true, meta: { expiresAt: meta.expiresAt || '', disabled: !!meta.disabled, expired: isBpExpired(meta) } });
+}
+
+// Per-blueprint Terms of Service override (bptos:<id>): a single plain-text
+// block that, when set, replaces the standard Master Services Agreement
+// body wherever that blueprint's terms are shown (sign modal, print
+// modes). Empty/unset means "use the standard MSA text" — nothing changes
+// for a blueprint that's never had this edited.
+async function handleAdminGetTos(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  const id = normalizeBlueprintId(new URL(request.url).searchParams.get('bp'));
+  const text = (await env.BLUEPRINT_AUTH.get(`bptos:${id}`)) || '';
+  return json(200, { ok: true, blueprintId: id, text });
+}
+
+async function handleAdminSaveTos(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+
+  let body;
+  try { body = await request.json(); }
+  catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+
+  const id = normalizeBlueprintId(body.blueprintId);
+  const known = BLUEPRINT_REGISTRY.some((b) => b.id === id) || !!(await env.BLUEPRINT_AUTH.get(`bp:${id}`));
+  if (!known) return json(404, { ok: false, error: 'Unknown blueprint' });
+
+  const text = (body.text || '').toString().slice(0, 50_000);
+  if (text) {
+    await env.BLUEPRINT_AUTH.put(`bptos:${id}`, text);
+  } else {
+    await env.BLUEPRINT_AUTH.delete(`bptos:${id}`);
+  }
+  return json(200, { ok: true, blueprintId: id, text });
+}
+
+async function handlePublicTos(request, env) {
+  const id = normalizeBlueprintId(new URL(request.url).searchParams.get('bp'));
+  const text = (await env.BLUEPRINT_AUTH.get(`bptos:${id}`)) || '';
+  return json(200, { ok: true, blueprintId: id, text });
 }
 
 // In-memory JWKS cache. Workers isolates live long enough that this saves

@@ -179,6 +179,18 @@
     } catch (_) { return null; }
   }
 
+  // Public — no session needed, it's just legal copy — so it works for
+  // both admin-triggered prints and the client's own sign modal/download.
+  async function fetchCustomTerms() {
+    const blueprintId = window.__blueprintId;
+    if (!blueprintId) return '';
+    try {
+      const resp = await fetch('/api/blueprint-tos?bp=' + encodeURIComponent(blueprintId));
+      const data = await resp.json().catch(() => ({}));
+      return (resp.ok && data.ok && data.text) || '';
+    } catch (_) { return ''; }
+  }
+
   async function printShopifyPartnerDocument() {
     ensureModeStyles();
     if (!(window.React && window.ReactDOM && window.UncapMSA)) {
@@ -192,11 +204,12 @@
     document.body.appendChild(wrap);
 
     const brand = (window.__brand && window.__brand.name) || '';
-    const signature = await fetchLatestSignature();
+    const [signature, customTerms] = await Promise.all([fetchLatestSignature(), fetchCustomTerms()]);
     const el = window.React.createElement(window.UncapMSA, {
       company: brand,
       name: (signature && signature.name) || '',
       title: (signature && signature.title) || '',
+      customTerms,
     });
     const root = window.ReactDOM.createRoot(wrap);
     root.render(el);
@@ -298,7 +311,7 @@
     }
     const brand = (window.__brand && window.__brand.name) || '';
     const blueprintId = window.__blueprintId || '';
-    const signature = await fetchLatestSignature();
+    const [signature, customTerms] = await Promise.all([fetchLatestSignature(), fetchCustomTerms()]);
 
     const msaWrap = document.createElement('div');
     msaWrap.className = 'bp-adm-msa-injected';
@@ -307,6 +320,7 @@
       company: brand,
       name: (signature && signature.name) || '',
       title: (signature && signature.title) || '',
+      customTerms,
     });
     const msaRoot = window.ReactDOM.createRoot(msaWrap);
     msaRoot.render(msaEl);

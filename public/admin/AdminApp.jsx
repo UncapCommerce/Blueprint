@@ -463,6 +463,7 @@
     const [showNew, setShowNew] = useState(() => new URLSearchParams(window.location.search).get('new') === '1');
     const [activityBp, setActivityBp] = useState(null); // {id, name}
     const [editExpiryBp, setEditExpiryBp] = useState(null);
+    const [tosBp, setTosBp] = useState(null);           // {id, name} of the row with TOS editor open
     const [printFor, setPrintFor] = useState(null);     // id of row with open print menu
     const [menuPos, setMenuPos] = useState(null);        // viewport position for the open print menu
     const printBtnRefs = useRef({});                     // bp.id -> button DOM node
@@ -593,6 +594,7 @@
           style={{ ...S.btnGhost, color: bp.disabled ? '#064E2E' : '#B3261E', borderColor: bp.disabled ? '#9BDDB0' : '#F0A9A9' }}>
           {bp.disabled ? 'Enable' : 'Disable'}
         </button>
+        <button type="button" style={S.btnGhost} onClick={() => setTosBp(bp)}>TOS</button>
         <span style={{ position: 'relative' }}>
           <button type="button" ref={(el) => { printBtnRefs.current[bp.id] = el; }} style={S.btnGhost}
             onClick={(e) => { e.stopPropagation(); setPrintFor(printFor === bp.id ? null : bp.id); }}>Print ▾</button>
@@ -714,6 +716,7 @@
 
         {activityBp && <ActivityModal bp={activityBp} onClose={() => setActivityBp(null)}/>}
         {editExpiryBp && <ExpiryModal bp={editExpiryBp} onClose={() => setEditExpiryBp(null)} onSaved={() => { setEditExpiryBp(null); load(); }}/>}
+        {tosBp && <TosModal bp={tosBp} onClose={() => setTosBp(null)}/>}
         {showNew && <NewBlueprintModal onClose={() => setShowNew(false)} onSaved={() => { setShowNew(false); load(); }}/>}
       </Page>
     );
@@ -746,6 +749,65 @@
             ) : null}
             <button type="button" style={S.btnGhost} onClick={onClose} disabled={busy}>Cancel</button>
             <button type="button" style={{ ...S.btnLime, opacity: busy || !date ? 0.7 : 1 }} onClick={() => save(false)} disabled={busy || !date}>{busy ? 'Saving…' : 'Save'}</button>
+          </div>
+        </div>
+      </Modal>
+    );
+  }
+
+  // Simple plain-text override for a blueprint's Terms of Service. Empty
+  // means "use the standard Master Services Agreement text" — this is
+  // purely additive, so blueprints nobody has edited are unaffected.
+  function TosModal({ bp, onClose }) {
+    const [text, setText] = useState('');
+    const [loaded, setLoaded] = useState(false);
+    const [busy, setBusy] = useState(false);
+    const [error, setError] = useState('');
+
+    useEffect(() => {
+      let dead = false;
+      api('/api/admin/blueprint-tos?bp=' + encodeURIComponent(bp.id))
+        .then((d) => { if (!dead) { setText(d.text || ''); setLoaded(true); } })
+        .catch((err) => { if (!dead) { setError(err.message); setLoaded(true); } });
+      return () => { dead = true; };
+    }, [bp.id]);
+
+    const save = async () => {
+      setBusy(true); setError('');
+      try {
+        await api('/api/admin/blueprint-tos', {
+          method: 'POST',
+          body: JSON.stringify({ blueprintId: bp.id, text }),
+        });
+        onClose();
+      } catch (err) { setError(err.message); setBusy(false); }
+    };
+
+    return (
+      <Modal title={'Terms of Service · ' + bp.name}
+        sub="Plain text · leave blank to use the standard Master Services Agreement" onClose={onClose} width={720}>
+        <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+          {!loaded ? (
+            <div style={{ padding: 20, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>Loading…</div>
+          ) : (
+            <textarea
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              placeholder="Leave blank to use the standard Uncap Master Services Agreement for this blueprint. Type here to fully replace it with custom terms — shown wherever this blueprint's terms appear (sign popup, printed PDFs)."
+              rows={16}
+              style={{ ...S.input, fontFamily: T.mono, fontSize: 13, lineHeight: 1.5, resize: 'vertical', minHeight: 260 }}
+            />
+          )}
+          {error && <div style={{ color: '#B3261E', fontFamily: T.sans, fontSize: 13 }}>{error}</div>}
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', flexWrap: 'wrap', paddingTop: 4 }}>
+            {text ? (
+              <button type="button" style={{ ...S.btnGhost, marginRight: 'auto', color: '#B3261E', borderColor: '#F0A9A9' }}
+                onClick={() => setText('')} disabled={busy}>Clear · use standard MSA</button>
+            ) : null}
+            <button type="button" style={S.btnGhost} onClick={onClose} disabled={busy}>Cancel</button>
+            <button type="button" style={{ ...S.btnLime, opacity: busy || !loaded ? 0.7 : 1 }} onClick={save} disabled={busy || !loaded}>
+              {busy ? 'Saving…' : 'Save'}
+            </button>
           </div>
         </div>
       </Modal>
