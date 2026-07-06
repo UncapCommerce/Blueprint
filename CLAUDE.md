@@ -35,10 +35,10 @@ React, ReactDOM, and `@babel/standalone` (vendored under `/vendor/`) from
   `/api/build/session/*` (KV-backed quiz resume), then falls through to
   the static assets binding for everything else
 - Production: `blueprint.uncap.com`. Deploys run on every push to
-  `main` via the GitHub Actions workflow
-  (`.github/workflows/deploy.yml`, `npm run deploy` with the
-  `CLOUDFLARE_API_TOKEN` repo secret). Cloudflare's Workers Builds
-  GitHub integration may also be connected as a second pipeline
+  `main` via Cloudflare's native Workers Builds GitHub connection (the
+  Worker is connected directly to this repo in the Cloudflare
+  dashboard) — there is no GitHub Actions deploy workflow and no
+  `CLOUDFLARE_API_TOKEN` repo secret involved
 - `wrangler dev --local` cannot emulate the `cloudflare:email` module on
   the pinned wrangler 3.x — local worker smoke tests fail at startup
   with "No such module". Validate with `wrangler deploy --dry-run` plus
