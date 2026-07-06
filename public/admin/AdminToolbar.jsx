@@ -123,7 +123,30 @@
     requestAnimationFrame(() => { try { window.print(); } catch (_) { cleanup(); } });
   }
 
-  function printShopifyPartnerDocument() {
+  // Looks up the most recent recorded signature for this blueprint so the
+  // printed MSA shows the client's actual name/title instead of a blank
+  // signature line. Falls back to blank if nothing was ever signed (e.g.
+  // printing before approval) or the lookup fails.
+  async function fetchLatestSignature() {
+    const token = window.__bpToken;
+    const blueprintId = window.__blueprintId;
+    if (!token || !blueprintId) return null;
+    try {
+      const resp = await fetch('/api/auth/admin/access-log', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ token, blueprintId }),
+      });
+      const data = await resp.json().catch(() => ({}));
+      if (!resp.ok || !data.ok) return null;
+      const signEvents = (data.events || []).filter((e) => e.type === 'sign');
+      if (!signEvents.length) return null;
+      // Events are already sorted newest-first by the worker.
+      return signEvents[0];
+    } catch (_) { return null; }
+  }
+
+  async function printShopifyPartnerDocument() {
     ensureModeStyles();
     if (!(window.React && window.ReactDOM && window.UncapMSA)) {
       alert('Could not load the Master Services Agreement for printing.');
@@ -136,7 +159,12 @@
     document.body.appendChild(wrap);
 
     const brand = (window.__brand && window.__brand.name) || '';
-    const el = window.React.createElement(window.UncapMSA, { company: brand, name: '', title: '' });
+    const signature = await fetchLatestSignature();
+    const el = window.React.createElement(window.UncapMSA, {
+      company: brand,
+      name: (signature && signature.name) || '',
+      title: (signature && signature.title) || '',
+    });
     const root = window.ReactDOM.createRoot(wrap);
     root.render(el);
 
