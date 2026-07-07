@@ -1,4 +1,4 @@
-name = "blueprint"
+name = "uncapgo"
 main = "worker/index.js"
 compatibility_date = "2025-04-01"
 account_id = "0ff8ba3297e0672ce4b1b53f66496300"
