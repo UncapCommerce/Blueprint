@@ -713,24 +713,27 @@
       setTimeout(() => setCopied(''), 1600);
     };
 
-    const markSigned = async (bp) => {
-      if (!window.confirm(`Mark "${bp.name}" as signed?\n\nUse this only when the client signed a physical/paper copy instead of the digital flow.`)) return;
+    // One dropdown drives all three manual statuses. "Disabled" only sets
+    // the disabled flag; "Signed"/"Open" also clear disabled so the new
+    // status is actually visible (disabled otherwise takes display
+    // precedence over everything else in statusChip/rowStatus).
+    const setStatus = async (bp, next) => {
+      const current = rowStatus(bp);
+      if (next === current) return;
+      if (next === 'disabled' && !window.confirm(`Disable "${bp.name}"?\n\nClients will no longer be able to open or sign in to this blueprint. The team keeps access, and you can re-enable it any time.`)) return;
+      if (next === 'signed' && !window.confirm(`Mark "${bp.name}" as signed?\n\nUse this only when the client signed a physical/paper copy instead of the digital flow.`)) return;
+      if (next === 'open' && current === 'signed' && !window.confirm(`Move "${bp.name}" back to Open?\n\nThis clears its recorded signature.`)) return;
       try {
-        await api('/api/admin/mark-signed', {
-          method: 'POST',
-          body: JSON.stringify({ blueprintId: bp.id }),
-        });
-        load();
-      } catch (err) { setError(err.message); }
-    };
-
-    const toggleDisabled = async (bp) => {
-      if (!bp.disabled && !window.confirm(`Disable "${bp.name}"?\n\nClients will no longer be able to open or sign in to this blueprint. The team keeps access, and you can re-enable it any time.`)) return;
-      try {
-        await api('/api/admin/blueprint-meta', {
-          method: 'POST',
-          body: JSON.stringify({ blueprintId: bp.id, disabled: !bp.disabled }),
-        });
+        if (next === 'disabled') {
+          await api('/api/admin/blueprint-meta', { method: 'POST', body: JSON.stringify({ blueprintId: bp.id, disabled: true }) });
+        } else {
+          if (bp.disabled) await api('/api/admin/blueprint-meta', { method: 'POST', body: JSON.stringify({ blueprintId: bp.id, disabled: false }) });
+          if (next === 'signed') {
+            await api('/api/admin/mark-signed', { method: 'POST', body: JSON.stringify({ blueprintId: bp.id, signed: true }) });
+          } else if (bp.signature) {
+            await api('/api/admin/mark-signed', { method: 'POST', body: JSON.stringify({ blueprintId: bp.id, signed: false }) });
+          }
+        }
         load();
       } catch (err) { setError(err.message); }
     };
@@ -802,13 +805,12 @@
           {copied === bp.id ? <IconCheck/> : <IconShare/>}
         </button>
         <button type="button" title="Activity" aria-label="Activity" style={S.btnIcon} onClick={() => setActivityBp(bp)}><IconActivity/></button>
-        {!bp.signature && (
-          <button type="button" style={S.btnGhost} onClick={() => markSigned(bp)}>Mark signed</button>
-        )}
-        <button type="button" onClick={() => toggleDisabled(bp)}
-          style={{ ...S.btnGhost, color: bp.disabled ? '#064E2E' : '#B3261E', borderColor: bp.disabled ? '#9BDDB0' : '#F0A9A9' }}>
-          {bp.disabled ? 'Enable' : 'Disable'}
-        </button>
+        <select value={rowStatus(bp)} onChange={(e) => setStatus(bp, e.target.value)}
+          style={{ ...S.input, width: 'auto', padding: '6px 10px', fontSize: 12.5, cursor: 'pointer' }}>
+          <option value="open">Open</option>
+          <option value="signed">Signed</option>
+          <option value="disabled">Disabled</option>
+        </select>
         <button type="button" style={S.btnGhost} onClick={() => setTosBp(bp)}>TOS</button>
         <span style={{ position: 'relative' }}>
           <button type="button" ref={(el) => { printBtnRefs.current[bp.id] = el; }} style={S.btnGhost}

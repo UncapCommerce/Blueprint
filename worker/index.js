@@ -332,9 +332,9 @@ export default {
     if (url.pathname === '/api/blueprint-tos' && request.method === 'GET') {
       return handlePublicTos(request, env);
     }
-    // TEMPORARY: one-time manual override to mark a blueprint signed when
-    // the client signed a physical/paper copy instead of using the digital
-    // flow. Remove this route after use.
+    // Manual override backing the admin dashboard's status dropdown, for
+    // marking a blueprint signed when the client signed a physical/paper
+    // copy instead of using the digital flow (or clearing that record).
     if (url.pathname === '/api/admin/mark-signed' && request.method === 'POST') {
       return handleAdminMarkSigned(request, env);
     }
@@ -1036,9 +1036,10 @@ async function handleAdminSaveTos(request, env) {
   return json(200, { ok: true, blueprintId: id, sections: sections && sections.length ? sections : DEFAULT_MSA_SECTIONS, isDefault: !(sections && sections.length) });
 }
 
-// TEMPORARY: writes the bpsigned:<id> rollup directly, for a blueprint
-// that was signed on paper rather than through the digital sign flow.
-// Remove this handler and its route once used.
+// Sets or clears the bpsigned:<id> rollup directly, for the admin
+// dashboard's status dropdown — used both to mark a blueprint signed when
+// the client signed a physical/paper copy instead of the digital flow,
+// and to move a blueprint back to Open (clears the recorded signature).
 async function handleAdminMarkSigned(request, env) {
   const sess = await getAdminSession(request, env);
   if (!sess) return json(401, { ok: false, error: 'Not signed in' });
@@ -1051,6 +1052,11 @@ async function handleAdminMarkSigned(request, env) {
   const id = normalizeBlueprintId(body.blueprintId);
   const known = BLUEPRINT_REGISTRY.some((b) => b.id === id);
   if (!known) return json(404, { ok: false, error: 'Unknown blueprint' });
+
+  if (body.signed === false) {
+    await env.BLUEPRINT_AUTH.delete(`bpsigned:${id}`);
+    return json(200, { ok: true, blueprintId: id, signature: null });
+  }
 
   const record = {
     blueprintId: id,
