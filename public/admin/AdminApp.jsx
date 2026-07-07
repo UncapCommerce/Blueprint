@@ -885,9 +885,11 @@
                       <td style={{ ...S.td, fontFamily: T.mono, fontSize: 12, color: T.fg3, whiteSpace: 'nowrap' }}>{bp.num || '—'}</td>
                       <td style={S.td}>
                         <div style={{ fontWeight: 700 }}>{bp.name}</div>
-                        <div style={{ fontFamily: T.mono, fontSize: 10.5, color: T.fg3, marginTop: 3 }}>
-                          {bp.kind === 'live' ? '/blueprint/' + bp.id + '/' : (bp.website || 'template generation pending')}
-                        </div>
+                        {bp.kind !== 'live' && (
+                          <div style={{ fontFamily: T.mono, fontSize: 10.5, color: T.fg3, marginTop: 3 }}>
+                            {bp.website || 'template generation pending'}
+                          </div>
+                        )}
                       </td>
                       <td style={S.td}>{statusChip(bp)}</td>
                       <td style={{ ...S.td, whiteSpace: 'nowrap' }}>{expiresCell(bp)}</td>
