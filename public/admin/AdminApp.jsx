@@ -986,8 +986,10 @@
       return () => { dead = true; };
     }, [bp.id]);
 
-    const updateBody = (i, value) => {
-      setSections((prev) => prev.map((s, idx) => (idx === i ? { ...s, body: value } : s)));
+    const updateItemBody = (i, j, value) => {
+      setSections((prev) => prev.map((s, idx) => (
+        idx === i ? { ...s, items: s.items.map((it, jdx) => (jdx === j ? { ...it, body: value } : it)) } : s
+      )));
     };
 
     const save = async () => {
@@ -1045,13 +1047,20 @@
                     <span style={{ fontFamily: T.mono, fontSize: 13, color: T.fg3, flexShrink: 0, marginLeft: 10 }}>{openIndex === i ? '−' : '+'}</span>
                   </button>
                   {openIndex === i && (
-                    <div style={{ padding: '0 14px 14px' }}>
-                      <textarea
-                        value={s.body}
-                        onChange={(e) => updateBody(i, e.target.value)}
-                        rows={8}
-                        style={{ ...S.input, fontFamily: T.mono, fontSize: 12.5, lineHeight: 1.5, resize: 'vertical' }}
-                      />
+                    <div style={{ padding: '0 14px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      {(s.items || []).map((it, j) => (
+                        <div key={j}>
+                          {it.label ? (
+                            <div style={{ fontFamily: T.mono, fontSize: 11.5, fontWeight: 700, color: T.fg3, marginBottom: 4 }}>{it.label}</div>
+                          ) : null}
+                          <textarea
+                            value={it.body}
+                            onChange={(e) => updateItemBody(i, j, e.target.value)}
+                            rows={Math.max(2, Math.min(8, Math.ceil(it.body.length / 90)))}
+                            style={{ ...S.input, fontFamily: T.mono, fontSize: 12.5, lineHeight: 1.5, resize: 'vertical' }}
+                          />
+                        </div>
+                      ))}
                     </div>
                   )}
                 </div>

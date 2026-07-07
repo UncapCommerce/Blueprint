@@ -431,9 +431,16 @@
           ? React.createElement('div', { className: 'msa-sections' },
               customSections.map((s, i) => React.createElement('div', { key: i, className: 'msa-clause h' },
                 React.createElement('span', { className: 'msa-num' }, (s.num || (i + 1)) + '.'),
-                React.createElement('p', { className: 'msa-body msa-custom-terms' },
+                React.createElement('div', { className: 'msa-body' },
                   s.title ? React.createElement('span', { className: 'msa-ctitle u' }, s.title + '. ') : null,
-                  s.body
+                  (s.items || []).map((it, j) => React.createElement('p', {
+                    key: j,
+                    className: 'msa-custom-terms',
+                    style: it.label && /^\(/.test(it.label) ? { marginLeft: 18 } : null,
+                  },
+                    it.label ? React.createElement('span', { style: { fontWeight: 600 } }, it.label + ' ') : null,
+                    it.body
+                  ))
                 )
               ))
             )
