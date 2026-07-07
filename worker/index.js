@@ -1116,10 +1116,13 @@ async function handleAdminAttioSearchPeople(request, env) {
 
   // Search by email when the query looks like one, name otherwise — Attio
   // filters a single attribute at a time, so this is a best-effort split
-  // rather than a true OR across both fields.
+  // rather than a true OR across both fields. Both are compound
+  // attributes on the People object (personal-name and email-address
+  // respectively), so the filter has to target the actual sub-field —
+  // filtering the bare attribute slug matches nothing.
   const filter = q.includes('@')
-    ? { email_addresses: { '$contains': q } }
-    : { name: { '$contains': q } };
+    ? { email_addresses: { email_address: { '$contains': q } } }
+    : { name: { full_name: { '$contains': q } } };
 
   let records;
   try {
