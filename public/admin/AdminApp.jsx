@@ -458,6 +458,56 @@
     );
   }
 
+  // Once a company/contact is picked, show a compact summary card with a
+  // clear (✕) button instead of the search box — makes the required,
+  // Attio-only nature of the field unambiguous (no free-text fallback).
+  function SelectedCard({ title, sub, onClear }) {
+    return (
+      <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10, padding: '10px 12px', background: T.cream, border: `1px solid ${T.line}`, borderRadius: 8 }}>
+        <div style={{ minWidth: 0 }}>
+          <div style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 13.5, color: T.fg1 }}>{title}</div>
+          {sub ? <div style={{ fontFamily: T.mono, fontSize: 11, color: T.fg3, marginTop: 3 }}>{sub}</div> : null}
+        </div>
+        <button type="button" aria-label="Clear" onClick={onClear}
+          style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: 999, border: 'none', background: T.line, color: T.fg1, cursor: 'pointer', fontSize: 11, lineHeight: 1, padding: 0, flexShrink: 0 }}>✕</button>
+      </div>
+    );
+  }
+
+  // Required single-select company field: search-and-pick only, no
+  // free-text fallback. Once picked, shows a read-only summary of
+  // whatever website/address Attio has on file for that company.
+  function CompanyPicker({ company, onPick, onClear }) {
+    return (
+      <div>
+        <label style={S.label}>Company</label>
+        {company ? (
+          <SelectedCard
+            title={company.name || '(unnamed)'}
+            sub={[company.website, company.address].filter(Boolean).join(' · ') || 'No website/address on file in Attio'}
+            onClear={onClear}
+          />
+        ) : (
+          <AttioTypeahead kind="companies" placeholder="Search Attio companies…" autoFocus onPick={onPick}/>
+        )}
+      </div>
+    );
+  }
+
+  // Required single-select Client Lead field — same pattern as CompanyPicker.
+  function LeadContactPicker({ contact, onPick, onClear }) {
+    return (
+      <div>
+        <label style={S.label}>Lead contact</label>
+        {contact ? (
+          <SelectedCard title={contact.name || contact.email} sub={contact.email} onClear={onClear}/>
+        ) : (
+          <AttioTypeahead kind="people" placeholder="Search Attio contacts…" onPick={onPick}/>
+        )}
+      </div>
+    );
+  }
+
   // ── Discoveries ──────────────────────────────────────────────────────
   function Discoveries() {
     const isMobile = useIsMobile();
@@ -534,26 +584,25 @@
   }
 
   function NewDiscoveryModal({ onClose, onSaved }) {
-    const [company, setCompany] = useState('');
-    const [companyAttioId, setCompanyAttioId] = useState('');
-    const [client, setClient]   = useState('');
+    const [company, setCompany] = useState(null);       // {attioId, name, domain, address}
     const [leadContact, setLeadContact] = useState(null); // {attioId, name, email}
     const [associatedContacts, setAssociatedContacts] = useState([]);
-    const [address, setAddress] = useState('');
-    const [website, setWebsite] = useState('');
+    const [expiresAt, setExpiresAt] = useState('');
     const [busy, setBusy]       = useState(false);
     const [error, setError]     = useState('');
 
     const save = async (e) => {
       e.preventDefault();
-      if (!company.trim()) { setError('Company is required'); return; }
+      if (!company) { setError('Pick a company from Attio'); return; }
+      if (!leadContact) { setError('Pick a Client Lead from Attio'); return; }
       setBusy(true); setError('');
       try {
         await api('/api/admin/discoveries', {
           method: 'POST',
           body: JSON.stringify({
-            company: company.trim(), client: client.trim(), address: address.trim(), website: website.trim(),
-            companyAttioId, leadContact, associatedContacts,
+            company: company.name, companyAttioId: company.attioId,
+            website: company.domain || '', address: company.address || '',
+            leadContact, associatedContacts, expiresAt,
           }),
         });
         onSaved();
@@ -561,17 +610,12 @@
     };
 
     return (
-      <Modal title="New discovery" sub="Company basics · technical questions come next phase" onClose={onClose}>
+      <Modal title="New discovery" sub="Company + contacts from Attio · technical questions come next phase" onClose={onClose}>
         <form onSubmit={save} style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <AttioTypeahead kind="companies" label="Find company in Attio" placeholder="Search Attio companies…" autoFocus
-            onPick={(c) => { setCompany(c.name || ''); setCompanyAttioId(c.attioId || ''); if (c.domain) setWebsite(c.domain); }}/>
-          <Field label="Company" value={company} onChange={(v) => { setCompany(v); setCompanyAttioId(''); }} placeholder="Acme Industrial Co."/>
-          <AttioTypeahead kind="people" label="Find Client Lead in Attio" placeholder="Search Attio contacts…"
-            onPick={(p) => { setLeadContact(p); setClient(p.name ? `${p.name}${p.email ? ' (' + p.email + ')' : ''}` : p.email); }}/>
-          <Field label="Client lead" value={client} onChange={(v) => { setClient(v); setLeadContact(null); }} placeholder="Jane Doe, Head of Ecommerce"/>
+          <CompanyPicker company={company} onPick={setCompany} onClear={() => setCompany(null)}/>
+          <LeadContactPicker contact={leadContact} onPick={setLeadContact} onClear={() => setLeadContact(null)}/>
           <AssociatedContactsPicker contacts={associatedContacts} onChange={setAssociatedContacts} excludeEmail={leadContact && leadContact.email}/>
-          <Field label="Address" value={address} onChange={setAddress} placeholder="100 Main St, Chicago, IL"/>
-          <Field label="Website" value={website} onChange={setWebsite} placeholder="acme.com"/>
+          <Field label="Expiration date (valid through)" type="date" value={expiresAt} onChange={setExpiresAt}/>
           {error && <div style={{ color: '#B3261E', fontFamily: T.sans, fontSize: 13 }}>{error}</div>}
           <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', paddingTop: 4 }}>
             <button type="button" style={S.btnGhost} onClick={onClose} disabled={busy}>Cancel</button>
@@ -1053,28 +1097,25 @@
   }
 
   function NewBlueprintModal({ onClose, onSaved }) {
-    const [companyName, setCompanyName] = useState('');
-    const [companyAttioId, setCompanyAttioId] = useState('');
-    const [website, setWebsite]         = useState('');
-    const [leadClient, setLeadClient]   = useState('');
+    const [company, setCompany] = useState(null);       // {attioId, name, domain, address}
     const [leadContact, setLeadContact] = useState(null); // {attioId, name, email}
     const [associatedContacts, setAssociatedContacts] = useState([]);
-    const [address, setAddress]         = useState('');
     const [expiresAt, setExpiresAt]     = useState('');
     const [busy, setBusy]               = useState(false);
     const [error, setError]             = useState('');
 
     const save = async (e) => {
       e.preventDefault();
-      if (!companyName.trim() || !website.trim()) { setError('Company name and website are required'); return; }
+      if (!company) { setError('Pick a company from Attio'); return; }
+      if (!leadContact) { setError('Pick a Client Lead from Attio'); return; }
       setBusy(true); setError('');
       try {
         await api('/api/admin/blueprints', {
           method: 'POST',
           body: JSON.stringify({
-            companyName: companyName.trim(), website: website.trim(),
-            leadClient: leadClient.trim(), address: address.trim(),
-            expiresAt, companyAttioId, leadContact, associatedContacts,
+            companyName: company.name, companyAttioId: company.attioId,
+            website: company.domain || '', address: company.address || '',
+            leadContact, associatedContacts, expiresAt,
           }),
         });
         onSaved();
@@ -1084,20 +1125,14 @@
     return (
       <Modal title="New blueprint" sub="Saved as a draft · template generation is the next phase" onClose={onClose} width={560}>
         <form onSubmit={save} style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <AttioTypeahead kind="companies" label="Find company in Attio" placeholder="Search Attio companies…" autoFocus
-            onPick={(c) => { setCompanyName(c.name || ''); setCompanyAttioId(c.attioId || ''); if (c.domain) setWebsite(c.domain); }}/>
-          <Field label="Company name" value={companyName} onChange={(v) => { setCompanyName(v); setCompanyAttioId(''); }} placeholder="Acme Industrial Co."/>
-          <Field label="Client website" value={website} onChange={setWebsite} placeholder="acme.com"/>
-          <AttioTypeahead kind="people" label="Find Client Lead in Attio" placeholder="Search Attio contacts…"
-            onPick={(p) => { setLeadContact(p); setLeadClient(p.name ? `${p.name}${p.email ? ' (' + p.email + ')' : ''}` : p.email); }}/>
-          <Field label="Lead client" value={leadClient} onChange={(v) => { setLeadClient(v); setLeadContact(null); }} placeholder="Jane Doe, Head of Ecommerce"/>
+          <CompanyPicker company={company} onPick={setCompany} onClear={() => setCompany(null)}/>
+          <LeadContactPicker contact={leadContact} onPick={setLeadContact} onClear={() => setLeadContact(null)}/>
           <AssociatedContactsPicker contacts={associatedContacts} onChange={setAssociatedContacts} excludeEmail={leadContact && leadContact.email}/>
           {(leadContact || associatedContacts.length > 0) && (
             <div style={{ padding: '10px 12px', background: '#EEF0FE', border: '1px solid #C3C9F5', borderRadius: 8, fontFamily: T.sans, fontSize: 12.5, color: '#3A44C4' }}>
               This blueprint will be restricted to {[leadContact, ...associatedContacts].filter(Boolean).length} email{[leadContact, ...associatedContacts].filter(Boolean).length === 1 ? '' : 's'} — only they (and the Uncap team) will be able to view it.
             </div>
           )}
-          <Field label="Company address" value={address} onChange={setAddress} placeholder="100 Main St, Chicago, IL"/>
           <Field label="Expiration date (valid through)" type="date" value={expiresAt} onChange={setExpiresAt}/>
           {error && <div style={{ color: '#B3261E', fontFamily: T.sans, fontSize: 13 }}>{error}</div>}
           <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', paddingTop: 4 }}>

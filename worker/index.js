@@ -954,7 +954,6 @@ async function handleAdminCreateBlueprint(request, env) {
 
   const name       = (body.companyName || '').toString().trim().slice(0, 200);
   const website    = (body.website     || '').toString().trim().slice(0, 300);
-  const leadClient = (body.leadClient  || '').toString().trim().slice(0, 200);
   const address    = (body.address     || '').toString().trim().slice(0, 300);
   const expiresAt  = (body.expiresAt   || '').toString().trim();
   const companyAttioId    = (body.companyAttioId || '').toString().trim().slice(0, 100);
@@ -962,8 +961,9 @@ async function handleAdminCreateBlueprint(request, env) {
   const associatedContacts = sanitizeContacts(body.associatedContacts).filter(
     (c) => !leadContact || c.email !== leadContact.email
   );
-  if (!name)    return json(400, { ok: false, error: 'Company name is required' });
-  if (!website) return json(400, { ok: false, error: 'Client website is required' });
+  const leadClient = leadContact ? (leadContact.name || leadContact.email) : '';
+  if (!name || !companyAttioId) return json(400, { ok: false, error: 'Pick a company from Attio' });
+  if (!leadContact) return json(400, { ok: false, error: 'Pick a Client Lead from Attio' });
   if (expiresAt && !/^\d{4}-\d{2}-\d{2}$/.test(expiresAt)) {
     return json(400, { ok: false, error: 'Expiration must be a YYYY-MM-DD date' });
   }
@@ -1084,6 +1084,24 @@ function attioFirstText(values) {
   return (v && (v.value || v.full_name || v.domain || v.email_address)) || '';
 }
 
+// Best-effort address lookup: Attio workspaces vary in whether/where a
+// company's address lives (custom attribute, or a standard "location"-type
+// field under one of a few common slugs). Tries each candidate and
+// formats whichever is present; blank if the workspace has none of them.
+function attioFirstAddress(values) {
+  const candidates = ['primary_location', 'address', 'location', 'headquarters'];
+  for (const slug of candidates) {
+    const arr = values && values[slug];
+    if (!Array.isArray(arr) || !arr.length) continue;
+    const v = arr[0];
+    if (!v) continue;
+    if (typeof v.value === 'string' && v.value) return v.value;
+    const parts = [v.line_1, v.line_2, v.locality, v.region, v.postcode, v.country_code].filter(Boolean);
+    if (parts.length) return parts.join(', ');
+  }
+  return '';
+}
+
 async function handleAdminAttioSearchCompanies(request, env) {
   const sess = await getAdminSession(request, env);
   if (!sess) return json(401, { ok: false, error: 'Not signed in' });
@@ -1102,6 +1120,7 @@ async function handleAdminAttioSearchCompanies(request, env) {
     attioId: r.id && r.id.record_id,
     name: attioFirstText(r.values && r.values.name),
     domain: attioFirstText(r.values && r.values.domains),
+    address: attioFirstAddress(r.values),
   })).filter((c) => c.attioId);
 
   return json(200, { ok: true, companies });
@@ -1167,20 +1186,25 @@ async function handleAdminCreateDiscovery(request, env) {
   catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
 
   const company = (body.company || '').toString().trim().slice(0, 200);
-  const client  = (body.client  || '').toString().trim().slice(0, 200);
   const address = (body.address || '').toString().trim().slice(0, 300);
   const website = (body.website || '').toString().trim().slice(0, 300);
+  const expiresAt = (body.expiresAt || '').toString().trim();
   const companyAttioId = (body.companyAttioId || '').toString().trim().slice(0, 100);
   const leadContact       = sanitizeContact(body.leadContact);
   const associatedContacts = sanitizeContacts(body.associatedContacts).filter(
     (c) => !leadContact || c.email !== leadContact.email
   );
-  if (!company) return json(400, { ok: false, error: 'Company is required' });
+  const client = leadContact ? (leadContact.name || leadContact.email) : '';
+  if (!company || !companyAttioId) return json(400, { ok: false, error: 'Pick a company from Attio' });
+  if (!leadContact) return json(400, { ok: false, error: 'Pick a Client Lead from Attio' });
+  if (expiresAt && !/^\d{4}-\d{2}-\d{2}$/.test(expiresAt)) {
+    return json(400, { ok: false, error: 'Expiration must be a YYYY-MM-DD date' });
+  }
 
   const ts = Date.now();
   const id = `${(9_999_999_999_999 - ts).toString(36).padStart(10, '0')}:${genRandSlug()}`;
   const rec = {
-    company, client, address, website,
+    company, client, address, website, expiresAt,
     companyAttioId, leadContact, associatedContacts,
     status: 'new',
     createdAt: new Date(ts).toISOString(),
