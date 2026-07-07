@@ -332,6 +332,12 @@ export default {
     if (url.pathname === '/api/blueprint-tos' && request.method === 'GET') {
       return handlePublicTos(request, env);
     }
+    // TEMPORARY: one-time manual override to mark a blueprint signed when
+    // the client signed a physical/paper copy instead of using the digital
+    // flow. Remove this route after use.
+    if (url.pathname === '/api/admin/mark-signed' && request.method === 'POST') {
+      return handleAdminMarkSigned(request, env);
+    }
 
     // /blueprint/<id>/<rest> is a transparent alias for the blueprint's
     // actual static files at /<dir>/<rest> — no files moved, this Worker
@@ -1028,6 +1034,35 @@ async function handleAdminSaveTos(request, env) {
     await env.BLUEPRINT_AUTH.delete(`bptos:${id}`);
   }
   return json(200, { ok: true, blueprintId: id, sections: sections && sections.length ? sections : DEFAULT_MSA_SECTIONS, isDefault: !(sections && sections.length) });
+}
+
+// TEMPORARY: writes the bpsigned:<id> rollup directly, for a blueprint
+// that was signed on paper rather than through the digital sign flow.
+// Remove this handler and its route once used.
+async function handleAdminMarkSigned(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+
+  let body;
+  try { body = await request.json(); }
+  catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+
+  const id = normalizeBlueprintId(body.blueprintId);
+  const known = BLUEPRINT_REGISTRY.some((b) => b.id === id);
+  if (!known) return json(404, { ok: false, error: 'Unknown blueprint' });
+
+  const record = {
+    blueprintId: id,
+    email: '',
+    name: (body.name || '').toString().trim().slice(0, 200) || 'Signed on paper (manual entry)',
+    title: (body.title || '').toString().trim().slice(0, 200) || 'Manual entry',
+    signedAt: new Date().toISOString(),
+    ip: '',
+    userAgent: 'manual-admin-entry',
+  };
+  await env.BLUEPRINT_AUTH.put(`bpsigned:${id}`, JSON.stringify(record));
+  return json(200, { ok: true, blueprintId: id, signature: record });
 }
 
 // Public — no session needed, it's just legal copy. Unlike the admin GET,
