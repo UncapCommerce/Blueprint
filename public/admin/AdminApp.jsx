@@ -992,6 +992,40 @@
       )));
     };
 
+    const updateItemLabel = (i, j, value) => {
+      setSections((prev) => prev.map((s, idx) => (
+        idx === i ? { ...s, items: s.items.map((it, jdx) => (jdx === j ? { ...it, label: value } : it)) } : s
+      )));
+    };
+
+    const updateSectionMeta = (i, field, value) => {
+      setSections((prev) => prev.map((s, idx) => (idx === i ? { ...s, [field]: value } : s)));
+    };
+
+    const addItem = (i) => {
+      setSections((prev) => prev.map((s, idx) => (
+        idx === i ? { ...s, items: [...(s.items || []), { label: '', body: '' }] } : s
+      )));
+    };
+
+    const deleteItem = (i, j) => {
+      setSections((prev) => prev.map((s, idx) => (
+        idx === i ? { ...s, items: s.items.filter((_, jdx) => jdx !== j) } : s
+      )));
+    };
+
+    const addSection = () => {
+      setSections((prev) => {
+        setOpenIndex(prev.length);
+        return [...prev, { num: String(prev.length + 1), title: 'New Section', items: [{ label: '', body: '' }] }];
+      });
+    };
+
+    const deleteSection = (i) => {
+      setSections((prev) => prev.filter((_, idx) => idx !== i));
+      setOpenIndex((cur) => (cur === i ? null : cur));
+    };
+
     const save = async () => {
       setBusy(true); setError('');
       try {
@@ -1037,35 +1071,62 @@
             <div style={{ maxHeight: '55vh', overflowY: 'auto', border: `1px solid ${T.line}`, borderRadius: 8 }}>
               {sections.map((s, i) => (
                 <div key={i} style={{ borderBottom: i < sections.length - 1 ? `1px solid ${T.line}` : 'none' }}>
-                  <button type="button" onClick={() => setOpenIndex(openIndex === i ? null : i)}
-                    style={{
-                      display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center',
-                      padding: '11px 14px', background: openIndex === i ? T.cream : T.paper, border: 'none',
-                      cursor: 'pointer', textAlign: 'left', fontFamily: T.sans, fontSize: 13.5, fontWeight: 600, color: T.fg1,
-                    }}>
-                    <span>§{s.num} {s.title}</span>
-                    <span style={{ fontFamily: T.mono, fontSize: 13, color: T.fg3, flexShrink: 0, marginLeft: 10 }}>{openIndex === i ? '−' : '+'}</span>
-                  </button>
+                  <div style={{ display: 'flex', alignItems: 'stretch' }}>
+                    <button type="button" onClick={() => setOpenIndex(openIndex === i ? null : i)}
+                      style={{
+                        display: 'flex', flex: 1, minWidth: 0, justifyContent: 'space-between', alignItems: 'center',
+                        padding: '11px 14px', background: openIndex === i ? T.cream : T.paper, border: 'none',
+                        cursor: 'pointer', textAlign: 'left', fontFamily: T.sans, fontSize: 13.5, fontWeight: 600, color: T.fg1,
+                      }}>
+                      <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>§{s.num} {s.title}</span>
+                      <span style={{ fontFamily: T.mono, fontSize: 13, color: T.fg3, flexShrink: 0, marginLeft: 10 }}>{openIndex === i ? '−' : '+'}</span>
+                    </button>
+                    <button type="button" title="Delete section" onClick={() => deleteSection(i)}
+                      style={{ flexShrink: 0, width: 38, background: openIndex === i ? T.cream : T.paper, border: 'none', borderLeft: `1px solid ${T.line}`, cursor: 'pointer', color: '#B3261E', fontFamily: T.sans, fontSize: 15 }}>
+                      ×
+                    </button>
+                  </div>
                   {openIndex === i && (
                     <div style={{ padding: '0 14px 14px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+                      <div style={{ display: 'flex', gap: 8 }}>
+                        <input value={s.num} onChange={(e) => updateSectionMeta(i, 'num', e.target.value)}
+                          placeholder="§ num" style={{ ...S.input, width: 70, fontFamily: T.mono, fontSize: 12.5 }} />
+                        <input value={s.title} onChange={(e) => updateSectionMeta(i, 'title', e.target.value)}
+                          placeholder="Section title" style={{ ...S.input, flex: 1, fontFamily: T.sans, fontSize: 13 }} />
+                      </div>
                       {(s.items || []).map((it, j) => (
-                        <div key={j}>
-                          {it.label ? (
-                            <div style={{ fontFamily: T.mono, fontSize: 11.5, fontWeight: 700, color: T.fg3, marginBottom: 4 }}>{it.label}</div>
-                          ) : null}
-                          <textarea
-                            value={it.body}
-                            onChange={(e) => updateItemBody(i, j, e.target.value)}
-                            rows={Math.max(2, Math.min(8, Math.ceil(it.body.length / 90)))}
-                            style={{ ...S.input, fontFamily: T.mono, fontSize: 12.5, lineHeight: 1.5, resize: 'vertical' }}
-                          />
+                        <div key={j} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <input value={it.label} onChange={(e) => updateItemLabel(i, j, e.target.value)}
+                              placeholder="label (e.g. 2.1 or (a))"
+                              style={{ ...S.input, width: 140, fontFamily: T.mono, fontSize: 11.5, fontWeight: 700, color: T.fg3, marginBottom: 4 }} />
+                            <textarea
+                              value={it.body}
+                              onChange={(e) => updateItemBody(i, j, e.target.value)}
+                              rows={Math.max(2, Math.min(8, Math.ceil(it.body.length / 90)))}
+                              style={{ ...S.input, fontFamily: T.mono, fontSize: 12.5, lineHeight: 1.5, resize: 'vertical' }}
+                            />
+                          </div>
+                          <button type="button" title="Delete point" onClick={() => deleteItem(i, j)}
+                            style={{ flexShrink: 0, marginTop: 2, width: 26, height: 26, borderRadius: 6, background: 'transparent', border: `1px solid ${T.line}`, cursor: 'pointer', color: '#B3261E', fontFamily: T.sans, fontSize: 14, lineHeight: 1 }}>
+                            ×
+                          </button>
                         </div>
                       ))}
+                      <button type="button" onClick={() => addItem(i)}
+                        style={{ ...S.btnGhost, alignSelf: 'flex-start', padding: '5px 12px', fontSize: 12.5 }}>
+                        + Add point
+                      </button>
                     </div>
                   )}
                 </div>
               ))}
             </div>
+          )}
+          {loaded && (
+            <button type="button" onClick={addSection} style={{ ...S.btnGhost, alignSelf: 'flex-start', padding: '6px 14px', fontSize: 13 }}>
+              + Add section
+            </button>
           )}
           {error && <div style={{ color: '#B3261E', fontFamily: T.sans, fontSize: 13 }}>{error}</div>}
           <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', flexWrap: 'wrap', paddingTop: 4 }}>
