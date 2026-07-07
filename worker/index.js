@@ -102,7 +102,7 @@ export default {
         legacyPath: legacyBlueprintRedirectPath(url.pathname),
         bpMatchGroups: bpMatch ? [bpMatch[1], bpMatch[2] || null] : null,
         resolvedEntry: entry || null,
-        rewrittenAssetPath: entry ? `/${entry.dir}${bpMatch[2] || '/'}` : null,
+        rewrittenAssetPath: entry ? `/${entry.dir}${(bpMatch[2] || '/') === '/' ? '/index.html' : (bpMatch[2] || '/')}` : null,
         cf: request.cf || null,
       }, null, 2), { headers: { 'content-type': 'application/json' } });
     }
@@ -223,8 +223,13 @@ export default {
             if (!adminSess) return disabledBlueprintPage();
           }
         }
+        // Resolve the directory-index case ourselves rather than relying
+        // on Static Assets' automatic index.html-for-trailing-slash
+        // behavior, which may not apply the same way to a synthetically
+        // constructed Request as it does to the original incoming one.
+        const assetPath = rest === '/' ? '/index.html' : rest;
         const assetUrl = new URL(url.toString());
-        assetUrl.pathname = `/${entry.dir}${rest}`;
+        assetUrl.pathname = `/${entry.dir}${assetPath}`;
         return env.ASSETS.fetch(new Request(assetUrl.toString(), request));
       }
       // Unknown slug under /blueprint/ — fall through to the normal
