@@ -6,6 +6,10 @@ workers_dev = false
 preview_urls = false
 
 routes = [
+  { pattern = "go.uncap.com", custom_domain = true },
+  # Kept attached so old blueprint.uncap.com/<Brand>/ links (some already
+  # signed by clients) 301-redirect to their new go.uncap.com/blueprint/<id>/
+  # home instead of breaking. See the redirect block at the top of fetch().
   { pattern = "blueprint.uncap.com", custom_domain = true }
 ]
 

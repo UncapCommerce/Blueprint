@@ -10,12 +10,21 @@ Assets in `public/`. There is **no build step** — `index.html` loads
 React, ReactDOM, and `@babel/standalone` (vendored under `/vendor/`) from
 `<script>` tags, and Babel transpiles `.jsx` files in the browser.
 
-- Root page: the **Blueprint admin app** (`public/index.html` +
-  `public/admin/AdminApp.jsx`). Google sign-in (Google Identity
-  Services), reserved for `@uncap.com` accounts. Sessions live in KV
-  (`admin_session:<token>`) behind an HttpOnly `bp_admin` cookie.
-  Sections: Home / Discoveries / Blueprints (Preview, Share, Activity,
-  Print per blueprint, plus draft creation)
+- Root page (`/` on `go.uncap.com`): the **Blueprint admin app**
+  (`public/index.html` + `public/admin/AdminApp.jsx`). Google sign-in
+  (Google Identity Services), reserved for `@uncap.com` accounts.
+  Sessions live in KV (`admin_session:<token>`) behind an HttpOnly
+  `bp_admin` cookie. Sections: Discoveries / Blueprints (Preview,
+  Share, Activity, TOS, Print per blueprint, plus draft creation)
+- Every blueprint's public URL is `/blueprint/<id>/` (e.g.
+  `/blueprint/mitutoyo/`), not its physical folder name. `worker/index.js`
+  transparently rewrites `/blueprint/<id>/<rest>` to `/<dir>/<rest>`
+  before handing the request to Static Assets — the physical
+  `public/<Brand>/` layout is unchanged, only the public-facing URL
+  differs from the folder name. `blueprint.uncap.com` stays attached to
+  this same Worker purely to 301-redirect old bare `/<Brand>/` links
+  (some already signed by clients) to their new `/blueprint/<id>/` home
+  on `go.uncap.com`
 - Google OAuth Client ID: `GOOGLE_CLIENT_ID_FALLBACK` constant in
   `worker/index.js` (a public value; hardcoded because `--keep-vars`
   means wrangler.toml var edits never reach the worker). A
@@ -34,7 +43,7 @@ React, ReactDOM, and `@babel/standalone` (vendored under `/vendor/`) from
 - Worker handles `/api/checkout/*` (Stripe SetupIntents) and
   `/api/build/session/*` (KV-backed quiz resume), then falls through to
   the static assets binding for everything else
-- Production: `blueprint.uncap.com`. Deploys run on every push to
+- Production: `go.uncap.com`. Deploys run on every push to
   `main` via Cloudflare's native Workers Builds GitHub connection (the
   Worker is connected directly to this repo in the Cloudflare
   dashboard) — there is no GitHub Actions deploy workflow and no
@@ -135,19 +144,25 @@ anything that rewrites already-pushed commits).
 
 ## Testing the deploy after merge
 
-`blueprint.uncap.com` is the production target. After a deploy the fast
-checks are:
+`go.uncap.com` is the production target. After a deploy the fast checks
+are:
 
 ```bash
 # Asset cache headers (should be max-age=31536000, immutable)
-curl -sI https://blueprint.uncap.com/vendor/react.production.min.js | head
+curl -sI https://go.uncap.com/vendor/react.production.min.js | head
 
 # Worker still serving HTML
-curl -s https://blueprint.uncap.com/ | head -20
+curl -s https://go.uncap.com/ | head -20
+
+# A blueprint resolves under its new /blueprint/<id>/ path
+curl -s -o /dev/null -w '%{http_code}\n' https://go.uncap.com/blueprint/mitutoyo/
+
+# Old link still redirects (expect 301 -> go.uncap.com/blueprint/mitutoyo/)
+curl -sI https://blueprint.uncap.com/Mitutoyo/ | head -5
 
 # /build quiz session API
 curl -s -o /dev/null -w '%{http_code}\n' \
-  https://blueprint.uncap.com/api/build/session?id=deadbeefdeadbeef
+  https://go.uncap.com/api/build/session?id=deadbeefdeadbeef
 # Expect 404 (session not found) or 503 (KV missing) — both prove the
 # worker is routing
 ```

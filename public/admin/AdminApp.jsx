@@ -705,7 +705,7 @@
       };
     }, [printFor, isMobile]);
 
-    const shareUrl = (bp) => `${window.location.origin}/${bp.dir}/`;
+    const shareUrl = (bp) => `${window.location.origin}/blueprint/${bp.id}/`;
     const copyShare = async (bp) => {
       try { await navigator.clipboard.writeText(shareUrl(bp)); }
       catch (_) { window.prompt('Copy the client link:', shareUrl(bp)); }
@@ -785,7 +785,7 @@
     // One actions row, shared by the desktop table and the mobile cards.
     const rowActions = (bp) => (
       <span style={{ display: 'inline-flex', gap: 8, flexWrap: 'wrap', justifyContent: isMobile ? 'flex-start' : 'flex-end' }}>
-        <a href={'/' + bp.dir + '/'} target="_blank" rel="noreferrer" title="Preview" aria-label="Preview"
+        <a href={'/blueprint/' + bp.id + '/'} target="_blank" rel="noreferrer" title="Preview" aria-label="Preview"
           style={{ ...S.btnIcon, textDecoration: 'none' }}><IconEye/></a>
         <button type="button" title={copied === bp.id ? 'Copied ✓' : 'Share'} aria-label="Share" style={S.btnIcon} onClick={() => copyShare(bp)}>
           {copied === bp.id ? <IconCheck/> : <IconShare/>}
@@ -811,7 +811,7 @@
                 ['shopify', 'For Shopify Partner Program', 'Key sections + Master Services Agreement'],
                 ['client', 'For the Client', 'Whole document + terms + signature audit trail']].map(([mode, l, sub]) => (
                 <button key={mode} type="button"
-                  onClick={() => { setPrintFor(null); window.open('/' + bp.dir + '/?bpPrint=' + mode, '_blank'); }}
+                  onClick={() => { setPrintFor(null); window.open('/blueprint/' + bp.id + '/?bpPrint=' + mode, '_blank'); }}
                   style={{ background: 'transparent', border: 'none', color: '#fff', textAlign: 'left', padding: '9px 11px', borderRadius: 6, cursor: 'pointer', fontFamily: T.mono, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', display: 'flex', flexDirection: 'column', gap: 3 }}>
                   {l}
                   <span style={{ fontSize: 9, letterSpacing: '0.02em', textTransform: 'none', opacity: 0.6, fontWeight: 500 }}>{sub}</span>
@@ -886,7 +886,7 @@
                       <td style={S.td}>
                         <div style={{ fontWeight: 700 }}>{bp.name}</div>
                         <div style={{ fontFamily: T.mono, fontSize: 10.5, color: T.fg3, marginTop: 3 }}>
-                          {bp.kind === 'live' ? '/' + bp.dir + '/' : (bp.website || 'template generation pending')}
+                          {bp.kind === 'live' ? '/blueprint/' + bp.id + '/' : (bp.website || 'template generation pending')}
                         </div>
                       </td>
                       <td style={S.td}>{statusChip(bp)}</td>

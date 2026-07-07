@@ -68,9 +68,45 @@ const BLUEPRINT_ALLOWLISTS = {
   ],
 };
 
+// The one true domain going forward. blueprint.uncap.com stays attached
+// to this same Worker (see wrangler.toml) purely so old links — some
+// already signed by real clients — 301 to their new home here instead of
+// breaking.
+const GO_HOST = 'go.uncap.com';
+
+// Old blueprint links were bare /<Brand>/... (e.g. /Mitutoyo/). New ones
+// are /blueprint/<id>/... (e.g. /blueprint/mitutoyo/). Returns the new
+// path if `pathname` matches a known blueprint's old dir, else null.
+function legacyBlueprintRedirectPath(pathname) {
+  const m = pathname.match(/^\/([A-Za-z0-9-]+)(\/.*)?$/);
+  if (!m) return null;
+  const entry = BLUEPRINT_REGISTRY.find((b) => b.dir === m[1]);
+  if (!entry) return null;
+  return `/blueprint/${entry.id}${m[2] || '/'}`;
+}
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
+
+    // Redirect anything hitting the old domain, and any old-style bare
+    // /<Brand>/ path even if it somehow reaches the new domain, to their
+    // go.uncap.com home — new-style /blueprint/<id>/ for blueprint pages,
+    // same path otherwise (admin dashboard, /build, etc. all live here
+    // unchanged, just under the new host).
+    if (request.method === 'GET' || request.method === 'HEAD') {
+      const legacyPath = legacyBlueprintRedirectPath(url.pathname);
+      if (url.hostname !== GO_HOST || legacyPath) {
+        const dest = new URL(url.toString());
+        dest.protocol = 'https:';
+        dest.hostname = GO_HOST;
+        dest.port = '';
+        if (legacyPath) dest.pathname = legacyPath;
+        if (dest.toString() !== url.toString()) {
+          return Response.redirect(dest.toString(), 301);
+        }
+      }
+    }
 
     if (url.pathname === '/api/auth/request-code' && request.method === 'POST') {
       return handleRequestCode(request, env);
@@ -147,19 +183,34 @@ export default {
       return handlePublicTos(request, env);
     }
 
-    // Disabled blueprints: block the page document for anyone without an
-    // admin session. Only fires on the blueprint index paths themselves,
-    // so regular asset traffic never pays the KV lookup.
-    if (request.method === 'GET') {
-      const m = url.pathname.match(/^\/([A-Za-z0-9-]+)\/(?:index\.html)?$/);
-      const entry = m && BLUEPRINT_REGISTRY.find((b) => b.dir === m[1]);
+    // /blueprint/<id>/<rest> is a transparent alias for the blueprint's
+    // actual static files at /<dir>/<rest> — no files moved, this Worker
+    // just rewrites the request before handing it to Static Assets. Every
+    // sub-resource (CSS/JS/images) the page requests relatively also
+    // passes back through this same fetch handler, so the whole page
+    // resolves correctly under its new URL without touching any of the
+    // per-blueprint HTML/JS.
+    const bpMatch = url.pathname.match(/^\/blueprint\/([a-z0-9-]+)(\/.*)?$/);
+    if (bpMatch) {
+      const entry = BLUEPRINT_REGISTRY.find((b) => b.id === bpMatch[1]);
       if (entry) {
-        const meta = await getBpMeta(env, entry.id);
-        if (meta.disabled) {
-          const adminSess = await getAdminSession(request, env);
-          if (!adminSess) return disabledBlueprintPage();
+        // Disabled blueprints: block the page document itself for anyone
+        // without an admin session. Only the index path, so regular
+        // sub-asset traffic (CSS/JS/images) never pays the KV lookup.
+        const rest = bpMatch[2] || '/';
+        if (request.method === 'GET' && (rest === '/' || rest === '/index.html')) {
+          const meta = await getBpMeta(env, entry.id);
+          if (meta.disabled) {
+            const adminSess = await getAdminSession(request, env);
+            if (!adminSess) return disabledBlueprintPage();
+          }
         }
+        const assetUrl = new URL(url.toString());
+        assetUrl.pathname = `/${entry.dir}${rest}`;
+        return env.ASSETS.fetch(new Request(assetUrl.toString(), request));
       }
+      // Unknown slug under /blueprint/ — fall through to the normal
+      // static-asset/SPA-fallback handling below (same as any other 404).
     }
 
     return env.ASSETS.fetch(request);

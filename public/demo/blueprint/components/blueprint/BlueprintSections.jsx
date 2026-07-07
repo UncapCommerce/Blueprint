@@ -1031,7 +1031,7 @@ function BPNext() {
             No pitch deck. No B.S.
           </p>
           <div style={{ display: 'flex', gap: 14, flexWrap: 'wrap', alignItems: 'center' }}>
-            <a href="https://blueprint.uncap.com/build" className="uc-btn b-primary" style={{ padding: '18px 28px', fontSize: 16 }}>
+            <a href="https://go.uncap.com/build" className="uc-btn b-primary" style={{ padding: '18px 28px', fontSize: 16 }}>
               Start the Blueprint <span>→</span>
             </a>
             <a href="mailto:hay@uncap.com" className="uc-link" style={{ marginLeft: 8 }}>
