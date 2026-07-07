@@ -713,6 +713,17 @@
       setTimeout(() => setCopied(''), 1600);
     };
 
+    const markSigned = async (bp) => {
+      if (!window.confirm(`Mark "${bp.name}" as signed?\n\nUse this only when the client signed a physical/paper copy instead of the digital flow.`)) return;
+      try {
+        await api('/api/admin/mark-signed', {
+          method: 'POST',
+          body: JSON.stringify({ blueprintId: bp.id }),
+        });
+        load();
+      } catch (err) { setError(err.message); }
+    };
+
     const toggleDisabled = async (bp) => {
       if (!bp.disabled && !window.confirm(`Disable "${bp.name}"?\n\nClients will no longer be able to open or sign in to this blueprint. The team keeps access, and you can re-enable it any time.`)) return;
       try {
@@ -791,6 +802,9 @@
           {copied === bp.id ? <IconCheck/> : <IconShare/>}
         </button>
         <button type="button" title="Activity" aria-label="Activity" style={S.btnIcon} onClick={() => setActivityBp(bp)}><IconActivity/></button>
+        {!bp.signature && (
+          <button type="button" style={S.btnGhost} onClick={() => markSigned(bp)}>Mark signed</button>
+        )}
         <button type="button" onClick={() => toggleDisabled(bp)}
           style={{ ...S.btnGhost, color: bp.disabled ? '#064E2E' : '#B3261E', borderColor: bp.disabled ? '#9BDDB0' : '#F0A9A9' }}>
           {bp.disabled ? 'Enable' : 'Disable'}
