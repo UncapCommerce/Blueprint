@@ -181,14 +181,17 @@
 
   // Public — no session needed, it's just legal copy — so it works for
   // both admin-triggered prints and the client's own sign modal/download.
-  async function fetchCustomTerms() {
+  // Returns null (not a synthesized default) unless an admin has actually
+  // saved a TOS override for this blueprint — everything else keeps
+  // rendering its own terms exactly as it always has.
+  async function fetchCustomSections() {
     const blueprintId = window.__blueprintId;
-    if (!blueprintId) return '';
+    if (!blueprintId) return null;
     try {
       const resp = await fetch('/api/blueprint-tos?bp=' + encodeURIComponent(blueprintId));
       const data = await resp.json().catch(() => ({}));
-      return (resp.ok && data.ok && data.text) || '';
-    } catch (_) { return ''; }
+      return (resp.ok && data.ok && data.sections) || null;
+    } catch (_) { return null; }
   }
 
   async function printShopifyPartnerDocument() {
@@ -204,12 +207,12 @@
     document.body.appendChild(wrap);
 
     const brand = (window.__brand && window.__brand.name) || '';
-    const [signature, customTerms] = await Promise.all([fetchLatestSignature(), fetchCustomTerms()]);
+    const [signature, customSections] = await Promise.all([fetchLatestSignature(), fetchCustomSections()]);
     const el = window.React.createElement(window.UncapMSA, {
       company: brand,
       name: (signature && signature.name) || '',
       title: (signature && signature.title) || '',
-      customTerms,
+      customSections,
     });
     const root = window.ReactDOM.createRoot(wrap);
     root.render(el);
@@ -311,7 +314,7 @@
     }
     const brand = (window.__brand && window.__brand.name) || '';
     const blueprintId = window.__blueprintId || '';
-    const [signature, customTerms] = await Promise.all([fetchLatestSignature(), fetchCustomTerms()]);
+    const [signature, customSections] = await Promise.all([fetchLatestSignature(), fetchCustomSections()]);
 
     const msaWrap = document.createElement('div');
     msaWrap.className = 'bp-adm-msa-injected';
@@ -320,7 +323,7 @@
       company: brand,
       name: (signature && signature.name) || '',
       title: (signature && signature.title) || '',
-      customTerms,
+      customSections,
     });
     const msaRoot = window.ReactDOM.createRoot(msaWrap);
     msaRoot.render(msaEl);

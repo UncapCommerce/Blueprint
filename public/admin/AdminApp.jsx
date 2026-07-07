@@ -959,26 +959,54 @@
   // Simple plain-text override for a blueprint's Terms of Service. Empty
   // means "use the standard Master Services Agreement text" — this is
   // purely additive, so blueprints nobody has edited are unaffected.
+  // Section-by-section TOS editor. Always shows the full current text —
+  // this blueprint's own saved override if one exists, otherwise the
+  // standard Master Services Agreement as a starting point — never a
+  // blank box. Nothing changes on the live site until Save is clicked.
   function TosModal({ bp, onClose }) {
-    const [text, setText] = useState('');
+    const [sections, setSections] = useState([]);
+    const [isDefault, setIsDefault] = useState(true);
+    const [hasHardcodedTerms, setHasHardcodedTerms] = useState(false);
     const [loaded, setLoaded] = useState(false);
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
+    const [openIndex, setOpenIndex] = useState(null);
 
     useEffect(() => {
       let dead = false;
       api('/api/admin/blueprint-tos?bp=' + encodeURIComponent(bp.id))
-        .then((d) => { if (!dead) { setText(d.text || ''); setLoaded(true); } })
+        .then((d) => {
+          if (dead) return;
+          setSections(d.sections || []);
+          setIsDefault(!!d.isDefault);
+          setHasHardcodedTerms(!!d.hasHardcodedTerms);
+          setLoaded(true);
+        })
         .catch((err) => { if (!dead) { setError(err.message); setLoaded(true); } });
       return () => { dead = true; };
     }, [bp.id]);
+
+    const updateBody = (i, value) => {
+      setSections((prev) => prev.map((s, idx) => (idx === i ? { ...s, body: value } : s)));
+    };
 
     const save = async () => {
       setBusy(true); setError('');
       try {
         await api('/api/admin/blueprint-tos', {
           method: 'POST',
-          body: JSON.stringify({ blueprintId: bp.id, text }),
+          body: JSON.stringify({ blueprintId: bp.id, sections }),
+        });
+        onClose();
+      } catch (err) { setError(err.message); setBusy(false); }
+    };
+
+    const revertToStandard = async () => {
+      setBusy(true); setError('');
+      try {
+        await api('/api/admin/blueprint-tos', {
+          method: 'POST',
+          body: JSON.stringify({ blueprintId: bp.id, sections: [] }),
         });
         onClose();
       } catch (err) { setError(err.message); setBusy(false); }
@@ -988,32 +1016,53 @@
 
     return (
       <Modal title={'Terms of Service · ' + bp.name}
-        sub={isTemplate
-          ? 'Plain text · master template — every new blueprint starts from a copy of this'
-          : 'Plain text · leave blank to use the standard Master Services Agreement'}
-        onClose={onClose} width={720}>
-        <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+        sub={isDefault ? 'Standard Master Services Agreement · click a section to edit it' : 'Custom terms saved for this blueprint · click a section to edit it'}
+        onClose={onClose} width={760}>
+        <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
           {isTemplate && (
             <div style={{ padding: '12px 14px', background: '#FFF6E0', border: '1px solid #E8C36A', borderRadius: 8, fontFamily: T.sans, fontSize: 13, color: '#6A4E00' }}>
               This blueprint is the master TOS template. Whatever's saved here is copied into every newly created blueprint going forward — existing blueprints are unaffected.
             </div>
           )}
+          {hasHardcodedTerms && (
+            <div style={{ padding: '12px 14px', background: '#FDE8E8', border: '1px solid #F0A9A9', borderRadius: 8, fontFamily: T.sans, fontSize: 13, color: '#8A1C1C' }}>
+              This blueprint has custom legal terms built into its own page (different governing state, fees, liability language, etc.) that aren't reflected in the standard text below. Saving here will replace those with whatever's shown — check with engineering first.
+            </div>
+          )}
           {!loaded ? (
-            <div style={{ padding: 20, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>Loading…</div>
+            <div style={{ padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>Loading…</div>
           ) : (
-            <textarea
-              value={text}
-              onChange={(e) => setText(e.target.value)}
-              placeholder="Leave blank to use the standard Uncap Master Services Agreement for this blueprint. Type here to fully replace it with custom terms — shown wherever this blueprint's terms appear (sign popup, printed PDFs)."
-              rows={16}
-              style={{ ...S.input, fontFamily: T.mono, fontSize: 13, lineHeight: 1.5, resize: 'vertical', minHeight: 260 }}
-            />
+            <div style={{ maxHeight: '55vh', overflowY: 'auto', border: `1px solid ${T.line}`, borderRadius: 8 }}>
+              {sections.map((s, i) => (
+                <div key={i} style={{ borderBottom: i < sections.length - 1 ? `1px solid ${T.line}` : 'none' }}>
+                  <button type="button" onClick={() => setOpenIndex(openIndex === i ? null : i)}
+                    style={{
+                      display: 'flex', width: '100%', justifyContent: 'space-between', alignItems: 'center',
+                      padding: '11px 14px', background: openIndex === i ? T.cream : T.paper, border: 'none',
+                      cursor: 'pointer', textAlign: 'left', fontFamily: T.sans, fontSize: 13.5, fontWeight: 600, color: T.fg1,
+                    }}>
+                    <span>§{s.num} {s.title}</span>
+                    <span style={{ fontFamily: T.mono, fontSize: 13, color: T.fg3, flexShrink: 0, marginLeft: 10 }}>{openIndex === i ? '−' : '+'}</span>
+                  </button>
+                  {openIndex === i && (
+                    <div style={{ padding: '0 14px 14px' }}>
+                      <textarea
+                        value={s.body}
+                        onChange={(e) => updateBody(i, e.target.value)}
+                        rows={8}
+                        style={{ ...S.input, fontFamily: T.mono, fontSize: 12.5, lineHeight: 1.5, resize: 'vertical' }}
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
           )}
           {error && <div style={{ color: '#B3261E', fontFamily: T.sans, fontSize: 13 }}>{error}</div>}
           <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', flexWrap: 'wrap', paddingTop: 4 }}>
-            {text ? (
+            {!isDefault ? (
               <button type="button" style={{ ...S.btnGhost, marginRight: 'auto', color: '#B3261E', borderColor: '#F0A9A9' }}
-                onClick={() => setText('')} disabled={busy}>Clear · use standard MSA</button>
+                onClick={revertToStandard} disabled={busy}>Revert to standard MSA</button>
             ) : null}
             <button type="button" style={S.btnGhost} onClick={onClose} disabled={busy}>Cancel</button>
             <button type="button" style={{ ...S.btnLime, opacity: busy || !loaded ? 0.7 : 1 }} onClick={save} disabled={busy || !loaded}>

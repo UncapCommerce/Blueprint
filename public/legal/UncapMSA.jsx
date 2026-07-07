@@ -331,11 +331,13 @@
     const title   = (props && props.title)   || '';
     const actions = (props && props.actions) || null;
     const terms   = (props && props.terms)   || null;
-    // Per-blueprint plain-text override, edited from the admin dashboard's
-    // TOS button. When set, it replaces the standard clause list below
-    // entirely; when empty (the default for every blueprint), the
-    // standard MSA_BODY_HTML renders as before.
-    const customTerms = (props && props.customTerms) || '';
+    // Per-blueprint section-by-section override, edited from the admin
+    // dashboard's TOS button. When set (an array of {num, title, body}),
+    // it replaces the standard clause list below entirely; when absent
+    // (the default for every blueprint until an admin explicitly saves
+    // one), the standard MSA_BODY_HTML renders exactly as before,
+    // including any per-blueprint `terms` customization.
+    const customSections = (props && props.customSections) || null;
     const effective = todayString();
 
     // Teleport the Print button to the very top of the modal form so it
@@ -425,8 +427,16 @@
           React.createElement('div', { className: 'msa-eyebrow' }, 'Terms'),
           React.createElement('h2', null, 'Services Agreement')
         ),
-        customTerms
-          ? React.createElement('div', { className: 'msa-custom-terms' }, customTerms)
+        customSections
+          ? React.createElement('div', { className: 'msa-sections' },
+              customSections.map((s, i) => React.createElement('div', { key: i, className: 'msa-clause h' },
+                React.createElement('span', { className: 'msa-num' }, (s.num || (i + 1)) + '.'),
+                React.createElement('p', { className: 'msa-body msa-custom-terms' },
+                  s.title ? React.createElement('span', { className: 'msa-ctitle u' }, s.title + '. ') : null,
+                  s.body
+                )
+              ))
+            )
           : React.createElement('div', { dangerouslySetInnerHTML: { __html: MSA_BODY_HTML(effective, terms) } }),
         React.createElement('div', { className: 'msa-sig msa-sig-bottom' },
           React.createElement('div', { className: 'msa-eyebrow', style: { marginBottom: 6 } }, 'Signature'),
