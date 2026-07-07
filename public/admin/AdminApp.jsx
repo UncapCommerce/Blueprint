@@ -482,11 +482,7 @@
       <div>
         <label style={S.label}>Company</label>
         {company ? (
-          <SelectedCard
-            title={company.name || '(unnamed)'}
-            sub={[company.website, company.address].filter(Boolean).join(' · ') || 'No website/address on file in Attio'}
-            onClear={onClear}
-          />
+          <SelectedCard title={company.name || '(unnamed)'} sub={company.attioId ? 'From Attio' : ''} onClear={onClear}/>
         ) : (
           <AttioTypeahead kind="companies" placeholder="Search Attio companies…" autoFocus onPick={onPick}/>
         )}
@@ -585,11 +581,20 @@
 
   function NewDiscoveryModal({ onClose, onSaved }) {
     const [company, setCompany] = useState(null);       // {attioId, name, domain, address}
+    const [website, setWebsite] = useState('');          // seeded from Attio, editable for this record only
+    const [address, setAddress] = useState('');
     const [leadContact, setLeadContact] = useState(null); // {attioId, name, email}
     const [associatedContacts, setAssociatedContacts] = useState([]);
     const [expiresAt, setExpiresAt] = useState('');
     const [busy, setBusy]       = useState(false);
     const [error, setError]     = useState('');
+
+    const pickCompany = (c) => {
+      setCompany(c);
+      setWebsite(c.domain || '');
+      setAddress(c.address || '');
+    };
+    const clearCompany = () => { setCompany(null); setWebsite(''); setAddress(''); };
 
     const save = async (e) => {
       e.preventDefault();
@@ -601,7 +606,7 @@
           method: 'POST',
           body: JSON.stringify({
             company: company.name, companyAttioId: company.attioId,
-            website: company.domain || '', address: company.address || '',
+            website: website.trim(), address: address.trim(),
             leadContact, associatedContacts, expiresAt,
           }),
         });
@@ -612,7 +617,13 @@
     return (
       <Modal title="New discovery" sub="Company + contacts from Attio · technical questions come next phase" onClose={onClose}>
         <form onSubmit={save} style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <CompanyPicker company={company} onPick={setCompany} onClear={() => setCompany(null)}/>
+          <CompanyPicker company={company} onPick={pickCompany} onClear={clearCompany}/>
+          {company && (
+            <>
+              <Field label="Website" value={website} onChange={setWebsite} placeholder="acme.com"/>
+              <Field label="Address" value={address} onChange={setAddress} placeholder="100 Main St, Chicago, IL"/>
+            </>
+          )}
           <LeadContactPicker contact={leadContact} onPick={setLeadContact} onClear={() => setLeadContact(null)}/>
           <AssociatedContactsPicker contacts={associatedContacts} onChange={setAssociatedContacts} excludeEmail={leadContact && leadContact.email}/>
           <Field label="Expiration date (valid through)" type="date" value={expiresAt} onChange={setExpiresAt}/>
@@ -1098,11 +1109,20 @@
 
   function NewBlueprintModal({ onClose, onSaved }) {
     const [company, setCompany] = useState(null);       // {attioId, name, domain, address}
+    const [website, setWebsite] = useState('');          // seeded from Attio, editable for this blueprint only
+    const [address, setAddress] = useState('');
     const [leadContact, setLeadContact] = useState(null); // {attioId, name, email}
     const [associatedContacts, setAssociatedContacts] = useState([]);
     const [expiresAt, setExpiresAt]     = useState('');
     const [busy, setBusy]               = useState(false);
     const [error, setError]             = useState('');
+
+    const pickCompany = (c) => {
+      setCompany(c);
+      setWebsite(c.domain || '');
+      setAddress(c.address || '');
+    };
+    const clearCompany = () => { setCompany(null); setWebsite(''); setAddress(''); };
 
     const save = async (e) => {
       e.preventDefault();
@@ -1114,7 +1134,7 @@
           method: 'POST',
           body: JSON.stringify({
             companyName: company.name, companyAttioId: company.attioId,
-            website: company.domain || '', address: company.address || '',
+            website: website.trim(), address: address.trim(),
             leadContact, associatedContacts, expiresAt,
           }),
         });
@@ -1125,7 +1145,13 @@
     return (
       <Modal title="New blueprint" sub="Saved as a draft · template generation is the next phase" onClose={onClose} width={560}>
         <form onSubmit={save} style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <CompanyPicker company={company} onPick={setCompany} onClear={() => setCompany(null)}/>
+          <CompanyPicker company={company} onPick={pickCompany} onClear={clearCompany}/>
+          {company && (
+            <>
+              <Field label="Client website" value={website} onChange={setWebsite} placeholder="acme.com"/>
+              <Field label="Company address" value={address} onChange={setAddress} placeholder="100 Main St, Chicago, IL"/>
+            </>
+          )}
           <LeadContactPicker contact={leadContact} onPick={setLeadContact} onClear={() => setLeadContact(null)}/>
           <AssociatedContactsPicker contacts={associatedContacts} onChange={setAssociatedContacts} excludeEmail={leadContact && leadContact.email}/>
           {(leadContact || associatedContacts.length > 0) && (
