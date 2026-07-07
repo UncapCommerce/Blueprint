@@ -128,6 +128,12 @@ export default {
     if (url.pathname === '/api/admin/discoveries' && request.method === 'POST') {
       return handleAdminCreateDiscovery(request, env);
     }
+    if (url.pathname === '/api/admin/attio/companies' && request.method === 'GET') {
+      return handleAdminAttioSearchCompanies(request, env);
+    }
+    if (url.pathname === '/api/admin/attio/people' && request.method === 'GET') {
+      return handleAdminAttioSearchPeople(request, env);
+    }
     if (url.pathname === '/api/admin/blueprint-tos' && request.method === 'GET') {
       return handleAdminGetTos(request, env);
     }
@@ -206,6 +212,32 @@ function normalizeBlueprintId(raw) {
   return (raw || 'unknown').toString().trim().toLowerCase().replace(/[^a-z0-9_-]/g, '') || 'unknown';
 }
 
+const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+// A Client Lead or Associated Contact picked from Attio. attioId is kept
+// for reference/back-linking; email is what actually matters for access.
+function sanitizeContact(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const email = (raw.email || '').toString().trim().toLowerCase();
+  if (!email || !EMAIL_RE.test(email)) return null;
+  return {
+    attioId: (raw.attioId || '').toString().trim().slice(0, 100),
+    name: (raw.name || '').toString().trim().slice(0, 200),
+    email,
+  };
+}
+
+function sanitizeContacts(raw, max) {
+  if (!Array.isArray(raw)) return [];
+  const out = [];
+  for (const item of raw) {
+    const c = sanitizeContact(item);
+    if (c && !out.some((existing) => existing.email === c.email)) out.push(c);
+    if (out.length >= (max || 20)) break;
+  }
+  return out;
+}
+
 // ----------------------------------------------------------------------------
 // Handlers
 // ----------------------------------------------------------------------------
@@ -238,9 +270,19 @@ async function handleRequestCode(request, env) {
   // Per-blueprint allowlist enforcement. If this blueprint is private to a
   // named list of clients, reject any other email up front so we never even
   // generate a code for an unauthorised address. Uncap team always passes.
-  const allowlist = BLUEPRINT_ALLOWLISTS[blueprintId];
-  if (allowlist && !isUncapTeam && !allowlist.includes(email)) {
-    return json(403, { ok: false, error: 'This proposal is restricted. Use the email it was sent to.' });
+  // Two sources, either of which can gate a blueprint: the static
+  // BLUEPRINT_ALLOWLISTS below (legacy, hand-maintained) and a dynamic
+  // per-blueprint list in KV (bpallow:<id>) populated automatically from
+  // the Client Lead + Associated Contacts chosen when the blueprint was
+  // created from Attio.
+  const staticAllowlist  = BLUEPRINT_ALLOWLISTS[blueprintId];
+  const dynamicAllowlist = await getBpAllowlist(env, blueprintId);
+  const hasAllowlist = !!staticAllowlist || dynamicAllowlist.length > 0;
+  if (hasAllowlist && !isUncapTeam) {
+    const allowed = (staticAllowlist || []).includes(email) || dynamicAllowlist.includes(email);
+    if (!allowed) {
+      return json(403, { ok: false, error: 'This proposal is restricted. Use the email it was sent to.' });
+    }
   }
 
   const code  = genCode();
@@ -648,6 +690,20 @@ async function getBpMeta(env, id) {
   try { return JSON.parse(raw); } catch { return {}; }
 }
 
+// Per-blueprint dynamic allowlist (bpallow:<id>): lowercased emails of the
+// Client Lead + Associated Contacts chosen from Attio when the blueprint
+// was created. Empty array (the default for anything never populated)
+// means "no dynamic restriction" — same as the static allowlist being
+// absent.
+async function getBpAllowlist(env, id) {
+  const raw = await env.BLUEPRINT_AUTH.get(`bpallow:${id}`);
+  if (!raw) return [];
+  try {
+    const list = JSON.parse(raw);
+    return Array.isArray(list) ? list : [];
+  } catch { return []; }
+}
+
 // expiresAt is a YYYY-MM-DD date; the blueprint stays valid through the
 // end of that day (UTC).
 function isBpExpired(meta) {
@@ -857,6 +913,7 @@ async function handleAdminBlueprints(request, env) {
         id: rec.id, dir: '', name: rec.name, num: '', kind: 'draft', signature: null,
         website: rec.website || '', leadClient: rec.leadClient || '', address: rec.address || '',
         createdAt: rec.createdAt || '', createdBy: rec.createdBy || '',
+        leadContact: rec.leadContact || null, associatedContacts: rec.associatedContacts || [],
       });
     } catch { /* skip corrupt record */ }
   }
@@ -900,6 +957,11 @@ async function handleAdminCreateBlueprint(request, env) {
   const leadClient = (body.leadClient  || '').toString().trim().slice(0, 200);
   const address    = (body.address     || '').toString().trim().slice(0, 300);
   const expiresAt  = (body.expiresAt   || '').toString().trim();
+  const companyAttioId    = (body.companyAttioId || '').toString().trim().slice(0, 100);
+  const leadContact       = sanitizeContact(body.leadContact);
+  const associatedContacts = sanitizeContacts(body.associatedContacts).filter(
+    (c) => !leadContact || c.email !== leadContact.email
+  );
   if (!name)    return json(400, { ok: false, error: 'Company name is required' });
   if (!website) return json(400, { ok: false, error: 'Client website is required' });
   if (expiresAt && !/^\d{4}-\d{2}-\d{2}$/.test(expiresAt)) {
@@ -916,6 +978,7 @@ async function handleAdminCreateBlueprint(request, env) {
 
   const rec = {
     id: slug, name, website, leadClient, address,
+    companyAttioId, leadContact, associatedContacts,
     status: 'draft',
     createdAt: new Date().toISOString(),
     createdBy: sess.email,
@@ -927,6 +990,17 @@ async function handleAdminCreateBlueprint(request, env) {
       updatedAt: rec.createdAt, updatedBy: sess.email,
     }));
   }
+  // Client Lead + Associated Contacts become this blueprint's dynamic
+  // allowlist — the only outside emails that can view it. No contacts
+  // picked means no restriction, same as any blueprint today.
+  const allowlistEmails = [
+    ...(leadContact ? [leadContact.email] : []),
+    ...associatedContacts.map((c) => c.email),
+  ];
+  if (allowlistEmails.length) {
+    await env.BLUEPRINT_AUTH.put(`bpallow:${slug}`, JSON.stringify(allowlistEmails));
+  }
+
   // Seed the new blueprint's Terms of Service from Anatomy Warehouse's —
   // the designated master template (edited via the same TOS button any
   // other blueprint uses). From here each copy is fully independent;
@@ -970,6 +1044,99 @@ async function handleAdminBpToken(request, env) {
   return json(200, { ok: true, token });
 }
 
+// ----------------------------------------------------------------------------
+// Attio CRM proxy. The API token (env.ATTIO_API_KEY) lives only in the
+// Cloudflare dashboard's Variables and Secrets — never in wrangler.toml —
+// and never reaches the browser; the dashboard only ever calls these two
+// admin-authenticated search endpoints, which pass back the minimal fields
+// the company/contact pickers need.
+// ----------------------------------------------------------------------------
+const ATTIO_API_BASE = 'https://api.attio.com/v2';
+
+async function attioQuery(env, object, filter, limit) {
+  if (!env.ATTIO_API_KEY) {
+    const err = new Error('Attio isn\'t connected yet — add ATTIO_API_KEY in the Cloudflare dashboard.');
+    err.status = 503;
+    throw err;
+  }
+  const resp = await fetch(`${ATTIO_API_BASE}/objects/${object}/records/query`, {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${env.ATTIO_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ filter, limit: limit || 8 }),
+  });
+  if (!resp.ok) {
+    const text = await resp.text().catch(() => '');
+    const err = new Error(`Attio ${object} query failed (${resp.status}): ${text.slice(0, 300)}`);
+    err.status = resp.status >= 400 && resp.status < 500 ? 502 : 502;
+    throw err;
+  }
+  const data = await resp.json().catch(() => ({}));
+  return Array.isArray(data.data) ? data.data : [];
+}
+
+// Attio's "text" attribute values come back as e.g. [{ value: "Acme Inc" }].
+function attioFirstText(values) {
+  if (!Array.isArray(values) || !values.length) return '';
+  const v = values[0];
+  return (v && (v.value || v.full_name || v.domain || v.email_address)) || '';
+}
+
+async function handleAdminAttioSearchCompanies(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+
+  const q = (new URL(request.url).searchParams.get('q') || '').trim().slice(0, 200);
+  if (!q) return json(200, { ok: true, companies: [] });
+
+  let records;
+  try {
+    records = await attioQuery(env, 'companies', { name: { '$contains': q } });
+  } catch (err) {
+    return json(err.status || 502, { ok: false, error: err.message });
+  }
+
+  const companies = records.map((r) => ({
+    attioId: r.id && r.id.record_id,
+    name: attioFirstText(r.values && r.values.name),
+    domain: attioFirstText(r.values && r.values.domains),
+  })).filter((c) => c.attioId);
+
+  return json(200, { ok: true, companies });
+}
+
+async function handleAdminAttioSearchPeople(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+
+  const q = (new URL(request.url).searchParams.get('q') || '').trim().slice(0, 200);
+  if (!q) return json(200, { ok: true, people: [] });
+
+  // Search by email when the query looks like one, name otherwise — Attio
+  // filters a single attribute at a time, so this is a best-effort split
+  // rather than a true OR across both fields.
+  const filter = q.includes('@')
+    ? { email_addresses: { '$contains': q } }
+    : { name: { '$contains': q } };
+
+  let records;
+  try {
+    records = await attioQuery(env, 'people', filter);
+  } catch (err) {
+    return json(err.status || 502, { ok: false, error: err.message });
+  }
+
+  const people = records.map((r) => ({
+    attioId: r.id && r.id.record_id,
+    name: attioFirstText(r.values && r.values.name),
+    email: attioFirstText(r.values && r.values.email_addresses),
+  })).filter((p) => p.attioId && p.email);
+
+  return json(200, { ok: true, people });
+}
+
 async function handleAdminListDiscoveries(request, env) {
   const sess = await getAdminSession(request, env);
   if (!sess) return json(401, { ok: false, error: 'Not signed in' });
@@ -1000,12 +1167,18 @@ async function handleAdminCreateDiscovery(request, env) {
   const client  = (body.client  || '').toString().trim().slice(0, 200);
   const address = (body.address || '').toString().trim().slice(0, 300);
   const website = (body.website || '').toString().trim().slice(0, 300);
+  const companyAttioId = (body.companyAttioId || '').toString().trim().slice(0, 100);
+  const leadContact       = sanitizeContact(body.leadContact);
+  const associatedContacts = sanitizeContacts(body.associatedContacts).filter(
+    (c) => !leadContact || c.email !== leadContact.email
+  );
   if (!company) return json(400, { ok: false, error: 'Company is required' });
 
   const ts = Date.now();
   const id = `${(9_999_999_999_999 - ts).toString(36).padStart(10, '0')}:${genRandSlug()}`;
   const rec = {
     company, client, address, website,
+    companyAttioId, leadContact, associatedContacts,
     status: 'new',
     createdAt: new Date(ts).toISOString(),
     createdBy: sess.email,

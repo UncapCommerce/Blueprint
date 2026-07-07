@@ -343,6 +343,121 @@
     );
   }
 
+  // Search-as-you-type against Attio (kind: 'companies' | 'people'), via
+  // the worker's admin-authenticated proxy — the Attio token never
+  // reaches the browser. Picking a result hands the raw Attio record back
+  // to the caller; this component holds no selection state of its own; it's
+  // just the search box + dropdown.
+  function AttioTypeahead({ kind, label, placeholder, onPick, autoFocus }) {
+    const [q, setQ] = useState('');
+    const [results, setResults] = useState([]);
+    const [open, setOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
+    const [failed, setFailed] = useState(false);
+    const boxRef = useRef(null);
+
+    useEffect(() => {
+      if (!q.trim()) { setResults([]); setOpen(false); setLoading(false); return undefined; }
+      let dead = false;
+      setLoading(true);
+      const t = setTimeout(async () => {
+        try {
+          const d = await api(`/api/admin/attio/${kind}?q=${encodeURIComponent(q.trim())}`);
+          if (dead) return;
+          setResults(d[kind] || []);
+          setFailed(false);
+          setOpen(true);
+        } catch (_) {
+          if (dead) return;
+          setResults([]); setFailed(true); setOpen(true);
+        } finally {
+          if (!dead) setLoading(false);
+        }
+      }, 280);
+      return () => { dead = true; clearTimeout(t); };
+    }, [q, kind]);
+
+    useEffect(() => {
+      const onDocClick = (e) => { if (boxRef.current && !boxRef.current.contains(e.target)) setOpen(false); };
+      document.addEventListener('click', onDocClick);
+      return () => document.removeEventListener('click', onDocClick);
+    }, []);
+
+    const resultLabel = (r) => kind === 'companies'
+      ? (r.domain ? `${r.name || '(unnamed)'} · ${r.domain}` : (r.name || '(unnamed)'))
+      : (r.email ? `${r.name || r.email} · ${r.email}` : r.name);
+
+    return (
+      <div ref={boxRef} style={{ position: 'relative' }}>
+        {label ? <label style={S.label}>{label}</label> : null}
+        <input
+          style={S.input}
+          value={q}
+          placeholder={placeholder}
+          autoFocus={!!autoFocus}
+          onChange={(e) => setQ(e.target.value)}
+          onFocus={() => { if (results.length || failed) setOpen(true); }}
+        />
+        {open && (
+          <div style={{
+            position: 'absolute', top: 'calc(100% + 4px)', left: 0, right: 0, zIndex: 30,
+            background: T.paper, border: `1px solid ${T.line}`, borderRadius: 8,
+            boxShadow: '0 18px 40px -18px rgba(0,0,0,0.35)', maxHeight: 220, overflowY: 'auto',
+          }}>
+            {loading ? (
+              <div style={{ padding: 12, fontFamily: T.sans, fontSize: 13, color: T.fg3 }}>Searching…</div>
+            ) : failed ? (
+              <div style={{ padding: 12, fontFamily: T.sans, fontSize: 13, color: T.fg3 }}>Couldn't reach Attio — check it's connected.</div>
+            ) : results.length === 0 ? (
+              <div style={{ padding: 12, fontFamily: T.sans, fontSize: 13, color: T.fg3 }}>No matches in Attio</div>
+            ) : results.map((r) => (
+              <button key={r.attioId} type="button"
+                onClick={() => { onPick(r); setQ(''); setResults([]); setOpen(false); }}
+                style={{ display: 'block', width: '100%', textAlign: 'left', padding: '9px 12px', background: 'transparent', border: 'none', borderBottom: `1px solid ${T.line}`, cursor: 'pointer', fontFamily: T.sans, fontSize: 13.5, color: T.fg1 }}>
+                {resultLabel(r)}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // Multi-select of Attio people, rendered as removable chips. Excludes
+  // whatever email is currently the Client Lead so the same person can't
+  // be picked twice.
+  function AssociatedContactsPicker({ contacts, onChange, excludeEmail }) {
+    const add = (person) => {
+      if (!person.email) return;
+      if (excludeEmail && person.email === excludeEmail) return;
+      if (contacts.some((c) => c.email === person.email)) return;
+      onChange([...contacts, { attioId: person.attioId, name: person.name, email: person.email }]);
+    };
+    const remove = (email) => onChange(contacts.filter((c) => c.email !== email));
+
+    return (
+      <div>
+        <label style={S.label}>Associated contacts</label>
+        <AttioTypeahead kind="people" placeholder="Search Attio contacts to add…" onPick={add}/>
+        {contacts.length > 0 && (
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
+            {contacts.map((c) => (
+              <span key={c.email} style={{
+                display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 6px 5px 10px',
+                background: T.cream, border: `1px solid ${T.line}`, borderRadius: 999,
+                fontFamily: T.sans, fontSize: 12.5, color: T.fg1,
+              }}>
+                {c.name || c.email}
+                <button type="button" aria-label={'Remove ' + (c.name || c.email)} onClick={() => remove(c.email)}
+                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, borderRadius: 999, border: 'none', background: T.line, color: T.fg1, cursor: 'pointer', fontSize: 11, lineHeight: 1, padding: 0 }}>✕</button>
+              </span>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  }
+
   // ── Discoveries ──────────────────────────────────────────────────────
   function Discoveries() {
     const isMobile = useIsMobile();
@@ -420,7 +535,10 @@
 
   function NewDiscoveryModal({ onClose, onSaved }) {
     const [company, setCompany] = useState('');
+    const [companyAttioId, setCompanyAttioId] = useState('');
     const [client, setClient]   = useState('');
+    const [leadContact, setLeadContact] = useState(null); // {attioId, name, email}
+    const [associatedContacts, setAssociatedContacts] = useState([]);
     const [address, setAddress] = useState('');
     const [website, setWebsite] = useState('');
     const [busy, setBusy]       = useState(false);
@@ -433,7 +551,10 @@
       try {
         await api('/api/admin/discoveries', {
           method: 'POST',
-          body: JSON.stringify({ company: company.trim(), client: client.trim(), address: address.trim(), website: website.trim() }),
+          body: JSON.stringify({
+            company: company.trim(), client: client.trim(), address: address.trim(), website: website.trim(),
+            companyAttioId, leadContact, associatedContacts,
+          }),
         });
         onSaved();
       } catch (err) { setError(err.message); setBusy(false); }
@@ -442,8 +563,13 @@
     return (
       <Modal title="New discovery" sub="Company basics · technical questions come next phase" onClose={onClose}>
         <form onSubmit={save} style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <Field label="Company" value={company} onChange={setCompany} placeholder="Acme Industrial Co." autoFocus/>
-          <Field label="Client" value={client} onChange={setClient} placeholder="Jane Doe, Head of Ecommerce"/>
+          <AttioTypeahead kind="companies" label="Find company in Attio" placeholder="Search Attio companies…" autoFocus
+            onPick={(c) => { setCompany(c.name || ''); setCompanyAttioId(c.attioId || ''); if (c.domain) setWebsite(c.domain); }}/>
+          <Field label="Company" value={company} onChange={(v) => { setCompany(v); setCompanyAttioId(''); }} placeholder="Acme Industrial Co."/>
+          <AttioTypeahead kind="people" label="Find Client Lead in Attio" placeholder="Search Attio contacts…"
+            onPick={(p) => { setLeadContact(p); setClient(p.name ? `${p.name}${p.email ? ' (' + p.email + ')' : ''}` : p.email); }}/>
+          <Field label="Client lead" value={client} onChange={(v) => { setClient(v); setLeadContact(null); }} placeholder="Jane Doe, Head of Ecommerce"/>
+          <AssociatedContactsPicker contacts={associatedContacts} onChange={setAssociatedContacts} excludeEmail={leadContact && leadContact.email}/>
           <Field label="Address" value={address} onChange={setAddress} placeholder="100 Main St, Chicago, IL"/>
           <Field label="Website" value={website} onChange={setWebsite} placeholder="acme.com"/>
           {error && <div style={{ color: '#B3261E', fontFamily: T.sans, fontSize: 13 }}>{error}</div>}
@@ -928,8 +1054,11 @@
 
   function NewBlueprintModal({ onClose, onSaved }) {
     const [companyName, setCompanyName] = useState('');
+    const [companyAttioId, setCompanyAttioId] = useState('');
     const [website, setWebsite]         = useState('');
     const [leadClient, setLeadClient]   = useState('');
+    const [leadContact, setLeadContact] = useState(null); // {attioId, name, email}
+    const [associatedContacts, setAssociatedContacts] = useState([]);
     const [address, setAddress]         = useState('');
     const [expiresAt, setExpiresAt]     = useState('');
     const [busy, setBusy]               = useState(false);
@@ -945,7 +1074,7 @@
           body: JSON.stringify({
             companyName: companyName.trim(), website: website.trim(),
             leadClient: leadClient.trim(), address: address.trim(),
-            expiresAt,
+            expiresAt, companyAttioId, leadContact, associatedContacts,
           }),
         });
         onSaved();
@@ -953,11 +1082,21 @@
     };
 
     return (
-      <Modal title="New blueprint" sub="Saved as a draft · template generation is the next phase" onClose={onClose}>
+      <Modal title="New blueprint" sub="Saved as a draft · template generation is the next phase" onClose={onClose} width={560}>
         <form onSubmit={save} style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <Field label="Company name" value={companyName} onChange={setCompanyName} placeholder="Acme Industrial Co." autoFocus/>
+          <AttioTypeahead kind="companies" label="Find company in Attio" placeholder="Search Attio companies…" autoFocus
+            onPick={(c) => { setCompanyName(c.name || ''); setCompanyAttioId(c.attioId || ''); if (c.domain) setWebsite(c.domain); }}/>
+          <Field label="Company name" value={companyName} onChange={(v) => { setCompanyName(v); setCompanyAttioId(''); }} placeholder="Acme Industrial Co."/>
           <Field label="Client website" value={website} onChange={setWebsite} placeholder="acme.com"/>
-          <Field label="Lead client" value={leadClient} onChange={setLeadClient} placeholder="Jane Doe, Head of Ecommerce"/>
+          <AttioTypeahead kind="people" label="Find Client Lead in Attio" placeholder="Search Attio contacts…"
+            onPick={(p) => { setLeadContact(p); setLeadClient(p.name ? `${p.name}${p.email ? ' (' + p.email + ')' : ''}` : p.email); }}/>
+          <Field label="Lead client" value={leadClient} onChange={(v) => { setLeadClient(v); setLeadContact(null); }} placeholder="Jane Doe, Head of Ecommerce"/>
+          <AssociatedContactsPicker contacts={associatedContacts} onChange={setAssociatedContacts} excludeEmail={leadContact && leadContact.email}/>
+          {(leadContact || associatedContacts.length > 0) && (
+            <div style={{ padding: '10px 12px', background: '#EEF0FE', border: '1px solid #C3C9F5', borderRadius: 8, fontFamily: T.sans, fontSize: 12.5, color: '#3A44C4' }}>
+              This blueprint will be restricted to {[leadContact, ...associatedContacts].filter(Boolean).length} email{[leadContact, ...associatedContacts].filter(Boolean).length === 1 ? '' : 's'} — only they (and the Uncap team) will be able to view it.
+            </div>
+          )}
           <Field label="Company address" value={address} onChange={setAddress} placeholder="100 Main St, Chicago, IL"/>
           <Field label="Expiration date (valid through)" type="date" value={expiresAt} onChange={setExpiresAt}/>
           {error && <div style={{ color: '#B3261E', fontFamily: T.sans, fontSize: 13 }}>{error}</div>}
