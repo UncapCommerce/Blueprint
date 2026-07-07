@@ -89,6 +89,24 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
+    // TEMPORARY diagnostic — proves whether this Worker is even executing
+    // for a given request, independent of the redirect logic below. Remove
+    // once the blueprint.uncap.com redirect mystery is solved.
+    if (url.searchParams.get('__debug') === '1') {
+      const bpMatch = url.pathname.match(/^\/blueprint\/([a-z0-9-]+)(\/.*)?$/);
+      const entry = bpMatch && BLUEPRINT_REGISTRY.find((b) => b.id === bpMatch[1]);
+      return new Response(JSON.stringify({
+        hostname: url.hostname,
+        pathname: url.pathname,
+        method: request.method,
+        legacyPath: legacyBlueprintRedirectPath(url.pathname),
+        bpMatchGroups: bpMatch ? [bpMatch[1], bpMatch[2] || null] : null,
+        resolvedEntry: entry || null,
+        rewrittenAssetPath: entry ? `/${entry.dir}${bpMatch[2] || '/'}` : null,
+        cf: request.cf || null,
+      }, null, 2), { headers: { 'content-type': 'application/json' } });
+    }
+
     // Redirect anything hitting the old domain, and any old-style bare
     // /<Brand>/ path even if it somehow reaches the new domain, to their
     // go.uncap.com home — new-style /blueprint/<id>/ for blueprint pages,
