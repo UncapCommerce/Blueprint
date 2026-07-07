@@ -17,6 +17,7 @@ routes = [
 directory = "./public"
 binding = "ASSETS"
 not_found_handling = "single-page-application"
+run_worker_first = true
 
 # Stores 6-digit verification codes (10-min TTL) and session tokens
 # (24-hour TTL) for the blueprint auth flow.
