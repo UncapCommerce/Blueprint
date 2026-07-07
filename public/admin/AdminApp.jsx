@@ -806,7 +806,8 @@
         </button>
         <button type="button" title="Activity" aria-label="Activity" style={S.btnIcon} onClick={() => setActivityBp(bp)}><IconActivity/></button>
         <select value={rowStatus(bp)} onChange={(e) => setStatus(bp, e.target.value)}
-          style={{ ...S.input, width: 'auto', padding: '6px 10px', fontSize: 12.5, cursor: 'pointer' }}>
+          disabled={!!bp.signature} title={bp.signature ? 'Signed by the client — status is locked' : undefined}
+          style={{ ...S.input, width: 'auto', padding: '6px 10px', fontSize: 12.5, cursor: bp.signature ? 'not-allowed' : 'pointer', opacity: bp.signature ? 0.6 : 1 }}>
           <option value="open">Open</option>
           <option value="signed">Signed</option>
           <option value="disabled">Disabled</option>
