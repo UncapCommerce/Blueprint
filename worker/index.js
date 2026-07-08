@@ -1728,7 +1728,7 @@ async function handleAdminActivity(request, env) {
   }
 
   events.sort((a, b) => new Date(b.ts || 0) - new Date(a.ts || 0));
-  return json(200, { ok: true, events: events.slice(0, 80) });
+  return json(200, { ok: true, events: events.slice(0, 300) });
 }
 
 async function handleAdminCreateDiscovery(request, env) {

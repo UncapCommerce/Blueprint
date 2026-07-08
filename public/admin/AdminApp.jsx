@@ -239,7 +239,6 @@
   function TopBar({ me, route, onLogout }) {
     const isMobile = useIsMobile();
     const items = [
-      { id: 'home', l: 'Home' },
       { id: 'discoveries', l: 'Discoveries' },
       { id: 'blueprints',  l: 'Blueprints' },
     ];
@@ -1318,10 +1317,12 @@
   // Dashboard landing page: a cross-entity recent-activity feed (created,
   // edited, signed, status changed) across both Discoveries and Blueprints.
   // Backed by /api/admin/activity. This is what the logo and first login land on.
+  const ACT_PAGE_SIZE = 50;
   function Home() {
     const isMobile = useIsMobile();
     const [events, setEvents] = useState(null);
     const [error, setError] = useState('');
+    const [page, setPage] = useState(1);
     useEffect(() => {
       let dead = false;
       api('/api/admin/activity')
@@ -1341,46 +1342,69 @@
       }
     };
 
-    const card = (children) => <div style={{ ...S.card, overflow: 'hidden' }}>{children}</div>;
+    const totalPages = events ? Math.max(1, Math.ceil(events.length / ACT_PAGE_SIZE)) : 1;
+    const pageSafe = Math.min(page, totalPages);
+    const pageRows = events ? events.slice((pageSafe - 1) * ACT_PAGE_SIZE, pageSafe * ACT_PAGE_SIZE) : [];
 
     return (
       <Page>
-        <PageHead eyebrow="Dashboard" title="Recent activity"/>
-        {events === null ? (
-          <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>Loading…</div>
-        ) : error ? (
-          <div style={{ ...S.card, padding: 24, color: '#B3261E', fontFamily: T.sans, fontSize: 14 }}>{error}</div>
-        ) : events.length === 0 ? (
-          <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>
-            No activity yet. Creating, editing, viewing, or signing a blueprint or discovery will show up here.
-          </div>
-        ) : card(
-          events.map((ev, i) => {
-            const a = actStyle(ev.type);
-            const path = ev.entity === 'discovery' ? '/discoveries' : '/blueprints';
-            return (
-              <a key={i} href={path} onClick={navClick(path)}
-                style={{ display: 'flex', gap: 12, alignItems: 'flex-start', textDecoration: 'none',
-                  padding: isMobile ? '13px 14px' : '14px 18px',
-                  borderBottom: i < events.length - 1 ? `1px solid ${T.line}` : 'none' }}>
-                <span style={{ flexShrink: 0, marginTop: 1, display: 'inline-block', padding: '3px 9px', borderRadius: 999,
-                  fontFamily: T.mono, fontSize: 9.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
-                  background: a.bg, color: a.fg, border: `1px solid ${a.bd}`, minWidth: 56, textAlign: 'center' }}>{a.l}</span>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: T.sans, fontSize: 14, color: T.fg1, lineHeight: 1.35 }}>
-                    <span style={{ fontWeight: 700 }}>{ev.name || ev.id}</span>
-                    <span style={{ fontFamily: T.mono, fontSize: 9, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', color: T.fg3, marginLeft: 8 }}>
-                      {ev.entity === 'discovery' ? 'Discovery' : 'Blueprint'}
-                    </span>
-                  </div>
-                  <div style={{ fontFamily: T.sans, fontSize: 12.5, color: T.fg2, marginTop: 2 }}>
-                    {[ev.detail, ev.actor, fmtWhen(ev.ts)].filter(Boolean).join(' · ')}
-                  </div>
+        <div style={{ maxWidth: 620, margin: '0 auto' }}>
+          <PageHead eyebrow="Dashboard" title="Recent activity"/>
+          {events === null ? (
+            <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>Loading…</div>
+          ) : error ? (
+            <div style={{ ...S.card, padding: 24, color: '#B3261E', fontFamily: T.sans, fontSize: 14 }}>{error}</div>
+          ) : events.length === 0 ? (
+            <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>
+              No activity yet. Creating, editing, viewing, or signing a blueprint or discovery will show up here.
+            </div>
+          ) : (
+            <>
+              <div style={{ ...S.card, overflow: 'hidden' }}>
+                {pageRows.map((ev, i) => {
+                  const a = actStyle(ev.type);
+                  const path = ev.entity === 'discovery' ? '/discoveries' : '/blueprints';
+                  return (
+                    <a key={i} href={path} onClick={navClick(path)}
+                      style={{ display: 'flex', gap: 10, alignItems: 'center', textDecoration: 'none',
+                        padding: isMobile ? '9px 12px' : '10px 14px',
+                        borderBottom: i < pageRows.length - 1 ? `1px solid ${T.line}` : 'none' }}>
+                      <span style={{ flexShrink: 0, display: 'inline-block', padding: '2px 7px', borderRadius: 999,
+                        fontFamily: T.mono, fontSize: 8.5, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase',
+                        background: a.bg, color: a.fg, border: `1px solid ${a.bd}`, minWidth: 52, textAlign: 'center' }}>{a.l}</span>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontFamily: T.sans, fontSize: 13, fontWeight: 700, color: T.fg1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          {ev.name || ev.id}
+                          <span style={{ fontFamily: T.mono, fontSize: 8.5, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.fg3, marginLeft: 7 }}>
+                            {ev.entity === 'discovery' ? 'Disc' : 'BP'}
+                          </span>
+                        </div>
+                        {ev.detail ? (
+                          <div style={{ fontFamily: T.sans, fontSize: 11.5, color: T.fg2, marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ev.detail}</div>
+                        ) : null}
+                      </div>
+                      <div style={{ flexShrink: 0, textAlign: 'right', maxWidth: '42%' }}>
+                        {ev.actor ? (
+                          <div style={{ fontFamily: T.mono, fontSize: 10.5, color: T.fg2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ev.actor}</div>
+                        ) : null}
+                        <div style={{ fontFamily: T.mono, fontSize: 10, color: T.fg3, marginTop: 1 }}>{fmtWhen(ev.ts)}</div>
+                      </div>
+                    </a>
+                  );
+                })}
+              </div>
+              {events.length > ACT_PAGE_SIZE && (
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, padding: '16px 0 4px' }}>
+                  <button type="button" style={{ ...S.btnGhost, opacity: pageSafe <= 1 ? 0.5 : 1 }} disabled={pageSafe <= 1}
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}>← Prev</button>
+                  <span style={{ fontFamily: T.mono, fontSize: 11, color: T.fg3 }}>Page {pageSafe} of {totalPages}</span>
+                  <button type="button" style={{ ...S.btnGhost, opacity: pageSafe >= totalPages ? 0.5 : 1 }} disabled={pageSafe >= totalPages}
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>Next →</button>
                 </div>
-              </a>
-            );
-          })
-        )}
+              )}
+            </>
+          )}
+        </div>
       </Page>
     );
   }
