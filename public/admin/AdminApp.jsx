@@ -752,8 +752,9 @@
     });
   }
 
-  function Blueprints() {
+  function Blueprints({ me }) {
     const isMobile = useIsMobile();
+    const canReopen = !!(me && (me.email || '').toLowerCase() === 'denis@uncap.com');
     const [rows, setRows] = useState(null);
     const [showNew, setShowNew] = useState(() => new URLSearchParams(window.location.search).get('new') === '1');
     const [activityBp, setActivityBp] = useState(null); // {id, name}
@@ -814,6 +815,17 @@
     // the disabled flag; "Signed"/"Open" also clear disabled so the new
     // status is actually visible (disabled otherwise takes display
     // precedence over everything else in statusChip/rowStatus).
+    // Restricted override to clear a mistaken signature and move a blueprint
+    // back to Open. Server-enforced to denis@uncap.com; the button only shows
+    // for that account.
+    const reopen = async (bp) => {
+      if (!window.confirm(`Reopen "${bp.name}"?\n\nThis clears its recorded signature and moves it back to Open. Use only if it was marked signed by mistake.`)) return;
+      try {
+        await api('/api/admin/mark-signed', { method: 'POST', body: JSON.stringify({ blueprintId: bp.id, signed: false }) });
+        load();
+      } catch (err) { setError(err.message); }
+    };
+
     const setStatus = async (bp, next) => {
       const current = rowStatus(bp);
       if (next === current) return;
@@ -909,6 +921,9 @@
           <option value="signed">Signed</option>
           <option value="disabled">Disabled</option>
         </select>
+        {bp.signature && canReopen && (
+          <button type="button" title="Clear signature and reopen" style={{ ...S.btnGhost, color: '#B3261E', borderColor: '#F0A9A9' }} onClick={() => reopen(bp)}>Reopen</button>
+        )}
         <button type="button" style={S.btnGhost} onClick={() => setTosBp(bp)}>TOS</button>
         <span style={{ position: 'relative' }}>
           <button type="button" ref={(el) => { printBtnRefs.current[bp.id] = el; }} style={S.btnGhost}
@@ -1572,7 +1587,7 @@
     return (
       <div style={{ minHeight: '100vh', background: T.cream }}>
         <TopBar me={me} route={route} onLogout={logout}/>
-        {route === 'discoveries' ? <Discoveries/> : route === 'blueprints' ? <Blueprints/> : <Home/>}
+        {route === 'discoveries' ? <Discoveries/> : route === 'blueprints' ? <Blueprints me={me}/> : <Home/>}
       </div>
     );
   }

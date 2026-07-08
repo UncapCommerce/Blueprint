@@ -1271,6 +1271,10 @@ async function handleAdminMarkSigned(request, env) {
   if (!known) return json(404, { ok: false, error: 'Unknown blueprint' });
 
   if (body.signed === false) {
+    // Clearing a recorded signature (reopen) is restricted to the owner.
+    if ((sess.email || '').toLowerCase() !== 'denis@uncap.com') {
+      return json(403, { ok: false, error: 'Only denis@uncap.com can reopen a signed blueprint.' });
+    }
     await env.BLUEPRINT_AUTH.delete(`bpsigned:${id}`);
     await logActivity(env, null, { type: 'status', entity: 'blueprint', id, name: await bpDisplayName(env, id), actor: sess.email, detail: 'Marked open (signature cleared)' });
     return json(200, { ok: true, blueprintId: id, signature: null });
