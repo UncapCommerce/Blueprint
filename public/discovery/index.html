@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<meta name="robots" content="noindex,nofollow"/>
+<title>Uncap Discovery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300..900;1,14..32,300..900&family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=JetBrains+Mono:wght@400;500;600&display=swap">
+<style>
+  html { font-optical-sizing: auto; }
+  body { margin: 0; background: #F2EFE7; color: #0A0A0A; font-family: Inter, -apple-system, 'Helvetica Neue', Arial, sans-serif; }
+  * { box-sizing: border-box; }
+  a { color: #0A0A0A; }
+  input, textarea, button, select { font-family: inherit; }
+  ::placeholder { color: #9A9A9A; }
+  @keyframes uc-draw { from { stroke-dashoffset: 100; } to { stroke-dashoffset: 0; } }
+  @keyframes uc-pulse { 0% { box-shadow: 0 0 0 0 rgba(10,10,10,0.30); } 70% { box-shadow: 0 0 0 10px rgba(10,10,10,0); } 100% { box-shadow: 0 0 0 0 rgba(10,10,10,0); } }
+  @keyframes uc-fadeup { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+  @keyframes uc-spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div id="disc-root"></div>
+<script src="/vendor/react.production.min.js"></script>
+<script src="/vendor/react-dom.production.min.js"></script>
+<script src="/vendor/babel.min.js"></script>
+<script src="/discovery/discovery-data.js?v=DEPLOY_HASH"></script>
+<script src="/discovery/scenes.js?v=DEPLOY_HASH"></script>
+<script type="text/babel" src="/discovery/DiscoveryExperience.jsx?v=DEPLOY_HASH"></script>
+</body>
+</html>
