@@ -296,6 +296,9 @@ export default {
     if (url.pathname === '/api/admin/discoveries' && request.method === 'GET') {
       return handleAdminListDiscoveries(request, env);
     }
+    if (url.pathname === '/api/admin/activity' && request.method === 'GET') {
+      return handleAdminActivity(request, env);
+    }
     if (url.pathname === '/api/admin/discoveries' && request.method === 'POST') {
       return handleAdminCreateDiscovery(request, env);
     }
@@ -822,6 +825,38 @@ async function listBlueprintEvents(env, blueprintId) {
     });
 }
 
+// ── Cross-entity activity feed ───────────────────────────────────────────
+// Append-only lifecycle log backing the dashboard home page: one record per
+// create / edit / status-change / sign across both blueprints and
+// discoveries. The key carries an inverted timestamp so a plain prefix scan
+// returns newest-first (same trick as access:/discovery:). Best-effort — a
+// failed write must never block the action that triggered it.
+async function logActivity(env, ctx, ev) {
+  const ts = Date.now();
+  const key = `activity:${(9_999_999_999_999 - ts).toString(36).padStart(10, '0')}:${genRandSlug()}`;
+  const rec = {
+    ts:     new Date(ts).toISOString(),
+    type:   (ev.type   || '').toString().slice(0, 20),   // created | edited | signed | status
+    entity: (ev.entity || '').toString().slice(0, 20),   // blueprint | discovery
+    id:     (ev.id     || '').toString().slice(0, 120),
+    name:   (ev.name   || '').toString().slice(0, 200),
+    actor:  (ev.actor  || '').toString().slice(0, 200),
+    detail: (ev.detail || '').toString().slice(0, 300),
+  };
+  const write = env.BLUEPRINT_AUTH.put(key, JSON.stringify(rec), { expirationTtl: ACCESS_LOG_TTL_SECONDS }).catch(() => {});
+  if (ctx && ctx.waitUntil) ctx.waitUntil(write); else await write;
+}
+
+// Best-effort human-readable name for a blueprint id: shipped registry name,
+// else the draft record's name, else the id itself.
+async function bpDisplayName(env, id) {
+  const reg = BLUEPRINT_REGISTRY.find((b) => b.id === id);
+  if (reg) return reg.name;
+  const raw = await env.BLUEPRINT_AUTH.get(`bp:${id}`);
+  if (raw) { try { return JSON.parse(raw).name || id; } catch {} }
+  return id;
+}
+
 async function handleNotify(request, env) {
   let body;
   try { body = await request.json(); }
@@ -920,6 +955,8 @@ async function handleSign(request, env, ctx) {
 
   // Self-test sessions write the record but never email.
   if (sess.selfTest) return json(200, { ok: true, skipped: 'self-test' });
+
+  await logActivity(env, ctx, { type: 'signed', entity: 'blueprint', id: sess.blueprintId, name: await bpDisplayName(env, sess.blueprintId), actor: sess.email, detail: `${name}${title ? ', ' + title : ''}` });
 
   const subject = `[Blueprint] ${sess.blueprintId} APPROVED by ${name} (${sess.email})`;
   const text =
@@ -1083,6 +1120,12 @@ async function handleAdminBlueprintMeta(request, env) {
   meta.updatedBy = sess.email;
 
   await env.BLUEPRINT_AUTH.put(`bpmeta:${id}`, JSON.stringify(meta));
+  const metaName = await bpDisplayName(env, id);
+  if (typeof body.disabled !== 'undefined') {
+    await logActivity(env, null, { type: 'status', entity: 'blueprint', id, name: metaName, actor: sess.email, detail: meta.disabled ? 'Put on hold (disabled)' : 'Re-enabled' });
+  } else if (typeof body.expiresAt !== 'undefined') {
+    await logActivity(env, null, { type: 'edited', entity: 'blueprint', id, name: metaName, actor: sess.email, detail: meta.expiresAt ? `Expiration set to ${meta.expiresAt}` : 'Expiration cleared' });
+  }
   return json(200, { ok: true, meta: { expiresAt: meta.expiresAt || '', disabled: !!meta.disabled, expired: isBpExpired(meta) } });
 }
 
@@ -1164,6 +1207,7 @@ async function handleAdminSaveTos(request, env) {
     // Empty save = revert to this blueprint's own default rendering.
     await env.BLUEPRINT_AUTH.delete(`bptos:${id}`);
   }
+  await logActivity(env, null, { type: 'edited', entity: 'blueprint', id, name: await bpDisplayName(env, id), actor: sess.email, detail: (sections && sections.length) ? 'Terms of Service updated' : 'Terms reverted to standard' });
   return json(200, { ok: true, blueprintId: id, sections: sections && sections.length ? sections : DEFAULT_MSA_SECTIONS, isDefault: !(sections && sections.length) });
 }
 
@@ -1186,6 +1230,7 @@ async function handleAdminMarkSigned(request, env) {
 
   if (body.signed === false) {
     await env.BLUEPRINT_AUTH.delete(`bpsigned:${id}`);
+    await logActivity(env, null, { type: 'status', entity: 'blueprint', id, name: await bpDisplayName(env, id), actor: sess.email, detail: 'Marked open (signature cleared)' });
     return json(200, { ok: true, blueprintId: id, signature: null });
   }
 
@@ -1199,6 +1244,7 @@ async function handleAdminMarkSigned(request, env) {
     userAgent: 'manual-admin-entry',
   };
   await env.BLUEPRINT_AUTH.put(`bpsigned:${id}`, JSON.stringify(record));
+  await logActivity(env, null, { type: 'signed', entity: 'blueprint', id, name: await bpDisplayName(env, id), actor: sess.email, detail: 'Marked signed (on paper)' });
   return json(200, { ok: true, blueprintId: id, signature: record });
 }
 
@@ -1444,6 +1490,7 @@ async function handleAdminCreateBlueprint(request, env) {
   const templateTos = await env.BLUEPRINT_AUTH.get(`bptos:${TOS_TEMPLATE_BLUEPRINT_ID}`);
   if (templateTos) await env.BLUEPRINT_AUTH.put(`bptos:${slug}`, templateTos);
 
+  await logActivity(env, null, { type: 'created', entity: 'blueprint', id: slug, name, actor: sess.email, detail: 'Blueprint draft created' });
   return json(200, { ok: true, blueprint: rec });
 }
 
@@ -1611,6 +1658,73 @@ async function handleAdminListDiscoveries(request, env) {
   return json(200, { ok: true, discoveries });
 }
 
+// Cross-entity recent-activity feed for the dashboard home page. Merges the
+// append-only activity: log with a backfill of 'created' events (from
+// existing draft/discovery createdAt) and 'signed' events (from bpsigned
+// rollups), so the feed is populated from history even though lifecycle
+// logging only began when this shipped. A backfilled event is suppressed
+// when a real logged event already covers the same entity, so the two never
+// double-count.
+async function handleAdminActivity(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+
+  const logged = [];
+  const actList = await env.BLUEPRINT_AUTH.list({ prefix: 'activity:', limit: 300 });
+  const actVals = await Promise.all(actList.keys.map((k) => env.BLUEPRINT_AUTH.get(k.name)));
+  for (const v of actVals) { if (!v) continue; try { logged.push(JSON.parse(v)); } catch {} }
+
+  // Entities already covered by a real logged created/signed event.
+  const have = new Set(
+    logged.filter((e) => e.type === 'created' || e.type === 'signed')
+          .map((e) => `${e.type}:${e.entity}:${e.id}`)
+  );
+  const events = [...logged];
+
+  const [bpList, discList, signedList] = await Promise.all([
+    env.BLUEPRINT_AUTH.list({ prefix: 'bp:', limit: 300 }),
+    env.BLUEPRINT_AUTH.list({ prefix: 'discovery:', limit: 300 }),
+    env.BLUEPRINT_AUTH.list({ prefix: 'bpsigned:', limit: 300 }),
+  ]);
+
+  const bpRecs = await Promise.all(bpList.keys.map((k) => env.BLUEPRINT_AUTH.get(k.name)));
+  for (const raw of bpRecs) {
+    if (!raw) continue;
+    try {
+      const r = JSON.parse(raw);
+      if (r.createdAt && !have.has(`created:blueprint:${r.id}`)) {
+        events.push({ ts: r.createdAt, type: 'created', entity: 'blueprint', id: r.id, name: r.name || r.id, actor: r.createdBy || '', detail: 'Blueprint draft created' });
+      }
+    } catch {}
+  }
+
+  const discRecs = await Promise.all(discList.keys.map((k) => env.BLUEPRINT_AUTH.get(k.name).then((v) => [k.name.slice('discovery:'.length), v])));
+  for (const [id, raw] of discRecs) {
+    if (!raw) continue;
+    try {
+      const r = JSON.parse(raw);
+      if (r.createdAt && !have.has(`created:discovery:${id}`)) {
+        events.push({ ts: r.createdAt, type: 'created', entity: 'discovery', id, name: r.company || id, actor: r.createdBy || '', detail: 'Discovery created' });
+      }
+    } catch {}
+  }
+
+  const signedRecs = await Promise.all(signedList.keys.map((k) => env.BLUEPRINT_AUTH.get(k.name).then((v) => [k.name.slice('bpsigned:'.length), v])));
+  for (const [id, raw] of signedRecs) {
+    if (!raw) continue;
+    try {
+      const r = JSON.parse(raw);
+      if (r.signedAt && !have.has(`signed:blueprint:${id}`)) {
+        const reg = BLUEPRINT_REGISTRY.find((b) => b.id === id);
+        events.push({ ts: r.signedAt, type: 'signed', entity: 'blueprint', id, name: (reg && reg.name) || r.blueprintId || id, actor: r.email || r.name || '', detail: r.name ? `${r.name}${r.title ? ', ' + r.title : ''}` : '' });
+      }
+    } catch {}
+  }
+
+  events.sort((a, b) => new Date(b.ts || 0) - new Date(a.ts || 0));
+  return json(200, { ok: true, events: events.slice(0, 80) });
+}
+
 async function handleAdminCreateDiscovery(request, env) {
   const sess = await getAdminSession(request, env);
   if (!sess) return json(401, { ok: false, error: 'Not signed in' });
@@ -1646,6 +1760,7 @@ async function handleAdminCreateDiscovery(request, env) {
     createdBy: sess.email,
   };
   await env.BLUEPRINT_AUTH.put(`discovery:${id}`, JSON.stringify(rec));
+  await logActivity(env, null, { type: 'created', entity: 'discovery', id, name: company, actor: sess.email, detail: 'Discovery created' });
   return json(200, { ok: true, discovery: { id, ...rec } });
 }
 

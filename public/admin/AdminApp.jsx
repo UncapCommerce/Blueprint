@@ -94,7 +94,9 @@
   // pathname straight back to the right route.
   function parseRoute() {
     const seg = window.location.pathname.split('/').filter(Boolean)[0];
-    return seg === 'discoveries' ? 'discoveries' : 'blueprints';
+    if (seg === 'discoveries') return 'discoveries';
+    if (seg === 'blueprints') return 'blueprints';
+    return 'home';
   }
   // Client-side transition: pushState updates the URL without a reload,
   // then a custom event nudges every useRoute() subscriber to re-parse
@@ -237,18 +239,22 @@
   function TopBar({ me, route, onLogout }) {
     const isMobile = useIsMobile();
     const items = [
+      { id: 'home', l: 'Home' },
       { id: 'discoveries', l: 'Discoveries' },
       { id: 'blueprints',  l: 'Blueprints' },
     ];
-    const pill = (it) => (
-      <a key={it.id} href={'/' + it.id} onClick={navClick('/' + it.id)} style={{
-        padding: '7px 14px', borderRadius: 999, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
-        fontFamily: T.sans, fontSize: 13.5, fontWeight: 600, lineHeight: 1,
-        color: route === it.id ? T.black : T.fg2,
-        background: route === it.id ? T.signal : 'transparent',
-        border: route === it.id ? `1px solid ${T.black}` : '1px solid transparent',
-      }}>{it.l}</a>
-    );
+    const pill = (it) => {
+      const path = it.id === 'home' ? '/' : '/' + it.id;
+      return (
+        <a key={it.id} href={path} onClick={navClick(path)} style={{
+          padding: '7px 14px', borderRadius: 999, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
+          fontFamily: T.sans, fontSize: 13.5, fontWeight: 600, lineHeight: 1,
+          color: route === it.id ? T.black : T.fg2,
+          background: route === it.id ? T.signal : 'transparent',
+          border: route === it.id ? `1px solid ${T.black}` : '1px solid transparent',
+        }}>{it.l}</a>
+      );
+    };
     return (
       <header style={{ position: 'sticky', top: 0, zIndex: 50, background: T.paper, borderBottom: `1px solid ${T.black}` }}>
         <div style={{
@@ -259,7 +265,7 @@
           gap: isMobile ? 10 : 26,
           flexWrap: isMobile ? 'wrap' : 'nowrap',
         }}>
-          <a href="/blueprints" onClick={navClick('/blueprints')} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+          <a href="/" onClick={navClick('/')} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
             <img src="/assets/uncap-logo-black.svg" alt="Uncap" style={{ height: 20, width: 'auto', display: 'block' }}/>
             <span style={{ ...S.eyebrow, color: T.fg1 }}>GO</span>
           </a>
@@ -1309,6 +1315,75 @@
   }
 
   // ── root ─────────────────────────────────────────────────────────────
+  // Dashboard landing page: a cross-entity recent-activity feed (created,
+  // edited, signed, status changed) across both Discoveries and Blueprints.
+  // Backed by /api/admin/activity. This is what the logo and first login land on.
+  function Home() {
+    const isMobile = useIsMobile();
+    const [events, setEvents] = useState(null);
+    const [error, setError] = useState('');
+    useEffect(() => {
+      let dead = false;
+      api('/api/admin/activity')
+        .then((d) => { if (!dead) setEvents(d.events || []); })
+        .catch((e) => { if (!dead) { setError(e.message); setEvents([]); } });
+      return () => { dead = true; };
+    }, []);
+
+    const actStyle = (type) => {
+      switch (type) {
+        case 'created': return { l: 'Created', bg: '#EEF0FE', fg: '#3A44C4', bd: '#C3C9F5' };
+        case 'signed':  return { l: 'Signed',  bg: '#DFFCE6', fg: '#064E2E', bd: '#9BDDB0' };
+        case 'edited':  return { l: 'Edited',  bg: '#FFF6E0', fg: '#6A4E00', bd: '#E8C36A' };
+        case 'status':  return { l: 'Status',  bg: T.black,   fg: '#fff',    bd: T.black };
+        default:        return { l: type || 'Event', bg: T.cream, fg: T.fg2, bd: T.line };
+      }
+    };
+
+    const card = (children) => <div style={{ ...S.card, overflow: 'hidden' }}>{children}</div>;
+
+    return (
+      <Page>
+        <PageHead eyebrow="Dashboard" title="Recent activity"/>
+        {events === null ? (
+          <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>Loading…</div>
+        ) : error ? (
+          <div style={{ ...S.card, padding: 24, color: '#B3261E', fontFamily: T.sans, fontSize: 14 }}>{error}</div>
+        ) : events.length === 0 ? (
+          <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>
+            No activity yet. Creating, editing, or signing a blueprint or discovery will show up here.
+          </div>
+        ) : card(
+          events.map((ev, i) => {
+            const a = actStyle(ev.type);
+            const path = ev.entity === 'discovery' ? '/discoveries' : '/blueprints';
+            return (
+              <a key={i} href={path} onClick={navClick(path)}
+                style={{ display: 'flex', gap: 12, alignItems: 'flex-start', textDecoration: 'none',
+                  padding: isMobile ? '13px 14px' : '14px 18px',
+                  borderBottom: i < events.length - 1 ? `1px solid ${T.line}` : 'none' }}>
+                <span style={{ flexShrink: 0, marginTop: 1, display: 'inline-block', padding: '3px 9px', borderRadius: 999,
+                  fontFamily: T.mono, fontSize: 9.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase',
+                  background: a.bg, color: a.fg, border: `1px solid ${a.bd}`, minWidth: 56, textAlign: 'center' }}>{a.l}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: T.sans, fontSize: 14, color: T.fg1, lineHeight: 1.35 }}>
+                    <span style={{ fontWeight: 700 }}>{ev.name || ev.id}</span>
+                    <span style={{ fontFamily: T.mono, fontSize: 9, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', color: T.fg3, marginLeft: 8 }}>
+                      {ev.entity === 'discovery' ? 'Discovery' : 'Blueprint'}
+                    </span>
+                  </div>
+                  <div style={{ fontFamily: T.sans, fontSize: 12.5, color: T.fg2, marginTop: 2 }}>
+                    {[ev.detail, ev.actor, fmtWhen(ev.ts)].filter(Boolean).join(' · ')}
+                  </div>
+                </div>
+              </a>
+            );
+          })
+        )}
+      </Page>
+    );
+  }
+
   function AdminApp() {
     const [me, setMe] = useState(undefined); // undefined = checking, null = signed out
     const route = useRoute();
@@ -1336,7 +1411,7 @@
     return (
       <div style={{ minHeight: '100vh', background: T.cream }}>
         <TopBar me={me} route={route} onLogout={logout}/>
-        {route === 'discoveries' ? <Discoveries/> : <Blueprints/>}
+        {route === 'discoveries' ? <Discoveries/> : route === 'blueprints' ? <Blueprints/> : <Home/>}
       </div>
     );
   }
