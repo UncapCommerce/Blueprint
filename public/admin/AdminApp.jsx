@@ -514,7 +514,15 @@
     const isMobile = useIsMobile();
     const [rows, setRows] = useState(null);
     const [showNew, setShowNew] = useState(() => new URLSearchParams(window.location.search).get('new') === '1');
+    const [transcriptFor, setTranscriptFor] = useState(null);
     const [error, setError] = useState('');
+
+    const discActions = (r) => (
+      <span style={{ display: 'inline-flex', gap: 8, flexWrap: 'wrap' }}>
+        <a href={'/discovery/' + r.handle + '/'} target="_blank" rel="noreferrer" style={{ ...S.btnGhost, textDecoration: 'none' }}>View →</a>
+        <button type="button" style={S.btnGhost} onClick={() => setTranscriptFor(r)}>Transcript</button>
+      </span>
+    );
 
     const load = useCallback(async () => {
       try { setRows((await api('/api/admin/discoveries')).discoveries); }
@@ -548,6 +556,8 @@
                   {r.client ? <div style={{ fontFamily: T.sans, fontSize: 13.5, color: T.fg2, marginTop: 3 }}>{r.client}</div> : null}
                   <div style={{ fontFamily: T.sans, fontSize: 13, marginTop: 3 }}>{webLink(r)}</div>
                   {r.address ? <div style={{ fontFamily: T.sans, fontSize: 12.5, color: T.fg3, marginTop: 3 }}>{r.address}</div> : null}
+                  <div style={{ marginTop: 9 }}>{discStatusChip(r.status)}</div>
+                  <div style={{ marginTop: 10 }}>{discActions(r)}</div>
                   <div style={{ fontFamily: T.mono, fontSize: 10.5, color: T.fg3, marginTop: 9 }}>
                     {fmtWhen(r.createdAt)} · {(r.createdBy || '').split('@')[0]}
                   </div>
@@ -558,18 +568,17 @@
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead><tr>
-                  <th style={S.th}>Company</th><th style={S.th}>Client</th><th style={S.th}>Website</th>
-                  <th style={S.th}>Address</th><th style={S.th}>Created</th><th style={S.th}>By</th>
+                  <th style={S.th}>Company</th><th style={S.th}>Client</th><th style={S.th}>Status</th>
+                  <th style={S.th}>Created</th><th style={{ ...S.th, textAlign: 'right' }}>Actions</th>
                 </tr></thead>
                 <tbody>
                   {rows.map((r) => (
                     <tr key={r.id}>
-                      <td style={{ ...S.td, fontWeight: 700 }}>{r.company}</td>
+                      <td style={{ ...S.td, fontWeight: 700 }}>{r.company}{r.handle ? <div style={{ fontFamily: T.mono, fontSize: 10.5, color: T.fg3, marginTop: 3, fontWeight: 400 }}>/discovery/{r.handle}/</div> : null}</td>
                       <td style={S.td}>{r.client || <span style={{ color: T.fg3 }}>—</span>}</td>
-                      <td style={S.td}>{webLink(r)}</td>
-                      <td style={S.td}>{r.address || <span style={{ color: T.fg3 }}>—</span>}</td>
+                      <td style={S.td}>{discStatusChip(r.status)}</td>
                       <td style={{ ...S.td, fontFamily: T.mono, fontSize: 12 }}>{fmtWhen(r.createdAt)}</td>
-                      <td style={{ ...S.td, fontFamily: T.mono, fontSize: 12, color: T.fg3 }}>{(r.createdBy || '').split('@')[0]}</td>
+                      <td style={{ ...S.td, textAlign: 'right', whiteSpace: 'nowrap' }}>{discActions(r)}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -579,8 +588,65 @@
         </div>
         {error && <div style={{ marginTop: 12, color: '#B3261E', fontFamily: T.sans, fontSize: 13 }}>{error}</div>}
 
-        {showNew && <NewDiscoveryModal onClose={() => setShowNew(false)} onSaved={() => { setShowNew(false); load(); }}/>}
+        {showNew && <NewDiscoveryModal onClose={() => setShowNew(false)}
+          onSaved={(d) => {
+            setShowNew(false);
+            // Creating a discovery moves the admin straight into the
+            // Discovery Experience to run the session on the call.
+            if (d && d.handle) { window.location.href = '/discovery/' + d.handle + '/'; return; }
+            load();
+          }}/>}
+        {transcriptFor && <TranscriptModal disc={transcriptFor} onClose={() => setTranscriptFor(null)}/>}
       </Page>
+    );
+  }
+
+  const DISC_STATUS = {
+    new:         { l: 'Not started', bg: '#EEF0FE', fg: '#3A44C4', bd: '#C3C9F5' },
+    in_progress: { l: 'In progress', bg: '#FFF6E0', fg: '#6A4E00', bd: '#E8C36A' },
+    complete:    { l: 'Complete',    bg: '#DFFCE6', fg: '#064E2E', bd: '#9BDDB0' },
+  };
+  function discStatusChip(status) {
+    const s = DISC_STATUS[status] || DISC_STATUS.new;
+    return <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 999, fontFamily: T.mono, fontSize: 9.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', background: s.bg, color: s.fg, border: `1px solid ${s.bd}` }}>{s.l}</span>;
+  }
+
+  // Read-only transcript: every question and its captured answer, grouped by step.
+  function TranscriptModal({ disc, onClose }) {
+    const [data, setData] = useState(null);
+    const [error, setError] = useState('');
+    const steps = window.DISCOVERY_STEPS || [];
+    useEffect(() => {
+      let dead = false;
+      api('/api/discovery/answers?handle=' + encodeURIComponent(disc.handle))
+        .then((d) => { if (!dead) setData(d); })
+        .catch((e) => { if (!dead) { setError(e.message); setData({ answers: {} }); } });
+      return () => { dead = true; };
+    }, [disc.handle]);
+    const fmt = (v) => Array.isArray(v) ? v.join(', ') : (v == null ? '' : String(v));
+    const answers = (data && data.answers) || {};
+    return (
+      <Modal title={'Transcript · ' + disc.company} sub="Every question and answer captured" onClose={onClose} width={760}>
+        <div style={{ padding: 20, maxHeight: '70vh', overflowY: 'auto' }}>
+          {!data ? <div style={{ color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>Loading…</div> : (
+            steps.map((st, i) => (
+              <div key={st.id} style={{ marginBottom: 22 }}>
+                <div style={{ fontFamily: T.mono, fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.fg3 }}>{String(i + 1).padStart(2, '0')} · {st.label}</div>
+                {st.groups.map((g) => g.questions.map((q) => {
+                  const a = fmt(answers[q.id]);
+                  return (
+                    <div key={q.id} style={{ padding: '9px 0', borderBottom: `1px solid ${T.line}` }}>
+                      <div style={{ fontFamily: T.sans, fontSize: 13, fontWeight: 600, color: T.fg1 }}>{q.label}</div>
+                      <div style={{ fontFamily: T.sans, fontSize: 13.5, color: a ? T.fg1 : T.fg3, marginTop: 2, whiteSpace: 'pre-wrap' }}>{a || '—'}</div>
+                    </div>
+                  );
+                }))}
+              </div>
+            ))
+          )}
+          {error && <div style={{ color: '#B3261E', fontFamily: T.sans, fontSize: 13 }}>{error}</div>}
+        </div>
+      </Modal>
     );
   }
 
@@ -607,7 +673,7 @@
       if (!leadContact) { setError('Pick a Client Lead from Attio'); return; }
       setBusy(true); setError('');
       try {
-        await api('/api/admin/discoveries', {
+        const d = await api('/api/admin/discoveries', {
           method: 'POST',
           body: JSON.stringify({
             company: company.name, companyAttioId: company.attioId,
@@ -615,7 +681,7 @@
             leadContact, associatedContacts, expiresAt,
           }),
         });
-        onSaved();
+        onSaved(d.discovery || null);
       } catch (err) { setError(err.message); setBusy(false); }
     };
 
@@ -1323,6 +1389,7 @@
     const [events, setEvents] = useState(null);
     const [error, setError] = useState('');
     const [page, setPage] = useState(1);
+    const [changesRef, setChangesRef] = useState(null);
     useEffect(() => {
       let dead = false;
       api('/api/admin/activity')
@@ -1333,12 +1400,13 @@
 
     const actStyle = (type) => {
       switch (type) {
-        case 'created': return { l: 'Created', bg: '#EEF0FE', fg: '#3A44C4', bd: '#C3C9F5' };
-        case 'signed':  return { l: 'Signed',  bg: '#DFFCE6', fg: '#064E2E', bd: '#9BDDB0' };
-        case 'edited':  return { l: 'Edited',  bg: '#FFF6E0', fg: '#6A4E00', bd: '#E8C36A' };
-        case 'status':  return { l: 'Status',  bg: T.black,   fg: '#fff',    bd: T.black };
-        case 'view':    return { l: 'Viewed',  bg: T.cream,   fg: T.fg2,     bd: T.line };
-        default:        return { l: type || 'Event', bg: T.cream, fg: T.fg2, bd: T.line };
+        case 'created':     return { l: 'Created', bg: '#EEF0FE', fg: '#3A44C4', bd: '#C3C9F5' };
+        case 'signed':      return { l: 'Signed',  bg: '#DFFCE6', fg: '#064E2E', bd: '#9BDDB0' };
+        case 'edited':      return { l: 'Edited',  bg: '#FFF6E0', fg: '#6A4E00', bd: '#E8C36A' };
+        case 'status':      return { l: 'Status',  bg: T.black,   fg: '#fff',    bd: T.black };
+        case 'view':        return { l: 'Viewed',  bg: T.cream,   fg: T.fg2,     bd: T.line };
+        case 'disc-update': return { l: 'Updated', bg: '#E8FF52', fg: '#0A0A0A', bd: T.black };
+        default:            return { l: type || 'Event', bg: T.cream, fg: T.fg2, bd: T.line };
       }
     };
 
@@ -1363,9 +1431,13 @@
               <div style={{ ...S.card, overflow: 'hidden' }}>
                 {pageRows.map((ev, i) => {
                   const a = actStyle(ev.type);
+                  const hasChanges = ev.type === 'disc-update' && ev.ref;
                   const path = ev.entity === 'discovery' ? '/discoveries' : '/blueprints';
+                  const onRowClick = hasChanges
+                    ? (e) => { e.preventDefault(); setChangesRef(ev.ref); }
+                    : navClick(path);
                   return (
-                    <a key={i} href={path} onClick={navClick(path)}
+                    <a key={i} href={hasChanges ? '#' : path} onClick={onRowClick}
                       style={{ display: 'flex', gap: 10, alignItems: 'center', textDecoration: 'none',
                         padding: isMobile ? '6px 12px' : '6px 14px',
                         borderBottom: i < pageRows.length - 1 ? `1px solid ${T.line}` : 'none' }}>
@@ -1380,7 +1452,9 @@
                           </span>
                         </div>
                         {ev.detail ? (
-                          <div style={{ fontFamily: T.sans, fontSize: 11.5, color: T.fg2, marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ev.detail}</div>
+                          <div style={{ fontFamily: T.sans, fontSize: 11.5, color: T.fg2, marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {ev.detail}{hasChanges ? <span style={{ color: T.fg1, fontWeight: 600 }}> · view changes →</span> : null}
+                          </div>
                         ) : null}
                       </div>
                       <div style={{ flexShrink: 0, textAlign: 'right', maxWidth: '42%' }}>
@@ -1405,7 +1479,43 @@
             </>
           )}
         </div>
+        {changesRef && <ChangesModal refId={changesRef} onClose={() => setChangesRef(null)}/>}
       </Page>
+    );
+  }
+
+  // Popup showing exactly what a client changed on a discovery submit.
+  function ChangesModal({ refId, onClose }) {
+    const [sub, setSub] = useState(null);
+    const [error, setError] = useState('');
+    useEffect(() => {
+      let dead = false;
+      api('/api/admin/discovery/submission?ref=' + encodeURIComponent(refId))
+        .then((d) => { if (!dead) setSub(d.submission); })
+        .catch((e) => { if (!dead) { setError(e.message); setSub({ changes: [] }); } });
+      return () => { dead = true; };
+    }, [refId]);
+    const changes = (sub && sub.changes) || [];
+    return (
+      <Modal title={sub ? (sub.by || 'Client') + ' · ' + (sub.company || 'Discovery') : 'Discovery update'} sub={sub ? fmtWhen(sub.at) + ' · ' + changes.length + ' change' + (changes.length === 1 ? '' : 's') : 'Loading…'} onClose={onClose} width={640}>
+        <div style={{ padding: 20, maxHeight: '70vh', overflowY: 'auto' }}>
+          {!sub ? <div style={{ color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>Loading…</div> : changes.length === 0 ? (
+            <div style={{ color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>No change detail available.</div>
+          ) : changes.map((c, i) => (
+            <div key={i} style={{ padding: '11px 0', borderBottom: `1px solid ${T.line}` }}>
+              <div style={{ fontFamily: T.sans, fontSize: 13, fontWeight: 700, color: T.fg1 }}>
+                {c.label}
+                <span style={{ fontFamily: T.mono, fontSize: 9, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: c.isNew ? '#064E2E' : '#6A4E00', marginLeft: 8 }}>{c.isNew ? 'New' : 'Changed'}</span>
+              </div>
+              {!c.isNew && c.before ? (
+                <div style={{ fontFamily: T.sans, fontSize: 13, color: T.fg3, marginTop: 3, textDecoration: 'line-through', whiteSpace: 'pre-wrap' }}>{c.before}</div>
+              ) : null}
+              <div style={{ fontFamily: T.sans, fontSize: 13.5, color: T.fg1, marginTop: 3, whiteSpace: 'pre-wrap' }}>{c.after}</div>
+            </div>
+          ))}
+          {error && <div style={{ color: '#B3261E', fontFamily: T.sans, fontSize: 13 }}>{error}</div>}
+        </div>
+      </Modal>
     );
   }
 
