@@ -1866,6 +1866,17 @@ function discoveryAllowlist(disc) {
   return [...new Set(emails)];
 }
 
+// Name of the assigned contact for an email, so client submits report a real
+// name without asking for it at the gate.
+function discoveryContactName(disc, email) {
+  const e = (email || '').toLowerCase();
+  if (disc.leadContact && (disc.leadContact.email || '').toLowerCase() === e) return disc.leadContact.name || '';
+  for (const c of (disc.associatedContacts || [])) {
+    if (c && (c.email || '').toLowerCase() === e) return c.name || '';
+  }
+  return '';
+}
+
 async function getDiscoveryAnswers(env, id) {
   const raw = await env.BLUEPRINT_AUTH.get(`discans:${id}`);
   if (!raw) return { answers: {}, activeStepIdx: 0, unlockedIdx: 0, status: 'new' };
@@ -1951,12 +1962,14 @@ async function handleDiscoveryRequestCode(request, env) {
   const disc = await getDiscoveryByHandle(env, body.handle);
   if (!disc) return json(404, { ok: false, error: 'Discovery not found' });
 
-  const isTeam = email.endsWith('@uncap.com');
+  // Strict allowlist: only the clients assigned to this discovery (lead +
+  // associated contacts) can ever request a passcode. The Uncap team opens
+  // it through the admin dashboard (cookie auth), not this gate.
   const allow = discoveryAllowlist(disc);
-  if (!isTeam && allow.length && !allow.includes(email)) {
+  if (!allow.includes(email)) {
     return json(403, { ok: false, error: 'This discovery is restricted. Use the email it was sent to.' });
   }
-  if (!isTeam) {
+  {
     const ip = clientIp(request);
     const okEmail = await rateLimit(env, `disccode:email:${disc.id}:${encodeURIComponent(email)}`, 3, 15 * 60);
     const okIp = ip ? await rateLimit(env, `disccode:ip:${ip}`, 10, 15 * 60) : true;
@@ -1979,10 +1992,12 @@ async function handleDiscoveryVerify(request, env) {
   try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
   const email = (body.email || '').toString().trim().toLowerCase();
   const code = (body.code || '').toString().trim();
-  const name = stripHeaderValue((body.name || '').toString()).slice(0, 200);
   if (!email || !code) return json(400, { ok: false, error: 'Enter your code' });
   const disc = await getDiscoveryByHandle(env, body.handle);
   if (!disc) return json(404, { ok: false, error: 'Discovery not found' });
+  // Only assigned contacts hold a code, but re-check the allowlist here too.
+  if (!discoveryAllowlist(disc).includes(email)) return json(403, { ok: false, error: 'This discovery is restricted.' });
+  const name = stripHeaderValue(discoveryContactName(disc, email)).slice(0, 200) || email.split('@')[0];
 
   const ip = clientIp(request);
   if (ip && !(await rateLimit(env, `discverify:${ip}`, 20, 10 * 60))) {

@@ -36,61 +36,92 @@
 
   const LABELS = ['Client', 'Architecture', 'Experience', 'Discovery', 'Conversion', 'Revenue', 'Unified', 'Project', 'Growth', 'Enclosing'];
 
-  // ── Passcode gate (client) ────────────────────────────────────────────
-  function Gate({ company, onToken }) {
-    const [stage, setStage] = useState('email'); // email | code
+  // ── Passcode gate (client) — identical to the blueprint proposal gate ──
+  function Gate({ onToken }) {
+    const [step, setStep] = useState('email'); // email | code
     const [email, setEmail] = useState('');
-    const [name, setName] = useState('');
     const [code, setCode] = useState('');
-    const [busy, setBusy] = useState(false);
-    const [err, setErr] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const inputRef = useRef(null);
+    useEffect(() => { if (inputRef.current) inputRef.current.focus(); }, [step]);
 
-    const requestCode = async () => {
-      setBusy(true); setErr('');
+    const requestCode = async (e) => {
+      e.preventDefault();
+      const raw = email.trim();
+      if (!raw) { setError('Enter your email'); return; }
+      setLoading(true); setError('');
       try {
-        await api('/api/discovery/request-code', { method: 'POST', body: JSON.stringify({ handle: HANDLE, email: email.trim() }) });
-        setStage('code');
-      } catch (e) { setErr(e.message); } finally { setBusy(false); }
+        const resp = await fetch('/api/discovery/request-code', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ handle: HANDLE, email: raw }) });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok || data.ok === false) { setError(data.error || 'Could not send code'); return; }
+        setStep('code');
+      } catch (_) { setError('Network error — try again.'); } finally { setLoading(false); }
     };
-    const verify = async () => {
-      setBusy(true); setErr('');
+    const verifyCode = async (e) => {
+      e.preventDefault();
+      if (code.length !== 6) { setError('Enter the 6-digit code'); return; }
+      setLoading(true); setError('');
       try {
-        const d = await api('/api/discovery/verify', { method: 'POST', body: JSON.stringify({ handle: HANDLE, email: email.trim(), code: code.trim(), name: name.trim() }) });
-        try { sessionStorage.setItem(TOKEN_KEY, d.token); } catch (_) {}
-        onToken(d.token, d.name || name.trim());
-      } catch (e) { setErr(e.message); } finally { setBusy(false); }
+        const resp = await fetch('/api/discovery/verify', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ handle: HANDLE, email: email.trim(), code: code.trim() }) });
+        const data = await resp.json().catch(() => ({}));
+        if (!resp.ok || data.ok === false) { setError(data.error || 'Wrong code'); return; }
+        try { sessionStorage.setItem(TOKEN_KEY, data.token); } catch (_) {}
+        onToken(data.token);
+      } catch (_) { setError('Network error — try again.'); } finally { setLoading(false); }
     };
 
-    const inputStyle = { width: '100%', padding: '12px 14px', border: '1px solid #C9C7C0', borderRadius: 6, fontSize: 15, background: '#FFFFFF', outline: 'none', marginBottom: 12 };
-    const btnStyle = { width: '100%', padding: '13px 18px', border: 'none', borderRadius: 6, background: '#0A0A0A', color: '#fff', fontSize: 15, fontWeight: 650, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.7 : 1 };
+    const inputBase = { width: '100%', boxSizing: 'border-box', padding: '14px 16px', color: 'var(--fg-1)', background: 'var(--uc-cream)', borderRadius: 5, outline: 'none', transition: 'border-color .15s var(--ease-out)' };
+    const primaryBtn = { width: '100%', justifyContent: 'center', marginTop: 18, display: 'inline-flex', alignItems: 'center', gap: 8, padding: '14px 22px', border: 'none', borderRadius: 5, background: 'var(--uc-black)', color: 'var(--uc-paper)', fontFamily: 'var(--font-sans)', fontSize: 15, fontWeight: 600, cursor: 'pointer' };
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--uc-cream)', color: 'var(--fg-1)', fontFamily: 'var(--font-sans)', padding: 24 }}>
         <div style={{ width: '100%', maxWidth: 420 }}>
-          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: '#707070', marginBottom: 14 }}>Uncap Discovery</div>
-          <h1 style={{ fontSize: 32, fontWeight: 800, letterSpacing: '-0.03em', margin: '0 0 8px', lineHeight: 1.05 }}>{company || 'Discovery session'}</h1>
-          <p style={{ fontSize: 15, color: '#4D4D4D', lineHeight: 1.55, margin: '0 0 24px' }}>
-            {stage === 'email'
-              ? 'Enter the email this was sent to and we\'ll send a 6-digit passcode.'
-              : 'Enter the 6-digit code we just emailed you.'}
-          </p>
-          {stage === 'email' ? (
-            <>
-              <input style={inputStyle} type="email" placeholder="you@company.com" value={email}
-                onChange={(e) => setEmail(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter' && email.trim()) requestCode(); }} autoFocus/>
-              <input style={inputStyle} type="text" placeholder="Your name (optional)" value={name} onChange={(e) => setName(e.target.value)}/>
-              <button style={btnStyle} disabled={busy || !email.trim()} onClick={requestCode}>{busy ? 'Sending…' : 'Send passcode'}</button>
-            </>
-          ) : (
-            <>
-              <input style={{ ...inputStyle, fontFamily: "'JetBrains Mono',monospace", fontSize: 22, letterSpacing: 6, textAlign: 'center' }} inputMode="numeric" maxLength={6}
-                placeholder="000000" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
-                onKeyDown={(e) => { if (e.key === 'Enter' && code.trim().length === 6) verify(); }} autoFocus/>
-              <button style={btnStyle} disabled={busy || code.trim().length !== 6} onClick={verify}>{busy ? 'Verifying…' : 'Open discovery'}</button>
-              <button style={{ background: 'none', border: 'none', color: '#707070', fontSize: 13, marginTop: 12, cursor: 'pointer', textDecoration: 'underline' }} onClick={() => { setStage('email'); setCode(''); setErr(''); }}>Use a different email</button>
-            </>
-          )}
-          {err && <div style={{ color: '#B3261E', fontSize: 13, marginTop: 14 }}>{err}</div>}
+          <img src="/assets/uncap-logo-black.svg" alt="Uncap" style={{ height: 28, width: 'auto', display: 'block', margin: '0 auto 28px' }}/>
+          <form onSubmit={step === 'email' ? requestCode : verifyCode} style={{ background: 'var(--uc-paper)', border: '1px solid var(--uc-black)', borderRadius: 8, padding: 36, boxShadow: '0 18px 40px -22px rgba(10,10,10,0.25)' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 24, fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--fg-3)' }}>
+              <span style={{ width: 14, height: 2, background: 'var(--uc-signal)' }}/>
+              Private discovery
+            </div>
+            {step === 'email' ? (
+              <React.Fragment>
+                <h1 style={{ margin: '0 0 10px', fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(28px, 4vw, 36px)', lineHeight: 1.04, letterSpacing: '-0.03em' }}>Enter your email.</h1>
+                <p style={{ margin: '0 0 24px', fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 15, lineHeight: 1.5, color: 'var(--fg-2)' }}>
+                  We&rsquo;ll send a one-time 6-digit passcode to unlock your discovery.
+                </p>
+                <input ref={inputRef} type="text" value={email} onChange={(e) => { setEmail(e.target.value); if (error) setError(''); }}
+                  placeholder="you@company.com" autoComplete="email" spellCheck="false" disabled={loading} aria-label="Email" aria-invalid={!!error}
+                  style={{ ...inputBase, fontFamily: 'var(--font-sans)', fontSize: 17, fontWeight: 500, border: '1px solid ' + (error ? 'var(--uc-error)' : 'var(--line-1)') }}
+                  onFocus={(e) => { if (!error) e.currentTarget.style.borderColor = 'var(--uc-black)'; }}
+                  onBlur={(e) => { if (!error) e.currentTarget.style.borderColor = 'var(--line-1)'; }}/>
+                {error && <div style={{ marginTop: 10, fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--uc-error)' }}>{error}</div>}
+                <button type="submit" disabled={loading || !email.trim()} style={{ ...primaryBtn, opacity: loading ? 0.7 : 1, cursor: loading ? 'default' : 'pointer' }}>
+                  {loading ? 'Sending…' : 'Send passcode'} <span>→</span>
+                </button>
+              </React.Fragment>
+            ) : (
+              <React.Fragment>
+                <h1 style={{ margin: '0 0 10px', fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(28px, 4vw, 36px)', lineHeight: 1.04, letterSpacing: '-0.03em' }}>Check your inbox.</h1>
+                <p style={{ margin: '0 0 24px', fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 15, lineHeight: 1.5, color: 'var(--fg-2)' }}>
+                  We sent a 6-digit passcode to <strong style={{ color: 'var(--fg-1)' }}>{email}</strong>. Valid for 10 minutes.
+                </p>
+                <input ref={inputRef} type="text" inputMode="numeric" value={code} onChange={(e) => { setCode(e.target.value.replace(/\D/g, '').slice(0, 6)); if (error) setError(''); }}
+                  placeholder="000000" autoComplete="one-time-code" disabled={loading} aria-label="6-digit code" aria-invalid={!!error}
+                  style={{ ...inputBase, fontFamily: 'var(--font-mono)', fontSize: 22, fontWeight: 700, letterSpacing: '0.25em', textAlign: 'center', border: '1px solid ' + (error ? 'var(--uc-error)' : 'var(--line-1)') }}
+                  onFocus={(e) => { if (!error) e.currentTarget.style.borderColor = 'var(--uc-black)'; }}
+                  onBlur={(e) => { if (!error) e.currentTarget.style.borderColor = 'var(--line-1)'; }}/>
+                {error && <div style={{ marginTop: 10, fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--uc-error)' }}>{error}</div>}
+                <button type="submit" disabled={loading || code.length !== 6} style={{ ...primaryBtn, opacity: (loading || code.length !== 6) ? 0.7 : 1, cursor: (loading || code.length !== 6) ? 'default' : 'pointer' }}>
+                  {loading ? 'Unlocking…' : 'Unlock'} <span>→</span>
+                </button>
+                <button type="button" onClick={() => { setStep('email'); setCode(''); setError(''); }}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, marginTop: 14, fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--fg-3)' }}>
+                  ← Use a different email
+                </button>
+              </React.Fragment>
+            )}
+            <div style={{ marginTop: 22, paddingTop: 18, borderTop: '1px solid var(--line-1)', fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--fg-3)' }}>Trouble? Email hey@uncap.com</div>
+          </form>
         </div>
       </div>
     );
@@ -538,7 +569,7 @@
       </div>;
     }
     if (phase === 'gate') {
-      return <Gate company={company} onToken={(tok, nm) => { setToken(tok); loadAnswers(tok).catch((e) => setErr(e.message)); }}/>;
+      return <Gate onToken={(tok) => { setToken(tok); loadAnswers(tok).catch((e) => setErr(e.message)); }}/>;
     }
     return <Experience role={role} company={company} initial={initial} token={token}/>;
   }
