@@ -261,7 +261,7 @@
         }}>
           <a href="/blueprints" onClick={navClick('/blueprints')} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
             <img src="/assets/uncap-logo-black.svg" alt="Uncap" style={{ height: 20, width: 'auto', display: 'block' }}/>
-            <span style={{ ...S.eyebrow, color: T.fg1 }}>Uncap GO</span>
+            <span style={{ ...S.eyebrow, color: T.fg1 }}>GO</span>
           </a>
 
           {!isMobile && (
