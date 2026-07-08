@@ -510,16 +510,31 @@
   }
 
   // ── Discoveries ──────────────────────────────────────────────────────
+  const DISC_PAGE_SIZE = 10;
   function Discoveries() {
     const isMobile = useIsMobile();
     const [rows, setRows] = useState(null);
     const [showNew, setShowNew] = useState(() => new URLSearchParams(window.location.search).get('new') === '1');
     const [transcriptFor, setTranscriptFor] = useState(null);
+    const [copied, setCopied] = useState('');
+    const [page, setPage] = useState(1);
     const [error, setError] = useState('');
 
+    const shareUrl = (r) => `${window.location.origin}/discovery/${r.handle}/`;
+    const copyUrl = async (r) => {
+      try { await navigator.clipboard.writeText(shareUrl(r)); }
+      catch (_) { window.prompt('Copy the discovery link:', shareUrl(r)); }
+      setCopied(r.id);
+      setTimeout(() => setCopied(''), 1600);
+    };
+
     const discActions = (r) => (
-      <span style={{ display: 'inline-flex', gap: 8, flexWrap: 'wrap' }}>
-        <a href={'/discovery/' + r.handle + '/'} target="_blank" rel="noreferrer" style={{ ...S.btnGhost, textDecoration: 'none' }}>View →</a>
+      <span style={{ display: 'inline-flex', gap: 8, flexWrap: 'wrap', justifyContent: isMobile ? 'flex-start' : 'flex-end' }}>
+        <a href={'/discovery/' + r.handle + '/'} target="_blank" rel="noreferrer" title="Open discovery" aria-label="Open discovery"
+          style={{ ...S.btnIcon, textDecoration: 'none' }}><IconEye/></a>
+        <button type="button" title={copied === r.id ? 'Copied ✓' : 'Copy link'} aria-label="Copy link" style={S.btnIcon} onClick={() => copyUrl(r)}>
+          {copied === r.id ? <IconCheck/> : <IconShare/>}
+        </button>
         <button type="button" style={S.btnGhost} onClick={() => setTranscriptFor(r)}>Transcript</button>
       </span>
     );
@@ -530,9 +545,10 @@
     }, []);
     useEffect(() => { load(); }, [load]);
 
-    const webLink = (r) => r.website
-      ? <a href={/^https?:/i.test(r.website) ? r.website : 'https://' + r.website} target="_blank" rel="noreferrer" style={{ color: T.fg1 }}>{r.website}</a>
-      : <span style={{ color: T.fg3 }}>—</span>;
+    const sorted = rows ? rows.slice().sort((a, b) => new Date(b.createdAt || 0) - new Date(a.createdAt || 0)) : null;
+    const totalPages = sorted ? Math.max(1, Math.ceil(sorted.length / DISC_PAGE_SIZE)) : 1;
+    const pageSafe = Math.min(page, totalPages);
+    const pageRows = sorted ? sorted.slice((pageSafe - 1) * DISC_PAGE_SIZE, pageSafe * DISC_PAGE_SIZE) : [];
 
     return (
       <Page>
@@ -545,22 +561,23 @@
           ) : rows.length === 0 ? (
             <div style={{ padding: '56px 24px', textAlign: 'center' }}>
               <div style={{ fontFamily: T.hero, fontWeight: 800, fontSize: 20, letterSpacing: '-0.02em', color: T.fg1, marginBottom: 8 }}>No discoveries yet.</div>
-              <div style={{ fontFamily: T.sans, fontSize: 14, color: T.fg2, marginBottom: 18 }}>Start the first one — the full technical questionnaire lands in the next phase.</div>
+              <div style={{ fontFamily: T.sans, fontSize: 14, color: T.fg2, marginBottom: 18 }}>Start the first one to open the discovery experience.</div>
               <button type="button" style={S.btnLime} onClick={() => setShowNew(true)}>+ New discovery</button>
             </div>
           ) : isMobile ? (
             <div>
-              {rows.map((r) => (
-                <div key={r.id} style={{ padding: '16px 16px 14px', borderBottom: `1px solid ${T.line}` }}>
-                  <div style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 15, color: T.fg1 }}>{r.company}</div>
-                  {r.client ? <div style={{ fontFamily: T.sans, fontSize: 13.5, color: T.fg2, marginTop: 3 }}>{r.client}</div> : null}
-                  <div style={{ fontFamily: T.sans, fontSize: 13, marginTop: 3 }}>{webLink(r)}</div>
-                  {r.address ? <div style={{ fontFamily: T.sans, fontSize: 12.5, color: T.fg3, marginTop: 3 }}>{r.address}</div> : null}
-                  <div style={{ marginTop: 9 }}>{discStatusChip(r.status)}</div>
-                  <div style={{ marginTop: 10 }}>{discActions(r)}</div>
-                  <div style={{ fontFamily: T.mono, fontSize: 10.5, color: T.fg3, marginTop: 9 }}>
-                    {fmtWhen(r.createdAt)} · {(r.createdBy || '').split('@')[0]}
+              {pageRows.map((r) => (
+                <div key={r.id} style={{ padding: '16px 16px 15px', borderBottom: `1px solid ${T.line}` }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', gap: 10 }}>
+                    <div style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 15, color: T.fg1 }}>{r.company}</div>
                   </div>
+                  {r.client ? <div style={{ fontFamily: T.sans, fontSize: 13.5, color: T.fg2, marginTop: 3 }}>{r.client}</div> : null}
+                  <div style={{ marginTop: 8 }}>{discStatusChip(r.status)}</div>
+                  <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={S.eyebrow}>Created</span>
+                    <span style={{ fontFamily: T.mono, fontSize: 12, color: T.fg3 }}>{fmtWhen(r.createdAt)}</span>
+                  </div>
+                  <div style={{ marginTop: 11 }}>{discActions(r)}</div>
                 </div>
               ))}
             </div>
@@ -572,9 +589,9 @@
                   <th style={S.th}>Created</th><th style={{ ...S.th, textAlign: 'right' }}>Actions</th>
                 </tr></thead>
                 <tbody>
-                  {rows.map((r) => (
+                  {pageRows.map((r) => (
                     <tr key={r.id}>
-                      <td style={{ ...S.td, fontWeight: 700 }}>{r.company}{r.handle ? <div style={{ fontFamily: T.mono, fontSize: 10.5, color: T.fg3, marginTop: 3, fontWeight: 400 }}>/discovery/{r.handle}/</div> : null}</td>
+                      <td style={{ ...S.td, fontWeight: 700 }}>{r.company}</td>
                       <td style={S.td}>{r.client || <span style={{ color: T.fg3 }}>—</span>}</td>
                       <td style={S.td}>{discStatusChip(r.status)}</td>
                       <td style={{ ...S.td, fontFamily: T.mono, fontSize: 12 }}>{fmtWhen(r.createdAt)}</td>
@@ -586,6 +603,15 @@
             </div>
           )}
         </div>
+        {sorted && sorted.length > DISC_PAGE_SIZE && (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, padding: '16px 0 4px' }}>
+            <button type="button" style={{ ...S.btnGhost, opacity: pageSafe <= 1 ? 0.5 : 1 }} disabled={pageSafe <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}>← Prev</button>
+            <span style={{ fontFamily: T.mono, fontSize: 11, color: T.fg3 }}>Page {pageSafe} of {totalPages}</span>
+            <button type="button" style={{ ...S.btnGhost, opacity: pageSafe >= totalPages ? 0.5 : 1 }} disabled={pageSafe >= totalPages}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}>Next →</button>
+          </div>
+        )}
         {error && <div style={{ marginTop: 12, color: '#B3261E', fontFamily: T.sans, fontSize: 13 }}>{error}</div>}
 
         {showNew && <NewDiscoveryModal onClose={() => setShowNew(false)}
