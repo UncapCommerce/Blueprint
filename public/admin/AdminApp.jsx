@@ -1348,7 +1348,7 @@
 
     return (
       <Page>
-        <div style={{ maxWidth: 620, margin: '0 auto' }}>
+        <div>
           <PageHead eyebrow="Dashboard" title="Recent activity"/>
           {events === null ? (
             <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>Loading…</div>
@@ -1367,7 +1367,7 @@
                   return (
                     <a key={i} href={path} onClick={navClick(path)}
                       style={{ display: 'flex', gap: 10, alignItems: 'center', textDecoration: 'none',
-                        padding: isMobile ? '9px 12px' : '10px 14px',
+                        padding: isMobile ? '6px 12px' : '6px 14px',
                         borderBottom: i < pageRows.length - 1 ? `1px solid ${T.line}` : 'none' }}>
                       <span style={{ flexShrink: 0, display: 'inline-block', padding: '2px 7px', borderRadius: 999,
                         fontFamily: T.mono, fontSize: 8.5, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase',
