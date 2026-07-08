@@ -299,6 +299,29 @@ export default {
     if (url.pathname === '/api/admin/activity' && request.method === 'GET') {
       return handleAdminActivity(request, env);
     }
+    if (url.pathname === '/api/admin/discovery/submission' && request.method === 'GET') {
+      return handleAdminDiscoverySubmission(request, env);
+    }
+
+    // ── Discovery experience (public /discovery/<handle>/) ───────────────
+    if (url.pathname === '/api/discovery/meta' && request.method === 'GET') {
+      return handleDiscoveryMeta(request, env);
+    }
+    if (url.pathname === '/api/discovery/request-code' && request.method === 'POST') {
+      return handleDiscoveryRequestCode(request, env);
+    }
+    if (url.pathname === '/api/discovery/verify' && request.method === 'POST') {
+      return handleDiscoveryVerify(request, env);
+    }
+    if (url.pathname === '/api/discovery/answers' && request.method === 'GET') {
+      return handleDiscoveryGetAnswers(request, env);
+    }
+    if (url.pathname === '/api/discovery/answers' && request.method === 'POST') {
+      return handleDiscoverySaveAnswers(request, env);
+    }
+    if (url.pathname === '/api/discovery/submit' && request.method === 'POST') {
+      return handleDiscoverySubmit(request, env);
+    }
     if (url.pathname === '/api/admin/discoveries' && request.method === 'POST') {
       return handleAdminCreateDiscovery(request, env);
     }
@@ -325,6 +348,18 @@ export default {
     // copy instead of using the digital flow (or clearing that record).
     if (url.pathname === '/api/admin/mark-signed' && request.method === 'POST') {
       return handleAdminMarkSigned(request, env);
+    }
+
+    // /discovery/<handle>/ is the single discovery experience app, served
+    // for any handle. The app reads the handle from location.pathname and
+    // loads its data over /api/discovery/*. Handles are dot-free slugs, so
+    // real assets under /discovery/ (index.html, *.jsx, *.js — all with a
+    // dot) never match here and are served normally by Static Assets.
+    const discMatch = url.pathname.match(/^\/discovery\/([a-z0-9-]+)\/?$/);
+    if (discMatch && (request.method === 'GET' || request.method === 'HEAD')) {
+      const assetUrl = new URL(url.toString());
+      assetUrl.pathname = '/discovery/index.html';
+      return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
     }
 
     // /blueprint/<id>/<rest> is a transparent alias for the blueprint's
@@ -849,6 +884,7 @@ async function logActivity(env, ctx, ev) {
     actor:  (ev.actor  || '').toString().slice(0, 200),
     detail: (ev.detail || '').toString().slice(0, 300),
   };
+  if (ev.ref) rec.ref = ev.ref.toString().slice(0, 120);
   const write = env.BLUEPRINT_AUTH.put(key, JSON.stringify(rec), { expirationTtl: ACCESS_LOG_TTL_SECONDS }).catch(() => {});
   if (ctx && ctx.waitUntil) ctx.waitUntil(write); else await write;
 }
@@ -1758,16 +1794,345 @@ async function handleAdminCreateDiscovery(request, env) {
 
   const ts = Date.now();
   const id = `${(9_999_999_999_999 - ts).toString(36).padStart(10, '0')}:${genRandSlug()}`;
+  // Public URL handle derived from the client's website domain, e.g.
+  // https://www.maplewoodfab.com → "maplewoodfab". Unique across discoveries.
+  const handle = await uniqueDiscoveryHandle(env, discoveryHandleFromWebsite(website, company));
   const rec = {
-    company, client, address, website, expiresAt,
+    company, client, address, website, expiresAt, handle,
     companyAttioId, leadContact, associatedContacts,
     status: 'new',
     createdAt: new Date(ts).toISOString(),
     createdBy: sess.email,
   };
   await env.BLUEPRINT_AUTH.put(`discovery:${id}`, JSON.stringify(rec));
+  await env.BLUEPRINT_AUTH.put(`dischandle:${handle}`, id);
   await logActivity(env, null, { type: 'created', entity: 'discovery', id, name: company, actor: sess.email, detail: 'Discovery created' });
   return json(200, { ok: true, discovery: { id, ...rec } });
+}
+
+// ── Discovery experience: handle, gate, autosave, submit ─────────────────
+// The public discovery URL is /discovery/<handle>/, where <handle> is a
+// clean slug of the client's website domain. Answers persist server-side so
+// a half-finished session resumes anywhere; the same URL is filled by an
+// admin (auto-authed via the admin cookie) on the call and later opened by
+// the client with an email passcode to edit/complete their own entries.
+
+function discoveryHandleFromWebsite(website, company) {
+  let h = (website || '').toString().trim().toLowerCase();
+  h = h.replace(/^https?:\/\//, '').replace(/^www\./, '');
+  h = h.split('/')[0].split('?')[0].split(':')[0];   // host only
+  h = h.split('.')[0];                                // main label before first dot
+  h = h.replace(/[^a-z0-9-]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  if (!h) h = normalizeBlueprintId(company || 'client');
+  return h || 'client';
+}
+
+async function uniqueDiscoveryHandle(env, base) {
+  let h = base;
+  for (let i = 2; i <= 50; i++) {
+    const existing = await env.BLUEPRINT_AUTH.get(`dischandle:${h}`);
+    if (!existing) return h;
+    h = `${base}-${i}`;
+  }
+  return `${base}-${genRandSlug()}`;
+}
+
+async function getDiscoveryByHandle(env, handle) {
+  const clean = (handle || '').toString().trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
+  if (!clean) return null;
+  const id = await env.BLUEPRINT_AUTH.get(`dischandle:${clean}`);
+  if (!id) return null;
+  const raw = await env.BLUEPRINT_AUTH.get(`discovery:${id}`);
+  if (!raw) return null;
+  try { return { id, ...JSON.parse(raw) }; } catch { return null; }
+}
+
+function discoveryAllowlist(disc) {
+  const emails = [];
+  if (disc.leadContact && disc.leadContact.email) emails.push(disc.leadContact.email.toLowerCase());
+  for (const c of (disc.associatedContacts || [])) {
+    if (c && c.email) emails.push(c.email.toLowerCase());
+  }
+  return [...new Set(emails)];
+}
+
+async function getDiscoveryAnswers(env, id) {
+  const raw = await env.BLUEPRINT_AUTH.get(`discans:${id}`);
+  if (!raw) return { answers: {}, activeStepIdx: 0, unlockedIdx: 0, status: 'new' };
+  try {
+    const p = JSON.parse(raw);
+    return {
+      answers: p.answers || {},
+      activeStepIdx: p.activeStepIdx || 0,
+      unlockedIdx: p.unlockedIdx || 0,
+      status: p.status || 'new',
+      updatedAt: p.updatedAt || '',
+      updatedBy: p.updatedBy || '',
+    };
+  } catch { return { answers: {}, activeStepIdx: 0, unlockedIdx: 0, status: 'new' }; }
+}
+
+function sanitizeAnswers(raw) {
+  const out = {};
+  if (!raw || typeof raw !== 'object') return out;
+  let n = 0;
+  for (const k of Object.keys(raw)) {
+    if (n++ >= 400) break;
+    const key = k.toString().slice(0, 80);
+    const v = raw[k];
+    if (Array.isArray(v)) {
+      out[key] = v.slice(0, 40).map((x) => x.toString().slice(0, 400));
+    } else if (v == null) {
+      out[key] = '';
+    } else {
+      out[key] = v.toString().slice(0, 8000);
+    }
+  }
+  return out;
+}
+
+// A discovery bearer session (client, passcode-authed). Distinct from
+// blueprint sessions by kind; bound to one discovery id + IP/UA.
+async function getDiscoverySession(env, token) {
+  if (!token) return null;
+  const raw = await env.BLUEPRINT_AUTH.get(`session:${token}`);
+  if (!raw) return null;
+  try {
+    const s = JSON.parse(raw);
+    return s.kind === 'discovery' ? s : null;
+  } catch { return null; }
+}
+
+// Resolve who's acting on a discovery: an admin (cookie) or a passcode
+// client (token in the body). Returns { role, email, name } or null.
+async function resolveDiscoveryActor(request, env, body, disc) {
+  const admin = await getAdminSession(request, env);
+  if (admin) return { role: 'admin', email: admin.email, name: admin.name || admin.email };
+  const token = (body.token || '').toString().trim();
+  const sess = await getDiscoverySession(env, token);
+  if (sess && sess.discoveryId === disc.id && sessionBindingOk(sess, request)) {
+    return { role: 'client', email: sess.email || '', name: sess.name || sess.email || 'Client' };
+  }
+  return null;
+}
+
+// Public: minimal meta so the gate/welcome can render before auth.
+async function handleDiscoveryMeta(request, env) {
+  const url = new URL(request.url);
+  const disc = await getDiscoveryByHandle(env, url.searchParams.get('handle'));
+  if (!disc) return json(404, { ok: false, error: 'Discovery not found' });
+  const admin = await getAdminSession(request, env);
+  return json(200, {
+    ok: true,
+    handle: disc.handle,
+    company: disc.company || '',
+    clientName: disc.company || disc.client || '',
+    status: disc.status || 'new',
+    isAdmin: !!admin,
+  });
+}
+
+async function handleDiscoveryRequestCode(request, env) {
+  let body;
+  try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  const emailRaw = (body.email || '').toString().trim();
+  if (!emailRaw || !EMAIL_RE.test(emailRaw)) return json(400, { ok: false, error: 'Enter a valid email' });
+  const email = emailRaw.toLowerCase();
+  const disc = await getDiscoveryByHandle(env, body.handle);
+  if (!disc) return json(404, { ok: false, error: 'Discovery not found' });
+
+  const isTeam = email.endsWith('@uncap.com');
+  const allow = discoveryAllowlist(disc);
+  if (!isTeam && allow.length && !allow.includes(email)) {
+    return json(403, { ok: false, error: 'This discovery is restricted. Use the email it was sent to.' });
+  }
+  if (!isTeam) {
+    const ip = clientIp(request);
+    const okEmail = await rateLimit(env, `disccode:email:${disc.id}:${encodeURIComponent(email)}`, 3, 15 * 60);
+    const okIp = ip ? await rateLimit(env, `disccode:ip:${ip}`, 10, 15 * 60) : true;
+    if (!okEmail || !okIp) return json(429, { ok: false, error: 'Too many code requests. Wait a few minutes and try again.' });
+  }
+  const code = genCode();
+  await env.BLUEPRINT_AUTH.put(`disccode:${disc.id}:${encodeURIComponent(email)}`, code, { expirationTtl: CODE_TTL_SECONDS });
+  await env.BLUEPRINT_AUTH.delete(`disctries:${disc.id}:${encodeURIComponent(email)}`).catch(() => {});
+  try {
+    await sendCodeEmail(env, { to: email, code, label: 'Discovery' });
+    return json(200, { ok: true });
+  } catch (err) {
+    console.error('discovery sendCodeEmail failed:', err && err.message);
+    return json(502, { ok: false, error: 'Could not send the code right now. Try again shortly.' });
+  }
+}
+
+async function handleDiscoveryVerify(request, env) {
+  let body;
+  try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  const email = (body.email || '').toString().trim().toLowerCase();
+  const code = (body.code || '').toString().trim();
+  const name = stripHeaderValue((body.name || '').toString()).slice(0, 200);
+  if (!email || !code) return json(400, { ok: false, error: 'Enter your code' });
+  const disc = await getDiscoveryByHandle(env, body.handle);
+  if (!disc) return json(404, { ok: false, error: 'Discovery not found' });
+
+  const ip = clientIp(request);
+  if (ip && !(await rateLimit(env, `discverify:${ip}`, 20, 10 * 60))) {
+    return json(429, { ok: false, error: 'Too many attempts. Wait a few minutes and try again.' });
+  }
+  const key = `disccode:${disc.id}:${encodeURIComponent(email)}`;
+  const triesKey = `disctries:${disc.id}:${encodeURIComponent(email)}`;
+  const stored = await env.BLUEPRINT_AUTH.get(key);
+  if (!stored || stored !== code) {
+    const tries = (parseInt(await env.BLUEPRINT_AUTH.get(triesKey), 10) || 0) + 1;
+    if (stored && tries >= MAX_CODE_ATTEMPTS) {
+      await env.BLUEPRINT_AUTH.delete(key).catch(() => {});
+      await env.BLUEPRINT_AUTH.delete(triesKey).catch(() => {});
+    } else {
+      await env.BLUEPRINT_AUTH.put(triesKey, String(tries), { expirationTtl: CODE_TTL_SECONDS }).catch(() => {});
+    }
+    return json(401, { ok: false, error: 'Invalid or expired code. Request a new one if needed.' });
+  }
+  await env.BLUEPRINT_AUTH.delete(key);
+  await env.BLUEPRINT_AUTH.delete(triesKey).catch(() => {});
+
+  const token = genToken();
+  await env.BLUEPRINT_AUTH.put(
+    `session:${token}`,
+    JSON.stringify({ kind: 'discovery', discoveryId: disc.id, handle: disc.handle, email, name, ip, userAgent: clientUa(request), ts: Date.now() }),
+    { expirationTtl: SESSION_TTL_SECONDS }
+  );
+  return json(200, { ok: true, token, role: 'client', name });
+}
+
+// Load answers + progress. Admin (cookie) or client (token in query/body).
+async function handleDiscoveryGetAnswers(request, env) {
+  const url = new URL(request.url);
+  const disc = await getDiscoveryByHandle(env, url.searchParams.get('handle'));
+  if (!disc) return json(404, { ok: false, error: 'Discovery not found' });
+  const actor = await resolveDiscoveryActor(request, env, { token: url.searchParams.get('token') || '' }, disc);
+  if (!actor) return json(401, { ok: false, error: 'Not authorised' });
+  const data = await getDiscoveryAnswers(env, disc.id);
+  return json(200, {
+    ok: true,
+    role: actor.role,
+    company: disc.company || '',
+    clientName: disc.company || disc.client || '',
+    handle: disc.handle,
+    answers: data.answers,
+    activeStepIdx: data.activeStepIdx,
+    unlockedIdx: data.unlockedIdx,
+    status: disc.status || data.status || 'new',
+  });
+}
+
+async function writeDiscoveryStatus(env, disc, status) {
+  if (disc.status === status) return;
+  disc.status = status;
+  const { id, ...rest } = disc;
+  await env.BLUEPRINT_AUTH.put(`discovery:${id}`, JSON.stringify(rest)).catch(() => {});
+}
+
+// Admin autosave (continuous during the call) — also flips status to
+// in_progress on first save, and to complete when the admin finishes.
+async function handleDiscoverySaveAnswers(request, env) {
+  let body;
+  try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  const disc = await getDiscoveryByHandle(env, body.handle);
+  if (!disc) return json(404, { ok: false, error: 'Discovery not found' });
+  const actor = await resolveDiscoveryActor(request, env, body, disc);
+  if (!actor) return json(401, { ok: false, error: 'Not authorised' });
+  if (actor.role !== 'admin') return json(403, { ok: false, error: 'Admin only' });
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+
+  const prev = await getDiscoveryAnswers(env, disc.id);
+  const answers = sanitizeAnswers(body.answers);
+  const activeStepIdx = Math.max(0, Math.min(9, parseInt(body.activeStepIdx, 10) || 0));
+  const unlockedIdx = Math.max(0, Math.min(9, parseInt(body.unlockedIdx, 10) || 0));
+  const complete = body.complete === true;
+  const status = complete ? 'complete' : (disc.status === 'complete' ? 'complete' : 'in_progress');
+
+  await env.BLUEPRINT_AUTH.put(`discans:${disc.id}`, JSON.stringify({
+    answers, activeStepIdx, unlockedIdx, status,
+    updatedAt: new Date().toISOString(), updatedBy: actor.email,
+  }));
+  await writeDiscoveryStatus(env, disc, status);
+
+  if (complete && prev.status !== 'complete') {
+    await logActivity(env, null, { type: 'status', entity: 'discovery', id: disc.id, name: disc.company || disc.handle, actor: actor.email, detail: 'Discovery completed' });
+  } else if (prev.status === 'new') {
+    await logActivity(env, null, { type: 'edited', entity: 'discovery', id: disc.id, name: disc.company || disc.handle, actor: actor.email, detail: 'Discovery started' });
+  }
+  return json(200, { ok: true, status });
+}
+
+// Client submit — diff against what's stored, save, and report the change
+// set on the dashboard activity feed with a viewable payload.
+async function handleDiscoverySubmit(request, env) {
+  let body;
+  try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  const disc = await getDiscoveryByHandle(env, body.handle);
+  if (!disc) return json(404, { ok: false, error: 'Discovery not found' });
+  const actor = await resolveDiscoveryActor(request, env, body, disc);
+  if (!actor) return json(401, { ok: false, error: 'Not authorised' });
+
+  const prev = await getDiscoveryAnswers(env, disc.id);
+  const next = sanitizeAnswers(body.answers);
+  const labels = (body.labels && typeof body.labels === 'object') ? body.labels : {};
+
+  // Compute the diff (added + changed entries) so the admin can review
+  // exactly what the client touched.
+  const changes = [];
+  const norm = (v) => Array.isArray(v) ? v.join(', ') : (v == null ? '' : String(v));
+  for (const qid of Object.keys(next)) {
+    const before = norm(prev.answers[qid]);
+    const after = norm(next[qid]);
+    if (after !== before && after.trim() !== '') {
+      changes.push({
+        qid,
+        label: (labels[qid] || qid).toString().slice(0, 200),
+        before: before.slice(0, 800),
+        after: after.slice(0, 800),
+        isNew: before.trim() === '',
+      });
+    }
+    if (changes.length >= 200) break;
+  }
+
+  const merged = { ...prev.answers, ...next };
+  await env.BLUEPRINT_AUTH.put(`discans:${disc.id}`, JSON.stringify({
+    answers: merged,
+    activeStepIdx: prev.activeStepIdx, unlockedIdx: prev.unlockedIdx,
+    status: disc.status === 'complete' ? 'complete' : 'in_progress',
+    updatedAt: new Date().toISOString(), updatedBy: actor.email,
+  }));
+
+  if (changes.length) {
+    const ts = Date.now();
+    const ref = `${(9_999_999_999_999 - ts).toString(36).padStart(10, '0')}:${genRandSlug()}`;
+    await env.BLUEPRINT_AUTH.put(`discsub:${disc.id}:${ref}`, JSON.stringify({
+      discoveryId: disc.id, handle: disc.handle, company: disc.company || '',
+      by: actor.name, email: actor.email, at: new Date(ts).toISOString(), changes,
+    }), { expirationTtl: ACCESS_LOG_TTL_SECONDS });
+    const who = actor.name || actor.email || 'A client';
+    await logActivity(env, null, {
+      type: 'disc-update', entity: 'discovery', id: disc.id,
+      name: disc.company || disc.handle, actor: who,
+      detail: `${changes.length} ${changes.length === 1 ? 'entry' : 'entries'} updated`,
+      ref: `${disc.id}:${ref}`,
+    });
+  }
+  return json(200, { ok: true, changed: changes.length });
+}
+
+// Admin: fetch a stored client-submission change set for the activity popup.
+async function handleAdminDiscoverySubmission(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  const ref = (new URL(request.url).searchParams.get('ref') || '').trim();
+  if (!/^[a-z0-9]+:[a-z0-9]+:[a-z0-9]+$/i.test(ref)) return json(400, { ok: false, error: 'Bad ref' });
+  const raw = await env.BLUEPRINT_AUTH.get(`discsub:${ref}`);
+  if (!raw) return json(404, { ok: false, error: 'Not found' });
+  try { return json(200, { ok: true, submission: JSON.parse(raw) }); }
+  catch { return json(404, { ok: false, error: 'Not found' }); }
 }
 
 // ----------------------------------------------------------------------------
@@ -1779,16 +2144,17 @@ async function handleAdminCreateDiscovery(request, env) {
 // fail with an error from Cloudflare's side.
 // ----------------------------------------------------------------------------
 
-async function sendCodeEmail(env, { to, code, blueprintId }) {
-  const subject = `Your Uncap Blueprint passcode`;
+async function sendCodeEmail(env, { to, code, blueprintId, label }) {
+  const what = label || 'Blueprint';
+  const subject = `Your Uncap ${what} passcode`;
   const text =
-    `Your 6-digit passcode to view the Uncap Blueprint:\n\n` +
+    `Your 6-digit passcode to open the Uncap ${what}:\n\n` +
     `${code}\n\n` +
     `Valid for 10 minutes. If you didn't request this, you can ignore the email.`;
   const html = `
     <div style="font-family:-apple-system,Inter,Arial,sans-serif;color:#0A0A0A;line-height:1.5;max-width:480px;margin:0 auto;padding:32px 24px;background:#F2EFE7;">
-      <div style="font-family:monospace;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#707070;margin-bottom:24px;">Uncap Blueprint · Passcode</div>
-      <p style="font-size:16px;margin:0 0 16px;">Your 6-digit passcode to view the Blueprint:</p>
+      <div style="font-family:monospace;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#707070;margin-bottom:24px;">Uncap ${escapeHtml(what)} · Passcode</div>
+      <p style="font-size:16px;margin:0 0 16px;">Your 6-digit passcode to open the ${escapeHtml(what)}:</p>
       <p style="font-family:monospace;font-size:34px;letter-spacing:8px;font-weight:700;margin:0 0 24px;background:#FFFFFF;border-radius:8px;padding:20px 24px;text-align:center;color:#0A0A0A;">${escapeHtml(code)}</p>
       <p style="font-size:13px;color:#707070;margin:0;">Valid for 10 minutes. If you didn't request this, you can ignore the email.</p>
     </div>`;
