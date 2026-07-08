@@ -27,8 +27,11 @@
 
 import { EmailMessage } from "cloudflare:email";
 
-const CODE_TTL_SECONDS    = 10 * 60;       // 10 minutes
-const SESSION_TTL_SECONDS = 24 * 60 * 60;  // 24 hours
+const CODE_TTL_SECONDS       = 10 * 60;             // 10 minutes
+const SESSION_TTL_SECONDS    = 2 * 60 * 60;         // 2 hours (client blueprint sessions)
+const ACCESS_LOG_TTL_SECONDS = 180 * 24 * 60 * 60;  // 180 days (access-log PII: email/IP/geo/UA)
+const SIGNATURE_TTL_SECONDS  = 365 * 24 * 60 * 60;  // 1 year (signature = legal audit trail)
+const MAX_CODE_ATTEMPTS      = 5;                   // wrong-code guesses before a code is burned
 
 // The master Terms of Service template every newly created blueprint
 // seeds from (see handleAdminCreateBlueprint). Edited the same way as any
@@ -221,24 +224,6 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
-    // TEMPORARY diagnostic — proves whether this Worker is even executing
-    // for a given request, independent of the redirect logic below. Remove
-    // once the blueprint.uncap.com redirect mystery is solved.
-    if (url.searchParams.get('__debug') === '1') {
-      const bpMatch = url.pathname.match(/^\/blueprint\/([a-z0-9-]+)(\/.*)?$/);
-      const entry = bpMatch && BLUEPRINT_REGISTRY.find((b) => b.id === bpMatch[1]);
-      return new Response(JSON.stringify({
-        hostname: url.hostname,
-        pathname: url.pathname,
-        method: request.method,
-        legacyPath: legacyBlueprintRedirectPath(url.pathname),
-        bpMatchGroups: bpMatch ? [bpMatch[1], bpMatch[2] || null] : null,
-        resolvedEntry: entry || null,
-        rewrittenAssetPath: entry ? `/${entry.dir}${(bpMatch[2] || '/') === '/' ? '/index.html' : (bpMatch[2] || '/')}` : null,
-        cf: request.cf || null,
-      }, null, 2), { headers: { 'content-type': 'application/json' } });
-    }
-
     // Redirect anything hitting the old domain, and any old-style bare
     // /<Brand>/ path even if it somehow reaches the new domain, to their
     // go.uncap.com home — new-style /blueprint/<id>/ for blueprint pages,
@@ -368,13 +353,13 @@ export default {
         const assetPath = rest === '/' ? '/index.html' : rest;
         const assetUrl = new URL(url.toString());
         assetUrl.pathname = `/${entry.dir}${assetPath}`;
-        return env.ASSETS.fetch(new Request(assetUrl.toString(), request));
+        return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
       }
       // Unknown slug under /blueprint/ — fall through to the normal
       // static-asset/SPA-fallback handling below (same as any other 404).
     }
 
-    return env.ASSETS.fetch(request);
+    return withSecurityHeaders(await env.ASSETS.fetch(request));
   },
 };
 
@@ -391,22 +376,109 @@ h1{font-size:24px;letter-spacing:-.02em;margin:0 0 10px}p{font-size:14.5px;line-
 <h1>This proposal is no longer available.</h1>
 <p>The link has been deactivated. If you believe this is a mistake, contact your Uncap lead or email hey@uncap.com.</p>
 </div></body></html>`;
-  return new Response(html, { status: 403, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } });
+  return withSecurityHeaders(new Response(html, { status: 403, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } }));
 }
 
 // ----------------------------------------------------------------------------
 // Helpers
 // ----------------------------------------------------------------------------
+// Security response headers applied to every worker response (API JSON,
+// static assets, blueprint pages). The CSP is deliberately compatible with
+// the no-build/in-browser-Babel architecture — @babel/standalone needs
+// 'unsafe-eval' and the inline `text/babel` scripts need 'unsafe-inline' —
+// but it still locks the exfiltration-relevant directives: connect-src is
+// same-origin only (a stolen bearer token can't be POSTed to an attacker
+// host), frame-ancestors 'none' blocks clickjacking, and script/style/font
+// origins are pinned to the three known externals (Google Sign-In, Google
+// Fonts, and unpkg for the two SRI-pinned print/demo pages).
+const CSP = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://unpkg.com",
+  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+  "font-src 'self' data: https://fonts.gstatic.com",
+  "img-src 'self' data: blob: https:",
+  "media-src 'self' data: https:",
+  "connect-src 'self' https://accounts.google.com",
+  "frame-src https://accounts.google.com",
+  "frame-ancestors 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "object-src 'none'",
+].join('; ');
+
+const SECURITY_HEADERS = {
+  'Content-Security-Policy': CSP,
+  'X-Frame-Options': 'DENY',
+  'X-Content-Type-Options': 'nosniff',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
+  'Permissions-Policy': 'geolocation=(), camera=(), microphone=(), payment=()',
+};
+
+// Reattach headers on a (possibly immutable) response by rebuilding it.
+function withSecurityHeaders(resp) {
+  const headers = new Headers(resp.headers);
+  for (const k in SECURITY_HEADERS) headers.set(k, SECURITY_HEADERS[k]);
+  return new Response(resp.body, { status: resp.status, statusText: resp.statusText, headers });
+}
+
 const json = (status, body) =>
-  new Response(JSON.stringify(body), {
+  withSecurityHeaders(new Response(JSON.stringify(body), {
     status,
-    headers: { 'content-type': 'application/json; charset=utf-8' },
-  });
+    headers: {
+      'content-type': 'application/json; charset=utf-8',
+      'cache-control': 'no-store',
+    },
+  }));
 
 const escapeHtml = (s) =>
   String(s).replace(/[&<>"']/g, (c) => (
     { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
   ));
+
+// Strip CR/LF so a user-supplied value can't inject additional email
+// headers when interpolated into the raw MIME header block.
+const stripHeaderValue = (s) => String(s == null ? '' : s).replace(/[\r\n]+/g, ' ').trim();
+
+const clientIp = (request) => request.headers.get('CF-Connecting-IP') || '';
+const clientUa = (request) => request.headers.get('User-Agent') || '';
+
+// KV key builders — email is percent-encoded so a ':' (or other structural
+// char) in an address can never reshape the key. put/get stay symmetric.
+const codeKey      = (bp, email) => `code:${bp}:${encodeURIComponent(email)}`;
+const codeTriesKey = (bp, email) => `codetries:${bp}:${encodeURIComponent(email)}`;
+
+// Coarse, eventually-consistent fixed-window rate limiter backed by KV.
+// Not a precise quota — it exists to blunt brute-force and email-bombing.
+// Returns true if the caller is under the limit (and counts this hit),
+// false if the window is exhausted.
+async function rateLimit(env, key, max, windowSec) {
+  const bucket = Math.floor(Date.now() / 1000 / windowSec);
+  const k = `rl:${key}:${bucket}`;
+  let n = 0;
+  try { n = parseInt(await env.BLUEPRINT_AUTH.get(k), 10) || 0; } catch { n = 0; }
+  if (n >= max) return false;
+  await env.BLUEPRINT_AUTH.put(k, String(n + 1), { expirationTtl: windowSec + 60 }).catch(() => {});
+  return true;
+}
+
+// Fetch + parse a blueprint bearer session, tolerating a corrupt record.
+async function getBlueprintSession(env, token) {
+  const raw = await env.BLUEPRINT_AUTH.get(`session:${token}`);
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch { return null; }
+}
+
+// Blueprint bearer sessions are bound to the IP + User-Agent they were
+// minted for, so a token exfiltrated via page XSS can't be replayed from
+// elsewhere. Only enforced when the session actually carries the bound
+// values, so pre-existing sessions aren't force-logged-out on rollout.
+function sessionBindingOk(sess, request) {
+  if (!sess) return false;
+  if (sess.ip && sess.ip !== clientIp(request)) return false;
+  if (sess.userAgent && sess.userAgent !== clientUa(request)) return false;
+  return true;
+}
 
 function genCode() {
   const buf = new Uint32Array(1);
@@ -478,6 +550,9 @@ async function handleRequestCode(request, env) {
   if (bpMeta.disabled && !isUncapTeam) {
     return json(403, { ok: false, error: 'This proposal is no longer available.' });
   }
+  if (isBpExpired(bpMeta) && !isUncapTeam) {
+    return json(403, { ok: false, error: 'This proposal has expired.' });
+  }
 
   // Per-blueprint allowlist enforcement. If this blueprint is private to a
   // named list of clients, reject any other email up front so we never even
@@ -497,18 +572,33 @@ async function handleRequestCode(request, env) {
     }
   }
 
+  // Rate limit to blunt email-bombing and code-griefing: cap codes per
+  // email and per source IP. The Uncap team is exempt (they self-test a
+  // lot and are trusted). New code window also resets the wrong-guess
+  // counter so a fresh code always gets its full attempt budget.
+  if (!isUncapTeam) {
+    const ip = clientIp(request);
+    const okEmail = await rateLimit(env, `reqcode:email:${blueprintId}:${encodeURIComponent(email)}`, 3, 15 * 60);
+    const okIp    = ip ? await rateLimit(env, `reqcode:ip:${ip}`, 10, 15 * 60) : true;
+    if (!okEmail || !okIp) {
+      return json(429, { ok: false, error: 'Too many code requests. Wait a few minutes and try again.' });
+    }
+  }
+
   const code  = genCode();
   await env.BLUEPRINT_AUTH.put(
-    `code:${blueprintId}:${email}`,
+    codeKey(blueprintId, email),
     code,
     { expirationTtl: CODE_TTL_SECONDS }
   );
+  await env.BLUEPRINT_AUTH.delete(codeTriesKey(blueprintId, email)).catch(() => {});
 
   try {
     await sendCodeEmail(env, { to: email, code, blueprintId });
     return json(200, { ok: true });
   } catch (err) {
-    return json(502, { ok: false, error: `Could not send code: ${err.message || 'unknown error'}` });
+    console.error('sendCodeEmail failed:', err && err.message);
+    return json(502, { ok: false, error: 'Could not send the code right now. Try again shortly.' });
   }
 }
 
@@ -522,19 +612,43 @@ async function handleVerify(request, env, ctx) {
   const blueprintId = normalizeBlueprintId(body.blueprintId);
   if (!email || !code) return json(400, { ok: false, error: 'Enter your code' });
 
-  // Mirror the request-code disabled check: a code issued moments before
-  // the blueprint was disabled must not still mint a session.
-  const bpMeta = await getBpMeta(env, blueprintId);
-  if (bpMeta.disabled && !email.endsWith('@uncap.com')) {
-    return json(403, { ok: false, error: 'This proposal is no longer available.' });
+  // Per-IP throttle across the whole verify surface — a second layer over
+  // the per-code attempt counter below, so one attacker can't parallelise
+  // across many codes/emails from a single host.
+  const ip = clientIp(request);
+  if (ip && !(await rateLimit(env, `verifyip:${ip}`, 20, 10 * 60))) {
+    return json(429, { ok: false, error: 'Too many attempts. Wait a few minutes and try again.' });
   }
 
-  const key    = `code:${blueprintId}:${email}`;
-  const stored = await env.BLUEPRINT_AUTH.get(key);
+  // Mirror the request-code disabled/expired checks: a code issued moments
+  // before the blueprint was disabled or expired must not still mint a session.
+  const isTeam = email.endsWith('@uncap.com');
+  const bpMeta = await getBpMeta(env, blueprintId);
+  if (bpMeta.disabled && !isTeam) {
+    return json(403, { ok: false, error: 'This proposal is no longer available.' });
+  }
+  if (isBpExpired(bpMeta) && !isTeam) {
+    return json(403, { ok: false, error: 'This proposal has expired.' });
+  }
+
+  const key      = codeKey(blueprintId, email);
+  const triesKey = codeTriesKey(blueprintId, email);
+  const stored   = await env.BLUEPRINT_AUTH.get(key);
   if (!stored || stored !== code) {
-    return json(401, { ok: false, error: 'Wrong code — try again or request a new one.' });
+    // Burn the code after too many wrong guesses so the 10^6 space can't be
+    // brute-forced within the code's 10-minute life. Generic message either
+    // way so it isn't an oracle for "does this code exist".
+    const tries = (parseInt(await env.BLUEPRINT_AUTH.get(triesKey), 10) || 0) + 1;
+    if (stored && tries >= MAX_CODE_ATTEMPTS) {
+      await env.BLUEPRINT_AUTH.delete(key).catch(() => {});
+      await env.BLUEPRINT_AUTH.delete(triesKey).catch(() => {});
+    } else {
+      await env.BLUEPRINT_AUTH.put(triesKey, String(tries), { expirationTtl: CODE_TTL_SECONDS }).catch(() => {});
+    }
+    return json(401, { ok: false, error: 'Invalid or expired code. Request a new one if needed.' });
   }
   await env.BLUEPRINT_AUTH.delete(key);
+  await env.BLUEPRINT_AUTH.delete(triesKey).catch(() => {});
 
   // "Self-test" sessions: any @uncap.com address (the internal team) gets
   // the full code-delivery experience but no notifications about itself
@@ -544,10 +658,11 @@ async function handleVerify(request, env, ctx) {
   const notifyEmail = (env.NOTIFY_EMAIL || '').trim().toLowerCase();
   const selfTest    = email.endsWith('@uncap.com') || (notifyEmail && email === notifyEmail);
 
+  const userAgent = clientUa(request);
   const token = genToken();
   await env.BLUEPRINT_AUTH.put(
     `session:${token}`,
-    JSON.stringify({ email, admin: false, selfTest, blueprintId, ts: Date.now() }),
+    JSON.stringify({ email, admin: false, selfTest, blueprintId, ip, userAgent, ts: Date.now() }),
     { expirationTtl: SESSION_TTL_SECONDS }
   );
 
@@ -565,17 +680,17 @@ async function handleVerify(request, env, ctx) {
       email,
       blueprintId,
       verifiedAt: new Date(ts).toISOString(),
-      ip:        request.headers.get('CF-Connecting-IP') || '',
+      ip,
       country:   cf.country || '',
       city:      cf.city    || '',
       region:    cf.region  || '',
-      userAgent: request.headers.get('User-Agent') || '',
+      userAgent,
       selfTest, admin: false,
     };
     const accessWrite = env.BLUEPRINT_AUTH.put(
       accessKey,
       JSON.stringify(accessRec),
-      { expirationTtl: 60 * 60 * 24 * 365 }
+      { expirationTtl: ACCESS_LOG_TTL_SECONDS }
     ).catch(() => {});
     if (ctx && ctx.waitUntil) ctx.waitUntil(accessWrite);
   }
@@ -610,9 +725,9 @@ async function handleSession(request, env) {
   const token = (body.token || '').toString().trim();
   if (!token) return json(400, { ok: false, error: 'Missing token' });
 
-  const raw = await env.BLUEPRINT_AUTH.get(`session:${token}`);
-  if (!raw) return json(401, { ok: false, error: 'Session expired' });
-  const sess = JSON.parse(raw);
+  const sess = await getBlueprintSession(env, token);
+  if (!sess) return json(401, { ok: false, error: 'Session expired' });
+  if (!sessionBindingOk(sess, request)) return json(401, { ok: false, error: 'Session expired' });
   return json(200, {
     ok: true,
     email:       sess.email || '',
@@ -634,9 +749,9 @@ async function handleAccessLog(request, env) {
   const blueprintId = normalizeBlueprintId(body.blueprintId);
   if (!token) return json(400, { ok: false, error: 'Missing token' });
 
-  const raw = await env.BLUEPRINT_AUTH.get(`session:${token}`);
-  if (!raw) return json(401, { ok: false, error: 'Session expired' });
-  const sess = JSON.parse(raw);
+  const sess = await getBlueprintSession(env, token);
+  if (!sess) return json(401, { ok: false, error: 'Session expired' });
+  if (!sessionBindingOk(sess, request)) return json(401, { ok: false, error: 'Session expired' });
   if (!sess.admin && !sess.selfTest) return json(403, { ok: false, error: 'Not authorised' });
 
   const events = await listBlueprintEvents(env, blueprintId);
@@ -655,9 +770,9 @@ async function handleMySignature(request, env) {
   const token = (body.token || '').toString().trim();
   if (!token) return json(400, { ok: false, error: 'Missing token' });
 
-  const raw = await env.BLUEPRINT_AUTH.get(`session:${token}`);
-  if (!raw) return json(401, { ok: false, error: 'Session expired' });
-  const sess = JSON.parse(raw);
+  const sess = await getBlueprintSession(env, token);
+  if (!sess) return json(401, { ok: false, error: 'Session expired' });
+  if (!sessionBindingOk(sess, request)) return json(401, { ok: false, error: 'Session expired' });
 
   const sigRaw = await env.BLUEPRINT_AUTH.get(`signature:${sess.blueprintId}:${token}`);
   if (!sigRaw) return json(200, { ok: true, signature: null });
@@ -716,9 +831,9 @@ async function handleNotify(request, env) {
   const event = (body.event || '').toString().trim();
   if (!token || !event) return json(400, { ok: false, error: 'Missing token or event' });
 
-  const raw = await env.BLUEPRINT_AUTH.get(`session:${token}`);
-  if (!raw) return json(401, { ok: false, error: 'Session expired' });
-  const sess = JSON.parse(raw);
+  const sess = await getBlueprintSession(env, token);
+  if (!sess) return json(401, { ok: false, error: 'Session expired' });
+  if (!sessionBindingOk(sess, request)) return json(401, { ok: false, error: 'Session expired' });
 
   // Admins are us — don't spam denis@uncap.com with notifications on our
   // own preview clicks. Same for self-test sessions where the logged-in
@@ -758,14 +873,15 @@ async function handleSign(request, env, ctx) {
   catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
 
   const token = (body.token || '').toString().trim();
-  const name  = (body.name  || '').toString().trim().slice(0, 200);
-  const title = (body.title || '').toString().trim().slice(0, 200);
+  // Strip CR/LF: name flows into the notification email's Subject line.
+  const name  = stripHeaderValue((body.name || '').toString()).slice(0, 200);
+  const title = stripHeaderValue((body.title || '').toString()).slice(0, 200);
   if (!token)        return json(400, { ok: false, error: 'Missing token' });
   if (!name || !title) return json(400, { ok: false, error: 'Both fields required' });
 
-  const raw = await env.BLUEPRINT_AUTH.get(`session:${token}`);
-  if (!raw) return json(401, { ok: false, error: 'Session expired' });
-  const sess = JSON.parse(raw);
+  const sess = await getBlueprintSession(env, token);
+  if (!sess) return json(401, { ok: false, error: 'Session expired' });
+  if (!sessionBindingOk(sess, request)) return json(401, { ok: false, error: 'Session expired' });
 
   if (sess.admin) return json(200, { ok: true, skipped: 'admin' });
 
@@ -786,10 +902,11 @@ async function handleSign(request, env, ctx) {
     await env.BLUEPRINT_AUTH.put(
       `signature:${sess.blueprintId}:${token}`,
       JSON.stringify(record),
-      { expirationTtl: 60 * 60 * 24 * 365 }
+      { expirationTtl: SIGNATURE_TTL_SECONDS }
     );
   } catch (err) {
-    return json(502, { ok: false, error: `Could not record signature: ${err.message || 'unknown'}` });
+    console.error('signature write failed:', err && err.message);
+    return json(502, { ok: false, error: 'Could not record the signature right now. Try again shortly.' });
   }
 
   // Best-effort rollup so the admin app's blueprint list can show signed
@@ -797,7 +914,7 @@ async function handleSign(request, env, ctx) {
   const rollup = env.BLUEPRINT_AUTH.put(
     `bpsigned:${sess.blueprintId}`,
     JSON.stringify(record),
-    { expirationTtl: 60 * 60 * 24 * 365 }
+    { expirationTtl: SIGNATURE_TTL_SECONDS }
   ).catch(() => {});
   if (ctx && ctx.waitUntil) ctx.waitUntil(rollup);
 
@@ -831,13 +948,19 @@ async function handleSign(request, env, ctx) {
 // Identity Services: the page posts Google's ID token (a JWT) here, we
 // verify the signature against Google's JWKS, require a verified
 // @uncap.com address, and mint a KV-backed session carried by an HttpOnly
-// bp_admin cookie. Because the cookie is scoped to the whole origin, the
+// __Host-bp_admin cookie. Because the cookie is scoped to the whole origin, the
 // per-client blueprint gates can also mint preview sessions from it
 // (POST /api/admin/bp-token), letting the team open any blueprint without
 // the email-code step.
 // ----------------------------------------------------------------------------
 
 const ADMIN_SESSION_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
+
+// __Host- prefix: the browser enforces Secure + Path=/ + no Domain, so a
+// sibling subdomain can't set or overwrite this cookie for the apex host.
+// (Renaming from the old bp_admin invalidates current admin sessions once;
+// the team just re-signs in with Google.)
+const ADMIN_COOKIE = '__Host-bp_admin';
 
 // Google OAuth "Web application" Client ID. This is a public identifier
 // (it ships in the login page HTML anyway), so hardcoding is safe — and
@@ -873,17 +996,25 @@ function getCookie(request, name) {
   return m ? m[1] : '';
 }
 
-// Cheap CSRF guard for cookie-authenticated mutations: browsers attach an
-// Origin header to cross-site POSTs, so reject anything not from our host.
+// CSRF guard for cookie-authenticated mutations. Browsers attach an Origin
+// header to cross-site POSTs; we compare it to our own host. Fails closed:
+// if Origin is absent we fall back to Referer, and if neither is present we
+// reject (rather than the old fail-open behaviour).
 function sameOrigin(request) {
+  const host = new URL(request.url).host;
   const origin = request.headers.get('Origin');
-  if (!origin) return true;
-  try { return new URL(origin).host === new URL(request.url).host; }
-  catch { return false; }
+  if (origin) {
+    try { return new URL(origin).host === host; } catch { return false; }
+  }
+  const referer = request.headers.get('Referer');
+  if (referer) {
+    try { return new URL(referer).host === host; } catch { return false; }
+  }
+  return false;
 }
 
 async function getAdminSession(request, env) {
-  const token = getCookie(request, 'bp_admin');
+  const token = getCookie(request, ADMIN_COOKIE);
   if (!/^[a-f0-9]{48}$/.test(token)) return null;
   const raw = await env.BLUEPRINT_AUTH.get(`admin_session:${token}`);
   if (!raw) return null;
@@ -1103,6 +1234,10 @@ async function verifyGoogleIdToken(credential, clientId) {
   const header  = JSON.parse(dec.decode(b64urlToBytes(parts[0])));
   const payload = JSON.parse(dec.decode(b64urlToBytes(parts[1])));
 
+  // Pin the algorithm: we only ever verify RS256, so reject anything else
+  // up front (defence-in-depth against alg-confusion / alg:none tokens).
+  if (header.alg !== 'RS256') throw new Error('Unexpected token algorithm');
+
   const now = Date.now();
   const stale = !googleJwks.keys || now - googleJwks.fetchedAt > 60 * 60 * 1000;
   const kidMissing = googleJwks.keys && !googleJwks.keys.some((k) => k.kid === header.kid);
@@ -1161,13 +1296,14 @@ async function handleGoogleLogin(request, env) {
     { expirationTtl: ADMIN_SESSION_TTL_SECONDS }
   );
 
-  return new Response(JSON.stringify({ ok: true, email, name: payload.name || '', picture: payload.picture || '' }), {
+  return withSecurityHeaders(new Response(JSON.stringify({ ok: true, email, name: payload.name || '', picture: payload.picture || '' }), {
     status: 200,
     headers: {
       'content-type': 'application/json; charset=utf-8',
-      'set-cookie': `bp_admin=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${ADMIN_SESSION_TTL_SECONDS}`,
+      'cache-control': 'no-store',
+      'set-cookie': `${ADMIN_COOKIE}=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${ADMIN_SESSION_TTL_SECONDS}`,
     },
-  });
+  }));
 }
 
 async function handleAdminMe(request, env) {
@@ -1178,17 +1314,18 @@ async function handleAdminMe(request, env) {
 
 async function handleAdminLogout(request, env) {
   if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
-  const token = getCookie(request, 'bp_admin');
+  const token = getCookie(request, ADMIN_COOKIE);
   if (/^[a-f0-9]{48}$/.test(token)) {
     await env.BLUEPRINT_AUTH.delete(`admin_session:${token}`).catch(() => {});
   }
-  return new Response(JSON.stringify({ ok: true }), {
+  return withSecurityHeaders(new Response(JSON.stringify({ ok: true }), {
     status: 200,
     headers: {
       'content-type': 'application/json; charset=utf-8',
-      'set-cookie': 'bp_admin=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0',
+      'cache-control': 'no-store',
+      'set-cookie': `${ADMIN_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
     },
-  });
+  }));
 }
 
 // List every blueprint (shipped registry + KV drafts) with its signature
@@ -1336,7 +1473,7 @@ async function handleAdminBpToken(request, env) {
   const token = genToken();
   await env.BLUEPRINT_AUTH.put(
     `session:${token}`,
-    JSON.stringify({ email: sess.email, admin: true, selfTest: true, blueprintId, ts: Date.now() }),
+    JSON.stringify({ email: sess.email, admin: true, selfTest: true, blueprintId, ip: clientIp(request), userAgent: clientUa(request), ts: Date.now() }),
     { expirationTtl: SESSION_TTL_SECONDS }
   );
   return json(200, { ok: true, token });
@@ -1574,10 +1711,14 @@ async function sendViaCloudflareEmail(env, { to, subject, text, html }) {
   }
   const from = parseAddress(env.EMAIL_FROM || 'Uncap Blueprint <noreply@uncap.com>');
   const boundary = '----=_Part_' + crypto.randomUUID();
+  // Strip CR/LF from every interpolated header value so no field can inject
+  // extra headers into the raw MIME block.
+  const fromDisplay = stripHeaderValue(from.display);
+  const fromAddress = stripHeaderValue(from.address);
   const headers = [
-    `From: ${from.display ? `"${from.display}" <${from.address}>` : from.address}`,
-    `To: ${to}`,
-    `Subject: ${subject}`,
+    `From: ${fromDisplay ? `"${fromDisplay}" <${fromAddress}>` : fromAddress}`,
+    `To: ${stripHeaderValue(to)}`,
+    `Subject: ${stripHeaderValue(subject)}`,
     `Message-ID: <${crypto.randomUUID()}@uncap.com>`,
     `Date: ${new Date().toUTCString()}`,
     `MIME-Version: 1.0`,

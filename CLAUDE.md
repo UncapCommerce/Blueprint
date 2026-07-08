@@ -14,7 +14,7 @@ React, ReactDOM, and `@babel/standalone` (vendored under `/vendor/`) from
   (`public/index.html` + `public/admin/AdminApp.jsx`). Google sign-in
   (Google Identity Services), reserved for `@uncap.com` accounts.
   Sessions live in KV (`admin_session:<token>`) behind an HttpOnly
-  `bp_admin` cookie. Sections: Discoveries / Blueprints (Preview,
+  `__Host-bp_admin` cookie. Sections: Discoveries / Blueprints (Preview,
   Share, Activity, TOS, Print per blueprint, plus draft creation)
 - Every blueprint's public URL is `/blueprint/<id>/` (e.g.
   `/blueprint/mitutoyo/`), not its physical folder name. `worker/index.js`
@@ -37,7 +37,7 @@ React, ReactDOM, and `@babel/standalone` (vendored under `/vendor/`) from
   `public/admin/AdminToolbar.jsx` is print hooks only (print-quality CSS
   for everyone + `?bpPrint=delivery|shopify` auto-print for admins,
   triggered from the admin app). Each blueprint Gate silently mints a
-  preview session from the `bp_admin` cookie via `/api/admin/bp-token`,
+  preview session from the `__Host-bp_admin` cookie via `/api/admin/bp-token`,
   so the team never types email codes
 - `/build` quiz: `public/build/index.html` + `public/components/QuizApp.jsx`
 - Worker handles `/api/checkout/*` (Stripe SetupIntents) and
@@ -61,10 +61,12 @@ React, ReactDOM, and `@babel/standalone` (vendored under `/vendor/`) from
 Every per-client Blueprint under `public/<Brand>/` follows the same
 contract — match this when adding a new one:
 
-- **Auth gate** in `index.html`: email → 6-digit code → 24-hour token,
+- **Auth gate** in `index.html`: email → 6-digit code → 2-hour token
+  (bound to the client's IP + User-Agent server-side; a wrong code is
+  burned after 5 tries, and request-code/verify are rate-limited),
   with `denis@uncap.com` as a no-email self-test. Team/admin access
   comes from the admin dashboard (each Gate mints a preview session from
-  the `bp_admin` cookie via `/api/admin/bp-token`), not a passcode typed
+  the `__Host-bp_admin` cookie via `/api/admin/bp-token`), not a passcode typed
   into the email field. Token is exposed on `window.__bpToken` for the
   approve button to read
 - **Blueprint number**: assign the next sequential ID (`001` Mitutoyo,
