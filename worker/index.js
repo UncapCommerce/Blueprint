@@ -1693,8 +1693,18 @@ async function handleAdminListDiscoveries(request, env) {
   const discoveries = (await Promise.all(list.keys.map(async (k) => {
     const raw = await env.BLUEPRINT_AUTH.get(k.name);
     if (!raw) return null;
-    try { return { id: k.name.slice('discovery:'.length), ...JSON.parse(raw) }; }
-    catch { return null; }
+    try {
+      const id = k.name.slice('discovery:'.length);
+      const rec = JSON.parse(raw);
+      // Backfill a handle for discoveries created before the experience
+      // shipped, so their View/Transcript links work.
+      if (!rec.handle) {
+        rec.handle = await uniqueDiscoveryHandle(env, discoveryHandleFromWebsite(rec.website, rec.company));
+        await env.BLUEPRINT_AUTH.put(k.name, JSON.stringify(rec)).catch(() => {});
+        await env.BLUEPRINT_AUTH.put(`dischandle:${rec.handle}`, id).catch(() => {});
+      }
+      return { id, ...rec };
+    } catch { return null; }
   }))).filter(Boolean);
 
   return json(200, { ok: true, discoveries });
@@ -2128,7 +2138,9 @@ async function handleAdminDiscoverySubmission(request, env) {
   const sess = await getAdminSession(request, env);
   if (!sess) return json(401, { ok: false, error: 'Not signed in' });
   const ref = (new URL(request.url).searchParams.get('ref') || '').trim();
-  if (!/^[a-z0-9]+:[a-z0-9]+:[a-z0-9]+$/i.test(ref)) return json(400, { ok: false, error: 'Bad ref' });
+  // ref is disc.id + ':' + submissionId, each of which is itself
+  // "<base36ts>:<hexslug>", so the full value is 4 colon-joined alnum parts.
+  if (ref.length > 120 || !/^[a-z0-9]+(:[a-z0-9]+){1,5}$/i.test(ref)) return json(400, { ok: false, error: 'Bad ref' });
   const raw = await env.BLUEPRINT_AUTH.get(`discsub:${ref}`);
   if (!raw) return json(404, { ok: false, error: 'Not found' });
   try { return json(200, { ok: true, submission: JSON.parse(raw) }); }
