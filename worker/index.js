@@ -696,6 +696,12 @@ async function handleVerify(request, env, ctx) {
       { expirationTtl: ACCESS_LOG_TTL_SECONDS }
     ).catch(() => {});
     if (ctx && ctx.waitUntil) ctx.waitUntil(accessWrite);
+
+    // Also surface the view in the cross-entity home feed. Registry names
+    // resolve in-memory (no KV read on this hot path); the location string
+    // is best-effort context.
+    const viewLoc = [cf.city, cf.region, cf.country].filter(Boolean).join(', ');
+    await logActivity(env, ctx, { type: 'view', entity: 'blueprint', id: blueprintId, name: await bpDisplayName(env, blueprintId), actor: email, detail: viewLoc });
   }
 
   // Fire-and-forget admin notification — don't block the response on the

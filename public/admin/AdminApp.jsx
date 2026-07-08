@@ -1336,6 +1336,7 @@
         case 'signed':  return { l: 'Signed',  bg: '#DFFCE6', fg: '#064E2E', bd: '#9BDDB0' };
         case 'edited':  return { l: 'Edited',  bg: '#FFF6E0', fg: '#6A4E00', bd: '#E8C36A' };
         case 'status':  return { l: 'Status',  bg: T.black,   fg: '#fff',    bd: T.black };
+        case 'view':    return { l: 'Viewed',  bg: T.cream,   fg: T.fg2,     bd: T.line };
         default:        return { l: type || 'Event', bg: T.cream, fg: T.fg2, bd: T.line };
       }
     };
@@ -1351,7 +1352,7 @@
           <div style={{ ...S.card, padding: 24, color: '#B3261E', fontFamily: T.sans, fontSize: 14 }}>{error}</div>
         ) : events.length === 0 ? (
           <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>
-            No activity yet. Creating, editing, or signing a blueprint or discovery will show up here.
+            No activity yet. Creating, editing, viewing, or signing a blueprint or discovery will show up here.
           </div>
         ) : card(
           events.map((ev, i) => {
