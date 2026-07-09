@@ -6,9 +6,18 @@
  */
 (function () {
   const { useState, useEffect, useLayoutEffect, useRef, useCallback } = React;
-  // Scenes 3-6 are the full "website frame" pages: taller than the artboard,
-  // fit to width and scrolled vertically inside a fixed viewport.
-  const isSiteScene = (idx) => idx >= 2 && idx <= 5;
+  // Scenes 3-6 are the rich "website frame" pages (normal document flow, tall,
+  // sections tagged with data-hotspot). All 10 steps fit to width and scroll
+  // vertically inside the fixed viewport.
+  const isRichScene = (idx) => idx >= 2 && idx <= 5;
+  // Extra section hotspots that don't map to a discovery question but should
+  // still spotlight + link to a relevant group. Add new rich-scene sections
+  // here when they need their own hotspot without a dedicated question.
+  const EXTRA_HOTSPOTS = {
+    'v-tiers':  { label: 'Tier & contract pricing', info: 'Quantity breaks and contract prices, right on the product page — how your pricing rewards bigger orders and signed-in accounts.', gid: 'g-buybox' },
+    'v-addons': { label: 'Add-ons & attach', info: 'The accessories and consumables that belong with this product, surfaced with a checkbox to lift average order value.', gid: 'g-buybox' },
+    'v-fbt':    { label: 'Frequently bought together', info: 'Cross-sell bundles built from what buyers actually purchase together, with a one-click add-all.', gid: 'g-buybox' },
+  };
 
   const HANDLE = (function () {
     const m = window.location.pathname.match(/^\/discovery\/([a-z0-9-]+)\/?$/);
@@ -170,10 +179,8 @@
       if (!el) return;
       const r = el.getBoundingClientRect();
       const pad = 20;
-      const site = isSiteScene(stepIdxRef.current);
-      const s = site
-        ? Math.max(0.1, (r.width - pad * 2) / 1440)                                            // fit width, scroll vertically
-        : Math.max(0.1, Math.min((r.width - pad * 2) / 1440, (r.height - pad * 2) / 900));     // fit whole artboard
+      // Every step fits to width and scrolls vertically inside the viewport.
+      const s = Math.max(0.1, (r.width - pad * 2) / 1440);
       const rounded = Math.round(s * 1000) / 1000;
       setScale((prev) => (rounded !== prev ? rounded : prev));
     }, []);
@@ -197,7 +204,7 @@
     useLayoutEffect(() => {
       setInfoCard(null);
       measure();
-      if (isSiteScene(activeStepIdx) && contentInnerRef.current) {
+      if (isRichScene(activeStepIdx) && contentInnerRef.current) {
         setContentH(contentInnerRef.current.offsetHeight || 900);
       } else {
         setContentH(900);
@@ -208,27 +215,24 @@
     // marker/outline overlay lines up with the rich scene DOM. Re-runs when
     // the scene, scale, or content height settle.
     useLayoutEffect(() => {
-      if (!isSiteScene(activeStepIdx) || !contentInnerRef.current) { setSiteHotspots([]); return; }
+      if (!isRichScene(activeStepIdx) || !contentInnerRef.current) { setSiteHotspots([]); return; }
       const root = contentInnerRef.current;
       const rootRect = root.getBoundingClientRect();
       const s = scale || 1;
-      const step = steps[activeStepIdx];
-      const list = [];
-      (step.hotspots || []).forEach((h, i) => {
-        const els = root.querySelectorAll('[data-hotspot="' + h.id + '"]');
-        if (!els.length) return;
-        let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
-        els.forEach((el) => {
-          const r = el.getBoundingClientRect();
-          x0 = Math.min(x0, (r.left - rootRect.left) / s);
-          y0 = Math.min(y0, (r.top - rootRect.top) / s);
-          x1 = Math.max(x1, (r.right - rootRect.left) / s);
-          y1 = Math.max(y1, (r.bottom - rootRect.top) / s);
-        });
-        const g = step.groups.find((gg) => gg.hotspotId === h.id);
-        list.push({ id: h.id, x: x0, y: y0, w: x1 - x0, h: y1 - y0, num: String(i + 1).padStart(2, '0'), gid: g ? g.id : '' });
+      // Every tagged section becomes a marker; union multiple elements that
+      // share an id, keep DOM order for numbering.
+      const byId = {}, order = [];
+      Array.from(root.querySelectorAll('[data-hotspot]')).forEach((el) => {
+        const id = el.getAttribute('data-hotspot');
+        const r = el.getBoundingClientRect();
+        const x = (r.left - rootRect.left) / s, y = (r.top - rootRect.top) / s, x2 = (r.right - rootRect.left) / s, y2 = (r.bottom - rootRect.top) / s;
+        if (!byId[id]) { byId[id] = { x0: x, y0: y, x1: x2, y1: y2 }; order.push(id); }
+        else { const b = byId[id]; b.x0 = Math.min(b.x0, x); b.y0 = Math.min(b.y0, y); b.x1 = Math.max(b.x1, x2); b.y1 = Math.max(b.y1, y2); }
       });
-      setSiteHotspots(list);
+      setSiteHotspots(order.map((id, i) => {
+        const b = byId[id];
+        return { id, x: b.x0, y: b.y0, w: b.x1 - b.x0, h: b.y1 - b.y0, num: String(i + 1).padStart(2, '0'), gid: resolveHotspot(id).gid };
+      }));
     }, [activeStepIdx, scale, contentH, fontsReady]);
 
     // Admin autosave (debounced). Clients persist only on Submit.
@@ -278,15 +282,23 @@
     // We measure each tagged section's rect and render the SAME pulsing marker
     // + animated draw outline + dim spotlight the coordinate hotspots use, so
     // the interaction and animation are identical across every step.
+    // Resolve a hotspot id to its label/info/group — from the discovery
+    // questions first, then the EXTRA_HOTSPOTS map for sections that have a
+    // marker but no dedicated question.
+    const resolveHotspot = (hid) => {
+      const step = steps[stepIdxRef.current];
+      const h = step && step.hotspots.find((x) => x.id === hid);
+      if (h) { const g = step.groups.find((gg) => gg.hotspotId === hid); return { label: h.label, info: h.info, gid: g ? g.id : '' }; }
+      return EXTRA_HOTSPOTS[hid] || { label: hid, info: '', gid: '' };
+    };
     const showCard = (hid, el) => {
       const step = steps[stepIdxRef.current];
-      const h = step && step.hotspots.find((hh) => hh.id === hid);
+      const meta = resolveHotspot(hid);
       const r = el.getBoundingClientRect();
       setInfoCard({
         top: r.top, left: r.left,
         eyebrow: 'STEP ' + String(stepIdxRef.current + 1).padStart(2, '0') + ' · ' + (step ? step.label.toUpperCase() : ''),
-        label: h ? h.label : hid, info: h ? h.info : '',
-        gid: (step && (step.groups.find((gg) => gg.hotspotId === hid) || {}).id) || '',
+        label: meta.label, info: meta.info, gid: meta.gid,
       });
     };
     const onSiteClick = (e) => {
@@ -294,15 +306,14 @@
       if (!el) { setActiveHotspotId(null); setInfoCard(null); return; }
       const hid = el.getAttribute('data-hotspot');
       setActiveHotspotId(hid);
-      const step = steps[stepIdxRef.current];
-      const g = step && step.groups.find((gg) => gg.hotspotId === hid);
-      if (g) scrollToGroup(g.id);
+      const meta = resolveHotspot(hid);
+      if (meta.gid) scrollToGroup(meta.gid);
       showCard(hid, el);
     };
     // Clicking a form group also spotlights + scrolls to its section.
     const focusGroup = (g) => {
       setActiveHotspotId(g.hotspotId);
-      if (isSiteScene(stepIdxRef.current)) {
+      if (isRichScene(stepIdxRef.current)) {
         const root = contentInnerRef.current;
         const el = root && root.querySelector('[data-hotspot="' + g.hotspotId + '"]');
         if (el) { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); setTimeout(() => showCard(g.hotspotId, el), 300); }
@@ -410,7 +421,7 @@
     });
 
     // Scene HTML (1-9 static); scene 10 rendered in JSX.
-    const isSite = isSiteScene(activeStepIdx);
+    const isRich = isRichScene(activeStepIdx);
     let sceneHtml = (window.DISCOVERY_SCENES || {})[activeStepIdx + 1] || '';
     if (activeStepIdx === 0) sceneHtml = sceneHtml.replace(/__CLIENT_NAME__/g, escapeText(company || 'there'));
 
@@ -439,67 +450,66 @@
 
         {/* MAIN ROW */}
         <div style={{ flex: '1 1 auto', display: 'flex', minHeight: 0 }}>
-          {/* STAGE */}
-          <div ref={stageRef} style={{ flex: '1 1 auto', minWidth: 0, display: 'flex', alignItems: isSite ? 'stretch' : 'center', justifyContent: 'center', position: 'relative', padding: 20, boxSizing: 'border-box' }}>
-            <div style={{ position: 'relative', width: Math.round(1440 * scale), height: isSite ? '100%' : Math.round(900 * scale), borderRadius: 6, overflow: 'hidden', border: '1px solid #C9C7C0', background: '#FFFFFF', boxShadow: '0 12px 32px rgba(10,10,10,0.10), 0 2px 4px rgba(10,10,10,0.05)' }}>
-              {isSite ? (
-                // Website-frame scenes: a rich, tall page scrolled inside the viewport.
-                // Sections are tagged with data-hotspot and click to spotlight.
-                <div style={{ width: '100%', height: '100%', overflowY: 'auto', overflowX: 'hidden' }}
-                  onScroll={() => { if (infoCard) setInfoCard(null); }}>
-                  <div style={{ position: 'relative', width: Math.round(1440 * scale), height: Math.round(contentH * scale) }}>
-                    <div ref={contentInnerRef} onClick={onSiteClick} style={{ position: 'absolute', top: 0, left: 0, width: 1440, transform: 'scale(' + scale + ')', transformOrigin: 'top left', cursor: 'pointer' }}
-                      dangerouslySetInnerHTML={{ __html: sceneHtml }}/>
-                    {/* Animated marker + outline overlay (same as the coordinate hotspots) */}
-                    <div style={{ position: 'absolute', top: 0, left: 0, width: 1440, transform: 'scale(' + scale + ')', transformOrigin: 'top left', pointerEvents: 'none' }}>
-                      {siteHotspots.map((h) => {
-                        const active = activeHotspotId === h.id;
-                        return (
-                          <div key={h.id} style={{ position: 'absolute', left: h.x, top: h.y, width: h.w, height: h.h, borderRadius: 8, zIndex: active ? 60 : 10, boxShadow: active ? '0 0 0 4000px rgba(10,10,10,0.55)' : 'none' }}>
-                            {!active && (
-                              <span style={{ position: 'absolute', top: -15, left: -15, width: 30, height: 30, borderRadius: '50%', background: '#FFFFFF', border: '1.5px solid #0A0A0A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 600, color: '#0A0A0A', animation: 'uc-pulse 2.4s cubic-bezier(.2,.7,.2,1) infinite' }}>{h.num}</span>
-                            )}
-                            {active && (
-                              <svg style={{ position: 'absolute', top: -2, left: -2, overflow: 'visible' }} width={h.w + 4} height={h.h + 4}>
-                                <rect x="2" y="2" width={h.w} height={h.h} rx="8" fill="none" stroke="#E8FF4E" strokeWidth="3.5" pathLength="100" style={{ strokeDasharray: 100, animation: 'uc-draw 700ms cubic-bezier(.2,.7,.2,1) forwards' }}></rect>
-                              </svg>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-              ) : (
-                <div onClick={() => { if (activeHotspotId) setActiveHotspotId(null); }} style={{ position: 'absolute', top: 0, left: 0, width: 1440, height: 900, transform: 'scale(' + scale + ')', transformOrigin: 'top left' }}>
-                  {activeStepIdx === 9
-                    ? <Scene10 steps={steps} answers={answers}/>
-                    : <div style={{ position: 'absolute', inset: 0 }} dangerouslySetInnerHTML={{ __html: sceneHtml }}/>}
-
-                  {/* HOTSPOT LAYER */}
-                  {hotspots.map((h) => (
-                    <div key={h.id} onClick={(e) => { e.stopPropagation(); onHotspotClick(h.id); }}
-                      style={{ position: 'absolute', left: h.x, top: h.y, width: h.w, height: h.h, cursor: 'pointer', zIndex: h.active ? 60 : 10, borderRadius: 8, boxShadow: h.active ? '0 0 0 4000px rgba(10,10,10,0.55)' : 'none' }}>
-                      {!h.active && (
-                        <span style={{ position: 'absolute', top: -15, left: -15, width: 30, height: 30, borderRadius: '50%', background: '#FFFFFF', border: '1.5px solid #0A0A0A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 600, color: '#0A0A0A', animation: 'uc-pulse 2.4s cubic-bezier(.2,.7,.2,1) infinite' }}>{h.num}</span>
-                      )}
-                      {h.active && (
-                        <svg style={{ position: 'absolute', top: -2, left: -2, overflow: 'visible', pointerEvents: 'none' }} width={h.w + 4} height={h.h + 4}>
-                          <rect x="2" y="2" width={h.w} height={h.h} rx="8" fill="none" stroke="#E8FF4E" strokeWidth="3.5" pathLength="100" style={{ strokeDasharray: 100, animation: 'uc-draw 700ms cubic-bezier(.2,.7,.2,1) forwards' }}></rect>
-                        </svg>
-                      )}
-                      {h.active && (
-                        <div onClick={(e) => e.stopPropagation()} style={hotspotCardStyle(h)}>
-                          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, letterSpacing: '0.12em', color: '#707070' }}>{h.eyebrow}</div>
-                          <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.015em', marginTop: 8 }}>{h.label}</div>
-                          <div style={{ fontSize: 13.5, lineHeight: 1.55, color: '#4D4D4D', marginTop: 8 }}>{h.info}</div>
-                          <button onClick={(e) => { e.stopPropagation(); scrollToGroup(h.gid); }} style={{ marginTop: 14, border: 'none', background: '#0A0A0A', color: '#FFFFFF', borderRadius: 5, padding: '10px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Answer in the form →</button>
+          {/* STAGE — every step fits to width and scrolls inside the viewport */}
+          <div ref={stageRef} style={{ flex: '1 1 auto', minWidth: 0, display: 'flex', alignItems: 'stretch', justifyContent: 'center', position: 'relative', padding: 20, boxSizing: 'border-box' }}>
+            <div style={{ position: 'relative', width: Math.round(1440 * scale), height: '100%', borderRadius: 6, overflow: 'hidden', border: '1px solid #C9C7C0', background: '#FFFFFF', boxShadow: '0 12px 32px rgba(10,10,10,0.10), 0 2px 4px rgba(10,10,10,0.05)' }}>
+              <div style={{ width: '100%', height: '100%', overflowY: 'auto', overflowX: 'hidden' }}
+                onScroll={() => { if (infoCard) setInfoCard(null); }}>
+                <div style={{ position: 'relative', width: Math.round(1440 * scale), height: Math.round((isRich ? contentH : 900) * scale) }}>
+                  {isRich ? (
+                    // Rich website-frame page: normal-flow HTML with tagged, measured sections.
+                    <>
+                      <div ref={contentInnerRef} onClick={onSiteClick} style={{ position: 'absolute', top: 0, left: 0, width: 1440, transform: 'scale(' + scale + ')', transformOrigin: 'top left', cursor: 'pointer' }}
+                        dangerouslySetInnerHTML={{ __html: sceneHtml }}/>
+                      <div style={{ position: 'absolute', top: 0, left: 0, width: 1440, transform: 'scale(' + scale + ')', transformOrigin: 'top left', pointerEvents: 'none' }}>
+                        {siteHotspots.map((h) => {
+                          const active = activeHotspotId === h.id;
+                          return (
+                            <div key={h.id} style={{ position: 'absolute', left: h.x, top: h.y, width: h.w, height: h.h, borderRadius: 8, zIndex: active ? 60 : 10, boxShadow: active ? '0 0 0 4000px rgba(10,10,10,0.55)' : 'none' }}>
+                              {!active && (
+                                <span style={{ position: 'absolute', top: -15, left: -15, width: 30, height: 30, borderRadius: '50%', background: '#FFFFFF', border: '1.5px solid #0A0A0A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 600, color: '#0A0A0A', animation: 'uc-pulse 2.4s cubic-bezier(.2,.7,.2,1) infinite' }}>{h.num}</span>
+                              )}
+                              {active && (
+                                <svg style={{ position: 'absolute', top: -2, left: -2, overflow: 'visible' }} width={h.w + 4} height={h.h + 4}>
+                                  <rect x="2" y="2" width={h.w} height={h.h} rx="8" fill="none" stroke="#E8FF4E" strokeWidth="3.5" pathLength="100" style={{ strokeDasharray: 100, animation: 'uc-draw 700ms cubic-bezier(.2,.7,.2,1) forwards' }}></rect>
+                                </svg>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </>
+                  ) : (
+                    // Plain artboard (steps 1-2, 7-10): fixed 1440x900 with coordinate hotspots.
+                    <div onClick={() => { if (activeHotspotId) setActiveHotspotId(null); }} style={{ position: 'absolute', top: 0, left: 0, width: 1440, height: 900, transform: 'scale(' + scale + ')', transformOrigin: 'top left' }}>
+                      {activeStepIdx === 9
+                        ? <Scene10 steps={steps} answers={answers}/>
+                        : <div style={{ position: 'absolute', inset: 0 }} dangerouslySetInnerHTML={{ __html: sceneHtml }}/>}
+                      {hotspots.map((h) => (
+                        <div key={h.id} onClick={(e) => { e.stopPropagation(); onHotspotClick(h.id); }}
+                          style={{ position: 'absolute', left: h.x, top: h.y, width: h.w, height: h.h, cursor: 'pointer', zIndex: h.active ? 60 : 10, borderRadius: 8, boxShadow: h.active ? '0 0 0 4000px rgba(10,10,10,0.55)' : 'none' }}>
+                          {!h.active && (
+                            <span style={{ position: 'absolute', top: -15, left: -15, width: 30, height: 30, borderRadius: '50%', background: '#FFFFFF', border: '1.5px solid #0A0A0A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 600, color: '#0A0A0A', animation: 'uc-pulse 2.4s cubic-bezier(.2,.7,.2,1) infinite' }}>{h.num}</span>
+                          )}
+                          {h.active && (
+                            <svg style={{ position: 'absolute', top: -2, left: -2, overflow: 'visible', pointerEvents: 'none' }} width={h.w + 4} height={h.h + 4}>
+                              <rect x="2" y="2" width={h.w} height={h.h} rx="8" fill="none" stroke="#E8FF4E" strokeWidth="3.5" pathLength="100" style={{ strokeDasharray: 100, animation: 'uc-draw 700ms cubic-bezier(.2,.7,.2,1) forwards' }}></rect>
+                            </svg>
+                          )}
+                          {h.active && (
+                            <div onClick={(e) => e.stopPropagation()} style={hotspotCardStyle(h)}>
+                              <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, letterSpacing: '0.12em', color: '#707070' }}>{h.eyebrow}</div>
+                              <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.015em', marginTop: 8 }}>{h.label}</div>
+                              <div style={{ fontSize: 13.5, lineHeight: 1.55, color: '#4D4D4D', marginTop: 8 }}>{h.info}</div>
+                              <button onClick={(e) => { e.stopPropagation(); scrollToGroup(h.gid); }} style={{ marginTop: 14, border: 'none', background: '#0A0A0A', color: '#FFFFFF', borderRadius: 5, padding: '10px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Answer in the form →</button>
+                            </div>
+                          )}
                         </div>
-                      )}
+                      ))}
                     </div>
-                  ))}
+                  )}
                 </div>
-              )}
+              </div>
             </div>
           </div>
 
