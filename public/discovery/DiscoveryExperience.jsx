@@ -497,11 +497,15 @@
                       <div style={{ position: 'absolute', top: 0, left: 0, width: 1440, transform: 'scale(' + scale + ')', transformOrigin: 'top left', pointerEvents: 'none' }}>
                         {siteHotspots.map((h) => {
                           const active = activeHotspotId === h.id;
+                          // Keep the badge on-screen: sections flush to the top
+                          // or left edge would otherwise clip it under the frame.
+                          const badgeTop = h.y < 20 ? 6 : -15;
+                          const badgeLeft = h.x < 20 ? 6 : -15;
                           return (
                             <div key={h.id} onClick={(e) => { e.stopPropagation(); selectSiteHotspot(h.id); }}
                               style={{ position: 'absolute', left: h.x, top: h.y, width: h.w, height: h.h, borderRadius: 8, zIndex: active ? 60 : 10, cursor: 'pointer', pointerEvents: 'auto', boxShadow: active ? '0 0 0 4000px rgba(10,10,10,0.55)' : 'none' }}>
                               {!active && (
-                                <span style={{ position: 'absolute', top: -15, left: -15, width: 30, height: 30, borderRadius: '50%', background: '#FFFFFF', border: '1.5px solid #0A0A0A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 600, color: '#0A0A0A', animation: 'uc-pulse 2.4s cubic-bezier(.2,.7,.2,1) infinite' }}>{h.num}</span>
+                                <span style={{ position: 'absolute', top: badgeTop, left: badgeLeft, width: 30, height: 30, borderRadius: '50%', background: '#FFFFFF', border: '1.5px solid #0A0A0A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 600, color: '#0A0A0A', animation: 'uc-pulse 2.4s cubic-bezier(.2,.7,.2,1) infinite' }}>{h.num}</span>
                               )}
                               {active && (
                                 <svg style={{ position: 'absolute', top: -2, left: -2, overflow: 'visible' }} width={h.w + 4} height={h.h + 4}>
