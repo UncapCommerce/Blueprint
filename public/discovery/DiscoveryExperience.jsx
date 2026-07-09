@@ -10,6 +10,14 @@
   // sections tagged with data-hotspot). All 10 steps fit to width and scroll
   // vertically inside the fixed viewport.
   const isRichScene = (idx) => idx >= 2 && idx <= 5;
+  // #step1 … #step10 in the URL so any step can be opened or shared directly.
+  const stepFromHash = () => {
+    const m = (window.location.hash || '').match(/^#step(\d+)$/i);
+    if (!m) return null;
+    const n = parseInt(m[1], 10) - 1;
+    return (n >= 0 && n <= 9) ? n : null;
+  };
+  const setStepHash = (idx) => { try { window.history.replaceState(null, '', '#step' + (idx + 1)); } catch (_) {} };
   // Extra section hotspots that don't map to a discovery question but should
   // still spotlight + link to a relevant group. Add new rich-scene sections
   // here when they need their own hotspot without a dedicated question.
@@ -142,9 +150,10 @@
   // ── The experience ────────────────────────────────────────────────────
   function Experience({ role, company, initial, token }) {
     const steps = window.DISCOVERY_STEPS || [];
+    const hashStep = stepFromHash();
     const [answers, setAnswers] = useState(initial.answers || {});
-    const [activeStepIdx, setActiveStepIdx] = useState(Math.min(initial.activeStepIdx || 0, 9));
-    const [unlockedIdx, setUnlockedIdx] = useState(Math.min(initial.unlockedIdx || 0, 9));
+    const [activeStepIdx, setActiveStepIdx] = useState(hashStep != null ? hashStep : Math.min(initial.activeStepIdx || 0, 9));
+    const [unlockedIdx, setUnlockedIdx] = useState(Math.max(Math.min(initial.unlockedIdx || 0, 9), hashStep != null ? hashStep : 0));
     const [activeHotspotId, setActiveHotspotId] = useState(null);
     const [scale, setScale] = useState(0.55);
     const [contentH, setContentH] = useState(900);
@@ -198,6 +207,16 @@
     // Web fonts change layout after load — re-measure once they're ready.
     useEffect(() => {
       if (document.fonts && document.fonts.ready) document.fonts.ready.then(() => setFontsReady(true)).catch(() => {});
+    }, []);
+    // Reflect the current step in the URL, and react to a shared/edited hash.
+    useEffect(() => {
+      setStepHash(stepIdxRef.current);
+      const onHash = () => {
+        const n = stepFromHash();
+        if (n != null && n !== stepIdxRef.current) { setUnlockedIdx((u) => Math.max(u, n)); go(n); }
+      };
+      window.addEventListener('hashchange', onHash);
+      return () => window.removeEventListener('hashchange', onHash);
     }, []);
     // Re-fit on step change, and measure the rich scene's natural height so
     // the scroll viewport gets the right scroll extent.
@@ -266,6 +285,8 @@
     const go = (idx) => {
       setActiveStepIdx(idx);
       setActiveHotspotId(null);
+      setInfoCard(null);
+      setStepHash(idx);
       if (formElRef.current) formElRef.current.scrollTo({ top: 0 });
       scrollStripToActive(idx);
       scheduleSave(answers, idx, Math.max(unlockedIdx, idx));
