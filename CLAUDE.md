@@ -39,6 +39,15 @@ React, ReactDOM, and `@babel/standalone` (vendored under `/vendor/`) from
   triggered from the admin app). Each blueprint Gate silently mints a
   preview session from the `__Host-bp_admin` cookie via `/api/admin/bp-token`,
   so the team never types email codes
+- Discovery experience: `public/discovery/` served at `/discovery/<handle>/`.
+  10-step questionnaire over scaled artboard "scenes". CRITICAL pattern:
+  every section of every scene must be click-to-highlight — coordinate
+  hotspots for the plain artboards, and a `data-hotspot="<groupId>"`
+  attribute on each section of the rich website-frame scenes (3-6, built by
+  the scenes generator). Clicking a section spotlights it and links to its
+  question group. ALWAYS tag any new/updated section this way. The `uncap`
+  handle is a fixed, always-filled training demo (`DEMO_ANSWERS` in
+  `worker/index.js`) — enrich only that one with example entries
 - `/build` quiz: `public/build/index.html` + `public/components/QuizApp.jsx`
 - Worker handles `/api/checkout/*` (Stripe SetupIntents) and
   `/api/build/session/*` (KV-backed quiz resume), then falls through to

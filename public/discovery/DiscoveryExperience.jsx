@@ -139,6 +139,7 @@
     const [activeHotspotId, setActiveHotspotId] = useState(null);
     const [scale, setScale] = useState(0.55);
     const [contentH, setContentH] = useState(900);
+    const [infoCard, setInfoCard] = useState(null);
     const [saveState, setSaveState] = useState(''); // '', 'saving', 'saved'
     const [submitState, setSubmitState] = useState('');
     const [done, setDone] = useState(false); // completion modal only after an explicit finish
@@ -150,6 +151,7 @@
     const saveTimer = useRef(null);
     const roRef = useRef(null);
     const contentInnerRef = useRef(null);
+    const prevHiRef = useRef(null);
     const stepIdxRef = useRef(activeStepIdx);
     stepIdxRef.current = activeStepIdx;
 
@@ -188,6 +190,8 @@
     // Re-fit on step change, and measure the rich scene's natural height so
     // the scroll viewport gets the right scroll extent.
     useLayoutEffect(() => {
+      prevHiRef.current = null; // old node is gone after the scene re-renders
+      setInfoCard(null);
       measure();
       if (isSiteScene(activeStepIdx) && contentInnerRef.current) {
         setContentH(contentInnerRef.current.offsetHeight || 900);
@@ -236,6 +240,64 @@
       const el = groupEls.current[gid];
       const c = formElRef.current;
       if (el && c) c.scrollTo({ top: Math.max(0, el.offsetTop - 12), behavior: 'smooth' });
+    };
+
+    // ── Click-to-highlight for the rich site scenes ──────────────────────
+    // Every section in a website-frame scene carries data-hotspot="<groupId>".
+    // Clicking one spotlights that section (lime outline + dim), scrolls the
+    // form to its question group, and shows the "why we ask" info card — the
+    // same interaction the coordinate hotspots give the other scenes.
+    const highlightEl = (el) => {
+      clearHighlight();
+      prevHiRef.current = { el, css: el.getAttribute('style') || '' };
+      el.style.boxShadow = '0 0 0 4000px rgba(10,10,10,0.55)';
+      el.style.outline = '3px solid #E8FF4E';
+      el.style.outlineOffset = '3px';
+      if (!el.style.borderRadius) el.style.borderRadius = '6px';
+      if (!el.style.position || el.style.position === 'static') el.style.position = 'relative';
+      el.style.zIndex = '5';
+    };
+    const clearHighlight = () => {
+      const p = prevHiRef.current;
+      if (p && p.el) p.el.setAttribute('style', p.css);
+      prevHiRef.current = null;
+    };
+    const cardFor = (hid, el) => {
+      const step = steps[stepIdxRef.current];
+      const g = step && step.groups.find((gg) => gg.hotspotId === hid);
+      const h = step && step.hotspots.find((hh) => hh.id === hid);
+      const r = el.getBoundingClientRect();
+      setInfoCard({
+        top: r.top, left: r.left,
+        eyebrow: 'STEP ' + String(stepIdxRef.current + 1).padStart(2, '0') + ' · ' + (step ? step.label.toUpperCase() : ''),
+        label: h ? h.label : hid, info: h ? h.info : '', gid: g ? g.id : '',
+      });
+      return g;
+    };
+    const openSection = (el) => {
+      const hid = el.getAttribute('data-hotspot');
+      if (!hid) return;
+      highlightEl(el);
+      setActiveHotspotId(hid);
+      const g = cardFor(hid, el);
+      if (g) scrollToGroup(g.id);
+    };
+    const onSiteClick = (e) => {
+      const el = e.target.closest ? e.target.closest('[data-hotspot]') : null;
+      if (el) openSection(el);
+      else { clearHighlight(); setActiveHotspotId(null); setInfoCard(null); }
+    };
+    // Clicking a form group also spotlights its section on the page.
+    const focusGroup = (g) => {
+      setActiveHotspotId(g.hotspotId);
+      if (isSiteScene(stepIdxRef.current)) {
+        const root = contentInnerRef.current;
+        const el = root && root.querySelector('[data-hotspot="' + g.hotspotId + '"]');
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          setTimeout(() => { highlightEl(el); cardFor(g.hotspotId, el); }, 280);
+        }
+      }
     };
 
     const setAnswer = (qid, val) => {
@@ -373,9 +435,11 @@
             <div style={{ position: 'relative', width: Math.round(1440 * scale), height: isSite ? '100%' : Math.round(900 * scale), borderRadius: 6, overflow: 'hidden', border: '1px solid #C9C7C0', background: '#FFFFFF', boxShadow: '0 12px 32px rgba(10,10,10,0.10), 0 2px 4px rgba(10,10,10,0.05)' }}>
               {isSite ? (
                 // Website-frame scenes: a rich, tall page scrolled inside the viewport.
-                <div style={{ width: '100%', height: '100%', overflowY: 'auto', overflowX: 'hidden' }}>
+                // Sections are tagged with data-hotspot and click to spotlight.
+                <div style={{ width: '100%', height: '100%', overflowY: 'auto', overflowX: 'hidden' }}
+                  onScroll={() => { if (infoCard) setInfoCard(null); }}>
                   <div style={{ position: 'relative', width: Math.round(1440 * scale), height: Math.round(contentH * scale) }}>
-                    <div ref={contentInnerRef} style={{ position: 'absolute', top: 0, left: 0, width: 1440, transform: 'scale(' + scale + ')', transformOrigin: 'top left' }}
+                    <div ref={contentInnerRef} onClick={onSiteClick} style={{ position: 'absolute', top: 0, left: 0, width: 1440, transform: 'scale(' + scale + ')', transformOrigin: 'top left', cursor: 'pointer' }}
                       dangerouslySetInnerHTML={{ __html: sceneHtml }}/>
                   </div>
                 </div>
@@ -433,7 +497,7 @@
                 const complete = gDone === g.questions.length;
                 return (
                   <div key={g.id} ref={(el) => { if (el) groupEls.current[g.id] = el; }}
-                    onClick={() => { if (activeHotspotId !== g.hotspotId) setActiveHotspotId(g.hotspotId); }}
+                    onClick={() => focusGroup(g)}
                     style={{ border: '1px solid ' + (active ? '#0A0A0A' : '#E4E1D8'), boxShadow: active ? '0 0 0 1px #0A0A0A' : 'none', borderRadius: 5, padding: 18, marginBottom: 14, background: '#FFFFFF', cursor: 'pointer', transition: 'border-color 220ms, box-shadow 220ms' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <span style={{ width: 24, height: 24, borderRadius: '50%', border: '1.5px solid #0A0A0A', background: complete ? '#0A0A0A' : 'transparent', color: complete ? '#FFFFFF' : '#0A0A0A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'JetBrains Mono',monospace", fontSize: 11, fontWeight: 600, flex: '0 0 auto' }}>{String(gi + 1).padStart(2, '0')}</span>
@@ -482,6 +546,20 @@
           </div>
         </div>
 
+        {infoCard && (
+          <div style={{ position: 'fixed', zIndex: 400, width: 360, maxWidth: 'calc(100vw - 24px)',
+            top: Math.max(12, Math.min(infoCard.top + 14, window.innerHeight - 250)),
+            left: Math.max(12, Math.min(infoCard.left + 16, window.innerWidth - 384)),
+            background: '#FFFFFF', border: '1px solid #0A0A0A', borderRadius: 8, padding: 20, boxShadow: '0 18px 44px rgba(10,10,10,0.28)' }}>
+            <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, letterSpacing: '0.12em', color: '#707070' }}>{infoCard.eyebrow}</div>
+            <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.015em', marginTop: 8 }}>{infoCard.label}</div>
+            <div style={{ fontSize: 13.5, lineHeight: 1.55, color: '#4D4D4D', marginTop: 8 }}>{infoCard.info}</div>
+            <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+              {infoCard.gid ? <button onClick={() => scrollToGroup(infoCard.gid)} style={{ border: 'none', background: '#0A0A0A', color: '#FFFFFF', borderRadius: 5, padding: '10px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Answer in the form →</button> : null}
+              <button onClick={() => { clearHighlight(); setActiveHotspotId(null); setInfoCard(null); }} style={{ border: '1px solid #C9C7C0', background: '#FFFFFF', color: '#1A1A1A', borderRadius: 5, padding: '10px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Dismiss</button>
+            </div>
+          </div>
+        )}
         {done && <DonePanel isAdmin={isAdmin} onClose={() => setDone(false)}/>}
       </div>
     );
