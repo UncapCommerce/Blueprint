@@ -322,6 +322,18 @@
         label: meta.label, info: meta.info, gid: meta.gid,
       });
     };
+    // Select a rich-scene section by its hotspot id (marker click or scene
+    // click). Toggles off when the same section is clicked again.
+    const selectSiteHotspot = (hid) => {
+      const next = activeHotspotId === hid ? null : hid;
+      setActiveHotspotId(next);
+      if (!next) { setInfoCard(null); return; }
+      const meta = resolveHotspot(hid);
+      if (meta.gid) scrollToGroup(meta.gid);
+      const root = contentInnerRef.current;
+      const el = root && root.querySelector('[data-hotspot="' + hid + '"]');
+      if (el) showCard(hid, el);
+    };
     const onSiteClick = (e) => {
       const el = e.target.closest ? e.target.closest('[data-hotspot]') : null;
       if (!el) { setActiveHotspotId(null); setInfoCard(null); return; }
@@ -486,7 +498,8 @@
                         {siteHotspots.map((h) => {
                           const active = activeHotspotId === h.id;
                           return (
-                            <div key={h.id} style={{ position: 'absolute', left: h.x, top: h.y, width: h.w, height: h.h, borderRadius: 8, zIndex: active ? 60 : 10, boxShadow: active ? '0 0 0 4000px rgba(10,10,10,0.55)' : 'none' }}>
+                            <div key={h.id} onClick={(e) => { e.stopPropagation(); selectSiteHotspot(h.id); }}
+                              style={{ position: 'absolute', left: h.x, top: h.y, width: h.w, height: h.h, borderRadius: 8, zIndex: active ? 60 : 10, cursor: 'pointer', pointerEvents: 'auto', boxShadow: active ? '0 0 0 4000px rgba(10,10,10,0.55)' : 'none' }}>
                               {!active && (
                                 <span style={{ position: 'absolute', top: -15, left: -15, width: 30, height: 30, borderRadius: '50%', background: '#FFFFFF', border: '1.5px solid #0A0A0A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 600, color: '#0A0A0A', animation: 'uc-pulse 2.4s cubic-bezier(.2,.7,.2,1) infinite' }}>{h.num}</span>
                               )}
