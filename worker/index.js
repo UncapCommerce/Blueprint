@@ -1060,17 +1060,17 @@ function getGoogleClientId(env) {
 const BP_CHANNELS = ['Partner', 'Inbound', 'Outbound', 'Referral', 'Events'];
 
 const BLUEPRINT_REGISTRY = [
-  { id: 'mitutoyo',         dir: 'Mitutoyo',         name: 'Mitutoyo',          num: '001' },
-  { id: 'wichelt',          dir: 'wichelt',          name: 'Wichelt Imports',   num: '002' },
-  { id: 'elevateoralcare',  dir: 'ElevateOralCare',  name: 'Elevate Oral Care', num: '003' },
-  { id: 'valveman',         dir: 'ValveMan',         name: 'ValveMan',          num: '004' },
-  { id: 'benami',           dir: 'Ben-Ami',          name: 'Ben-Ami',           num: '005' },
-  { id: 'anatomywarehouse', dir: 'AnatomyWarehouse', name: 'Anatomy Warehouse', num: '006' },
-  { id: 'sperscientific',   dir: 'SperScientific',   name: 'Sper Scientific',   num: '007' },
-  { id: 'gpscity',          dir: 'GPSCity',          name: 'GPS City',          num: '008' },
-  { id: 'tucsonalternator', dir: 'TucsonAlternator', name: 'Tucson Alternator', num: '009' },
-  { id: 'elycattleman',     dir: 'ElyCattleman',     name: 'Ely Cattleman',     num: '010' },
-  { id: 'vivo',             dir: 'VIVO',             name: 'VIVO',              num: '011' },
+  { id: 'mitutoyo',         dir: 'Mitutoyo',         name: 'Mitutoyo',          num: '001', channel: 'Inbound' },
+  { id: 'wichelt',          dir: 'wichelt',          name: 'Wichelt Imports',   num: '002', channel: 'Inbound' },
+  { id: 'elevateoralcare',  dir: 'ElevateOralCare',  name: 'Elevate Oral Care', num: '003', channel: 'Partner' },
+  { id: 'valveman',         dir: 'ValveMan',         name: 'ValveMan',          num: '004', channel: 'Outbound' },
+  { id: 'benami',           dir: 'Ben-Ami',          name: 'Ben-Ami',           num: '005', channel: 'Partner' },
+  { id: 'anatomywarehouse', dir: 'AnatomyWarehouse', name: 'Anatomy Warehouse', num: '006', channel: 'Partner' },
+  { id: 'sperscientific',   dir: 'SperScientific',   name: 'Sper Scientific',   num: '007', channel: 'Inbound' },
+  { id: 'gpscity',          dir: 'GPSCity',          name: 'GPS City',          num: '008', channel: 'Partner' },
+  { id: 'tucsonalternator', dir: 'TucsonAlternator', name: 'Tucson Alternator', num: '009', channel: 'Referral' },
+  { id: 'elycattleman',     dir: 'ElyCattleman',     name: 'Ely Cattleman',     num: '010', channel: 'Inbound' },
+  { id: 'vivo',             dir: 'VIVO',             name: 'VIVO',              num: '011', channel: 'Inbound' },
 ];
 
 function getCookie(request, name) {
@@ -1460,7 +1460,9 @@ async function handleAdminBlueprints(request, env) {
     const meta = await getBpMeta(env, i.id);
     i.expiresAt = meta.expiresAt || '';
     i.disabled  = !!meta.disabled;
-    i.channel   = meta.channel || '';
+    // An explicit channel saved in bpmeta wins; otherwise fall back to the
+    // registry default set on the shipped blueprints.
+    i.channel   = meta.channel || i.channel || '';
     i.expired   = isBpExpired(meta);
 
     if (i.kind !== 'live') return;
