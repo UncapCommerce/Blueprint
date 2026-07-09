@@ -1847,6 +1847,110 @@ async function handleAdminCreateDiscovery(request, env) {
 // admin (auto-authed via the admin cookie) on the call and later opened by
 // the client with an email passcode to edit/complete their own entries.
 
+// ── Training demo instance (/discovery/uncap/) ───────────────────────────
+// A fixed, always-filled discovery the team trains on. Reads return the full
+// example set below; saves/submits are no-ops so it can never be polluted.
+// IMPORTANT: when questions or fields are added anywhere, add their example
+// answers HERE (and only here) so this demo stays fully populated.
+const DEMO_DISCOVERY_HANDLE = 'uncap';
+const DEMO_DISCOVERY = {
+  id: 'demo-uncap', handle: 'uncap', company: 'Harlow Industrial Supply (Demo)',
+  client: 'Uncap Team', website: 'uncap.com', status: 'complete',
+  leadContact: { name: 'Uncap Team', email: 'denis@uncap.com' }, associatedContacts: [],
+};
+const DEMO_ANSWERS = {
+  // 1 · Client
+  'q-name': 'Harlow Industrial Supply',
+  'q-what': 'Industrial MRO distribution — abrasives, fasteners, safety, power tools, and cutting tools. We sell to fabricators, contractors, and plant-maintenance teams across the Midwest.',
+  'q-rev': '$50–250M',
+  'q-stake': 'Karen Ruiz (VP Ecommerce, decision maker), Tom Beckett (Director of IT), Priya Shah (Product Data Manager), and Dana Whitfield (Inside Sales Lead).',
+  'q-owner': 'Karen Ruiz, VP Ecommerce',
+  'q-why': 'We lost two national accounts last quarter to competitors with self-serve portals, and our ERP contract renews in nine months — we want commerce sorted before then.',
+  'q-success': '30% of revenue online within 12 months, 500+ active buyer accounts self-serving, and a 20% drop in order-entry calls.',
+  'q-channels': ['Sales reps', 'Phone / email', 'EDI'],
+  // 2 · Architecture
+  'q-platform': 'Magento',
+  'q-breaking': 'Magento 2 is on an unsupported version, integrations are held together with nightly CSV jobs, and inventory is always a day stale.',
+  'q-erp': 'Epicor Prophet 21',
+  'q-pim': 'Mostly in the ERP plus a large spreadsheet the product team maintains; images live on a shared drive.',
+  'q-locations': '6–20',
+  'q-integrations': 'A middleware vendor syncs P21 to Magento nightly; EDI runs through SPS Commerce; payments via a legacy gateway.',
+  'q-edi': 'Yes',
+  'q-maintains': 'A single contractor, part-time',
+  // 3 · Experience
+  'q-5sec': "That we're a real distributor with deep stock, contract pricing, and same-day shipping — not a marketplace reseller.",
+  'q-brand': 'Logo only',
+  'q-lookup': 'Mostly by part number and manufacturer number, then by category and application.',
+  'q-skus': '10–100K',
+  'q-topcats': 'Abrasives, Fasteners, Safety & PPE, Power Tools',
+  'q-convince': 'Net-30 terms, same-day shipping, real technical specs, and a rep they can call.',
+  'q-guest': 'Login to see',
+  'q-custpricing': 'Yes',
+  // 4 · Discovery
+  'q-attrs': 'Size/diameter, grit, material, brand, thread size, and compliance rating.',
+  'q-dataq': 'Messy',
+  'q-card': 'Part number, price (contract price when signed in), stock status, brand, and a quick-add quantity.',
+  'q-stock': 'By location',
+  'q-partsearch': 'Critical',
+  'q-crossref': 'Yes',
+  'q-ordersize': '5–20',
+  'q-compare': 'Yes',
+  // 5 · Conversion
+  'q-pricing': 'List price with customer-specific contract pricing and quantity breaks; a handful of negotiated SKUs.',
+  'q-qtybreaks': 'Yes',
+  'q-uom': 'Each / case',
+  'q-techcontent': 'Spec tables, datasheets (PDF), SDS sheets, and CAD models for select lines.',
+  'q-assets': 'Shared drive and vendor portals, plus PDFs stored in the ERP',
+  'q-leadtime': 'Varies',
+  'q-quote': 'Yes',
+  'q-rep': 'Yes',
+  // 6 · Revenue
+  'q-aov': '$5–50K',
+  'q-friction': 'Freight quoting for LTL, PO entry, and tax exemption — buyers give up and call instead.',
+  'q-paymethods': ['Credit card', 'PO / net terms', 'ACH'],
+  'q-terms': 'Credit application reviewed by finance, usually 2–3 days; limits set per account.',
+  'q-freight': 'Parcel for small orders, LTL freight for pallets; some hazmat (aerosols); will-call at two branches.',
+  'q-split': 'Yes',
+  'q-freightquote': 'Yes',
+  'q-taxexempt': 'Yes',
+  // 7 · Unified
+  'q-roles': 'Yes — purchasing agents place orders, plant managers approve above a threshold, and each account sets spending limits.',
+  'q-accounts': '1–10K',
+  'q-quoteflow': "Today it's email and PDFs back and forth, then re-keyed into the ERP — slow and error-prone.",
+  'q-repsorder': 'Yes',
+  'q-calls': 'Invoice copies, order status, tracking, and reordering past items.',
+  'q-payinvoice': 'Yes',
+  'q-repeat': 'Yes',
+  'q-punchout': 'Yes',
+  // 8 · Project
+  'q-launch': 'Q3 next year, ahead of the ERP renewal',
+  'q-deadlines': "ERP contract renews in nine months; we want to avoid re-signing a commerce module we won't use.",
+  'q-phased': 'Phased',
+  'q-budget': '$150–300K',
+  'q-signoff': 'Karen Ruiz (VP Ecommerce), with CFO approval',
+  'q-internal': 'Karen owns the project, Tom (IT) owns integrations, Priya owns product data, marketing supports content.',
+  'q-capacity': 'Some',
+  'q-procurement': 'Proposal review, legal for the MSA, then a procurement PO — about 3–4 weeks.',
+  // 9 · Growth
+  'q-support': 'Growth retainer',
+  'q-dayto': "Marketing plus Karen's team, with our retainer for larger changes",
+  'q-metrics': 'Online revenue %, new account signups, reorder rate, and order-entry call volume.',
+  'q-analytics': 'GA4 plus ERP reports',
+  'q-testing': 'Yes',
+  'q-phase2': 'Punchout integrations, a mobile app for reps, and international shipping.',
+  'q-newchannels': ['Marketplaces', 'International'],
+  'q-marketing': ['SEO', 'Email / SMS'],
+  // 10 · Enclosing
+  'q-missed': 'How we migrate 20 years of order history, and whether customers keep their existing logins.',
+  'q-risk': "Product-data quality — if attributes aren't cleaned up, filtering and search won't deliver.",
+  'q-agencies': 'Worked with a large agency before — great design, weak grasp of B2B/ERP realities. We want a partner who gets distribution.',
+  'q-comms': 'Weekly standups, Slack, and a shared board',
+  'q-proposal': 'Three weeks from today',
+  'q-audience': 'Karen Ruiz (VP Ecommerce) and the CFO',
+  'q-confidential': "We're quietly evaluating one competitor's platform too — please keep this engagement discreet.",
+  'q-homerun': 'Launch on time, hit 30% online revenue, and have reps actually prefer the new tools.',
+};
+
 function discoveryHandleFromWebsite(website, company) {
   let h = (website || '').toString().trim().toLowerCase();
   h = h.replace(/^https?:\/\//, '').replace(/^www\./, '');
@@ -1870,6 +1974,15 @@ async function uniqueDiscoveryHandle(env, base) {
 async function getDiscoveryByHandle(env, handle) {
   const clean = (handle || '').toString().trim().toLowerCase().replace(/[^a-z0-9-]/g, '');
   if (!clean) return null;
+  // The training demo always resolves, even if no KV record exists.
+  if (clean === DEMO_DISCOVERY_HANDLE) {
+    const id = await env.BLUEPRINT_AUTH.get(`dischandle:${clean}`);
+    if (id) {
+      const raw = await env.BLUEPRINT_AUTH.get(`discovery:${id}`);
+      if (raw) { try { return { demo: true, id, ...JSON.parse(raw) }; } catch {} }
+    }
+    return { demo: true, ...DEMO_DISCOVERY };
+  }
   const id = await env.BLUEPRINT_AUTH.get(`dischandle:${clean}`);
   if (!id) return null;
   const raw = await env.BLUEPRINT_AUTH.get(`discovery:${id}`);
@@ -1984,9 +2097,11 @@ async function handleDiscoveryRequestCode(request, env) {
 
   // Strict allowlist: only the clients assigned to this discovery (lead +
   // associated contacts) can ever request a passcode. The Uncap team opens
-  // it through the admin dashboard (cookie auth), not this gate.
+  // it through the admin dashboard (cookie auth), not this gate — except the
+  // training demo, which any @uncap.com teammate can unlock by passcode.
   const allow = discoveryAllowlist(disc);
-  if (!allow.includes(email)) {
+  const allowed = allow.includes(email) || (disc.demo && email.endsWith('@uncap.com'));
+  if (!allowed) {
     return json(403, { ok: false, error: 'This discovery is restricted. Use the email it was sent to.' });
   }
   {
@@ -2016,7 +2131,9 @@ async function handleDiscoveryVerify(request, env) {
   const disc = await getDiscoveryByHandle(env, body.handle);
   if (!disc) return json(404, { ok: false, error: 'Discovery not found' });
   // Only assigned contacts hold a code, but re-check the allowlist here too.
-  if (!discoveryAllowlist(disc).includes(email)) return json(403, { ok: false, error: 'This discovery is restricted.' });
+  if (!discoveryAllowlist(disc).includes(email) && !(disc.demo && email.endsWith('@uncap.com'))) {
+    return json(403, { ok: false, error: 'This discovery is restricted.' });
+  }
   const name = stripHeaderValue(discoveryContactName(disc, email)).slice(0, 200) || email.split('@')[0];
 
   const ip = clientIp(request);
@@ -2055,6 +2172,15 @@ async function handleDiscoveryGetAnswers(request, env) {
   if (!disc) return json(404, { ok: false, error: 'Discovery not found' });
   const actor = await resolveDiscoveryActor(request, env, { token: url.searchParams.get('token') || '' }, disc);
   if (!actor) return json(401, { ok: false, error: 'Not authorised' });
+  // The training demo always returns the full example set, every step
+  // unlocked, and never reads persisted answers.
+  if (disc.demo) {
+    return json(200, {
+      ok: true, role: actor.role, company: disc.company || '',
+      clientName: disc.company || disc.client || '', handle: disc.handle,
+      answers: DEMO_ANSWERS, activeStepIdx: 0, unlockedIdx: 9, status: 'complete',
+    });
+  }
   const data = await getDiscoveryAnswers(env, disc.id);
   return json(200, {
     ok: true,
@@ -2087,6 +2213,9 @@ async function handleDiscoverySaveAnswers(request, env) {
   if (!actor) return json(401, { ok: false, error: 'Not authorised' });
   if (actor.role !== 'admin') return json(403, { ok: false, error: 'Admin only' });
   if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+  // The training demo is read-only — accept saves but never persist, so it
+  // stays pristine no matter who clicks through it.
+  if (disc.demo) return json(200, { ok: true, status: 'complete', demo: true });
 
   const prev = await getDiscoveryAnswers(env, disc.id);
   const answers = sanitizeAnswers(body.answers);
@@ -2118,6 +2247,8 @@ async function handleDiscoverySubmit(request, env) {
   if (!disc) return json(404, { ok: false, error: 'Discovery not found' });
   const actor = await resolveDiscoveryActor(request, env, body, disc);
   if (!actor) return json(401, { ok: false, error: 'Not authorised' });
+  // Training demo: accept the submit but never persist or report it.
+  if (disc.demo) return json(200, { ok: true, changed: 0, demo: true });
 
   const prev = await getDiscoveryAnswers(env, disc.id);
   const next = sanitizeAnswers(body.answers);

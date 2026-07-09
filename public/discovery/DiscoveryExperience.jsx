@@ -141,7 +141,7 @@
     const [contentH, setContentH] = useState(900);
     const [saveState, setSaveState] = useState(''); // '', 'saving', 'saved'
     const [submitState, setSubmitState] = useState('');
-    const [done, setDone] = useState(initial.status === 'complete' && role === 'admin');
+    const [done, setDone] = useState(false); // completion modal only after an explicit finish
 
     const stageElRef = useRef(null);
     const formElRef = useRef(null);
