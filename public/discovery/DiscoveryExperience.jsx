@@ -5,7 +5,10 @@
  * unlock it with an email passcode, then edit/fill their own entries.
  */
 (function () {
-  const { useState, useEffect, useRef, useCallback } = React;
+  const { useState, useEffect, useLayoutEffect, useRef, useCallback } = React;
+  // Scenes 3-6 are the full "website frame" pages: taller than the artboard,
+  // fit to width and scrolled vertically inside a fixed viewport.
+  const isSiteScene = (idx) => idx >= 2 && idx <= 5;
 
   const HANDLE = (function () {
     const m = window.location.pathname.match(/^\/discovery\/([a-z0-9-]+)\/?$/);
@@ -135,6 +138,7 @@
     const [unlockedIdx, setUnlockedIdx] = useState(Math.min(initial.unlockedIdx || 0, 9));
     const [activeHotspotId, setActiveHotspotId] = useState(null);
     const [scale, setScale] = useState(0.55);
+    const [contentH, setContentH] = useState(900);
     const [saveState, setSaveState] = useState(''); // '', 'saving', 'saved'
     const [submitState, setSubmitState] = useState('');
     const [done, setDone] = useState(initial.status === 'complete' && role === 'admin');
@@ -145,6 +149,9 @@
     const groupEls = useRef({});
     const saveTimer = useRef(null);
     const roRef = useRef(null);
+    const contentInnerRef = useRef(null);
+    const stepIdxRef = useRef(activeStepIdx);
+    stepIdxRef.current = activeStepIdx;
 
     const isAdmin = role === 'admin';
 
@@ -159,8 +166,11 @@
       const el = stageElRef.current;
       if (!el) return;
       const r = el.getBoundingClientRect();
-      const pad = 26;
-      const s = Math.max(0.1, Math.min((r.width - pad * 2) / 1440, (r.height - pad * 2) / 900));
+      const pad = 20;
+      const site = isSiteScene(stepIdxRef.current);
+      const s = site
+        ? Math.max(0.1, (r.width - pad * 2) / 1440)                                            // fit width, scroll vertically
+        : Math.max(0.1, Math.min((r.width - pad * 2) / 1440, (r.height - pad * 2) / 900));     // fit whole artboard
       const rounded = Math.round(s * 1000) / 1000;
       setScale((prev) => (rounded !== prev ? rounded : prev));
     }, []);
@@ -175,6 +185,16 @@
     }, [measure]);
 
     useEffect(() => () => { if (roRef.current) roRef.current.disconnect(); }, []);
+    // Re-fit on step change, and measure the rich scene's natural height so
+    // the scroll viewport gets the right scroll extent.
+    useLayoutEffect(() => {
+      measure();
+      if (isSiteScene(activeStepIdx) && contentInnerRef.current) {
+        setContentH(contentInnerRef.current.offsetHeight || 900);
+      } else {
+        setContentH(900);
+      }
+    }, [activeStepIdx, measure]);
 
     // Admin autosave (debounced). Clients persist only on Submit.
     const scheduleSave = useCallback((nextAnswers, aIdx, uIdx) => {
@@ -319,6 +339,7 @@
     });
 
     // Scene HTML (1-9 static); scene 10 rendered in JSX.
+    const isSite = isSiteScene(activeStepIdx);
     let sceneHtml = (window.DISCOVERY_SCENES || {})[activeStepIdx + 1] || '';
     if (activeStepIdx === 0) sceneHtml = sceneHtml.replace(/__CLIENT_NAME__/g, escapeText(company || 'there'));
 
@@ -348,36 +369,46 @@
         {/* MAIN ROW */}
         <div style={{ flex: '1 1 auto', display: 'flex', minHeight: 0 }}>
           {/* STAGE */}
-          <div ref={stageRef} style={{ flex: '1 1 auto', minWidth: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-            <div style={{ position: 'relative', width: Math.round(1440 * scale), height: Math.round(900 * scale), borderRadius: 6, overflow: 'hidden', border: '1px solid #C9C7C0', background: '#FFFFFF', boxShadow: '0 12px 32px rgba(10,10,10,0.10), 0 2px 4px rgba(10,10,10,0.05)' }}>
-              <div onClick={() => { if (activeHotspotId) setActiveHotspotId(null); }} style={{ position: 'absolute', top: 0, left: 0, width: 1440, height: 900, transform: 'scale(' + scale + ')', transformOrigin: 'top left' }}>
-                {activeStepIdx === 9
-                  ? <Scene10 steps={steps} answers={answers}/>
-                  : <div style={{ position: 'absolute', inset: 0 }} dangerouslySetInnerHTML={{ __html: sceneHtml }}/>}
-
-                {/* HOTSPOT LAYER */}
-                {hotspots.map((h) => (
-                  <div key={h.id} onClick={(e) => { e.stopPropagation(); onHotspotClick(h.id); }}
-                    style={{ position: 'absolute', left: h.x, top: h.y, width: h.w, height: h.h, cursor: 'pointer', zIndex: h.active ? 60 : 10, borderRadius: 8, boxShadow: h.active ? '0 0 0 4000px rgba(10,10,10,0.55)' : 'none' }}>
-                    {!h.active && (
-                      <span style={{ position: 'absolute', top: -15, left: -15, width: 30, height: 30, borderRadius: '50%', background: '#FFFFFF', border: '1.5px solid #0A0A0A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 600, color: '#0A0A0A', animation: 'uc-pulse 2.4s cubic-bezier(.2,.7,.2,1) infinite' }}>{h.num}</span>
-                    )}
-                    {h.active && (
-                      <svg style={{ position: 'absolute', top: -2, left: -2, overflow: 'visible', pointerEvents: 'none' }} width={h.w + 4} height={h.h + 4}>
-                        <rect x="2" y="2" width={h.w} height={h.h} rx="8" fill="none" stroke="#E8FF4E" strokeWidth="3.5" pathLength="100" style={{ strokeDasharray: 100, animation: 'uc-draw 700ms cubic-bezier(.2,.7,.2,1) forwards' }}></rect>
-                      </svg>
-                    )}
-                    {h.active && (
-                      <div onClick={(e) => e.stopPropagation()} style={hotspotCardStyle(h)}>
-                        <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, letterSpacing: '0.12em', color: '#707070' }}>{h.eyebrow}</div>
-                        <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.015em', marginTop: 8 }}>{h.label}</div>
-                        <div style={{ fontSize: 13.5, lineHeight: 1.55, color: '#4D4D4D', marginTop: 8 }}>{h.info}</div>
-                        <button onClick={(e) => { e.stopPropagation(); scrollToGroup(h.gid); }} style={{ marginTop: 14, border: 'none', background: '#0A0A0A', color: '#FFFFFF', borderRadius: 5, padding: '10px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Answer in the form →</button>
-                      </div>
-                    )}
+          <div ref={stageRef} style={{ flex: '1 1 auto', minWidth: 0, display: 'flex', alignItems: isSite ? 'stretch' : 'center', justifyContent: 'center', position: 'relative', padding: 20, boxSizing: 'border-box' }}>
+            <div style={{ position: 'relative', width: Math.round(1440 * scale), height: isSite ? '100%' : Math.round(900 * scale), borderRadius: 6, overflow: 'hidden', border: '1px solid #C9C7C0', background: '#FFFFFF', boxShadow: '0 12px 32px rgba(10,10,10,0.10), 0 2px 4px rgba(10,10,10,0.05)' }}>
+              {isSite ? (
+                // Website-frame scenes: a rich, tall page scrolled inside the viewport.
+                <div style={{ width: '100%', height: '100%', overflowY: 'auto', overflowX: 'hidden' }}>
+                  <div style={{ position: 'relative', width: Math.round(1440 * scale), height: Math.round(contentH * scale) }}>
+                    <div ref={contentInnerRef} style={{ position: 'absolute', top: 0, left: 0, width: 1440, transform: 'scale(' + scale + ')', transformOrigin: 'top left' }}
+                      dangerouslySetInnerHTML={{ __html: sceneHtml }}/>
                   </div>
-                ))}
-              </div>
+                </div>
+              ) : (
+                <div onClick={() => { if (activeHotspotId) setActiveHotspotId(null); }} style={{ position: 'absolute', top: 0, left: 0, width: 1440, height: 900, transform: 'scale(' + scale + ')', transformOrigin: 'top left' }}>
+                  {activeStepIdx === 9
+                    ? <Scene10 steps={steps} answers={answers}/>
+                    : <div style={{ position: 'absolute', inset: 0 }} dangerouslySetInnerHTML={{ __html: sceneHtml }}/>}
+
+                  {/* HOTSPOT LAYER */}
+                  {hotspots.map((h) => (
+                    <div key={h.id} onClick={(e) => { e.stopPropagation(); onHotspotClick(h.id); }}
+                      style={{ position: 'absolute', left: h.x, top: h.y, width: h.w, height: h.h, cursor: 'pointer', zIndex: h.active ? 60 : 10, borderRadius: 8, boxShadow: h.active ? '0 0 0 4000px rgba(10,10,10,0.55)' : 'none' }}>
+                      {!h.active && (
+                        <span style={{ position: 'absolute', top: -15, left: -15, width: 30, height: 30, borderRadius: '50%', background: '#FFFFFF', border: '1.5px solid #0A0A0A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 600, color: '#0A0A0A', animation: 'uc-pulse 2.4s cubic-bezier(.2,.7,.2,1) infinite' }}>{h.num}</span>
+                      )}
+                      {h.active && (
+                        <svg style={{ position: 'absolute', top: -2, left: -2, overflow: 'visible', pointerEvents: 'none' }} width={h.w + 4} height={h.h + 4}>
+                          <rect x="2" y="2" width={h.w} height={h.h} rx="8" fill="none" stroke="#E8FF4E" strokeWidth="3.5" pathLength="100" style={{ strokeDasharray: 100, animation: 'uc-draw 700ms cubic-bezier(.2,.7,.2,1) forwards' }}></rect>
+                        </svg>
+                      )}
+                      {h.active && (
+                        <div onClick={(e) => e.stopPropagation()} style={hotspotCardStyle(h)}>
+                          <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, letterSpacing: '0.12em', color: '#707070' }}>{h.eyebrow}</div>
+                          <div style={{ fontSize: 18, fontWeight: 700, letterSpacing: '-0.015em', marginTop: 8 }}>{h.label}</div>
+                          <div style={{ fontSize: 13.5, lineHeight: 1.55, color: '#4D4D4D', marginTop: 8 }}>{h.info}</div>
+                          <button onClick={(e) => { e.stopPropagation(); scrollToGroup(h.gid); }} style={{ marginTop: 14, border: 'none', background: '#0A0A0A', color: '#FFFFFF', borderRadius: 5, padding: '10px 16px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Answer in the form →</button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
