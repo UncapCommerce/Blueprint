@@ -779,18 +779,11 @@
 
     useEffect(() => { setPage(1); }, [search, statusFilter, channelFilter]);
 
-    const setChannel = async (bp, channel) => {
-      try {
-        await api('/api/admin/blueprint-meta', { method: 'POST', body: JSON.stringify({ blueprintId: bp.id, channel }) });
-        load();
-      } catch (err) { setError(err.message); }
-    };
+    // Channel is set when the blueprint is created; the list just shows it.
     const channelCell = (bp) => (
-      <select value={bp.channel || ''} onChange={(e) => setChannel(bp, e.target.value)}
-        style={{ ...S.input, width: 'auto', padding: '5px 8px', fontSize: 12, cursor: 'pointer' }}>
-        <option value="">—</option>
-        {BP_CHANNELS.map((c) => <option key={c} value={c}>{c}</option>)}
-      </select>
+      bp.channel
+        ? <span style={{ fontFamily: T.sans, fontSize: 13, color: T.fg1 }}>{bp.channel}</span>
+        : <span style={{ color: T.fg3 }}>—</span>
     );
 
     // The print menu is rendered in a portal (see below) so it isn't
