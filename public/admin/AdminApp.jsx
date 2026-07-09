@@ -736,7 +736,7 @@
 
   // ── Blueprints ───────────────────────────────────────────────────────
   const BP_PAGE_SIZE = 10;
-  const BP_CHANNELS = ['Partner', 'Inbound', 'Outbound', 'Events'];
+  const BP_CHANNELS = ['Partner', 'Inbound', 'Outbound', 'Referral', 'Events'];
 
   // Newest first. Drafts carry a real createdAt; the fixed live-blueprint
   // registry doesn't (they predate that field), so anything with a real

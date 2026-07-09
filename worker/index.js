@@ -1057,7 +1057,7 @@ function getGoogleClientId(env) {
 // appended to this list by handleAdminBlueprints.
 // Acquisition channel a blueprint came through — set at creation and editable
 // from the dashboard, stored in bpmeta:<id>.channel.
-const BP_CHANNELS = ['Partner', 'Inbound', 'Outbound', 'Events'];
+const BP_CHANNELS = ['Partner', 'Inbound', 'Outbound', 'Referral', 'Events'];
 
 const BLUEPRINT_REGISTRY = [
   { id: 'mitutoyo',         dir: 'Mitutoyo',         name: 'Mitutoyo',          num: '001' },
