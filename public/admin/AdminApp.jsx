@@ -736,6 +736,7 @@
 
   // ── Blueprints ───────────────────────────────────────────────────────
   const BP_PAGE_SIZE = 10;
+  const BP_CHANNELS = ['Partner', 'Inbound', 'Outbound', 'Events'];
 
   // Newest first. Drafts carry a real createdAt; the fixed live-blueprint
   // registry doesn't (they predate that field), so anything with a real
@@ -767,6 +768,7 @@
     const [error, setError] = useState('');
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
+    const [channelFilter, setChannelFilter] = useState('all');
     const [page, setPage] = useState(1);
 
     const load = useCallback(async () => {
@@ -775,7 +777,21 @@
     }, []);
     useEffect(() => { load(); }, [load]);
 
-    useEffect(() => { setPage(1); }, [search, statusFilter]);
+    useEffect(() => { setPage(1); }, [search, statusFilter, channelFilter]);
+
+    const setChannel = async (bp, channel) => {
+      try {
+        await api('/api/admin/blueprint-meta', { method: 'POST', body: JSON.stringify({ blueprintId: bp.id, channel }) });
+        load();
+      } catch (err) { setError(err.message); }
+    };
+    const channelCell = (bp) => (
+      <select value={bp.channel || ''} onChange={(e) => setChannel(bp, e.target.value)}
+        style={{ ...S.input, width: 'auto', padding: '5px 8px', fontSize: 12, cursor: 'pointer' }}>
+        <option value="">—</option>
+        {BP_CHANNELS.map((c) => <option key={c} value={c}>{c}</option>)}
+      </select>
+    );
 
     // The print menu is rendered in a portal (see below) so it isn't
     // clipped by the card's overflow:hidden, which is what keeps the
@@ -873,10 +889,11 @@
       const q = search.trim().toLowerCase();
       return rows.filter((bp) => {
         if (statusFilter !== 'all' && rowStatus(bp) !== statusFilter) return false;
+        if (channelFilter !== 'all' && (bp.channel || '') !== channelFilter) return false;
         if (q && !(bp.name || '').toLowerCase().includes(q)) return false;
         return true;
       });
-    }, [rows, search, statusFilter]);
+    }, [rows, search, statusFilter, channelFilter]);
 
     const totalPages = filteredRows ? Math.max(1, Math.ceil(filteredRows.length / BP_PAGE_SIZE)) : 1;
     const pageSafe = Math.min(page, totalPages);
@@ -958,6 +975,11 @@
             <option value="expired">Expired</option>
             <option value="disabled">Disabled</option>
           </select>
+          <select value={channelFilter} onChange={(e) => setChannelFilter(e.target.value)}
+            style={{ ...S.input, width: 'auto', flex: '0 0 auto', padding: '9px 12px', fontSize: 14, cursor: 'pointer' }}>
+            <option value="all">All channels</option>
+            {BP_CHANNELS.map((c) => <option key={c} value={c}>{c}</option>)}
+          </select>
         </div>
 
         <div style={{ ...S.card, overflow: 'hidden' }}>
@@ -977,6 +999,9 @@
                   </div>
                   <div style={{ marginTop: 7 }}>{statusChip(bp)}</div>
                   <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={S.eyebrow}>Channel</span>{channelCell(bp)}
+                  </div>
+                  <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={S.eyebrow}>Expires</span>{expiresCell(bp)}
                   </div>
                   {bp.kind === 'live' ? (
@@ -993,7 +1018,7 @@
             <div style={{ overflowX: 'auto' }}>
               <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                 <thead><tr>
-                  <th style={S.th}>#</th><th style={S.th}>Blueprint</th><th style={S.th}>Status</th><th style={S.th}>Expires</th><th style={{ ...S.th, textAlign: 'right' }}>Actions</th>
+                  <th style={S.th}>#</th><th style={S.th}>Blueprint</th><th style={S.th}>Status</th><th style={S.th}>Channel</th><th style={S.th}>Expires</th><th style={{ ...S.th, textAlign: 'right' }}>Actions</th>
                 </tr></thead>
                 <tbody>
                   {pageRows.map((bp) => (
@@ -1008,6 +1033,7 @@
                         )}
                       </td>
                       <td style={S.td}>{statusChip(bp)}</td>
+                      <td style={S.td}>{channelCell(bp)}</td>
                       <td style={{ ...S.td, whiteSpace: 'nowrap' }}>{expiresCell(bp)}</td>
                       <td style={{ ...S.td, textAlign: 'right', whiteSpace: 'nowrap' }}>
                         {bp.kind === 'live'
@@ -1351,6 +1377,7 @@
     const [leadContact, setLeadContact] = useState(null); // {attioId, name, email}
     const [associatedContacts, setAssociatedContacts] = useState([]);
     const [expiresAt, setExpiresAt]     = useState('');
+    const [channel, setChannelSel]      = useState('');
     const [busy, setBusy]               = useState(false);
     const [error, setError]             = useState('');
 
@@ -1372,7 +1399,7 @@
           body: JSON.stringify({
             companyName: company.name, companyAttioId: company.attioId,
             website: website.trim(), address: address.trim(),
-            leadContact, associatedContacts, expiresAt,
+            leadContact, associatedContacts, expiresAt, channel,
           }),
         });
         onSaved();
@@ -1396,6 +1423,13 @@
               This blueprint will be restricted to {[leadContact, ...associatedContacts].filter(Boolean).length} email{[leadContact, ...associatedContacts].filter(Boolean).length === 1 ? '' : 's'} — only they (and the Uncap team) will be able to view it.
             </div>
           )}
+          <div>
+            <div style={S.label}>Channel</div>
+            <select value={channel} onChange={(e) => setChannelSel(e.target.value)} style={{ ...S.input, cursor: 'pointer' }}>
+              <option value="">Select a channel…</option>
+              {BP_CHANNELS.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
           <Field label="Expiration date (valid through)" type="date" value={expiresAt} onChange={setExpiresAt}/>
           {error && <div style={{ color: '#B3261E', fontFamily: T.sans, fontSize: 13 }}>{error}</div>}
           <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', paddingTop: 4 }}>

@@ -1055,6 +1055,10 @@ function getGoogleClientId(env) {
 // Registry of shipped blueprints (the static folders under public/).
 // Drafts created from the admin app live in KV under bp:<slug> and are
 // appended to this list by handleAdminBlueprints.
+// Acquisition channel a blueprint came through — set at creation and editable
+// from the dashboard, stored in bpmeta:<id>.channel.
+const BP_CHANNELS = ['Partner', 'Inbound', 'Outbound', 'Events'];
+
 const BLUEPRINT_REGISTRY = [
   { id: 'mitutoyo',         dir: 'Mitutoyo',         name: 'Mitutoyo',          num: '001' },
   { id: 'wichelt',          dir: 'wichelt',          name: 'Wichelt Imports',   num: '002' },
@@ -1158,6 +1162,11 @@ async function handleAdminBlueprintMeta(request, env) {
   if (typeof body.disabled !== 'undefined') {
     meta.disabled = !!body.disabled;
   }
+  if (typeof body.channel !== 'undefined') {
+    const channel = (body.channel || '').toString().trim();
+    if (channel && !BP_CHANNELS.includes(channel)) return json(400, { ok: false, error: 'Invalid channel' });
+    meta.channel = channel;
+  }
   meta.updatedAt = new Date().toISOString();
   meta.updatedBy = sess.email;
 
@@ -1167,8 +1176,10 @@ async function handleAdminBlueprintMeta(request, env) {
     await logActivity(env, null, { type: 'status', entity: 'blueprint', id, name: metaName, actor: sess.email, detail: meta.disabled ? 'Put on hold (disabled)' : 'Re-enabled' });
   } else if (typeof body.expiresAt !== 'undefined') {
     await logActivity(env, null, { type: 'edited', entity: 'blueprint', id, name: metaName, actor: sess.email, detail: meta.expiresAt ? `Expiration set to ${meta.expiresAt}` : 'Expiration cleared' });
+  } else if (typeof body.channel !== 'undefined') {
+    await logActivity(env, null, { type: 'edited', entity: 'blueprint', id, name: metaName, actor: sess.email, detail: meta.channel ? `Channel set to ${meta.channel}` : 'Channel cleared' });
   }
-  return json(200, { ok: true, meta: { expiresAt: meta.expiresAt || '', disabled: !!meta.disabled, expired: isBpExpired(meta) } });
+  return json(200, { ok: true, meta: { expiresAt: meta.expiresAt || '', disabled: !!meta.disabled, channel: meta.channel || '', expired: isBpExpired(meta) } });
 }
 
 // Per-blueprint Terms of Service override (bptos:<id>): a JSON array of
@@ -1449,6 +1460,7 @@ async function handleAdminBlueprints(request, env) {
     const meta = await getBpMeta(env, i.id);
     i.expiresAt = meta.expiresAt || '';
     i.disabled  = !!meta.disabled;
+    i.channel   = meta.channel || '';
     i.expired   = isBpExpired(meta);
 
     if (i.kind !== 'live') return;
@@ -1483,6 +1495,7 @@ async function handleAdminCreateBlueprint(request, env) {
   const website    = (body.website     || '').toString().trim().slice(0, 300);
   const address    = (body.address     || '').toString().trim().slice(0, 300);
   const expiresAt  = (body.expiresAt   || '').toString().trim();
+  const channel    = (body.channel     || '').toString().trim();
   const companyAttioId    = (body.companyAttioId || '').toString().trim().slice(0, 100);
   const leadContact       = sanitizeContact(body.leadContact);
   const associatedContacts = sanitizeContacts(body.associatedContacts).filter(
@@ -1494,6 +1507,7 @@ async function handleAdminCreateBlueprint(request, env) {
   if (expiresAt && !/^\d{4}-\d{2}-\d{2}$/.test(expiresAt)) {
     return json(400, { ok: false, error: 'Expiration must be a YYYY-MM-DD date' });
   }
+  if (channel && !BP_CHANNELS.includes(channel)) return json(400, { ok: false, error: 'Invalid channel' });
 
   const slug = normalizeBlueprintId(name);
   if (BLUEPRINT_REGISTRY.some((b) => b.id === slug)) {
@@ -1511,9 +1525,9 @@ async function handleAdminCreateBlueprint(request, env) {
     createdBy: sess.email,
   };
   await env.BLUEPRINT_AUTH.put(`bp:${slug}`, JSON.stringify(rec));
-  if (expiresAt) {
+  if (expiresAt || channel) {
     await env.BLUEPRINT_AUTH.put(`bpmeta:${slug}`, JSON.stringify({
-      expiresAt, disabled: false,
+      expiresAt, disabled: false, channel,
       updatedAt: rec.createdAt, updatedBy: sess.email,
     }));
   }
