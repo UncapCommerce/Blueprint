@@ -5,18 +5,6 @@
 // ── Central brand (name + logo) — change window.__brand to rebrand everywhere ──
 function brandName() { return (window.__brand && window.__brand.name) || 'Weedoo Greenboat'; }
 function brandHandle() { return brandName().toLowerCase().replace(/[^a-z0-9]+/g, ''); }
-const VIVO_IMG = {
-  '1B Electric Desk':    'https://vivo-us.com/cdn/shop/files/DESK-KIT-1B6B_01_v_4.0.jpg?v=1782333890&width=400',
-  'K Series Converter':  'https://vivo-us.com/cdn/shop/files/Shopify2_a2ac58fe-a956-4cf2-b023-ab4d9fe5d27a.jpg?v=1781799930&width=400',
-  'Dual Monitor Mount':  'https://vivo-us.com/cdn/shop/files/shopify_4fdf2f4b-0189-4cc4-b7c9-c8a63aad712d.jpg?v=1764785024&width=400',
-  'Single Monitor Mount':'https://vivo-us.com/cdn/shop/files/STAND-V001_01_Shopify_c324fd80-4a38-4edb-908c-5e7ee140167b.jpg?v=1765445720&width=400',
-  'TV Cart':             'https://vivo-us.com/cdn/shop/files/STAND-TV03E_Shopify.jpg?v=1755801892&width=400',
-  'TV Cart 32"-83"':     'https://vivo-us.com/cdn/shop/files/STAND-TV03E_Shopify.jpg?v=1755801892&width=400',
-  'Corner Electric Desk':'https://vivo-us.com/cdn/shop/files/DESK-E3CTB_01_2.0_p1b.jpg?v=1745843189&width=400',
-  'Corner Desk':         'https://vivo-us.com/cdn/shop/files/DESK-E3CTB_01_2.0_p1b.jpg?v=1745843189&width=400',
-};
-function vivoImg(n) { return VIVO_IMG[n] || null; }
-
 function BrandMark({ fontSize = 11, color = 'var(--fg-1)', family = 'var(--font-display)', weight = 700, letterSpacing = '-0.01em', dotColor = 'var(--uc-brand)', height }) {
   const b = window.__brand || {};
   if (b.logoSrc) return <img src={b.logoSrc} alt={brandName()} style={{ height: height || Math.round(fontSize * 1.5), width: 'auto', display: 'block', objectFit: 'contain' }}/>;
@@ -191,7 +179,7 @@ function BPIntro() {
               fontSize: 'clamp(20px, 2.2vw, 32px)', lineHeight: 1.25,
               letterSpacing: '-0.015em', color: 'var(--uc-paper)', textWrap: 'pretty'
             }}>
-              An upgrade plan to advance {brandName()}&rsquo;s existing Shopify store &mdash; unlocking Unified Commerce across B2C, B2B, and operations.
+              A comprehensive plan to replatform Weedoo Greenboat on Shopify and unify commerce operations for B2C and B2B — with an exceptional customer experience designed for growth.
             </div>
           </div>
 
@@ -201,9 +189,10 @@ function BPIntro() {
             borderTop: '1px solid #1F1F1F'
           }}>
             {[
-              { k: 'Prepared by', v: 'Denis Dyli', s: 'Principal' },
-              { k: 'Client lead',  v: 'Cody Hirstein',  s: 'Marketing Manager' },
-              { k: 'Valid through', v: 'Jul 31, 2026',    s: '30 days' }
+              { k: 'Prepared by', v: 'Denis Dyli', s: 'CEO, Principal' },
+              { k: 'Client lead',  v: 'TBD',   s: null },
+              { k: 'Company',      v: 'Weedoo Greenboat', s: null, a: null },
+              { k: 'Valid through', v: 'TBD',    s: null }
             ].map((c, i) => (
               <div key={i} style={{
                 padding: '14px 0', borderBottom: '1px solid #1F1F1F',
@@ -220,10 +209,14 @@ function BPIntro() {
                     display: 'block', fontFamily: 'var(--font-display)', fontWeight: 700,
                     fontSize: 15, letterSpacing: '-0.01em', color: 'var(--uc-paper)'
                   }}>{c.v}</span>
-                  <span style={{
+                  {c.s && <span style={{
                     display: 'block', fontFamily: 'var(--font-mono)', fontSize: 11,
                     color: 'var(--uc-stone-500)', marginTop: 2
-                  }}>{c.s}</span>
+                  }}>{c.s}</span>}
+                  {c.a && <span style={{
+                    display: 'block', fontFamily: 'var(--font-mono)', fontSize: 9,
+                    color: 'var(--uc-stone-500)', marginTop: 4, whiteSpace: 'pre-line', lineHeight: 1.5
+                  }}>{c.a}</span>}
                 </span>
               </div>
             ))}
@@ -248,9 +241,9 @@ function BPSummary() {
         </BPHeadline>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           <p style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: 'clamp(16px, 1.4vw, 20px)', lineHeight: 1.55, color: 'var(--fg-2)' }}>
-            {brandName()} is already on Shopify &mdash; this blueprint advances that investment.
-            This blueprint lays out how we overhaul and advance the existing store to unlock Unified Commerce across B2C, B2B, and operations
-            — in a fixed scope, on a fixed timeline.
+            {brandName()} is running a capable operation on a stack that no longer keeps up.
+            This blueprint lays out how we unify storefront, B2B, and back-office on
+            Shopify — in a fixed scope, on a fixed timeline.
           </p>
           <p style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: 'clamp(16px, 1.4vw, 20px)', lineHeight: 1.55, color: 'var(--fg-2)' }}>
             The result: one system, lower total cost of ownership, and a revenue engine
@@ -266,10 +259,10 @@ function BPSummary() {
         borderTop: '1px solid var(--line-1)', borderBottom: '1px solid var(--line-1)'
       }}>
         {[
-          { v: '12 wk', l: 'Estimated timeline to upgrade & go live' },
-          { v: 'Unified', l: 'B2C, B2B & Unified Commerce on Shopify' },
-          { v: '2.0 OS', l: 'Upgraded theme and app cleanup' },
-          { v: 'Speed', l: 'Sidekick ready solution for self management' }
+          { v: '16 wk', l: 'Estimated timeline to launch on Shopify' },
+          { v: 'Unified', l: 'B2C, B2B, Quotes on Shopify integrated with ERP' },
+          { v: '−52%', l: 'Projected lower cost on Apps' },
+          { v: '+22%', l: 'Targeted increase across KPIs' }
         ].map((s, i) => (
           <div key={i} style={{
             padding: 'clamp(24px, 3vw, 36px)',
@@ -338,10 +331,10 @@ function BPWhereCell({ it, i }) {
 
 function BPWhere() {
   const items = [
-    { n: '01', t: 'Outdated theme', tag: 'Storefront', impact: 'High', pct: 82, d: 'An old version theme built years back when Shopify did not have today’s capabilities.' },
-    { n: '02', t: 'Older user experience', tag: 'Systems', impact: 'Critical', pct: 94, d: 'A UX foundation tailored over time that needs a full overhaul to meet modern expectations.' },
-    { n: '03', t: 'Basic B2B setup', tag: 'Trade', impact: 'Medium', pct: 64, d: 'Basic B2B enablement without a full quote management workflow.' },
-    { n: '04', t: 'Limited for growth', tag: 'Data', impact: 'High', pct: 78, d: 'The current setup does not support what the business needs to grow over the next few years.' }
+    { n: '01', t: 'Aging storefront', tag: 'Storefront', impact: 'High', pct: 82, d: 'Custom-built, patched for years, costing more every renewal cycle.' },
+    { n: '02', t: 'Disconnected systems', tag: 'Systems', impact: 'Critical', pct: 94, d: 'Inventory in spreadsheets, quotes in inboxes, an ERP that talks to nothing.' },
+    { n: '03', t: 'Outdated Quote Management', tag: 'Trade', impact: 'Medium', pct: 64, d: 'Account orders re-keyed by hand. Reps spend half the day on data entry.' },
+    { n: '04', t: 'Costly to run', tag: 'Cost', impact: 'High', pct: 78, d: 'Support, upkeep, apps and integrations make BigCommerce very expensive.' }
   ];
   return (
     <BPSection id="where" n="02" label="Today" tail="CURRENT STATE">
@@ -351,7 +344,7 @@ function BPWhere() {
           <BPSerif>honestly assessed.</BPSerif>
         </BPHeadline>
         <p style={{ margin: 0, maxWidth: 380, fontFamily: 'var(--font-serif)', fontSize: 'clamp(15px, 1.3vw, 18px)', lineHeight: 1.5, color: 'var(--fg-2)', textWrap: 'pretty' }}>
-          Four gaps are quietly capping growth. None are unusual at this scale — and every one is already solvable within the Shopify platform VIVO runs on.
+          Four gaps are quietly capping growth. None are unusual for a business this size &mdash; and every one is fixable on Shopify.
         </p>
       </div>
 
@@ -365,9 +358,9 @@ function BPWhere() {
 // ── 03 OBJECTIVES ───────────────────────────────────────────────────────────
 function BPObjectives() {
   const items = [
-    { n: '01', t: 'Zero-disruption upgrade', d: 'Overhaul the existing Shopify store without disruption — unlocking capabilities already within reach.', metric: 'Zero',   unit: 'disruption',       tag: 'Upgrade' },
-    { n: '02', t: 'Advanced Unified Commerce', d: 'One platform for storefront, B2B, and back-office. No reconciling.', metric: 'One', unit: 'system of record', tag: 'Revenue' },
-    { n: '03', t: 'Updated and modern experience', d: 'Fewer tools, one partner. Consolidate onto the Shopify stack already in place.', metric: 'Lower', unit: 'total cost', tag: 'Finance' },
+    { n: '01', t: 'Seamless replatforming', d: 'Migrate to Shopify without losing what works — while optimizing for growth.', metric: 'Zero',   unit: 'disruption',       tag: 'Migration' },
+    { n: '02', t: 'Unify commerce',   d: 'One platform for storefront, B2B, and back-office. No reconciling.',           metric: 'One',    unit: 'system of record', tag: 'Revenue' },
+    { n: '03', t: 'Cut cost of ownership', d: 'Fewer tools, one partner. Retire the legacy stack and its renewals.',          metric: 'Lower',  unit: 'total cost',       tag: 'Finance' },
     { n: '04', t: 'Growth-ready foundation', d: 'Conversion, AOV, retention — engineered in, not bolted on.',                  metric: 'Higher', unit: 'AOV + LTV',        tag: 'Growth' },
     { n: '05', t: 'Free the team',         d: 'Automate the robot work. Let people do the work that grows the business.',     metric: 'Faster', unit: 'daily ops',        tag: 'Operations' }
   ];
@@ -399,6 +392,44 @@ function BPObjectives() {
         borderTop: '1px solid var(--line-1)'
       }}>
         {items.map(it => <BPLadderRow key={it.n} it={it}/>)}
+      </div>
+    </BPSection>
+  );
+}
+
+// ── 04 RECOMMENDED APPROACH ────────────────────────────────────────────────
+function BPApproach() {
+  const steps = [
+    { n: 'Phase 1', t: 'Blueprint', d: 'Architecture, data model, integration map. A plan that holds up under scrutiny.', wk: '2 weeks' },
+    { n: 'Phase 2', t: 'Build', d: 'Storefront, B2B, ERP sync. Fixed scope, senior team, no surprises.', wk: '16 weeks' },
+    { n: 'Phase 3', t: 'Grow', d: 'Migrate, go live, then optimize conversion, AOV, and automation.', wk: 'Months 6–12' }
+  ];
+  return (
+    <BPSection id="approach" n="04" label="Recommended Approach" dark tail="THE PLAN">
+      <BPHeadline dark>
+        Three phases.{' '}
+        <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, color: 'var(--uc-stone-300)' }}>One straight line.</span>
+      </BPHeadline>
+      <div style={{
+        marginTop: 'clamp(32px, 4vw, 56px)',
+        display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, position: 'relative'
+      }}>
+        <div aria-hidden="true" style={{ position: 'absolute', left: '8%', right: '8%', top: 40, height: 1, background: '#2B2B2B' }}/>
+        {steps.map((s, i) => (
+          <div key={i} style={{
+            background: '#0F0F0F', border: '1px solid #1F1F1F', borderRadius: 5,
+            padding: 'clamp(22px, 2.6vw, 30px)', display: 'flex', flexDirection: 'column', gap: 14,
+            position: 'relative', zIndex: 1
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--uc-signal)' }}>{s.n}</span>
+              <span style={{ width: 8, height: 8, borderRadius: 999, background: 'var(--uc-signal)' }}/>
+            </div>
+            <div style={{ fontFamily: 'var(--font-hero)', fontWeight: 700, fontSize: 'clamp(26px, 2.8vw, 40px)', letterSpacing: '-0.035em', color: 'var(--uc-paper)' }}>{s.t}</div>
+            <div style={{ fontFamily: 'var(--font-serif)', fontSize: 14.5, lineHeight: 1.5, color: 'var(--uc-stone-300)' }}>{s.d}</div>
+            <div style={{ marginTop: 'auto', paddingTop: 14, borderTop: '1px solid #1F1F1F', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--uc-stone-500)' }}>{s.wk}</div>
+          </div>
+        ))}
       </div>
     </BPSection>
   );
@@ -440,7 +471,7 @@ function BPLadderRow({ it }) {
 
       <span style={{
         fontFamily: 'var(--font-hero)', fontWeight: 700,
-        fontSize: 'clamp(22px, 2.2vw, 36px)',
+        fontSize: 'clamp(26px, 3vw, 48px)',
         letterSpacing: '-0.035em', lineHeight: 1.0,
         color: 'var(--fg-1)',
         transform: hover ? 'translateX(6px)' : 'none',
@@ -535,13 +566,15 @@ function BPBuildLayer({ L }) {
 function BPScope() {
   const layers = [
     { code: '01', t: 'Commerce Strategy', d: 'Strategy, R&D, optimisation, and a plan the board can trust.' },
-    { code: '02', t: 'Experience Design', d: 'A modern, conversion-focused storefront, built to scale.' },
-    { code: '03', t: 'Solution Architecture', d: 'Solution architecture, roadmap and integration.' },
+    { code: '02', t: 'Experience Design', d: 'A modern, conversion-focused storefront, built for growth.' },
+    { code: '03', t: 'Solution Architecture', d: 'Scalable tech stack and implementation roadmap.' },
     { code: '04', t: 'B2B Enablement',    d: 'Catalogs, pricing tiers, NET terms, and account portals.' },
-    { code: '05', t: 'Launch & Hypercare Support',  d: 'QA, a go-live runbook, and 30-day post-launch care.', kind: 'base' }
+    { code: '05', t: 'ERP Integration',   d: 'Bidirectional, real-time sync native to Shopify Plus.' },
+    { code: '06', t: 'Data Migration',    d: 'Products, customers, order history, and SEO redirects.' },
+    { code: '07', t: 'Launch & Hypercare Support',  d: 'QA, a go-live runbook, and 30-day post-launch care.', kind: 'base' }
   ];
   return (
-    <BPSection id="scope" n="04" label="Scope of Work" tail="THE SYSTEM">
+    <BPSection id="scope" n="05" label="Scope of Work" tail="THE SYSTEM">
       <div style={{ maxWidth: 720 }}>
         <BPHeadline>
           What&rsquo;s in{' '}
@@ -570,7 +603,7 @@ function BPScope() {
 
 // ── 06 DELIVERY ─────────────────────────────────────────────────────────────
 const BP_GRID = 'minmax(0, 32px) minmax(0, 244px) minmax(0, 1fr) minmax(0, 58px)';
-const BP_WEEKS = 12;
+const BP_WEEKS = 16;
 const BP_GAP = 'clamp(12px, 1.6vw, 22px)';
 // faint week gridlines across the chart column
 const BP_GRIDLINES = 'repeating-linear-gradient(90deg, var(--line-1) 0, var(--line-1) 1px, transparent 1px, transparent calc(100% / ' + BP_WEEKS + '))';
@@ -622,19 +655,20 @@ function BPGanttRow({ task }) {
 
 function BPGantt() {
   const groups = [
-    { name: 'Foundation', range: 'WK 01–04', tasks: [
-      { n: '01', t: 'Onboarding & Kickoff',       tag: 'Setup',    s: 1, e: 1,  range: 'W1' },
-      { n: '02', t: 'Deep Dive Workshops',        tag: 'Strategy · Solutions · Design',   s: 1, e: 2,  range: 'W1–2' },
-      { n: '03', t: 'Experience Design',  tag: 'UX/UI Design · Web · Mobile',   s: 2, e: 4,  range: 'W2–4' },
-      { n: '04', t: 'Approval',                   tag: 'Tech Stack Review & Design Sign-off', s: 4, e: 4,  range: 'W4' }
+    { name: 'Foundation', range: 'WK 01–05', tasks: [
+      { n: '01', t: 'Onboarding & Kickoff',       tag: 'Setup',    s: 1, e: 2,  range: 'W1–2' },
+      { n: '02', t: 'Deep Dive Workshops',        tag: 'Strategy · Solutions · Design',   s: 1, e: 3,  range: 'W1–3' },
+      { n: '03', t: 'Experience Design',  tag: 'UX/UI Design · Web · Mobile',   s: 2, e: 5,  range: 'W2–5' },
+      { n: '04', t: 'Approval',                   tag: 'Tech Stack Review & Design Sign-off', s: 4, e: 5,  range: 'W4–5' }
     ] },
-    { name: 'Production', range: 'WK 04–10', tasks: [
-      { n: '05', t: 'Development',                tag: 'Build',    s: 4,  e: 9, range: 'W4–9' },
-      { n: '06', t: 'Integration',                tag: 'Connect',  s: 7,  e: 10, range: 'W7–10' },
-      { n: '08', t: 'QA & Testing',               tag: 'Verify',   s: 9, e: 11, range: 'W9–11' }
+    { name: 'Production', range: 'WK 05–14', tasks: [
+      { n: '05', t: 'Development',                tag: 'Build',    s: 5,  e: 13, range: 'W5–13' },
+      { n: '06', t: 'Data Migration',             tag: 'Migrate',  s: 5,  e: 11, range: 'W5–11' },
+      { n: '07', t: 'Integration',                tag: 'Connect',  s: 8,  e: 13, range: 'W8–13' },
+      { n: '08', t: 'QA & Testing',               tag: 'Verify',   s: 12, e: 14, range: 'W12–14' }
     ] },
-    { name: 'Audit', range: 'WK 11–12', tasks: [
-      { n: '09', t: 'Client UAT',                 tag: 'Go-live',  s: 11, e: 12, range: 'W11–12' }
+    { name: 'Audit', range: 'WK 14–16', tasks: [
+      { n: '09', t: 'Client UAT',                 tag: 'Go-live',  s: 14, e: 16, range: 'W14–16' }
     ] }
   ];
   return (
@@ -668,7 +702,7 @@ function BPGantt() {
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-3)'
       }}>
-        <span>WK 01 → WK 12 · ~3 Months</span>
+        <span>WK 01 → WK 16 · ~4 Months</span>
         <span>Overlapping phases · single team</span>
       </div>
     </div>
@@ -680,13 +714,13 @@ function BPGantt() {
 function GfxChrome({ children }) {
   return (
     <div style={{ background: 'var(--uc-paper)', border: '1px solid var(--line-1)', borderRadius: 5, overflow: 'hidden' }}>
-      <div style={{ background:'var(--uc-black)', color:'var(--uc-paper)', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>FREE SHIPPING OVER $75 · BUSINESS ACCOUNTS</div>
+      <div style={{ background:'#1B5272', color:'#fff', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>FREE SHIPPING OVER $100 · UNIVERSITY & HOSPITAL PRICING</div>
       <div style={{ display:'flex', alignItems:'center', gap:12, padding:'9px 14px', borderBottom:'1px solid var(--line-1)' }}>
-        <span style={{ display:'flex', alignItems:'center', gap:6 }}><span style={{ width:16, height:16, borderRadius:999, background:'var(--uc-black)' }}/><BrandMark fontSize={12} letterSpacing="-0.015em"/></span>
-        <div style={{ display:'flex', gap:11, marginLeft:6 }}>{['Desks','Monitor Mounts','Accessories','TV Mounts'].map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:8.5, fontWeight:700, letterSpacing:'0.04em', color:i===0?'var(--fg-1)':'var(--fg-3)' }}>{x}</span>))}</div>
+        <span style={{ display:'flex', alignItems:'center', gap:6 }}><BrandMark fontSize={12} letterSpacing="-0.015em"/></span>
+        <div style={{ display:'flex', gap:11, marginLeft:6 }}>{['Models','Simulators','Charts','Brands'].map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:8.5, fontWeight:700, letterSpacing:'0.04em', color:i===0?'var(--fg-1)':'var(--fg-3)' }}>{x}</span>))}</div>
         <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
           <span style={{ fontFamily:'var(--font-mono)', fontSize:8, color:'var(--fg-3)' }}>Search…</span>
-          <span style={{ fontFamily:'var(--font-mono)', fontSize:8, fontWeight:700, color:'var(--uc-paper)', background:'var(--uc-black)', padding:'3px 8px', borderRadius:3 }}>Cart 2</span>
+          <span style={{ fontFamily:'var(--font-mono)', fontSize:8, fontWeight:700, color:'#fff', background:'#1B5272', padding:'3px 8px', borderRadius:3, display:'inline-flex', alignItems:'center' }}><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{display:'inline-block',verticalAlign:'middle',marginRight:2}}><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>Cart 2</span>
         </div>
       </div>
       {children}
@@ -695,10 +729,10 @@ function GfxChrome({ children }) {
 }
 function GfxMegaNav() {
   const cols = [
-    { h: 'Standing Desks', items: ['Electric Desks','Manual Desks','L-Shape Desks','Corner Desks'] },
-    { h: 'Monitor Mounts', items: ['Single Mounts','Dual Mounts','Triple Mounts','Ultrawide'] },
-    { h: 'Accessories', items: ['Keyboard Trays','Cable Mgmt','PC Mounts','Desk Chairs'] },
-    { h: 'Featured', items: ['VIVO PRO Line','New Arrivals','Business Account'] }
+    { h: 'Models', items: ['Skull & Brain','Full Body','Muscular','Skeletal'] },
+    { h: 'Simulators', items: ['IV & Injection','CPR & AED','Birthing','Surgical'] },
+    { h: 'Charts', items: ['Human Body','Muscular','Skeletal','Organ'] },
+    { h: 'Featured', items: ['New Models','Bulk Orders','Institution Pricing'] }
   ];
   return (
     <GfxChrome>
@@ -715,47 +749,46 @@ function GfxMegaNav() {
 }
 function GfxCollection() {
   const prods = [
-    ['1B Electric Desk','$169.99','Navy','#2E3A6E','SALE','4.8','271'],
-    ['K Series Converter','$119.99','Black','#1A2644',null,'4.6','1808'],
-    ['Dual Monitor Mount','$39.99','Black','#3D4B73','NEW','4.9','1136'],
-    ['Single Monitor Mount','$34.99','Black','#2A3560',null,'4.7','2941'],
-    ['TV Cart 32"-83"','$99.99','Black','#17257d','PRO','4.9','1563'],
-    ['Corner Electric Desk','$239.99','Black','#0F1A4D',null,'4.5','27']
+    ['Human Skull Model','$89.00','Full size','#B0C4D4','NEW','4.8','212'],
+    ['3B Heart 2-Part','$124.00','Life size','#C4AEAD',null,'4.6','158'],
+    ['Muscular Figure','$219.00','17-part','#B8C8D4','PRO','4.9','64'],
+    ['Anatomy Chart Set','$38.00','4 charts','#8AACBB',null,'4.7','309'],
+    ['IV Training Arm','$159.00','Latex-free','#C8B89A','PRO','4.9','47'],
+    ['Brain Model 4-Pt','$72.00','4-part','#B4B0C0',null,'4.5','521']
   ];
   const facets = [
-    { h: 'Category', items: [['Standing Desks', true],['Monitor Mounts', true],['Desk Converters', false],['TV Mounts', false],['Accessories', false]] },
-    { h: 'Line', items: [['VIVO PRO', true],['Standard', false],['Workspace', false]] },
-    { h: 'Availability', items: [['In stock', true],['Ships today', false],['Business only', false]] }
+    { h: 'Product', items: [['Anatomical Models', true],['Simulators', true],['Anatomy Charts', false],['Specimens', false],['Custom', false]] },
+    { h: 'Brand', items: [['3B Scientific', true],['Axis Scientific', false],['Erler Zimmer', false]] },
+    { h: 'Profession', items: [['Healthcare Ed.', true],['Medical School', false],['Hospital / Clinical', false]] }
   ];
   return (
     <div style={{ background:'var(--uc-paper)', border:'1px solid var(--line-1)', borderRadius:5, overflow:'hidden' }}>
       {/* chrome */}
-      <div style={{ background:'var(--uc-black)', color:'var(--uc-paper)', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>FREE SHIPPING OVER $75 · BUSINESS ACCOUNTS</div>
+      <div style={{ background:'#1B5272', color:'#fff', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>FREE SHIPPING OVER $100 · UNIVERSITY & HOSPITAL PRICING</div>
       <div style={{ display:'flex', alignItems:'center', gap:11, padding:'8px 14px', borderBottom:'1px solid var(--line-1)' }}>
-        <span style={{ width:14, height:14, borderRadius:999, background:'var(--uc-black)' }}/>
         <BrandMark fontSize={11}/>
-        <div style={{ display:'flex', gap:9, marginLeft:4 }}>{['Desks','Monitor Mounts','Accessories','TV Mounts'].map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:i===1?'var(--fg-1)':'var(--fg-3)' }}>{x}</span>))}</div>
+        <div style={{ display:'flex', gap:9, marginLeft:4 }}>{['Models','Simulators','Charts','Brands'].map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:i===1?'var(--fg-1)':'var(--fg-3)' }}>{x}</span>))}</div>
         <span style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:7 }}>
           <span style={{ width:110, height:18, borderRadius:999, border:'1px solid var(--line-2)', display:'flex', alignItems:'center', gap:4, padding:'0 9px', fontFamily:'var(--font-mono)', fontSize:7, color:'var(--fg-3)', whiteSpace:'nowrap', overflow:'hidden' }}><span style={{ fontSize:8 }}>⌕</span>Search products…</span>
-          <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--uc-paper)', background:'var(--uc-black)', padding:'3px 8px', borderRadius:3 }}>Cart 0</span>
+          <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'#fff', background:'#1B5272', padding:'3px 8px', borderRadius:3, display:'inline-flex', alignItems:'center' }}><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{display:'inline-block',verticalAlign:'middle',marginRight:2}}><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>Cart 0</span>
         </span>
       </div>
 
       {/* breadcrumb + title + sort */}
       <div style={{ padding:'11px 14px 9px', display:'flex', alignItems:'flex-end', justifyContent:'space-between', gap:10 }}>
         <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
-          <span style={{ fontFamily:'var(--font-mono)', fontSize:7, letterSpacing:'0.1em', color:'var(--fg-3)' }}>HOME / MONITOR MOUNTS</span>
-          <span style={{ fontFamily:'var(--font-hero)', fontWeight:700, fontSize:19, letterSpacing:'-0.035em', color:'var(--fg-1)' }}>Monitor Mounts</span>
+          <span style={{ fontFamily:'var(--font-mono)', fontSize:7, letterSpacing:'0.1em', color:'var(--fg-3)' }}>HOME / ANATOMICAL MODELS</span>
+          <span style={{ fontFamily:'var(--font-hero)', fontWeight:700, fontSize:19, letterSpacing:'-0.035em', color:'var(--fg-1)' }}>Anatomical Models</span>
         </div>
         <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-          <span style={{ fontFamily:'var(--font-mono)', fontSize:7, color:'var(--fg-3)' }}>1,284 results</span>
+          <span style={{ fontFamily:'var(--font-mono)', fontSize:7, color:'var(--fg-3)' }}>2,400 results</span>
           <span style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, color:'var(--fg-1)', border:'1px solid var(--line-2)', borderRadius:3, padding:'3px 7px' }}>Sort: Best ▾</span>
         </div>
       </div>
 
       {/* applied filter chips */}
       <div style={{ padding:'0 14px 10px', display:'flex', gap:5, flexWrap:'wrap', alignItems:'center' }}>
-        {['Standing Desks ✕','Monitor Mounts ✕','In stock ✕'].map((c,i)=>(<span key={i} style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, color:'var(--fg-1)', background:'var(--uc-bone)', border:'1px solid var(--line-2)', borderRadius:999, padding:'2px 8px' }}>{c}</span>))}
+        {['Models ✕','Simulators ✕','In stock ✕'].map((c,i)=>(<span key={i} style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, color:'var(--fg-1)', background:'var(--uc-bone)', border:'1px solid var(--line-2)', borderRadius:999, padding:'2px 8px' }}>{c}</span>))}
         <span style={{ fontFamily:'var(--font-mono)', fontSize:7, color:'var(--uc-brand)', fontWeight:700 }}>Clear all</span>
       </div>
 
@@ -779,14 +812,14 @@ function GfxCollection() {
         <div style={{ padding:10, display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:8 }}>
           {prods.map((p,i)=>(
             <div key={i} style={{ border:'1px solid var(--line-1)', borderRadius:3, padding:6, display:'flex', flexDirection:'column', gap:4, background:'var(--uc-paper)' }}>
-              <div style={{ aspectRatio:'1/1', background:vivoImg(p[0])?'#f8f6f2':`linear-gradient(140deg, ${p[3]}, var(--uc-bone))`, borderRadius:2, position:'relative', overflow:'hidden' }}>{vivoImg(p[0]) && <img src={vivoImg(p[0])} alt={p[0]} style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'contain', objectPosition:'center', padding:'6%', background:'#f8f6f2', borderRadius:'inherit' }}/>}
+              <div style={{ aspectRatio:'1/1', background:`linear-gradient(140deg, ${p[3]}, var(--uc-bone))`, borderRadius:2, position:'relative' }}>
                 {p[4] && <span style={{ position:'absolute', top:4, left:4, padding:'1px 5px', background:p[4]==='NEW'?'var(--uc-brand)':(p[4]==='PRO'?'var(--uc-black)':'#3F8B5D'), color:'#fff', borderRadius:2, fontFamily:'var(--font-mono)', fontSize:5.5, fontWeight:800 }}>{p[4]}</span>}
                 <span style={{ position:'absolute', bottom:4, right:4, width:15, height:15, borderRadius:999, background:'var(--uc-paper)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, color:'var(--fg-1)', boxShadow:'0 1px 3px rgba(0,0,0,0.18)' }}>＋</span>
               </div>
               <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:8.5, letterSpacing:'-0.01em', color:'var(--fg-1)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{p[0]}</span>
               <div style={{ display:'flex', alignItems:'center', gap:3 }}><span style={{ fontFamily:'var(--font-mono)', fontSize:6, color:'var(--uc-brand)' }}>★★★★★</span><span style={{ fontFamily:'var(--font-mono)', fontSize:6, color:'var(--fg-3)' }}>{p[5]} ({p[6]})</span></div>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline' }}><span style={{ fontFamily:'var(--font-mono)', fontSize:9, fontWeight:700, color:'var(--fg-1)' }}>{p[1]}</span><span style={{ fontFamily:'var(--font-mono)', fontSize:6, color:'var(--fg-3)' }}>{p[2]}</span></div>
-              <span style={{ fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, color:'#3F8B5D' }}>Business price ✓</span>
+              <span style={{ fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, color:'#3F8B5D' }}>Institution pricing ✓</span>
             </div>
           ))}
         </div>
@@ -800,34 +833,33 @@ function GfxCollection() {
   );
 }
 function GfxCart() {
-  const lines=[['1B Electric Desk · Black','2','$159.99','$319.98'],['Dual Monitor Mount · Black','3','$36.99','$110.97'],['K Series Converter · Walnut','1','$119.99','$119.99']];
-  const grid=[['1B Electric Desk','$169.99','#2E3A6E','SALE'],['K Series Converter','$119.99','#1A2644',null],['Dual Monitor Mount','$39.99','#3D4B73','NEW'],['Single Monitor Mount','$34.99','#2A3560',null],['TV Cart','$99.99','#17257d',null],['Corner Desk','$239.99','#0F1A4D',null]];
+  const lines=[['Human Skull Model','2+','$84.00','$168'],['3B Heart 2-Part','5+','$112.00','$560'],['Anatomy Chart Set','10+','$34.00','$340']];
+  const grid=[['Skull Model','$89.00','#B0C4D4','NEW'],['3B Heart','$124.00','#C4AEAD',null],['Muscular Fig.','$219.00','#B8C8D4','PRO'],['IV Training Arm','$159.00','#C8B89A',null],['Brain Model','$72.00','#B4B0C0',null],['Anatomy Charts','$38.00','#8AACBB',null]];
   return (
     <div style={{ position:'relative', background:'var(--uc-paper)', border:'1px solid var(--line-1)', borderRadius:5, overflow:'hidden' }}>
       {/* Full CATEGORY page behind */}
       <div>
-        <div style={{ background:'var(--uc-black)', color:'var(--uc-paper)', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>FREE SHIPPING OVER $75 · BUSINESS ACCOUNTS</div>
+        <div style={{ background:'#1B5272', color:'#fff', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>FREE SHIPPING OVER $100 · UNIVERSITY & HOSPITAL PRICING</div>
         <div style={{ display:'flex', alignItems:'center', gap:11, padding:'8px 14px', borderBottom:'1px solid var(--line-1)' }}>
-          <span style={{ width:14, height:14, borderRadius:999, background:'var(--uc-black)' }}/>
           <BrandMark fontSize={11}/>
-          <div style={{ display:'flex', gap:9, marginLeft:4 }}>{['Desks','Monitor Mounts','Accessories','TV Mounts'].map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:i===0?'var(--fg-1)':'var(--fg-3)' }}>{x}</span>))}</div>
-          <span style={{ marginLeft:'auto', fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--uc-paper)', background:'var(--uc-black)', padding:'3px 8px', borderRadius:3 }}>Cart 3</span>
+          <div style={{ display:'flex', gap:9, marginLeft:4 }}>{['Models','Simulators','Charts','Brands'].map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:i===0?'var(--fg-1)':'var(--fg-3)' }}>{x}</span>))}</div>
+          <span style={{ marginLeft:'auto', fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'#fff', background:'#1B5272', padding:'3px 8px', borderRadius:3, display:'inline-flex', alignItems:'center' }}><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{display:'inline-block',verticalAlign:'middle',marginRight:2}}><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>Cart 3</span>
         </div>
         {/* category title + breadcrumb */}
         <div style={{ padding:'11px 14px 9px', display:'flex', alignItems:'baseline', justifyContent:'space-between' }}>
           <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
-            <span style={{ fontFamily:'var(--font-mono)', fontSize:7, letterSpacing:'0.1em', color:'var(--fg-3)' }}>HOME / STANDING DESKS</span>
-            <span style={{ fontFamily:'var(--font-hero)', fontWeight:700, fontSize:19, letterSpacing:'-0.035em', color:'var(--fg-1)' }}>Standing Desks</span>
+            <span style={{ fontFamily:'var(--font-mono)', fontSize:7, letterSpacing:'0.1em', color:'var(--fg-3)' }}>HOME / ANATOMICAL MODELS</span>
+            <span style={{ fontFamily:'var(--font-hero)', fontWeight:700, fontSize:19, letterSpacing:'-0.035em', color:'var(--fg-1)' }}>Anatomical Models</span>
           </div>
-          <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, color:'var(--fg-3)' }}>48 products · Sort ▾</span>
+          <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, color:'var(--fg-3)' }}>240 products · Sort ▾</span>
         </div>
         {/* filter chips */}
-        <div style={{ display:'flex', gap:6, padding:'0 14px 11px' }}>{['Electric','Manual','L-Shape','In stock'].map((f,i)=>(<span key={f} style={{ padding:'3px 9px', borderRadius:999, border:'1px solid', borderColor:i===0?'var(--uc-black)':'var(--line-1)', background:i===0?'var(--uc-black)':'transparent', color:i===0?'var(--uc-paper)':'var(--fg-2)', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700 }}>{f}</span>))}</div>
+        <div style={{ display:'flex', gap:6, padding:'0 14px 11px' }}>{['Skull','Heart','Charts','In stock'].map((f,i)=>(<span key={f} style={{ padding:'3px 9px', borderRadius:999, border:'1px solid', borderColor:i===0?'var(--uc-black)':'var(--line-1)', background:i===0?'var(--uc-black)':'transparent', color:i===0?'var(--uc-paper)':'var(--fg-2)', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700 }}>{f}</span>))}</div>
         {/* product grid */}
         <div style={{ padding:'0 14px 14px', display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:9 }}>
           {grid.map((p,i)=>(
             <div key={i} style={{ display:'flex', flexDirection:'column', gap:5 }}>
-              <div style={{ aspectRatio:'1/1', borderRadius:3, background:vivoImg(p[0])?'#f8f6f2':`linear-gradient(140deg, ${p[2]}, var(--uc-bone))`, position:'relative', overflow:'hidden' }}>{vivoImg(p[0]) && <img src={vivoImg(p[0])} alt={p[0]} style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'contain', objectPosition:'center', padding:'6%', background:'#f8f6f2', borderRadius:'inherit' }}/>}{p[3] && <span style={{ position:'absolute', top:5, left:5, padding:'1px 6px', background:p[3]==='BEST'?'#3F8B5D':'var(--uc-brand)', color:'#fff', borderRadius:2, fontFamily:'var(--font-mono)', fontSize:5.5, fontWeight:800 }}>{p[3]}</span>}<span style={{ position:'absolute', bottom:5, right:5, width:16, height:16, borderRadius:999, background:'var(--uc-paper)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, color:'var(--fg-1)' }}>＋</span></div>
+              <div style={{ aspectRatio:'1/1', borderRadius:3, background:`linear-gradient(140deg, ${p[2]}, var(--uc-bone))`, position:'relative' }}>{p[3] && <span style={{ position:'absolute', top:5, left:5, padding:'1px 6px', background:p[3]==='BEST'?'#3F8B5D':'var(--uc-brand)', color:'#fff', borderRadius:2, fontFamily:'var(--font-mono)', fontSize:5.5, fontWeight:800 }}>{p[3]}</span>}<span style={{ position:'absolute', bottom:5, right:5, width:16, height:16, borderRadius:999, background:'var(--uc-paper)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, color:'var(--fg-1)' }}>＋</span></div>
               <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:8.5, letterSpacing:'-0.01em', color:'var(--fg-1)' }}>{p[0]}</span>
               <span style={{ fontFamily:'var(--font-mono)', fontSize:8, fontWeight:700, color:'var(--fg-1)' }}>{p[1]}</span>
             </div>
@@ -866,146 +898,98 @@ function GfxCart() {
         {/* upsells */}
         <div style={{ padding:'9px 13px', background:'var(--uc-cream)', borderBottom:'1px solid var(--line-1)' }}>
           <div style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:6 }}>PAIRS WELL WITH</div>
-          <div style={{ display:'flex', gap:6 }}>{[['Desk Pad','$29'],['Monitor Arm','$45'],['Cable Box','$19']].map((u,i)=>(<div key={i} style={{ flex:1, border:'1px solid var(--line-1)', borderRadius:3, padding:5, display:'flex', flexDirection:'column', gap:3, background:'var(--uc-paper)' }}><div style={{ aspectRatio:'1/1', background:'var(--uc-stone-200)', borderRadius:2 }}/><span style={{ fontFamily:'var(--font-display)', fontWeight:600, fontSize:7, color:'var(--fg-1)' }}>{u[0]}</span><span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--uc-black)' }}>+ {u[1]}</span></div>))}</div>
+          <div style={{ display:'flex', gap:6 }}>{[['Model Stand','$22'],['Carrying Case','$38'],['Display Base','$18']].map((u,i)=>(<div key={i} style={{ flex:1, border:'1px solid var(--line-1)', borderRadius:3, padding:5, display:'flex', flexDirection:'column', gap:3, background:'var(--uc-paper)' }}><div style={{ aspectRatio:'1/1', background:'var(--uc-stone-200)', borderRadius:2 }}/><span style={{ fontFamily:'var(--font-display)', fontWeight:600, fontSize:7, color:'var(--fg-1)' }}>{u[0]}</span><span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--uc-black)' }}>+ {u[1]}</span></div>))}</div>
         </div>
         {/* StorePro subscription upgrade */}
         <div style={{ padding:'10px 13px', background:'var(--uc-black)', color:'var(--uc-paper)', borderBottom:'1px solid var(--line-1)', display:'flex', gap:9, alignItems:'center' }}>
           <span style={{ width:18, height:18, borderRadius:999, border:'2px solid var(--uc-signal)', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center' }}><span style={{ width:7, height:7, borderRadius:999, background:'var(--uc-signal)' }}/></span>
-          <div style={{ flex:1 }}><div style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:9.5, color:'var(--uc-paper)' }}>Upgrade to VIVO Business <span style={{ color:'var(--uc-signal)' }}>−15%</span></div><div style={{ fontFamily:'var(--font-mono)', fontSize:7, color:'var(--uc-stone-300)' }}>free shipping · bulk pricing · dedicated support</div></div>
+          <div style={{ flex:1 }}><div style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:9.5, color:'var(--uc-paper)' }}>Upgrade to Pro Account <span style={{ color:'var(--uc-signal)' }}>−15%</span></div><div style={{ fontFamily:'var(--font-mono)', fontSize:7, color:'var(--uc-stone-300)' }}>$49/mo · free shipping · priority support</div></div>
           <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:800, color:'var(--uc-black)', background:'var(--uc-signal)', padding:'4px 8px', borderRadius:3 }}>ADD</span>
         </div>
         {/* totals + checkout */}
         <div style={{ marginTop:'auto', padding:'10px 13px', borderTop:'1px solid var(--line-1)' }}>
-          <div style={{ display:'flex', justifyContent:'space-between', fontFamily:'var(--font-mono)', fontSize:8.5, color:'var(--fg-3)', marginBottom:3 }}><span>Subtotal</span><span>$2,890</span></div>
-          <div style={{ display:'flex', justifyContent:'space-between', fontFamily:'var(--font-mono)', fontSize:8.5, color:'#3F8B5D', marginBottom:7 }}><span>Tier savings</span><span>−$310</span></div>
-          <span style={{ display:'block', textAlign:'center', padding:'9px', background:'var(--uc-black)', color:'var(--uc-paper)', borderRadius:3, fontSize:10, fontWeight:700 }}>NET-30 eligible · $550.94</span>
+          <div style={{ display:'flex', justifyContent:'space-between', fontFamily:'var(--font-mono)', fontSize:8.5, color:'var(--fg-3)', marginBottom:3 }}><span>Subtotal</span><span>$1,068</span></div>
+          <div style={{ display:'flex', justifyContent:'space-between', fontFamily:'var(--font-mono)', fontSize:8.5, color:'#3F8B5D', marginBottom:7 }}><span>Volume savings</span><span>−$120</span></div>
+          <span style={{ display:'block', textAlign:'center', padding:'9px', background:'#1B5272', color:'#fff', borderRadius:3, fontSize:10, fontWeight:700 }}>Checkout · NET-30 · $1,068</span>
         </div>
       </div>
     </div>
   );
 }
-function GfxConfigurator() {
-  const [step, setStep] = React.useState(0);
-  const [sel, setSel] = React.useState({});
-  const deskOpts = [
-    { l:'Electric', col:'#17257d', svg:
-      <svg viewBox="0 0 44 32" fill="currentColor" width="100%" height="100%">
-        <rect x="2" y="7" width="40" height="3.5" rx="0.8"/>
-        <rect x="4" y="10.5" width="4.5" height="17" rx="0.8" opacity="0.8"/>
-        <rect x="35.5" y="10.5" width="4.5" height="17" rx="0.8" opacity="0.8"/>
-        <rect x="3" y="26" width="8" height="2" rx="0.8" opacity="0.45"/>
-        <rect x="33" y="26" width="8" height="2" rx="0.8" opacity="0.45"/>
-        <rect x="18" y="11.5" width="8" height="3" rx="0.6" opacity="0.35"/>
-        <circle cx="22" cy="13" r="1.2" opacity="0.65"/>
-      </svg> },
-    { l:'Manual', col:'#2E3A6E', svg:
-      <svg viewBox="0 0 44 32" fill="currentColor" width="100%" height="100%">
-        <rect x="2" y="7" width="40" height="3.5" rx="0.8"/>
-        <rect x="4" y="10.5" width="4" height="17" rx="0.8" opacity="0.8"/>
-        <rect x="36" y="10.5" width="4" height="17" rx="0.8" opacity="0.8"/>
-        <rect x="3" y="26" width="8" height="2" rx="0.8" opacity="0.45"/>
-        <rect x="33" y="26" width="8" height="2" rx="0.8" opacity="0.45"/>
-        <circle cx="42" cy="16.5" r="3" fill="none" stroke="currentColor" strokeWidth="1.4" opacity="0.6"/>
-        <line x1="40" y1="10.5" x2="42" y2="13.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" opacity="0.6"/>
-      </svg> },
-    { l:'L-Shape', col:'#3D4B73', svg:
-      <svg viewBox="0 0 44 36" fill="currentColor" width="100%" height="100%">
-        <rect x="2" y="5" width="40" height="3.5" rx="0.8"/>
-        <rect x="2" y="8.5" width="4" height="20" rx="0.8" opacity="0.8"/>
-        <rect x="38" y="8.5" width="4" height="12" rx="0.8" opacity="0.8"/>
-        <rect x="3" y="27" width="7" height="2" rx="0.8" opacity="0.45"/>
-        <rect x="22" y="18.5" width="20" height="3.5" rx="0.8" opacity="0.75"/>
-        <rect x="38" y="22" width="4" height="9" rx="0.8" opacity="0.7"/>
-        <rect x="36" y="30" width="7" height="2" rx="0.8" opacity="0.45"/>
-      </svg> },
-    { l:'Corner', col:'#0F1A4D', svg:
-      <svg viewBox="0 0 44 36" fill="currentColor" width="100%" height="100%">
-        <rect x="2" y="5" width="40" height="3.5" rx="0.8"/>
-        <rect x="2" y="8.5" width="4" height="22" rx="0.8" opacity="0.8"/>
-        <rect x="38" y="8.5" width="4" height="22" rx="0.8" opacity="0.8"/>
-        <rect x="3" y="29" width="7" height="2" rx="0.8" opacity="0.45"/>
-        <rect x="34" y="29" width="7" height="2" rx="0.8" opacity="0.45"/>
-        <path d="M6 8.5 Q22 8.5 22 22 L38 22 L38 25.5 L20 25.5 Q4 25.5 4 8.5 Z" opacity="0.25"/>
-      </svg> }
-  ];
-  const steps = [
-    { id:'desk',  label:'Desk' },
-    { id:'acc',   label:'Accessories', opts:['Monitor Mount','Keyboard Tray','Cable Mgmt','Pegboard'] },
-    { id:'chair', label:'Chair',       opts:['Ergonomic','Executive','Mesh','Task'] }
-  ];
-  const cur = steps[step];
-  const picked = sel[cur.id];
-  return (
-    <div style={{ marginTop:4, border:'1px solid var(--line-1)', borderRadius:4, overflow:'hidden' }}>
-      <div style={{ display:'flex' }}>
-        {steps.map((s,i) => (
-          <div key={s.id} onClick={()=>setStep(i)} style={{ flex:1, padding:'4px 2px', textAlign:'center', cursor:'pointer', borderLeft:i>0?'1px solid var(--line-1)':'none', background:i===step?'var(--uc-black)':'var(--uc-bone)' }}>
-            <div style={{ fontFamily:'var(--font-mono)', fontSize:5, fontWeight:700, letterSpacing:'0.1em', color:i===step?'var(--uc-signal)':sel[s.id]?'#3F8B5D':'var(--fg-3)' }}>0{i+1}</div>
-            <div style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:7, color:i===step?'var(--uc-paper)':sel[s.id]?'#3F8B5D':'var(--fg-2)' }}>{s.label}</div>
-          </div>
-        ))}
-      </div>
-      {step === 0 && (
-        <div style={{ padding:'6px 7px', display:'grid', gridTemplateColumns:'1fr 1fr', gap:5 }}>
-          {deskOpts.map(o=>(
-            <div key={o.l} onClick={()=>setSel(p=>({...p,desk:o.l}))} style={{ borderRadius:4, border:'1.5px solid', cursor:'pointer', borderColor:picked===o.l?'var(--uc-black)':'var(--line-1)', background:picked===o.l?'var(--uc-black)':'var(--uc-paper)', display:'flex', flexDirection:'column', alignItems:'center', padding:'7px 5px 4px' }}>
-              <div style={{ width:38, height:26, color:picked===o.l?'rgba(255,255,255,0.9)':o.col }}>{o.svg}</div>
-              <div style={{ fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, marginTop:3, color:picked===o.l?'var(--uc-paper)':'var(--fg-1)' }}>{o.l}</div>
-            </div>
-          ))}
-        </div>
-      )}
-      {step > 0 && (
-        <div style={{ padding:'6px 7px', display:'grid', gridTemplateColumns:'1fr 1fr', gap:4 }}>
-          {cur.opts.map(o=>(
-            <span key={o} onClick={()=>setSel(p=>({...p,[cur.id]:o}))} style={{ padding:'5px 3px', textAlign:'center', borderRadius:3, cursor:'pointer', border:'1px solid', borderColor:picked===o?'var(--uc-black)':'var(--line-1)', background:picked===o?'var(--uc-black)':'transparent', fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, color:picked===o?'var(--uc-paper)':'var(--fg-2)', whiteSpace:'nowrap' }}>{o}</span>
-          ))}
-        </div>
-      )}
-      <div style={{ display:'flex', justifyContent:'space-between', padding:'0 7px 6px' }}>
-        <span onClick={()=>setStep(s=>Math.max(0,s-1))} style={{ padding:'4px 8px', border:'1px solid var(--line-1)', borderRadius:3, fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, color:'var(--fg-3)', cursor:'pointer', visibility:step===0?'hidden':'visible' }}>\u2190 Back</span>
-        <span onClick={()=>setStep(s=>Math.min(steps.length-1,s+1))} style={{ padding:'4px 8px', background:step<steps.length-1?'var(--uc-black)':'#3F8B5D', color:'var(--uc-paper)', borderRadius:3, fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, cursor:'pointer' }}>{step<steps.length-1?'Next \u2192':'Done \u2713'}</span>
-      </div>
-    </div>
-  );
-}
-
 function GfxPDP() {
   return (
     <div style={{ background:'var(--uc-paper)', border:'1px solid var(--line-1)', borderRadius:5, overflow:'hidden' }}>
       {/* chrome */}
-      <div style={{ background:'var(--uc-black)', color:'var(--uc-paper)', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>FREE SHIPPING OVER $75 · BUSINESS ACCOUNTS</div>
+      <div style={{ background:'#1B5272', color:'#fff', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>FREE SHIPPING OVER $100 · UNIVERSITY & HOSPITAL PRICING</div>
       <div style={{ display:'flex', alignItems:'center', gap:11, padding:'8px 14px', borderBottom:'1px solid var(--line-1)' }}>
-        <span style={{ width:14, height:14, borderRadius:999, background:'var(--uc-black)' }}/>
         <BrandMark fontSize={11}/>
-        <div style={{ display:'flex', gap:9, marginLeft:4 }}>{['Desks','Monitor Mounts','Accessories','TV Mounts'].map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:i===0?'var(--fg-1)':'var(--fg-3)' }}>{x}</span>))}</div>
-        <span style={{ marginLeft:'auto', fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--uc-paper)', background:'var(--uc-black)', padding:'3px 8px', borderRadius:3 }}>Cart 2</span>
+        <div style={{ display:'flex', gap:9, marginLeft:4 }}>{['Models','Simulators','Charts','Brands'].map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:i===0?'var(--fg-1)':'var(--fg-3)' }}>{x}</span>))}</div>
+        <span style={{ marginLeft:'auto', fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'#fff', background:'#1B5272', padding:'3px 8px', borderRadius:3, display:'inline-flex', alignItems:'center' }}><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{display:'inline-block',verticalAlign:'middle',marginRight:2}}><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>Cart 2</span>
       </div>
       {/* breadcrumb */}
-      <div style={{ padding:'8px 14px 0', fontFamily:'var(--font-mono)', fontSize:7, letterSpacing:'0.08em', color:'var(--fg-3)' }}>HOME / STANDING DESKS / ELECTRIC</div>
+      <div style={{ padding:'8px 14px 0', fontFamily:'var(--font-mono)', fontSize:7, letterSpacing:'0.08em', color:'var(--fg-3)' }}>HOME / MODELS / SKULL & BRAIN</div>
 
       {/* gallery + buy box */}
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:13, padding:'9px 14px 13px' }}>
         {/* gallery */}
         <div style={{ display:'grid', gridTemplateColumns:'26px 1fr', gap:7 }}>
-          <div style={{ display:'flex', flexDirection:'column', gap:6 }}>{['#2E3A6E','#17257d','#3D4B73','#0F1A4D'].map((c,i)=>(<div key={i} style={{ aspectRatio:'1/1', borderRadius:3, background:`linear-gradient(140deg, ${c}, var(--uc-stone-200))`, border:i===0?'1.5px solid var(--uc-black)':'1px solid var(--line-1)' }}/>))}</div>
-          <div style={{ aspectRatio:'4/4.6', borderRadius:4, background:'radial-gradient(120% 90% at 65% 20%, #17257d, #0F1A4D 60%, #080E2B)', position:'relative', overflow:'hidden' }}>
+          <div style={{ display:'flex', flexDirection:'column', gap:6 }}>{['#1B5272','#2E7EB8','#B0C4D4','#8AACBB'].map((c,i)=>(<div key={i} style={{ aspectRatio:'1/1', borderRadius:3, background:`linear-gradient(140deg, ${c}, var(--uc-bone))`, border:i===0?'1.5px solid var(--uc-black)':'1px solid var(--line-1)' }}/>))}</div>
+          <div style={{ aspectRatio:'4/4.6', borderRadius:4, background:'radial-gradient(120% 90% at 65% 20%, #2E7EB8, #1B5272 60%, #0D2034)', position:'relative', overflow:'hidden' }}>
             <span style={{ position:'absolute', top:8, left:8, padding:'2px 7px', background:'#3F8B5D', color:'#fff', borderRadius:999, fontFamily:'var(--font-mono)', fontSize:6, fontWeight:800, letterSpacing:'0.06em' }}>BEST SELLER</span>
-            <img src="https://vivo-us.com/cdn/shop/files/DESK-KIT-1B6B_01_v_4.0.jpg?v=1782333890&width=600" alt="1B Series Electric Desk" style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'contain', objectPosition:'center', padding:'8%', background:'#f8f6f2' }}/>
+            <svg viewBox="0 0 100 120" style={{ position:'absolute', bottom:'2%', right:0, left:0, margin:'0 auto', width:'75%', opacity:0.95 }}>
+  {/* Cranium + mandible outline */}
+  <path d="M50 5 C74 5 93 22 93 46 C93 64 83 76 70 82 L68 97 C68 101 64 103 60 103 L40 103 C36 103 32 101 32 97 L30 82 C17 76 7 64 7 46 C7 22 26 5 50 5 Z" fill="rgba(180,210,230,0.1)" stroke="rgba(255,255,255,0.78)" strokeWidth="1.6" strokeLinejoin="round"/>
+  {/* Left orbital socket */}
+  <path d="M24 44 C24 33 30 26 39 28 C47 26 52 33 50 44 C48 54 26 56 24 44 Z" fill="rgba(0,0,0,0.4)" stroke="rgba(255,255,255,0.68)" strokeWidth="1.3"/>
+  {/* Right orbital socket */}
+  <path d="M50 44 C50 33 55 26 61 28 C70 26 76 34 76 44 C74 55 52 55 50 44 Z" fill="rgba(0,0,0,0.4)" stroke="rgba(255,255,255,0.68)" strokeWidth="1.3"/>
+  {/* Nasal aperture */}
+  <path d="M45 58 C43 53 44 48 50 46 C56 48 57 53 55 58 C53 65 51 68 50 68 C49 68 47 65 45 58 Z" fill="rgba(0,0,0,0.34)" stroke="rgba(255,255,255,0.52)" strokeWidth="1"/>
+  {/* Left zygomatic arch */}
+  <path d="M7 57 C4 64 6 74 14 78 C21 81 28 80 32 78" fill="none" stroke="rgba(255,255,255,0.42)" strokeWidth="1.3" strokeLinecap="round"/>
+  {/* Right zygomatic arch */}
+  <path d="M93 57 C96 64 94 74 86 78 C79 81 72 80 68 78" fill="none" stroke="rgba(255,255,255,0.42)" strokeWidth="1.3" strokeLinecap="round"/>
+  {/* Upper teeth baseline */}
+  <path d="M34 97 L66 97" stroke="rgba(255,255,255,0.52)" strokeWidth="0.9"/>
+  {/* Individual teeth */}
+  <path d="M37 97 L37 103 M42 97 L42 104 M47 97 L47 104 M50 97 L50 104 M53 97 L53 104 M58 97 L58 104 M63 97 L63 103" stroke="rgba(255,255,255,0.38)" strokeWidth="0.9" strokeLinecap="round"/>
+  {/* Coronal suture */}
+  <path d="M18 30 C30 23 40 20 50 20 C60 20 70 23 82 30" fill="none" stroke="rgba(255,255,255,0.22)" strokeWidth="0.7" strokeDasharray="2.5,2"/>
+  {/* Sagittal suture */}
+  <path d="M50 5 L50 20" fill="none" stroke="rgba(255,255,255,0.22)" strokeWidth="0.7" strokeDasharray="2.5,2"/>
+  {/* Temporal lines */}
+  <path d="M19 24 C15 36 13 48 16 58" fill="none" stroke="rgba(255,255,255,0.17)" strokeWidth="0.7"/>
+  <path d="M81 24 C85 36 87 48 84 58" fill="none" stroke="rgba(255,255,255,0.17)" strokeWidth="0.7"/>
+  {/* Nose bridge */}
+  <path d="M44 42 L46 46 L50 48 L54 46 L56 42" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="0.8" strokeLinejoin="round"/>
+  {/* Infraorbital foramina */}
+  <circle cx="37" cy="59" r="1.4" fill="rgba(255,255,255,0.2)"/>
+  <circle cx="63" cy="59" r="1.4" fill="rgba(255,255,255,0.2)"/>
+  {/* Foramen magnum */}
+  <ellipse cx="50" cy="111" rx="7" ry="4" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="0.7"/>
+  {/* Lambdoid suture hint */}
+  <path d="M18 46 C24 56 32 62 30 76" fill="none" stroke="rgba(255,255,255,0.14)" strokeWidth="0.6" strokeDasharray="2,2"/>
+  <path d="M82 46 C76 56 68 62 70 76" fill="none" stroke="rgba(255,255,255,0.14)" strokeWidth="0.6" strokeDasharray="2,2"/>
+</svg>
             <span style={{ position:'absolute', bottom:8, left:8, display:'flex', gap:4 }}>{[0,1,2,3].map(i=>(<span key={i} style={{ width:5, height:5, borderRadius:999, background:i===0?'#fff':'rgba(255,255,255,0.45)' }}/>))}</span>
           </div>
         </div>
 
         {/* buy box */}
         <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
-          <div style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em', color:'#3F8B5D' }}>VIVO · IN STOCK · SHIPS TODAY</div>
-          <div style={{ fontFamily:'var(--font-hero)', fontWeight:700, fontSize:21, letterSpacing:'-0.04em', lineHeight:0.9, color:'var(--fg-1)' }}>1B Series<br/><span style={{ fontFamily:'var(--font-serif)', fontWeight:400, fontSize:16 }}>Electric Standing Desk</span></div>
-          <div style={{ display:'flex', alignItems:'center', gap:6, fontFamily:'var(--font-mono)', fontSize:8 }}><span style={{ color:'var(--uc-brand)' }}>★★★★★</span><span style={{ color:'var(--fg-3)' }}>4.9 · 128 reviews</span></div>
-          {/* multi-step configurator */}
-          <GfxConfigurator/>
+          <div style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em', color:'#3F8B5D' }}>3B SCIENTIFIC · IN STOCK · SHIPS TODAY</div>
+          <div style={{ fontFamily:'var(--font-hero)', fontWeight:700, fontSize:21, letterSpacing:'-0.04em', lineHeight:0.9, color:'var(--fg-1)' }}>3B Scientific<br/><span style={{ fontFamily:'var(--font-serif)', fontWeight:400, fontSize:16 }}>Skull 4-Part Model</span></div>
+          <div style={{ display:'flex', alignItems:'center', gap:6, fontFamily:'var(--font-mono)', fontSize:8 }}><span style={{ color:'var(--uc-brand)' }}>★★★★★</span><span style={{ color:'var(--fg-3)' }}>4.9 · 312 reviews</span></div>
+          {/* swatches */}
+          <div style={{ display:'flex', gap:5, marginTop:1 }}>{['#1B5272','#2E7EB8','#B0C4D4','#8AACBB'].map((c,i)=>(<span key={i} style={{ width:16, height:16, borderRadius:999, background:c, border:i===0?'1.5px solid var(--uc-black)':'1px solid var(--line-1)', boxShadow:i===0?'0 0 0 2px var(--uc-paper) inset':'none' }}/>))}</div>
+          {/* configuration — configurable product */}
+          <div style={{ marginTop:1 }}>
+            <div style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:4 }}>CONFIGURATION</div>
+            <div style={{ display:'flex', gap:4 }}>{[['4-part',true],['8-part',false],['Classroom 6pk',false]].map(([l,on],i)=>(<span key={i} style={{ flex:1, padding:'5px 2px', textAlign:'center', border:'1px solid', borderColor:on?'var(--uc-black)':'var(--line-1)', borderRadius:3, fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, color:on?'var(--uc-paper)':'var(--fg-2)', background:on?'var(--uc-black)':'transparent', whiteSpace:'nowrap' }}>{l}</span>))}</div>
+          </div>
           {/* tier pricing — minimalist table */}
           <div style={{ marginTop:2, border:'1px solid var(--line-1)', borderRadius:3, overflow:'hidden' }}>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)' }}>{[['2+','$159'],['5+','$149'],['10+','$139'],['25+','$129']].map((t,i)=>(
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)' }}>{[['1+','$89'],['3+','$82'],['6+','$76'],['12+','$69']].map((t,i)=>(
               <div key={i} style={{ padding:'4px 2px', textAlign:'center', borderLeft:i?'1px solid var(--line-1)':'none' }}>
                 <div style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, color:'var(--fg-3)', letterSpacing:'0.04em' }}>{t[0]}</div>
                 <div style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--fg-1)', marginTop:2 }}>{t[1]}</div>
@@ -1019,17 +1003,17 @@ function GfxPDP() {
                 <span style={{ padding:'8px 4px', minWidth:18, textAlign:'center', fontFamily:'var(--font-mono)', fontSize:9, fontWeight:700, color:'var(--fg-1)', borderLeft:'1px solid var(--line-1)', borderRight:'1px solid var(--line-1)' }}>1</span>
                 <span style={{ padding:'0 8px', fontFamily:'var(--font-mono)', fontSize:11, fontWeight:700, color:'var(--fg-2)' }}>+</span>
               </div>
-              <span style={{ flex:1, padding:'8px', textAlign:'center', background:'var(--uc-black)', color:'var(--uc-paper)', borderRadius:3, fontFamily:'var(--font-display)', fontSize:9.5, fontWeight:800 }}>Add to cart</span>
+              <span style={{ flex:1, padding:'8px', textAlign:'center', background:'#1B5272', color:'#fff', borderRadius:3, fontFamily:'var(--font-display)', fontSize:9.5, fontWeight:800 }}>Add to cart</span>
             </div>
             <span style={{ padding:'7px', textAlign:'center', border:'1px solid var(--uc-black)', borderRadius:3, fontFamily:'var(--font-display)', fontSize:9, fontWeight:700, color:'var(--fg-1)' }}>Request a Quote</span>
           </div>
           {/* trust row */}
-          <div style={{ display:'flex', gap:8, marginTop:3, flexWrap:'wrap' }}>{['✓ 3-yr warranty','✓ Free returns','✓ Ships today'].map(t=>(<span key={t} style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, color:'var(--fg-3)' }}>{t}</span>))}</div>
+          <div style={{ display:'flex', gap:8, marginTop:3, flexWrap:'wrap' }}>{['✓ Lifetime guarantee','✓ Free returns','✓ Ships today'].map(t=>(<span key={t} style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, color:'var(--fg-3)' }}>{t}</span>))}</div>
           {/* frequently bought together (compact, in buy box) */}
           <div style={{ marginTop:7, paddingTop:9, borderTop:'1px solid var(--line-1)' }}>
             <div style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:6 }}>FREQUENTLY BOUGHT TOGETHER</div>
             <div style={{ display:'flex', alignItems:'center', gap:5, marginBottom:8 }}>
-              {[['1B Electric Desk','$169','#2E3A6E'],['Monitor Arm Dual','$45','#3D4B73'],['Desk Pad XL','$29','#8A8780']].map((p,i)=>(
+              {[['Skull 4-Part','$89','#1B5272'],['Brain Model 4Pt','$72','#2E7EB8'],['Anatomy Charts','$38','#B0C4D4']].map((p,i)=>(
                 <React.Fragment key={i}>
                   {i>0 && <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:11, color:'var(--fg-3)', flexShrink:0 }}>+</span>}
                   <div style={{ flex:1, display:'flex', flexDirection:'column', gap:3 }}>
@@ -1041,8 +1025,8 @@ function GfxPDP() {
               ))}
             </div>
             <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-              <span style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, color:'var(--fg-3)', whiteSpace:'nowrap' }}>Bundle <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:12, color:'var(--fg-1)' }}>$366</span></span>
-              <span style={{ flex:1, padding:'6px', textAlign:'center', background:'var(--uc-black)', color:'var(--uc-paper)', borderRadius:3, fontFamily:'var(--font-display)', fontSize:8.5, fontWeight:700 }}>Add all 3</span>
+              <span style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, color:'var(--fg-3)', whiteSpace:'nowrap' }}>Bundle <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:12, color:'var(--fg-1)' }}>$199</span></span>
+              <span style={{ flex:1, padding:'6px', textAlign:'center', background:'#1B5272', color:'#fff', borderRadius:3, fontFamily:'var(--font-display)', fontSize:8.5, fontWeight:700 }}>Add all 3</span>
             </div>
           </div>
         </div>
@@ -1052,11 +1036,11 @@ function GfxPDP() {
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:1, background:'var(--line-1)', borderTop:'1px solid var(--line-1)' }}>
         <div style={{ background:'var(--uc-paper)', padding:'11px 14px' }}>
           <div style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:7 }}>SPECIFICATIONS</div>
-          {[['Height range','25"–51"'],['Weight capacity','220 lb'],['Motor','Single, 2-stage'],['Top size','55" × 28"']].map((r,i)=>(<div key={i} style={{ display:'flex', justifyContent:'space-between', padding:'4px 0', borderTop:i?'1px solid var(--line-1)':'none', fontFamily:'var(--font-mono)', fontSize:8 }}><span style={{ color:'var(--fg-3)' }}>{r[0]}</span><span style={{ color:'var(--fg-1)', fontWeight:700 }}>{r[1]}</span></div>))}
+          {[['Material','High-quality PVC'],['Parts','4-part'],['Scale','Life size'],['Weight','1.2 lb']].map((r,i)=>(<div key={i} style={{ display:'flex', justifyContent:'space-between', padding:'4px 0', borderTop:i?'1px solid var(--line-1)':'none', fontFamily:'var(--font-mono)', fontSize:8 }}><span style={{ color:'var(--fg-3)' }}>{r[0]}</span><span style={{ color:'var(--fg-1)', fontWeight:700 }}>{r[1]}</span></div>))}
         </div>
         <div style={{ background:'var(--uc-cream)', padding:'11px 14px' }}>
           <div style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:7 }}>WHY BUYERS CHOOSE IT</div>
-          <div style={{ display:'flex', flexDirection:'column', gap:6 }}>{['Brushless motor — more runtime, less downtime.','Trade pricing and NET terms unlock at 4+ units.','Same-day will-call at all 14 branches.'].map((t,i)=>(<div key={i} style={{ display:'grid', gridTemplateColumns:'12px 1fr', gap:7, alignItems:'start' }}><span style={{ width:10, height:10, borderRadius:999, background:'var(--uc-signal)', marginTop:1, display:'flex', alignItems:'center', justifyContent:'center' }}><svg width="6" height="6" viewBox="0 0 12 12" fill="none"><path d="M2 6 L5 9 L10 3" stroke="var(--uc-black)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg></span><span style={{ fontFamily:'var(--font-serif)', fontSize:9, lineHeight:1.35, color:'var(--fg-2)' }}>{t}</span></div>))}</div>
+          <div style={{ display:'flex', flexDirection:'column', gap:6 }}>{['Used in 500+ medical schools worldwide.','Institution pricing and NET-30 terms available.','Same-day shipping on all in-stock models.'].map((t,i)=>(<div key={i} style={{ display:'grid', gridTemplateColumns:'12px 1fr', gap:7, alignItems:'start' }}><span style={{ width:10, height:10, borderRadius:999, background:'var(--uc-signal)', marginTop:1, display:'flex', alignItems:'center', justifyContent:'center' }}><svg width="6" height="6" viewBox="0 0 12 12" fill="none"><path d="M2 6 L5 9 L10 3" stroke="var(--uc-black)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg></span><span style={{ fontFamily:'var(--font-serif)', fontSize:9, lineHeight:1.35, color:'var(--fg-2)' }}>{t}</span></div>))}</div>
         </div>
       </div>
 
@@ -1073,7 +1057,7 @@ function GfxPDP() {
       {/* you may also like */}
       <div style={{ padding:'11px 14px', borderTop:'1px solid var(--line-1)', background:'var(--uc-bone)' }}>
         <div style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:8 }}>COMPLETE THE SET</div>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:7 }}>{[['20V Battery 2pk','$129','#C2410C'],['Bit Set 40pc','$38','#8A8780'],['Tough Case','$54','#3A3632'],['Tool Bag','$42','#C8A14E']].map((p,i)=>(<div key={i} style={{ display:'flex', flexDirection:'column', gap:4 }}><div style={{ aspectRatio:'1/1', borderRadius:3, background:`linear-gradient(140deg, ${p[2]}, var(--uc-bone))` }}/><span style={{ fontFamily:'var(--font-display)', fontWeight:600, fontSize:7.5, color:'var(--fg-1)' }}>{p[0]}</span><span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--fg-1)' }}>{p[1]}</span></div>))}</div>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:7 }}>{[['Brain Model 4Pt','$72','#1B5272'],['Anatomy Charts','$38','#8AACBB'],['Spine Model','$119','#2E7EB8'],['Muscle Figure','$219','#B0C4D4']].map((p,i)=>(<div key={i} style={{ display:'flex', flexDirection:'column', gap:4 }}><div style={{ aspectRatio:'1/1', borderRadius:3, background:`linear-gradient(140deg, ${p[2]}, var(--uc-bone))` }}/><span style={{ fontFamily:'var(--font-display)', fontWeight:600, fontSize:7.5, color:'var(--fg-1)' }}>{p[0]}</span><span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--fg-1)' }}>{p[1]}</span></div>))}</div>
       </div>
     </div>
   );
@@ -1085,13 +1069,12 @@ function GfxPortal() {
   return (
     <div style={{ background:'var(--uc-paper)', border:'1px solid var(--line-1)', borderRadius:5, overflow:'hidden' }}>
       {/* chrome */}
-      <div style={{ background:'var(--uc-black)', color:'var(--uc-paper)', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>PRIVATE ORDERING PORTAL · NET-45 TERMS ACTIVE</div>
+      <div style={{ background:'#1B5272', color:'#fff', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>PRIVATE ORDERING PORTAL · INSTITUTION ACCOUNT ACTIVE</div>
       <div style={{ display:'flex', alignItems:'center', gap:11, padding:'8px 14px', borderBottom:'1px solid var(--line-1)' }}>
-        <span style={{ width:14, height:14, borderRadius:999, background:'var(--uc-black)' }}/>
         <BrandMark fontSize={11}/>
         <span style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:7 }}>
-          <span style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, color:'var(--fg-3)' }}>MERIDIAN CONTRACT CO.</span>
-          <span style={{ width:18, height:18, borderRadius:999, background:'linear-gradient(135deg,#8FA086,#6E5235)', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:800, color:'#fff' }}>M</span>
+          <span style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, color:'var(--fg-3)' }}>CENTRAL MEDICAL UNIV.</span>
+          <span style={{ width:18, height:18, borderRadius:999, background:'linear-gradient(135deg,#2E7EB8,#1B5272)', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:800, color:'#fff' }}>M</span>
         </span>
       </div>
 
@@ -1099,7 +1082,7 @@ function GfxPortal() {
       <div style={{ display:'grid', gridTemplateColumns:'112px 1fr', gap:1, background:'var(--line-1)' }}>
         {/* sidebar */}
         <div style={{ background:'var(--uc-bone)', padding:'11px 10px', display:'flex', flexDirection:'column', gap:3 }}>
-          {nav.map((n,i)=>(<div key={i} style={{ display:'flex', alignItems:'center', gap:7, padding:'5px 7px', borderRadius:3, background:n[2]?'var(--uc-black)':'transparent' }}><span style={{ fontSize:9, color:n[2]?'var(--uc-signal)':'var(--fg-3)' }}>{n[0]}</span><span style={{ fontFamily:'var(--font-mono)', fontSize:8, fontWeight:700, color:n[2]?'var(--uc-paper)':'var(--fg-2)' }}>{n[1]}</span></div>))}
+          {nav.map((n,i)=>(<div key={i} style={{ display:'flex', alignItems:'center', gap:7, padding:'5px 7px', borderRadius:3, background:n[2]?'var(--uc-black)':'transparent' }}><span style={{ fontSize:9, color:n[2]?'#1B5272':'var(--fg-3)' }}>{n[0]}</span><span style={{ fontFamily:'var(--font-mono)', fontSize:8, fontWeight:700, color:n[2]?'var(--uc-paper)':'var(--fg-2)' }}>{n[1]}</span></div>))}
           <div style={{ marginTop:'auto', padding:'8px 7px 0' }}><div style={{ fontFamily:'var(--font-mono)', fontSize:6.5, color:'var(--fg-3)', lineHeight:1.5 }}>CREDIT LINE<br/><span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:13, letterSpacing:'-0.02em', color:'var(--fg-1)' }}>$118k</span> open</div></div>
         </div>
 
@@ -1136,36 +1119,36 @@ function GfxPortal() {
 }
 
 function GfxHomepage() {
-  const nav = ['Shop','VIVO PRO','Deals','Workspace','Business'];
+  const nav = ['Shop','Brands','Deals','New','Trade'];
   const mega = [
-    { h: 'By Category', items: ['Standing Desks','Monitor Mounts','Desk Converters','TV Mounts','Accessories','Chairs'] },
-    { h: 'By Space', items: ['Home Office','Corporate','Gaming Setup','Education'] },
-    { h: 'Quick Links', items: ['New Arrivals','Clearance','Pro Pricing','Bulk Orders'] }
+    { h: 'By Category', items: ['Anatomical Models','Simulators','Anatomy Charts','Specimens','Custom Products','Simulated Meds'] },
+    { h: 'By Audience', items: ['Medical Schools','Nursing Programs','Veterinary','Hospitals'] },
+    { h: 'Quick Links', items: ['New Arrivals','Deals','Institution Pricing','Bulk Orders'] }
   ];
-  const brands = ['1B SERIES','E3 SERIES','V SERIES','K SERIES','VIVO PRO','WORKSPACE'];
-  const feat = [['1B Electric Desk','$169.99','#2E3A6E','SALE'],['Dual Monitor Mount','$39.99','#3D4B73','NEW'],['K Series Converter','$119.99','#1A2644',null],['TV Cart','$99.99','#17257d','PRO']];
+  const brands = ['3B SCI','AXIS','ERLER','SOMSO','NASCO','VATA'];
+  const feat = [['Human Skull','$89.00','#B0C4D4','NEW'],['3B Heart','$124.00','#C4AEAD',null],['IV Training Arm','$159.00','#C8B89A','PRO'],['Brain Model','$72.00','#1B5272',null]];
   return (
     <div style={{ background:'var(--uc-paper)', border:'1px solid var(--line-1)', borderRadius:5, overflow:'hidden' }}>
       {/* announcement */}
-      <div style={{ background:'var(--uc-black)', color:'var(--uc-paper)', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>FREE SHIPPING OVER $75 · BUSINESS ACCOUNTS</div>
+      <div style={{ background:'#1B5272', color:'#fff', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>FREE SHIPPING OVER $100 · UNIVERSITY & HOSPITAL PRICING</div>
       {/* header */}
       <div style={{ display:'flex', alignItems:'center', gap:11, padding:'8px 14px', borderBottom:'1px solid var(--line-1)' }}>
         <BrandMark fontSize={12}/>
         <div style={{ display:'flex', gap:11, marginLeft:6 }}>{nav.map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:i===0?'var(--fg-1)':'var(--fg-3)', position:'relative' }}>{x}{i===0 && <span style={{ position:'absolute', left:0, right:0, bottom:-9, height:2, background:'var(--uc-black)' }}/>}</span>))}</div>
         <span style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:7 }}>
-          <span style={{ width:120, height:18, borderRadius:999, border:'1px solid var(--line-2)', display:'flex', alignItems:'center', gap:4, padding:'0 9px', fontFamily:'var(--font-mono)', fontSize:7, color:'var(--fg-3)', whiteSpace:'nowrap', overflow:'hidden' }}><span style={{ fontSize:8 }}>⌕</span>Search 500+ products…</span>
-          <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--uc-paper)', background:'var(--uc-black)', padding:'3px 8px', borderRadius:3 }}>Cart 6</span>
+          <span style={{ width:120, height:18, borderRadius:999, border:'1px solid var(--line-2)', display:'flex', alignItems:'center', gap:4, padding:'0 9px', fontFamily:'var(--font-mono)', fontSize:7, color:'var(--fg-3)', whiteSpace:'nowrap', overflow:'hidden' }}><span style={{ fontSize:8 }}>⌕</span>Search anatomy & medical models…</span>
+          <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'#fff', background:'#1B5272', padding:'3px 8px', borderRadius:3, display:'inline-flex', alignItems:'center' }}><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{display:'inline-block',verticalAlign:'middle',marginRight:2}}><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>Cart 6</span>
         </span>
       </div>
 
       {/* hero + mega menu overlay */}
-      <div style={{ position:'relative', height:188, background:'linear-gradient(100deg, #1C1A17 0%, #3A2F25 55%, #7A3B16 135%)', overflow:'hidden' }}>
+      <div style={{ position:'relative', height:188, background:'linear-gradient(100deg, #0D2034 0%, #1B5272 55%, #2E7EB8 135%)', overflow:'hidden' }}>
         <svg viewBox="0 0 200 90" preserveAspectRatio="none" style={{ position:'absolute', right:-10, bottom:-10, width:220, opacity:0.16 }}><path d="M5 85 L5 34 L52 34 L52 12 L104 12 L104 34 L195 34 L195 85 Z" fill="none" stroke="#fff" strokeWidth="1.6"/><path d="M28 85 L28 52 M78 85 L78 34 M150 85 L150 50" stroke="#fff" strokeWidth="1"/></svg>
         {/* hero copy (right 1/3) */}
         <div style={{ position:'absolute', right:18, top:0, bottom:0, width:'34%', display:'flex', flexDirection:'column', justifyContent:'center', gap:7 }}>
-          <span style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.16em', color:'var(--uc-signal)' }}>SUMMER SALE · ENDS SUNDAY</span>
-          <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:24, letterSpacing:'-0.04em', lineHeight:0.9, color:'#fff' }}>Ergonomic office,<br/><span style={{ fontFamily:'var(--font-serif)', fontWeight:400 }}>on sale now.</span></span>
-          <span style={{ alignSelf:'flex-start', marginTop:2, padding:'5px 13px', background:'var(--uc-signal)', color:'var(--uc-black)', borderRadius:999, fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:800 }}>Shop the sale →</span>
+          <span style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.16em', color:'var(--uc-signal)' }}>40,000+ EDUCATORS TRUST US</span>
+          <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:24, letterSpacing:'-0.04em', lineHeight:0.9, color:'#fff' }}>Medical education<br/><span style={{ fontFamily:'var(--font-serif)', fontWeight:400 }}>at scale.</span></span>
+          <span style={{ alignSelf:'flex-start', marginTop:2, padding:'5px 13px', background:'#1B5272', color:'#fff', borderRadius:999, fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:800 }}>Shop models →</span>
         </div>
         {/* mega menu over 2/3 */}
         <div style={{ position:'absolute', left:0, top:0, bottom:0, width:'64%', background:'rgba(248,246,240,0.97)', borderRight:'1px solid var(--line-2)', boxShadow:'10px 0 30px -16px rgba(0,0,0,0.5)', padding:'14px 16px', display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:14 }}>
@@ -1178,11 +1161,11 @@ function GfxHomepage() {
         </div>
       </div>
 
-      {/* Workspace configurator */}
+      {/* Year / Make / Model fitment */}
       <div style={{ background:'var(--uc-black)', padding:'10px 14px', display:'flex', alignItems:'center', gap:8 }}>
-        <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, letterSpacing:'0.08em', color:'var(--uc-signal)', whiteSpace:'nowrap' }}>BUILD YOURS</span>
-        {['Room','Style','Budget'].map((f,i)=>(<span key={f} style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'space-between', height:22, background:'var(--uc-paper)', borderRadius:4, padding:'0 9px', fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--fg-2)' }}>{f}<span style={{ color:'var(--fg-3)' }}>▾</span></span>))}
-        <span style={{ display:'inline-flex', alignItems:'center', height:22, padding:'0 12px', background:'var(--uc-signal)', color:'var(--uc-black)', borderRadius:4, fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:800, whiteSpace:'nowrap' }}>Shop Now →</span>
+        <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, letterSpacing:'0.08em', color:'#B8D4E8', whiteSpace:'nowrap' }}>FIND YOUR FIT</span>
+        {['Product','Brand','Profession'].map((f,i)=>(<span key={f} style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'space-between', height:22, background:'var(--uc-paper)', borderRadius:4, padding:'0 9px', fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--fg-2)' }}>{f}<span style={{ color:'var(--fg-3)' }}>▾</span></span>))}
+        <span style={{ display:'inline-flex', alignItems:'center', height:22, padding:'0 12px', background:'#1B5272', color:'#fff', borderRadius:4, fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:800, whiteSpace:'nowrap' }}>Find Now →</span>
       </div>
 
       {/* brand strip */}
@@ -1196,7 +1179,7 @@ function GfxHomepage() {
       <div style={{ padding:'0 14px 14px', display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:9 }}>
         {feat.map((p,i)=>(
           <div key={i} style={{ display:'flex', flexDirection:'column', gap:4 }}>
-            <div style={{ aspectRatio:'1/0.9', borderRadius:4, background:vivoImg(p[0])?'#f8f6f2':`linear-gradient(150deg, ${p[2]}, var(--uc-bone))`, position:'relative', overflow:'hidden' }}>{vivoImg(p[0]) && <img src={vivoImg(p[0])} alt={p[0]} style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'contain', objectPosition:'center', padding:'6%', background:'#f8f6f2', borderRadius:'inherit' }}/>}{p[3] && <span style={{ position:'absolute', top:5, left:5, padding:'1px 6px', background:p[3]==='DEAL'?'var(--uc-brand)':(p[3]==='NEW'?'var(--uc-black)':(p[3]==='PRO'?'var(--uc-black)':'#3F8B5D')), color:'#fff', borderRadius:2, fontFamily:'var(--font-mono)', fontSize:5.5, fontWeight:800 }}>{p[3]}</span>}<span style={{ position:'absolute', bottom:5, right:5, width:16, height:16, borderRadius:999, background:'var(--uc-paper)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, color:'var(--fg-1)', boxShadow:'0 1px 3px rgba(0,0,0,0.18)' }}>＋</span></div>
+            <div style={{ aspectRatio:'1/0.9', borderRadius:4, background:`linear-gradient(150deg, ${p[2]}, var(--uc-bone))`, position:'relative' }}>{p[3] && <span style={{ position:'absolute', top:5, left:5, padding:'1px 6px', background:p[3]==='DEAL'?'var(--uc-brand)':(p[3]==='NEW'?'var(--uc-black)':(p[3]==='PRO'?'var(--uc-black)':'#3F8B5D')), color:'#fff', borderRadius:2, fontFamily:'var(--font-mono)', fontSize:5.5, fontWeight:800 }}>{p[3]}</span>}<span style={{ position:'absolute', bottom:5, right:5, width:16, height:16, borderRadius:999, background:'var(--uc-paper)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, color:'var(--fg-1)', boxShadow:'0 1px 3px rgba(0,0,0,0.18)' }}>＋</span></div>
             <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:8.5, color:'var(--fg-1)', letterSpacing:'-0.01em' }}>{p[0]}</span>
             <span style={{ fontFamily:'var(--font-mono)', fontSize:8.5, fontWeight:700, color:'var(--fg-1)' }}>{p[1]}</span>
           </div>
@@ -1205,10 +1188,10 @@ function GfxHomepage() {
 
       {/* brand story — image + text */}
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:0, borderTop:'1px solid var(--line-1)' }}>
-        <div style={{ background:'linear-gradient(150deg, #17257d, #0F1A4D)', minHeight:96, position:'relative' }}><span style={{ position:'absolute', bottom:8, left:10, padding:'2px 7px', background:'var(--uc-paper)', borderRadius:3, fontFamily:'var(--font-mono)', fontSize:5.5, fontWeight:800, letterSpacing:'0.1em', color:'var(--fg-3)' }}>EST. 2013</span></div>
+        <div style={{ background:'linear-gradient(150deg, #1B5272, #0D2034)', minHeight:96, position:'relative' }}><span style={{ position:'absolute', bottom:8, left:10, padding:'2px 7px', background:'var(--uc-paper)', borderRadius:3, fontFamily:'var(--font-mono)', fontSize:5.5, fontWeight:800, letterSpacing:'0.1em', color:'var(--fg-3)' }}>SKOKIE, IL</span></div>
         <div style={{ padding:'16px 16px', display:'flex', flexDirection:'column', justifyContent:'center', gap:7, background:'var(--uc-bone)' }}>
           <span style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, letterSpacing:'0.14em', color:'var(--fg-3)' }}>OUR STORY</span>
-          <span style={{ fontFamily:'var(--font-serif)', fontStyle:'italic', fontSize:14, lineHeight:1.3, letterSpacing:'-0.01em', color:'var(--fg-1)' }}>From home offices to corporate campuses — ergonomic solutions for every workspace.</span>
+          <span style={{ fontFamily:'var(--font-serif)', fontStyle:'italic', fontSize:14, lineHeight:1.3, letterSpacing:'-0.01em', color:'var(--fg-1)' }}>Serving universities, hospitals and medical schools with the best anatomy education tools.</span>
           <span style={{ alignSelf:'flex-start', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, color:'var(--fg-1)', borderBottom:'1.5px solid var(--uc-signal)', paddingBottom:1 }}>Read our story →</span>
         </div>
       </div>
@@ -1224,8 +1207,7 @@ function BPPerformance() {
       points: [
         { t: 'Customer Journey', d: 'Streamlined and tailored paths from landing to checkout, for both retail and trade buyers.' },
         { t: 'Information Architecture', d: 'Mega navigation with multi-level menus built around how shops actually browse.' },
-        { t: 'Product Finding', d: 'Quizzes and smart tools to guide buyers to the perfect product.' },
-        { t: 'Upgraded brand connection', d: 'Redesign the home page with increased visual depth and authenticity.' }
+        { t: 'Product Finding', d: 'Product, Brand, Profession fitment, quizzes, and creative ways to find products.' }
       ],
       gfx: <GfxHomepage/>
     },
@@ -1271,7 +1253,7 @@ function BPPerformance() {
     }
   ];
   return (
-    <BPSection id="performance" n="05" label="Commerce" paper tail="DESIGNED FOR KPI">
+    <BPSection id="performance" n="06" label="Commerce" paper tail="DESIGNED FOR KPI">
       <BPHeadline>
         Designed for the{' '}
         <BPSerif>numbers that matter.</BPSerif>
@@ -1337,15 +1319,15 @@ function GfxPhone({ kind }) {
               <BrandMark fontSize={14} family="var(--font-hero)" weight={800} letterSpacing="-0.045em"/>
             </span>
             <span style={{ display:'inline-flex', gap:6, alignItems:'center' }}>
-              <span style={{ display:'inline-flex', alignItems:'center', gap:5, height:22, padding:'0 9px', background:'var(--uc-black)', borderRadius:5, fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--uc-paper)' }}>⛒ Cart<span style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', minWidth:11, height:11, padding:'0 2px', background:'var(--uc-signal)', color:'var(--uc-black)', borderRadius:999, fontSize:6, fontWeight:800 }}>6</span></span>
+              <span style={{ display:'inline-flex', alignItems:'center', gap:5, height:22, padding:'0 9px', background:'#1B5272', borderRadius:5, fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'#fff' }}><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{display:'inline-block',verticalAlign:'middle',marginRight:2}}><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>Cart<span style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', minWidth:11, height:11, padding:'0 2px', background:'#fff', color:'#1B5272', borderRadius:999, fontSize:6, fontWeight:800 }}>6</span></span>
             </span>
           </div>
           {/* big open search */}
           <div style={{ padding:'0 12px 9px' }}>
             <div style={{ display:'flex', alignItems:'center', gap:8, height:30, border:'1.5px solid var(--uc-black)', borderRadius:5, padding:'0 4px 0 10px' }}>
               <span style={{ fontSize:10, color:'var(--fg-2)' }}>⌕</span>
-              <span style={{ flex:1, fontFamily:'var(--font-mono)', fontSize:8, color:'var(--fg-3)' }}>Search 500+ products…</span>
-              <span style={{ alignSelf:'stretch', display:'flex', alignItems:'center', padding:'0 9px', margin:'3px 0', background:'var(--uc-signal)', color:'var(--uc-black)', borderRadius:3, fontFamily:'var(--font-mono)', fontSize:7, fontWeight:800 }}>GO</span>
+              <span style={{ flex:1, fontFamily:'var(--font-mono)', fontSize:8, color:'var(--fg-3)' }}>Search anatomy & medical models…</span>
+              <span style={{ alignSelf:'stretch', display:'flex', alignItems:'center', padding:'0 9px', margin:'3px 0', background:'#1B5272', color:'#fff', borderRadius:3, fontFamily:'var(--font-mono)', fontSize:7, fontWeight:800 }}>GO</span>
             </div>
           </div>
         </div>
@@ -1353,24 +1335,24 @@ function GfxPhone({ kind }) {
         <div style={{ flex:1, overflow:'hidden', display:'flex', flexDirection:'column' }}>
         {kind === 'home' && (
           <div style={{ display:'flex', flexDirection:'column' }}>
-            {/* announcement */}
-            <div style={{ background:'var(--uc-black)', color:'var(--uc-paper)', padding:'4px 0', textAlign:'center', fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, letterSpacing:'0.12em' }}>FREE SHIPPING OVER $75 · BUSINESS ACCOUNTS</div>
+            {/* contractor announcement */}
+            <div style={{ background:'#1B5272', color:'#fff', padding:'4px 0', textAlign:'center', fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, letterSpacing:'0.12em' }}>FREE SHIPPING OVER $100 · UNIVERSITY & HOSPITAL PRICING</div>
             {/* SHORT hero banner */}
-            <div style={{ margin:'10px 12px 0', borderRadius:8, background:'linear-gradient(100deg, #1C1A17 0%, #3A2F25 55%, #7A3B16 135%)', position:'relative', overflow:'hidden', padding:'12px 13px', display:'flex', flexDirection:'column', gap:5, minHeight:96 }}>
+            <div style={{ margin:'10px 12px 0', borderRadius:8, background:'linear-gradient(100deg, #0D2034 0%, #1B5272 55%, #2E7EB8 135%)', position:'relative', overflow:'hidden', padding:'12px 13px', display:'flex', flexDirection:'column', gap:5, minHeight:96 }}>
               <svg viewBox="0 0 120 60" style={{ position:'absolute', right:-6, bottom:-6, width:120, opacity:0.18 }}><path d="M5 55 L5 22 L32 22 L32 8 L62 8 L62 22 L115 22 L115 55 Z" fill="none" stroke="#fff" strokeWidth="1.6"/><path d="M16 55 L16 33 M46 55 L46 22 M88 55 L88 32" stroke="#fff" strokeWidth="1"/></svg>
-              <span style={{ fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, letterSpacing:'0.16em', color:'var(--uc-signal)' }}>SUMMER SALE · ENDS SUNDAY</span>
-              <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:18, letterSpacing:'-0.04em', lineHeight:0.9, color:'#fff' }}>Ergonomic office,<br/><span style={{ fontFamily:'var(--font-serif)', fontWeight:400 }}>on sale now.</span></span>
-              <span style={{ alignSelf:'flex-start', marginTop:2, padding:'5px 12px', background:'var(--uc-signal)', color:'var(--uc-black)', borderRadius:999, fontFamily:'var(--font-mono)', fontSize:7, fontWeight:800 }}>Shop the sale →</span>
+              <span style={{ fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, letterSpacing:'0.16em', color:'var(--uc-signal)' }}>40,000+ EDUCATORS TRUST US</span>
+              <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:18, letterSpacing:'-0.04em', lineHeight:0.9, color:'#fff' }}>Medical education<br/><span style={{ fontFamily:'var(--font-serif)', fontWeight:400 }}>at scale.</span></span>
+              <span style={{ alignSelf:'flex-start', marginTop:2, padding:'5px 12px', background:'#1B5272', color:'#fff', borderRadius:999, fontFamily:'var(--font-mono)', fontSize:7, fontWeight:800 }}>Shop models →</span>
             </div>
             {/* brand strip */}
-            <div style={{ display:'flex', alignItems:'center', gap:0, margin:'11px 0 0', padding:'8px 12px', borderTop:'1px solid var(--line-1)', borderBottom:'1px solid var(--line-1)', justifyContent:'space-between' }}>{['1B SERIES','E3 SERIES','V SERIES','K SERIES','VIVO PRO'].map(b=>(<span key={b} style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:9, letterSpacing:'-0.02em', color:'var(--fg-3)' }}>{b}</span>))}</div>
+            <div style={{ display:'flex', alignItems:'center', gap:0, margin:'11px 0 0', padding:'8px 12px', borderTop:'1px solid var(--line-1)', borderBottom:'1px solid var(--line-1)', justifyContent:'space-between' }}>{['3B SCI','AXIS','ERLER','SOMSO','NASCO'].map(b=>(<span key={b} style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:9, letterSpacing:'-0.02em', color:'var(--fg-3)' }}>{b}</span>))}</div>
             {/* product tabs */}
             <div style={{ display:'flex', gap:13, padding:'10px 12px 8px' }}>{['Best Sellers','New','Deals'].map((t,i)=>(<span key={t} style={{ paddingBottom:4, fontFamily:'var(--font-display)', fontWeight:700, fontSize:9, color:i===0?'var(--fg-1)':'var(--fg-3)', borderBottom:i===0?'2px solid var(--uc-black)':'2px solid transparent' }}>{t}</span>))}</div>
             {/* product grid */}
             <div style={{ padding:'0 12px 11px', display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
-              {[['1B Electric Desk','$169.99','#2E3A6E','SALE'],['Dual Monitor Mount','$39.99','#3D4B73','NEW'],['K Series Converter','$119.99','#1A2644',null],['TV Cart','$99.99','#17257d','DEAL']].map((p,i)=>(
+              {[['Human Skull','$89.00','#B0C4D4','NEW'],['3B Heart','$124.00','#C4AEAD',null],['IV Training Arm','$159.00','#C8B89A','PRO'],['Brain Model','$72.00','#1B5272','DEAL']].map((p,i)=>(
                 <div key={i} style={{ display:'flex', flexDirection:'column', gap:4 }}>
-                  <div style={{ aspectRatio:'1/0.86', borderRadius:5, background:vivoImg(p[0])?'#f8f6f2':`linear-gradient(150deg, ${p[2]}, var(--uc-bone))`, position:'relative', overflow:'hidden' }}>{vivoImg(p[0]) && <img src={vivoImg(p[0])} alt={p[0]} style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'contain', objectPosition:'center', padding:'6%', background:'#f8f6f2', borderRadius:'inherit' }}/>}{p[3] && <span style={{ position:'absolute', top:5, left:5, padding:'1px 6px', background:p[3]==='DEAL'?'var(--uc-brand)':(p[3]==='NEW'?'var(--uc-black)':'#3F8B5D'), color:'#fff', borderRadius:2, fontFamily:'var(--font-mono)', fontSize:5, fontWeight:800 }}>{p[3]}</span>}<span style={{ position:'absolute', bottom:5, right:5, width:16, height:16, borderRadius:999, background:'var(--uc-paper)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, color:'var(--fg-1)' }}>＋</span></div>
+                  <div style={{ aspectRatio:'1/0.86', borderRadius:5, background:`linear-gradient(150deg, ${p[2]}, var(--uc-bone))`, position:'relative' }}>{p[3] && <span style={{ position:'absolute', top:5, left:5, padding:'1px 6px', background:p[3]==='DEAL'?'var(--uc-brand)':(p[3]==='NEW'?'var(--uc-black)':'#3F8B5D'), color:'#fff', borderRadius:2, fontFamily:'var(--font-mono)', fontSize:5, fontWeight:800 }}>{p[3]}</span>}<span style={{ position:'absolute', bottom:5, right:5, width:16, height:16, borderRadius:999, background:'var(--uc-paper)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, color:'var(--fg-1)' }}>＋</span></div>
                   <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:8, color:'var(--fg-1)', letterSpacing:'-0.01em' }}>{p[0]}</span>
                   <span style={{ fontFamily:'var(--font-mono)', fontSize:8, fontWeight:700, color:'var(--fg-1)' }}>{p[1]}</span>
                 </div>
@@ -1378,8 +1360,8 @@ function GfxPhone({ kind }) {
             </div>
             {/* categories */}
             <div style={{ padding:'0 12px 12px' }}>
-              <div style={{ fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:6 }}>SHOP BY DEPARTMENT</div>
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:6 }}>{[['Desks','#2E3A6E'],['Mounts','#3D4B73'],['Accessories','#1A2644'],['TV','#17257d']].map((c,i)=>(<div key={i} style={{ display:'flex', flexDirection:'column', gap:3 }}><div style={{ aspectRatio:'1/1', borderRadius:4, background:`linear-gradient(140deg, ${c[1]}, var(--uc-bone))` }}/><span style={{ fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, textAlign:'center', color:'var(--fg-2)' }}>{c[0]}</span></div>))}</div>
+              <div style={{ fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:6 }}>SHOP BY CATEGORY</div>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:6 }}>{[['Models','#B0C4D4'],['Simulators','#1B5272'],['Charts','#8AACBB'],['Specimens','#C4AEAD']].map((c,i)=>(<div key={i} style={{ display:'flex', flexDirection:'column', gap:3 }}><div style={{ aspectRatio:'1/1', borderRadius:4, background:`linear-gradient(140deg, ${c[1]}, var(--uc-bone))` }}/><span style={{ fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, textAlign:'center', color:'var(--fg-2)' }}>{c[0]}</span></div>))}</div>
             </div>
           </div>
         )}
@@ -1387,35 +1369,35 @@ function GfxPhone({ kind }) {
           <div style={{ display:'flex', flexDirection:'column' }}>
             {/* editorial hero */}
             <div style={{ padding:'14px 13px 10px', display:'flex', flexDirection:'column', gap:6 }}>
-              <span style={{ display:'inline-flex', alignItems:'center', gap:5, fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, letterSpacing:'0.16em', color:'var(--fg-3)' }}><span style={{ width:5, height:5, borderRadius:999, background:'var(--uc-signal)' }}/>EST. 2013 · USA-BASED</span>
-              <span style={{ fontFamily:'var(--font-hero)', fontWeight:700, fontSize:21, letterSpacing:'-0.045em', lineHeight:0.9, color:'var(--fg-1)' }}>Ergonomic solutions<br/><span style={{ fontFamily:'var(--font-serif)', fontWeight:400 }}>for every workspace.</span></span>
+              <span style={{ display:'inline-flex', alignItems:'center', gap:5, fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, letterSpacing:'0.16em', color:'var(--fg-3)' }}><span style={{ width:5, height:5, borderRadius:999, background:'#1B5272' }}/>SKOKIE, IL · ANATOMYWAREHOUSE.COM</span>
+              <span style={{ fontFamily:'var(--font-hero)', fontWeight:700, fontSize:21, letterSpacing:'-0.045em', lineHeight:0.9, color:'var(--fg-1)' }}>Serving medical<br/><span style={{ fontFamily:'var(--font-serif)', fontWeight:400 }}>educators worldwide.</span></span>
             </div>
             {/* overlapping image cards */}
             <div style={{ position:'relative', height:112, margin:'2px 13px 8px' }}>
-              <div style={{ position:'absolute', left:0, top:8, width:'58%', aspectRatio:'4/3', borderRadius:5, background:'linear-gradient(150deg, #17257d, var(--uc-stone-200))', transform:'rotate(-4deg)', boxShadow:'0 8px 16px -10px rgba(10,10,10,0.45)' }}/>
-              <div style={{ position:'absolute', right:6, top:0, width:'52%', aspectRatio:'3/4', borderRadius:5, background:'linear-gradient(150deg, #2E3A6E, var(--uc-stone-200))', transform:'rotate(6deg)', boxShadow:'0 8px 16px -10px rgba(10,10,10,0.4)' }}/>
-              <span style={{ position:'absolute', left:'33%', bottom:2, padding:'3px 8px', background:'var(--uc-paper)', border:'1px solid var(--line-1)', borderRadius:3, fontFamily:'var(--font-mono)', fontSize:5.5, fontWeight:800, letterSpacing:'0.1em', color:'var(--fg-3)', transform:'rotate(-3deg)' }}>FOUNDED · 2013</span>
+              <div style={{ position:'absolute', left:0, top:8, width:'58%', aspectRatio:'4/3', borderRadius:5, background:'linear-gradient(150deg, #B0C4D4, var(--uc-bone))', transform:'rotate(-4deg)', boxShadow:'0 8px 16px -10px rgba(10,10,10,0.45)' }}/>
+              <div style={{ position:'absolute', right:6, top:0, width:'52%', aspectRatio:'3/4', borderRadius:5, background:'linear-gradient(150deg, #1B5272, var(--uc-bone))', transform:'rotate(6deg)', boxShadow:'0 8px 16px -10px rgba(10,10,10,0.4)' }}/>
+              <span style={{ position:'absolute', left:'33%', bottom:2, padding:'3px 8px', background:'var(--uc-paper)', border:'1px solid var(--line-1)', borderRadius:3, fontFamily:'var(--font-mono)', fontSize:5.5, fontWeight:800, letterSpacing:'0.1em', color:'var(--fg-3)', transform:'rotate(-3deg)' }}>ORIGINAL LOCATION</span>
             </div>
             {/* manifesto */}
-            <div style={{ padding:'4px 13px 8px' }}><span style={{ fontFamily:'var(--font-serif)', fontStyle:'italic', fontSize:10.5, lineHeight:1.45, color:'var(--fg-2)' }}>“From dorm rooms to boardrooms — ergonomic solutions designed to help you work better, every day.”</span></div>
+            <div style={{ padding:'4px 13px 8px' }}><span style={{ fontFamily:'var(--font-serif)', fontStyle:'italic', fontSize:10.5, lineHeight:1.45, color:'var(--fg-2)' }}>“One yard became fourteen branches. Same promise: the right material, on the truck, on time.”</span></div>
             {/* stat strip */}
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:6, padding:'8px 13px', borderTop:'1px solid var(--line-1)', background:'var(--uc-paper)' }}>{[['500+','Products'],['4.8★','Avg rating'],['10+','Years']].map((s,i)=>(<div key={i}><div style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:14, letterSpacing:'-0.035em', color:'var(--fg-1)' }}>{s[0]}</div><div style={{ fontFamily:'var(--font-mono)', fontSize:5.5, color:'var(--fg-3)', letterSpacing:'0.08em', textTransform:'uppercase' }}>{s[1]}</div></div>))}</div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:6, padding:'8px 13px', borderTop:'1px solid var(--line-1)', background:'var(--uc-paper)' }}>{[['14','Branches'],['40k','SKUs'],['50yr','In trade']].map((s,i)=>(<div key={i}><div style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:14, letterSpacing:'-0.035em', color:'var(--fg-1)' }}>{s[0]}</div><div style={{ fontFamily:'var(--font-mono)', fontSize:5.5, color:'var(--fg-3)', letterSpacing:'0.08em', textTransform:'uppercase' }}>{s[1]}</div></div>))}</div>
           </div>
         )}
         {kind === 'blog' && (
           <div style={{ display:'flex', flexDirection:'column' }}>
-            <div style={{ padding:'12px 13px 8px' }}><span style={{ fontFamily:'var(--font-hero)', fontWeight:700, fontSize:19, letterSpacing:'-0.04em', color:'var(--fg-1)' }}>Workspace Guides</span></div>
+            <div style={{ padding:'12px 13px 8px' }}><span style={{ fontFamily:'var(--font-hero)', fontWeight:700, fontSize:19, letterSpacing:'-0.04em', color:'var(--fg-1)' }}>Field Guides</span></div>
             {/* featured story */}
             <div style={{ margin:'0 13px', borderRadius:6, overflow:'hidden', border:'1px solid var(--line-1)' }}>
-              <div style={{ aspectRatio:'16/9', background:'radial-gradient(120% 100% at 30% 10%, #17257d, #0F1A4D)', position:'relative' }}><span style={{ position:'absolute', top:7, left:7, padding:'2px 7px', background:'var(--uc-signal)', color:'var(--uc-black)', borderRadius:999, fontFamily:'var(--font-mono)', fontSize:6, fontWeight:800, letterSpacing:'0.06em' }}>FEATURED</span></div>
+              <div style={{ aspectRatio:'16/9', background:'radial-gradient(120% 100% at 30% 10%, #C2A878, #6E5235)', position:'relative' }}><span style={{ position:'absolute', top:7, left:7, padding:'2px 7px', background:'var(--uc-signal)', color:'var(--uc-black)', borderRadius:999, fontFamily:'var(--font-mono)', fontSize:6, fontWeight:800, letterSpacing:'0.06em' }}>FEATURED</span></div>
               <div style={{ padding:'9px 11px', background:'var(--uc-paper)', display:'flex', flexDirection:'column', gap:4 }}>
-                <span style={{ fontFamily:'var(--font-mono)', fontSize:5.5, fontWeight:700, letterSpacing:'0.12em', color:'var(--fg-3)' }}>ERGONOMICS · 7 MIN</span>
-                <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:12.5, letterSpacing:'-0.018em', lineHeight:1.08, color:'var(--fg-1)' }}>Setting up your perfect standing desk.</span>
+                <span style={{ fontFamily:'var(--font-mono)', fontSize:5.5, fontWeight:700, letterSpacing:'0.12em', color:'var(--fg-3)' }}>CONCRETE · 7 MIN</span>
+                <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:12.5, letterSpacing:'-0.018em', lineHeight:1.08, color:'var(--fg-1)' }}>Concrete cure times, by the spec.</span>
               </div>
             </div>
             {/* article list */}
             <div style={{ padding:'10px 13px', display:'flex', flexDirection:'column', gap:9 }}>
-              {[['Monitor arm setup guide','5 min','#3D4B73'],['Standing desk height guide','6 min','#2E3A6E'],['Cable management tips','8 min','#1A2644']].map((a,i)=>(
+              {[['Rebar bending basics','5 min','#9C8F7A'],['Choosing the right fastener','6 min','#8A8780'],['Conduit fill calculations','8 min','#C8A14E']].map((a,i)=>(
                 <div key={i} style={{ display:'grid', gridTemplateColumns:'42px 1fr', gap:9, alignItems:'center' }}>
                   <div style={{ aspectRatio:'1/1', borderRadius:4, background:`linear-gradient(150deg, ${a[2]}, var(--uc-bone))` }}/>
                   <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
@@ -1436,11 +1418,11 @@ function GfxPhone({ kind }) {
 function BPContent() {
   const screens = [
     { kind: 'home',  label: 'Landing Pages', d: 'Short hero, brand wall, live product tabs, and a department grid — a merchandising surface that gets pros to the full catalog fast.' },
-    { kind: 'about', label: 'Brand Story', d: 'Supplier story and proof — brand heritage and credentials that build buyer trust and rank for branded search.' },
+    { kind: 'about', label: 'Brand Story', d: 'Supplier story and proof — branch network and credentials that win contractor trust and rank for branded search.' },
     { kind: 'blog',  label: 'Guides & Resources', d: 'How-to and spec content engineered for SEO, GEO, and paid landing — each guide a destination that routes to product.' }
   ];
   return (
-    <BPSection id="content" n="06" label="Content" paper tail="STORY · SEO · GEO · PAID">
+    <BPSection id="content" n="07" label="Content" paper tail="STORY · SEO · GEO · PAID">
       <BPHeadline>
         Content that{' '}
         <BPSerif>does the selling.</BPSerif>
@@ -1491,10 +1473,10 @@ function BPContent() {
         const seo = [
           ['Site Crawl', 'Inventory every indexable URL on the old site.'],
           ['301 Redirects', 'Map all live URLs — products, collections, blogs, pages, assets.'],
-          ['Title Tags', 'Preserve every title tag as-is unless there&rsquo;s a proven issue.'],
+          ['Title Tags', 'Migrate every title tag as-is unless there&rsquo;s a proven issue.'],
           ['Meta Descriptions', 'Preserve existing descriptions to avoid CTR drops.'],
           ['Heading Structure', 'Keep correct H1–H6 hierarchy through the rebuild.'],
-          ['Body Content', 'Retain core on-page content; no major changes mid-upgrade.'],
+          ['Body Content', 'Retain core on-page content; no major changes mid-migration.'],
           ['Duplicate Control', 'Prevent duplicates from variants, tags, or collections.'],
           ['Internal Links', 'Rebuild contextual links to maintain authority flow.'],
           ['Catalog Sitemap', 'Retain the catalog structure&rsquo;s SEO optimization.'],
@@ -1503,7 +1485,7 @@ function BPContent() {
           ['Canonical Tags', 'Confirm each page self-canonicalizes correctly.'],
           ['Pagination Logic', 'Keep paginated pages crawlable and correctly linked.'],
           ['Facet Management', 'Block filtered, sorted, and parameter URLs from indexing.'],
-          ['Alt Text', 'Carry all image alt text without loss.'],
+          ['Alt Text', 'Migrate all image alt text without loss.'],
           ['Image Compression', 'Optimize aggressively for Core Web Vitals.'],
           ['Schema Tags', 'Implement schema markup to best practices.'],
           ['Core Web Vitals', 'Measure and tune LCP, CLS, and INP.'],
@@ -1521,7 +1503,7 @@ function BPContent() {
                 <span aria-hidden="true" style={{ width: 16, height: 2, background: 'var(--uc-signal)' }}/>
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--fg-1)' }}>SEO Enablement</span>
               </div>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--fg-3)', letterSpacing: '0.04em' }}>{seo.length}-point SEO preservation checklist</span>            </div>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, color: 'var(--fg-3)', letterSpacing: '0.04em' }}>{seo.length}-point migration checklist</span>            </div>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(168px, 1fr))', gap: '1px', background: 'var(--line-1)', border: '1px solid var(--line-1)', borderRadius: 8, overflow: 'hidden' }}>
               {seo.map(([t, d], i) => (
                 <div key={i} style={{ background: 'var(--uc-paper)', padding: '11px 14px', display: 'flex', gap: 10, alignItems: 'center' }}>
@@ -1542,30 +1524,31 @@ function BPContent() {
 // ── 07 TECH STACK ──────────────────────────────────────────────────────────
 function BPTechStack() {
   const rows = [
-    { name: 'Shopify Plus',                fn: 'Commerce platform + B2B',                     pri: 'existing' },
-    { name: 'Shopify Search & Discovery',  fn: 'Search, filters, and product recommendations', pri: 'existing' },
-    { name: 'Shopify Checkout Blocks',     fn: 'Custom checkout extensions and upsells',       pri: 'existing' },
-    { name: 'Shopify Forms',               fn: 'Lead capture, popups, and customer forms',     pri: 'existing' },
-    { name: 'Shopify Flow',                fn: 'Store automation and workflow triggers',        pri: 'existing' },
-    { name: 'Shopify Messaging',           fn: 'Customer messaging and inbox',                 pri: 'existing' },
-    { name: 'Shopify Knowledgebase',       fn: 'Self-service help center and FAQs',            pri: 'existing' },
-    { name: 'Shopify Marketplace Connect', fn: 'Multi-channel selling across marketplaces',    pri: 'existing' },
-    { name: 'Shopify Translate & Adapt',   fn: 'Multilingual storefront and content',          pri: 'existing' },
-    { name: 'Uncap Quotes',                fn: 'B2B quote management and approvals',           pri: 'new' },
-    { name: 'ShipperHQ',                   fn: 'Shipping rates, rules, and carrier logic',     pri: 'existing' },
-    { name: 'Aftersell',                   fn: 'Post-purchase upsells and revenue expansion',  pri: 'existing' },
-    { name: 'Celigo',                      fn: 'Integration platform and data sync',           pri: 'existing' },
-    { name: 'TaxJar',                      fn: 'Tax compliance and automated calculations',    pri: 'existing' },
-    { name: 'Matrixify',                   fn: 'Bulk data import, export, and management',     pri: 'existing' },
-    { name: 'Judge.me',                    fn: 'Product reviews and ratings',                  pri: 'new' }
+    { name: 'Shopify Plus',              fn: 'Commerce platform foundation',      pri: 'start',  cost: '$2,300/mo' },
+    { name: 'Shopify B2B',               fn: 'Native B2B ordering portal',         pri: 'start',  cost: 'Included' },
+    { name: 'Shopify Search & Discovery',fn: 'Product search + merchandising',    pri: 'start',  cost: 'Free' },
+    { name: 'Shopify Checkout Blocks',   fn: 'Custom checkout experience',         pri: 'start',  cost: 'Free' },
+    { name: 'Shopify Flow',              fn: 'Automation + workflows',             pri: 'start',  cost: 'Free' },
+    { name: 'Shopify Digital Downloads', fn: 'Digital product delivery',          pri: 'start',  cost: 'Free' },
+    { name: 'Shopify Knowledge Base',    fn: 'Help center + product docs',        pri: 'start',  cost: 'Free' },
+    { name: 'Google & Facebook Apps',    fn: 'Free Shopify channels for catalog + ads',pri: 'start',  cost: '$0' },
+    { name: 'Uncap Quotes',              fn: 'Quote management + B2B sales',      pri: 'start',  cost: '$100/mo' },
+    { name: 'TaxCloud App',              fn: 'Tax compliance',                    pri: 'launch', cost: 'Free' },
+    { name: 'Brightpearl App',           fn: 'ERP + inventory sync',              pri: 'launch', cost: 'Free' },
+    { name: 'HubSpot App',               fn: 'CRM + marketing automation',        pri: 'launch', cost: 'Free' },
+    { name: 'JudgeMe',                   fn: 'Reviews + social proof',            pri: 'launch', cost: '$15/mo' },
+    { name: 'Rewind Backups',            fn: 'Store backup + restore',            pri: 'launch', cost: '$50/mo' },
+    { name: 'Affiliatly',                fn: 'Affiliate marketing',               pri: 'launch', cost: '$40/mo' },
+    { name: 'Matrixify',                 fn: 'Data import + migration',           pri: 'optional', cost: '~$20/mo' }
   ];
   const priMeta = {
-    existing: { l: 'Already Setup', c: 'var(--uc-signal)', fg: 'var(--uc-black)' },
-    new:      { l: 'New Setup',     c: '#FF8B37',          fg: 'var(--uc-black)' },
-    future:   { l: 'Future phase',  c: 'transparent',      fg: 'var(--fg-3)', outline: true }
+    start:  { l: 'Needed to start',  c: 'var(--uc-signal)', fg: 'var(--uc-black)' },
+    launch: { l: 'Needed on launch', c: '#FF8B37',          fg: 'var(--uc-black)' },
+    future: { l: 'Future phase',     c: 'transparent',      fg: 'var(--fg-3)', outline: true },
+    optional:{ l: 'Optional',        c: 'transparent',      fg: 'var(--uc-stone-300)', outline: true }
   };
   return (
-    <BPSection id="techstack" n="07" label="Architecture" dark grid tail="WHAT IT RUNS ON">
+    <BPSection id="techstack" n="08" label="Architecture" dark grid tail="WHAT IT RUNS ON">
       <BPHeadline dark>
         A stack chosen for{' '}
         <BPSerif>longevity.</BPSerif>
@@ -1584,12 +1567,12 @@ function BPTechStack() {
 
         {(() => {
           const layers = [
-            { tier:'04', name:'Revenue & Expansion',    note:'After launch',    tools:[['Aftersell','existing'],['Marketplace Connect','new']] },
-            { tier:'03', name:'Experience & Engagement', note:'Customer-facing',  tools:[['Search & Discovery','existing'],['Checkout Blocks','existing'],['Messaging','existing']] },
-            { tier:'02', name:'Operations & Data',       note:'System of record', tools:[['Uncap Quotes','new'],['Celigo','existing'],['TaxJar','existing'],['ShipperHQ','existing']] },
-            { tier:'01', name:'Commerce Core',           note:'Foundation',       tools:[['Shopify Plus','existing'],['Flow','existing'],['Translate & Adapt','existing']], core:true }
+            { tier:'04', name:'Growth & Retention', note:'After launch', tools:[['JudgeMe','launch'],['Rewind Backups','launch'],['Affiliatly','future'],['HubSpot App','future']] },
+            { tier:'03', name:'Data & Integrations', note:'Operations', tools:[['Brightpearl App','launch'],['TaxCloud App','launch']] },
+            { tier:'02', name:'Commerce Tools', note:'Built on Shopify', tools:[['Shopify B2B','start'],['Uncap Quotes','start'],['Google & Facebook Apps','start'],['Search & Discovery','start'],['Checkout Blocks','start'],['Flow','start']] },
+            { tier:'01', name:'Commerce Core', note:'Foundation', tools:[['Shopify Plus','start']], core:true }
           ];
-          const chip = { existing:{ bg:'var(--uc-signal)', fg:'var(--uc-black)' }, new:{ bg:'#FF8B37', fg:'var(--uc-black)' }, future:{ bg:'transparent', fg:'var(--uc-stone-300)', outline:true } };
+          const chip = { start:{ bg:'var(--uc-signal)', fg:'var(--uc-black)' }, launch:{ bg:'#FF8B37', fg:'var(--uc-black)' }, future:{ bg:'transparent', fg:'var(--uc-stone-300)', outline:true } };
           return (
             <div style={{ display:'flex', gap:'clamp(12px, 1.6vw, 20px)' }}>
               {/* flow rail */}
@@ -1643,14 +1626,14 @@ function BPTechStack() {
       <div style={{ marginTop:'clamp(28px, 3.5vw, 44px)', background:'#15120D', border:'1px solid #241F18', borderRadius:12, padding:'clamp(18px, 2.4vw, 32px)' }}>
       <div style={{ border:'1px solid #1F1F1F', borderRadius:6, overflow:'hidden' }}>
         {/* Header */}
-        <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1.1fr) minmax(0,2fr) minmax(0,1.2fr)', gap:16, padding:'12px 18px', background:'#0F0F0F', borderBottom:'1px solid #1F1F1F', fontFamily:'var(--font-mono)', fontSize:10, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'var(--uc-stone-500)' }}>
-          <span>Name</span><span>Functionality</span><span style={{ textAlign:'center' }}>Priority</span>
+        <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1.1fr) minmax(0,1.6fr) minmax(0,1.1fr) 96px', gap:16, padding:'12px 18px', background:'#0F0F0F', borderBottom:'1px solid #1F1F1F', fontFamily:'var(--font-mono)', fontSize:10, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'var(--uc-stone-500)' }}>
+          <span>Name</span><span>Functionality</span><span style={{ textAlign:'center' }}>Priority</span><span style={{ textAlign:'right' }}>Cost</span>
         </div>
         {/* Rows */}
         {rows.map((r, i) => {
           const m = priMeta[r.pri];
           return (
-            <div key={i} style={{ display:'grid', gridTemplateColumns:'minmax(0,1.1fr) minmax(0,2fr) minmax(0,1.2fr)', gap:16, padding:'14px 18px', borderBottom: i < rows.length-1 ? '1px solid #1F1F1F' : 'none', alignItems:'center' }}>
+            <div key={i} style={{ display:'grid', gridTemplateColumns:'minmax(0,1.1fr) minmax(0,1.6fr) minmax(0,1.1fr) 96px', gap:16, padding:'14px 18px', borderBottom: i < rows.length-1 ? '1px solid #1F1F1F' : 'none', alignItems:'center' }}>
               <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:'clamp(14px,1.3vw,17px)', letterSpacing:'-0.012em', color:'var(--uc-paper)' }}>{r.name}</span>
               <span style={{ fontFamily:'var(--font-serif)', fontSize:14, color:'var(--uc-stone-300)' }}>{r.fn}</span>
               <span style={{ justifySelf:'center' }}>
@@ -1659,20 +1642,23 @@ function BPTechStack() {
                   {m.l}
                 </span>
               </span>
+              <span style={{ fontFamily:'var(--font-mono)', fontSize:13, fontWeight:700, color:'var(--uc-paper)', textAlign:'right' }}>{r.cost}</span>
             </div>
           );
         })}
         {/* Footer total */}
-        <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1.1fr) minmax(0,2fr) minmax(0,1.2fr)', gap:16, padding:'14px 18px', borderTop:'1px solid #2B2B2B', background:'#0F0F0F', alignItems:'center' }}>
-          <span style={{ fontFamily:'var(--font-mono)', fontSize:10, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'var(--uc-signal)' }}>{rows.length} tools</span>
-          <span style={{ fontFamily:'var(--font-serif)', fontSize:13, color:'var(--uc-stone-500)' }}>Start + launch stack, tailored to VIVO</span>
+        <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1.1fr) minmax(0,1.6fr) minmax(0,1.1fr) 120px', gap:16, padding:'14px 18px', borderTop:'1px solid #2B2B2B', background:'#0F0F0F', alignItems:'center' }}>
+          <span style={{ fontFamily:'var(--font-mono)', fontSize:10, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'var(--uc-signal)' }}>Est. monthly</span>
+          <span style={{ fontFamily:'var(--font-serif)', fontSize:13, color:'var(--uc-stone-500)' }}>Start + launch stack, before optional &amp; future phases</span>
           <span/>
+          <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:'clamp(18px,1.8vw,24px)', letterSpacing:'-0.03em', color:'var(--uc-paper)', textAlign:'right' }}>~$2,505/mo</span>
         </div>
       </div>
       <div style={{ marginTop:16, display:'flex', gap:18, flexWrap:'wrap', fontFamily:'var(--font-mono)', fontSize:10, color:'var(--uc-stone-500)', letterSpacing:'0.06em' }}>
         <span style={{ display:'inline-flex', alignItems:'center', gap:6 }}><span style={{ width:8,height:8,borderRadius:999,background:'var(--uc-signal)' }}/>NEEDED TO START</span>
         <span style={{ display:'inline-flex', alignItems:'center', gap:6 }}><span style={{ width:8,height:8,borderRadius:999,background:'#FF8B37' }}/>NEEDED ON LAUNCH</span>
         <span style={{ display:'inline-flex', alignItems:'center', gap:6 }}><span style={{ width:8,height:8,borderRadius:999,border:'1px solid #2B2B2B' }}/>FUTURE PHASE</span>
+        <span style={{ display:'inline-flex', alignItems:'center', gap:6 }}><span style={{ width:8,height:8,borderRadius:999,border:'1px solid #3B3B3B' }}/>OPTIONAL</span>
         <span style={{ marginLeft:'auto' }}>↳ Swappable to your existing vendors</span>
       </div>
       </div>
@@ -1749,11 +1735,11 @@ function GfxQuotes() {
   const tabs = [['All','22'],['Drafts','1'],['Sent','1'],['Viewed','3'],['Commented','4'],['Approved','5'],['Paid','7']];
   const rows = [
     { id:'Q-2087', dt:'2026-05-28', co:'Midwest Fabrication LLC', cu:'Dale Wojcik',     it:'509',  tot:'$2,406.06', exp:'2026-06-12', st:'Viewed',   cm:true },
-    { id:'Q-2086', dt:'2026-05-28', co:'Pacific Office Solutions',   cu:'Stan Petryk',     it:'20',   tot:'$2,182.80', exp:'2026-06-15', st:'Draft' },
-    { id:'Q-2085', dt:'2026-05-27', co:'Midwest Corporate Interiors', cu:'Sandra Liu',      it:'1230', tot:'$5,074.55', exp:'2026-06-22', st:'Approved' },
-    { id:'Q-2084', dt:'2026-05-27', co:'Apex Tech Campus',            cu:'Carl Bregović',   it:'12',   tot:'$1,536.52', exp:'2026-06-20', st:'Viewed',   cm:true },
-    { id:'Q-2083', dt:'2026-05-27', co:'Summit Health Systems',       cu:'Erik Lindqvist',  it:'4',    tot:'$1,060.25', exp:'2026-06-09', st:'Paid',     arch:true },
-    { id:'Q-2082', dt:'2026-05-08', co:'Blueprint Design Studio',     cu:'Jen Park',        it:'4',    tot:'$2,708.16', exp:'2026-05-20', st:'Expired',  arch:true },
+    { id:'Q-2086', dt:'2026-05-28', co:'Rust Belt Welding Supply', cu:'Stan Petryk',     it:'20',   tot:'$2,182.80', exp:'2026-06-15', st:'Draft' },
+    { id:'Q-2085', dt:'2026-05-27', co:'Great Lakes Industrial',  cu:'Sandra Liu',      it:'1230', tot:'$5,074.55', exp:'2026-06-22', st:'Approved' },
+    { id:'Q-2084', dt:'2026-05-27', co:'Allegheny Iron & Forge',  cu:'Carl Bregović',   it:'12',   tot:'$1,536.52', exp:'2026-06-20', st:'Viewed',   cm:true },
+    { id:'Q-2083', dt:'2026-05-27', co:'Harbor Steel Works',      cu:'Erik Lindqvist',  it:'4',    tot:'$1,060.25', exp:'2026-06-09', st:'Paid',     arch:true },
+    { id:'Q-2082', dt:'2026-05-08', co:'Cascade Machine Tooling', cu:'Jen Park',        it:'4',    tot:'$2,708.16', exp:'2026-05-20', st:'Expired',  arch:true },
     { id:'Q-2081', dt:'2026-05-27', co:'Birch Run Manufacturing', cu:'Travis McCready', it:'259',  tot:'$1,244.44', exp:'2026-06-14', st:'Paid',     arch:true }
   ];
   const initials = (n) => n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
@@ -1855,9 +1841,9 @@ function BPB2B() {
     { t: 'Sales rep tools', d: 'Order on behalf of, account dashboards, and assisted selling.' },
     { t: 'Quote request management', d: 'Capture, review, negotiate, and convert quote requests into orders — powered by the Uncap Quotes Shopify app.' }
   ];
-  const channels = ['DTC Storefront', 'B2B Portal', 'Point of Sale', 'Sales Reps'];
+  const channels = ['DTC Storefront', 'B2B Portal', 'Quote Management', 'Sales Reps'];
   return (
-    <BPSection id="b2b" n="08" label="Unified" paper tail="ONE OPERATION">
+    <BPSection id="b2b" n="09" label="Unified" paper tail="ONE OPERATION">
       <BPHeadline>
         One experience{' '}
         <BPSerif>across every channel.</BPSerif>
@@ -1924,6 +1910,8 @@ function BPB2B() {
       <div style={{ marginTop:20, fontFamily:'var(--font-mono)', fontSize:11, color:'var(--fg-3)', letterSpacing:'0.06em' }}>
         ↳ Built on Shopify B2B (Plus) · extended by Uncap products where needed
       </div>
+
+
     </BPSection>
   );
 }
@@ -1938,17 +1926,16 @@ function BPAgentic() {
     { t: 'AEO optimized', d: 'FAQ content, JSON-LD, and the technical components that make products discoverable to AI.' }
   ];
   const chat = [
-    { who: 'buyer', text: 'I need standing desks and monitor mounts for a 20-person office.' },
-    { who: 'agent', text: 'Here are the right SKUs at your business pricing:' },
+    { who: 'buyer', text: 'I need rebar and tie wire for a 40-ft footing.' },
+    { who: 'agent', text: 'Here are the right SKUs at your contractor pricing:' },
     { who: 'cards', items: [
-      { t: '1B Electric Desk · 55" Black', price: '$149.99', c: '#2E3A6E', qty: '×20', icon: <g stroke="#fff" strokeWidth="2.4" strokeLinecap="round"><rect x="8" y="28" width="32" height="4" rx="1"/><path d="M14 32 L14 42 M34 32 L34 42"/><path d="M8 20 L40 20 M8 26 L40 26"/></g> },
-      { t: 'Dual Monitor Mount · Black', price: '$36.99', c: '#3D4B73', qty: '×20', icon: <g stroke="#fff" strokeWidth="2.4" fill="none"><path d="M10 14 q3 5 0 10 q-3 5 0 10 M24 14 q3 5 0 10 q-3 5 0 10 M38 14 q3 5 0 10 q-3 5 0 10"/></g> },
-      { t: 'Desk Pad XL · 36×24"', price: '$29.00', c: '#8A8780', qty: '×20', icon: <g stroke="#fff" strokeWidth="2.4" fill="none"><rect x="8" y="16" width="32" height="22" rx="2"/><path d="M12 38 L12 42 M36 38 L36 42"/></g> },
+      { t: '½" #4 Rebar · 20 ft', price: '$8.40', c: '#9C8F7A', qty: '×24', icon: <g stroke="#fff" strokeWidth="2.4" strokeLinecap="round"><path d="M10 14 L40 14 M8 24 L38 24 M10 34 L40 34"/><path d="M10 14 q3 5 0 10 q-3 5 0 10 M24 14 q3 5 0 10 q-3 5 0 10 M38 14 q3 5 0 10 q-3 5 0 10"/></g> },
+      { t: '16-ga Tie Wire · 3.5 lb', price: '$18.00', c: '#8A8780', qty: '×2', icon: <g stroke="#fff" strokeWidth="2.4" fill="none"><circle cx="24" cy="24" r="14"/><circle cx="24" cy="24" r="8"/><path d="M24 10 L24 4 M38 24 q5 -1 6 -4" strokeLinecap="round"/></g> }
     ] },
-    { who: 'buyer', text: 'Add all three, ship to our Chicago office, NET-30.' }
+    { who: 'buyer', text: 'Add both, ship to the Adams St. yard, NET-30.' }
   ];
   return (
-    <BPSection id="agentic" n="09" label="Agentic" dark tail="THE AI-ENABLED STORE">
+    <BPSection id="agentic" n="10" label="Agentic" dark tail="THE AI-ENABLED STORE">
       <BPHeadline dark>
         Built for the{' '}
         <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, color: 'var(--uc-stone-300)' }}>agentic web.</span>
@@ -2029,19 +2016,169 @@ function BPAgentic() {
   );
 }
 
+// ── 09 SYSTEM INTEGRATIONS ──────────────────────────────────────────────────
+function BPIntegrations() {
+  const pFont = '-apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+  const maps = [
+    { l:'Order',       d:'→', r:'Sales Order' },
+    { l:'Customer',    d:'→', r:'Account' },
+    { l:'Line items',  d:'→', r:'SO Lines' },
+    { l:'Inventory',   d:'←', r:'Stock on hand' },
+    { l:'Fulfillment', d:'←', r:'Item Fulfillment' }
+  ];
+  const activity = [
+    ['Order #SO-48217 pushed to NetSuite', '2 min ago'],
+    ['Inventory delta · 1,284 items reconciled', '9 min ago'],
+    ['Customer ACME Contracting created in ERP', '14 min ago']
+  ];
+  const Card = ({ children, pad=true }) => (
+    <div style={{ background:'#FFFFFF', border:'1px solid #E3E3E3', borderRadius:12, boxShadow:'0 1px 0 rgba(0,0,0,0.05)', padding: pad ? '14px 16px' : 0 }}>{children}</div>
+  );
+  const Badge = ({ children, tone='info' }) => {
+    const t = tone==='success' ? { bg:'#CDFEE1', fg:'#014B40' } : tone==='attention' ? { bg:'#FFF1E3', fg:'#5E3B00' } : { bg:'#EBF5FA', fg:'#00527C' };
+    return <span style={{ display:'inline-flex', alignItems:'center', gap:5, fontFamily:pFont, fontSize:11, fontWeight:600, color:t.fg, background:t.bg, borderRadius:8, padding:'2px 8px', whiteSpace:'nowrap' }}>{children}</span>;
+  };
+  return (
+    <BPSection id="integrations" n="11" label="Integrated" tail="HOW IT CONNECTS">
+      <BPHeadline>
+        One operation,{' '}
+        <BPSerif>not five silos.</BPSerif>
+      </BPHeadline>
+      <p style={{ marginTop:'clamp(18px, 2.2vw, 26px)', maxWidth:640, fontFamily:'var(--font-serif)', fontSize:'clamp(15px, 1.3vw, 18px)', lineHeight:1.5, color:'var(--fg-2)' }}>
+        Shopify and Brightpearl will be connected via the <strong style={{ fontFamily:'var(--font-display)', fontWeight:700, color:'var(--fg-1)' }}>Brightpearl by Sage Shopify App</strong> — enabling real-time, bidirectional sync of orders, inventory, customers, and fulfilment between your storefront and ERP. No middleware, no reconciling.
+      </p>
+
+      {/* Brightpearl screenshot */}
+      <div style={{ marginTop:'clamp(30px, 4vw, 52px)', borderRadius:12, overflow:'hidden', border:'1px solid var(--line-2)', boxShadow:'0 24px 60px -32px rgba(10,10,10,0.45)' }}>
+        <img src={window.__resources.brightpearlScreenshot} alt="Brightpearl by Sage — Sales and Inventory view" style={{ width:'100%', display:'block' }}/>
+      </div>
+      <div style={{ marginTop:20, fontFamily:'var(--font-mono)', fontSize:11, color:'var(--fg-3)', letterSpacing:'0.06em' }}>
+        ↳ Brightpearl by Sage Shopify App · real-time bidirectional sync · no manual re-keying
+      </div>
+
+    </BPSection>
+  );
+}
+
+function BPMigration() {
+  const steps = [
+    { t: 'Audit & map', s: 'Catalogue every record — products, customers, orders, content, redirects.' },
+    { t: 'Transform', s: 'Clean, dedupe, and re-map data to the new model. Nothing copied blind.' },
+    { t: 'Stage & verify', s: 'Dry-run into staging. Reconcile counts, spot-check edge cases.' },
+    { t: 'Cutover', s: 'Final delta sync, 301 redirect map, DNS switch with zero lost orders.' }
+  ];
+  const items = ['Products', 'Collections', 'Orders', 'Customers', 'Pages', 'Blogs'];
+  return (
+    <BPSection id="migration" n="12" label="Migration" paper tail="MOVE WITHOUT LOSS" vec="bgVector2">
+      <BPHeadline>
+        Replatform{' '}
+        <BPSerif>without losing a thing.</BPSerif>
+      </BPHeadline>
+      <p style={{ marginTop: 18, maxWidth: 600, fontFamily: 'var(--font-serif)', fontSize: 'clamp(15px, 1.3vw, 18px)', lineHeight: 1.5, color: 'var(--fg-2)' }}>
+        We migrate cart-to-cart — every product, customer, and order — and re-map the
+        messy parts: legacy categories become tags, custom attributes become metafields,
+        old URLs become 301s. Nothing copied blind, nothing lost.
+      </p>
+
+      {/* cart-to-cart field crosswalk */}
+      {(() => {
+        const source = [['Title','text'],['SKU','text'],['Price','money'],['Brand','text'],['Categories','list'],['spec_sheet','custom'],['install_guide','custom'],['Legacy URL','url']];
+        const target = [['Title','text','1:1'],['SKU / Variant','text','1:1'],['Price','money','1:1'],['Vendor','text','from Brand'],['Tags','list','merged'],['spec_sheet','metafield','metafield'],['install_guide','metafield','metafield'],['Redirect','url','301']];
+        const links = [[0,0,1],[1,1,1],[2,2,1],[3,3,0],[3,4,0],[4,4,0],[5,5,0],[6,6,0],[7,7,0]];
+        const cols = '1fr clamp(54px,8vw,108px) 1fr';
+        const tBadge = (t) => <span style={{ fontFamily:'var(--font-mono)', fontSize:8.5, fontWeight:700, letterSpacing:'0.04em', textTransform:'uppercase', color:'var(--fg-3)', background:'var(--uc-bone)', border:'1px solid var(--line-1)', borderRadius:3, padding:'1px 5px', whiteSpace:'nowrap' }}>{t}</span>;
+        return (
+          <div style={{ marginTop:'clamp(30px, 4vw, 48px)', border:'1px solid var(--line-2)', borderRadius:10, overflow:'hidden', background:'var(--uc-paper)', boxShadow:'0 24px 60px -34px rgba(10,10,10,0.4)' }}>
+            {/* platform header */}
+            <div style={{ display:'grid', gridTemplateColumns:cols, alignItems:'center', borderBottom:'1px solid var(--line-1)', background:'var(--uc-bone)' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 16px' }}>
+                <span style={{ width:26, height:26, borderRadius:6, background:'#121118', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'var(--font-hero)', fontSize:12, fontWeight:800, color:'#8FA0FF' }}>B</span>
+                <div style={{ display:'flex', flexDirection:'column', gap:1 }}>
+                  <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:14, letterSpacing:'-0.01em', color:'var(--fg-1)' }}>BigCommerce</span>
+                  <span style={{ fontFamily:'var(--font-mono)', fontSize:9, color:'var(--fg-3)' }}>Legacy store · 12,480 records</span>
+                </div>
+              </div>
+              <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:2 }}>
+                <span style={{ fontFamily:'var(--font-mono)', fontSize:8.5, fontWeight:700, letterSpacing:'0.14em', color:'var(--fg-3)' }}>MIGRATE</span>
+                <span style={{ fontFamily:'var(--font-mono)', fontSize:14, fontWeight:800, color:'var(--uc-signal)', background:'var(--uc-black)', borderRadius:4, padding:'1px 9px' }}>→</span>
+              </div>
+              <div style={{ display:'flex', alignItems:'center', justifyContent:'flex-end', gap:10, padding:'12px 16px' }}>
+                <div style={{ display:'flex', flexDirection:'column', gap:1, alignItems:'flex-end' }}>
+                  <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:14, letterSpacing:'-0.01em', color:'var(--fg-1)' }}>Shopify Plus</span>
+                  <span style={{ fontFamily:'var(--font-mono)', fontSize:9, color:'var(--fg-3)' }}>New store · mapped & verified</span>
+                </div>
+                <span style={{ width:26, height:26, borderRadius:6, background:'#1A1A1A', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'var(--font-hero)', fontSize:12, fontWeight:800, color:'#95BF47' }}>S</span>
+              </div>
+            </div>
+            {/* record type tabs */}
+            <div style={{ display:'flex', alignItems:'center', gap:16, padding:'9px 16px', borderBottom:'1px solid var(--line-1)', flexWrap:'wrap' }}>
+              {['Products','Customers','Orders','Content'].map((t,i)=>(<span key={t} style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:11.5, letterSpacing:'-0.01em', color:i===0?'var(--fg-1)':'var(--fg-3)', borderBottom:i===0?'2px solid var(--uc-black)':'2px solid transparent', paddingBottom:3 }}>{t}</span>))}
+              <span style={{ marginLeft:'auto', display:'inline-flex', alignItems:'center', gap:6, fontFamily:'var(--font-mono)', fontSize:9.5, fontWeight:700, color:'#2F7D52' }}><span style={{ width:6, height:6, borderRadius:999, background:'#3F8B5D' }}/>Field map verified</span>
+            </div>
+            {/* crosswalk */}
+            <div style={{ position:'relative', display:'grid', gridTemplateColumns:cols, minHeight:'clamp(300px, 33vw, 392px)' }}>
+              {/* left record */}
+              <div style={{ display:'flex', flexDirection:'column' }}>
+                {source.map(([n,ty],i)=>(
+                  <div key={i} style={{ position:'relative', flex:1, display:'flex', alignItems:'center', justifyContent:'flex-end', gap:9, padding:'0 16px', borderTop:i?'1px solid var(--line-1)':'none' }}>
+                    {tBadge(ty)}
+                    <span style={{ fontFamily:'var(--font-display)', fontWeight:600, fontSize:'clamp(12px,1.1vw,14.5px)', color:'var(--fg-1)', whiteSpace:'nowrap' }}>{n}</span>
+                    <span style={{ position:'absolute', right:-4, top:'50%', transform:'translateY(-50%)', width:7, height:7, borderRadius:999, background:'var(--uc-paper)', border:'1.5px solid var(--fg-3)' }}/>
+                  </div>
+                ))}
+              </div>
+              {/* connectors */}
+              <div style={{ position:'relative' }}>
+                <svg width="100%" height="100%" viewBox="0 0 100 1000" preserveAspectRatio="none" style={{ position:'absolute', inset:0, display:'block' }}>
+                  {links.map(([sI,tI,k],j)=>{ const yL=(sI+0.5)/source.length*1000; const yR=(tI+0.5)/target.length*1000; return <path key={j} d={'M0 '+yL+' C 55 '+yL+' 45 '+yR+' 100 '+yR} fill="none" stroke={k?'var(--uc-signal)':'var(--uc-brand)'} strokeWidth="2" strokeDasharray={k?'0':'7 5'} vectorEffect="non-scaling-stroke"/>; })}
+                </svg>
+              </div>
+              {/* right record */}
+              <div style={{ display:'flex', flexDirection:'column' }}>
+                {target.map(([n,ty,tf],i)=>(
+                  <div key={i} style={{ position:'relative', flex:1, display:'flex', alignItems:'center', gap:9, padding:'0 16px', borderTop:i?'1px solid var(--line-1)':'none' }}>
+                    <span style={{ position:'absolute', left:-4, top:'50%', transform:'translateY(-50%)', width:7, height:7, borderRadius:999, background:'var(--uc-paper)', border:'1.5px solid var(--fg-3)' }}/>
+                    <span style={{ fontFamily:'var(--font-display)', fontWeight:600, fontSize:'clamp(12px,1.1vw,14.5px)', color:'var(--fg-1)', whiteSpace:'nowrap' }}>{n}</span>
+                    <span style={{ marginLeft:'auto', fontFamily:'var(--font-mono)', fontSize:8.5, fontWeight:700, letterSpacing:'0.03em', whiteSpace:'nowrap', color: tf==='1:1'?'var(--fg-3)':'var(--uc-black)', background: tf==='1:1'?'transparent':'var(--uc-signal)', border: tf==='1:1'?'1px solid var(--line-1)':'1px solid var(--uc-signal)', borderRadius:3, padding:'1px 6px' }}>{tf}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            {/* legend */}
+            <div style={{ display:'flex', alignItems:'center', gap:18, padding:'11px 16px', borderTop:'1px solid var(--line-1)', background:'var(--uc-bone)', flexWrap:'wrap', fontFamily:'var(--font-mono)', fontSize:10, color:'var(--fg-3)' }}>
+              <span style={{ display:'inline-flex', alignItems:'center', gap:7 }}><span style={{ width:18, height:2, background:'var(--uc-signal)' }}/>1:1 copy</span>
+              <span style={{ display:'inline-flex', alignItems:'center', gap:7 }}><span style={{ width:18, height:2, background:'repeating-linear-gradient(90deg, var(--uc-brand) 0 5px, transparent 5px 9px)' }}/>Transformed — tags · metafields · 301s</span>
+              <span style={{ marginLeft:'auto' }}>Tags, custom fields &amp; attributes preserved</span>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* what we migrate */}
+      <div style={{ marginTop: 'clamp(28px, 3vw, 40px)', display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 0, borderTop: '1px solid var(--line-1)', borderBottom: '1px solid var(--line-1)' }}>
+        {items.map((item, i) => (
+          <div key={i} style={{ padding: '24px 24px 24px 0', paddingLeft: i > 0 ? 24 : 0, borderLeft: i > 0 ? '1px solid var(--line-1)' : 'none', position: 'relative' }}>
+            <span aria-hidden="true" style={{ position: 'absolute', top: 0, left: i > 0 ? 24 : 0, width: 16, height: 2, background: 'var(--uc-signal)' }}/>
+            <div style={{ fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(20px, 2.2vw, 32px)', letterSpacing: '-0.035em', lineHeight: 1, color: 'var(--fg-1)' }}>{item}</div>
+          </div>
+        ))}
+      </div>
+    </BPSection>
+  );
+}
+window.BPMigration = BPMigration;
 
 function BPDelivery() {
   const milestones = [
     { wk: 'WK 01', t: 'Kickoff + Blueprint start', s: 'Discovery, architecture, data model.' },
     { wk: 'WK 03', t: 'Blueprint sign-off', s: 'Plan, prototype, and budget locked.' },
-    { wk: 'WK 06', t: 'Storefront alpha', s: 'Core theme + catalog in staging.' },
-    { wk: 'WK 09', t: 'Integrations live', s: 'ERP sync + B2B flows validated.' },
-    { wk: 'WK 11', t: 'Optimization + QA', s: 'All flows optimized, integrations validated, full QA pass.' },
-    { wk: 'WK 12', t: 'Launch', s: 'Go live + 30-day support begins.' },
-    { wk: 'MO 3+', t: 'Post Launch Optimizations', s: 'Ongoing improvements, performance tuning, and growth iterations — 12 weeks / 3 months.' }
+    { wk: 'WK 05', t: 'Storefront alpha + Migration start', s: 'Core theme + catalog in staging. Data migration begins.' },
+    { wk: 'WK 08', t: 'Integrations live', s: 'ERP sync + B2B flows validated.' },
+    { wk: 'WK 12', t: 'Migration + QA', s: 'Data moved, redirects, full QA pass.' },
+    { wk: 'WK 16', t: 'Launch', s: 'Go live + 30-day support begins.' }
   ];
   return (
-    <BPSection id="delivery" n="10" label="Delivery" paper tail="TIMELINE">
+    <BPSection id="delivery" n="13" label="Delivery" paper tail="TIMELINE">
       <BPHeadline>
         Sixteen weeks,{' '}
         <BPSerif>phase by phase.</BPSerif>
@@ -2085,6 +2222,67 @@ function BPDelivery() {
 }
 
 // ── RISK ASSESSMENT ─────────────────────────────────────────────────────────
+function BPRiskAssessment() {
+  const sev = {
+    Low:    { c: 'var(--uc-signal)', label: 'Low' },
+    Medium: { c: '#FF8B37',          label: 'Medium' },
+    High:   { c: 'var(--uc-error)',  label: 'High' }
+  };
+  const risks = [
+    { t: 'Third party vendor delays', sev: 'High',
+      d: 'When other third parties involved delay what’s needed for the project, our delivery will get delayed.',
+      m: 'Constant communication to all stakeholders throughout the project.' },
+    { t: 'ERP Integration', sev: 'Medium',
+      d: 'Depending on how ERP data is set up, the ERP consultant may delay the integration and postpone launch.',
+      m: 'Loop them in the process as early as the kickoff day.' },
+    { t: 'Product information changes', sev: 'Medium',
+      d: 'If there are product information sections that change during this migration, or product linking updates, this will affect the timeline.',
+      m: 'Identify these during the deep dive workshops.' },
+
+    { t: 'Scope creep mid-build', sev: 'Low',
+      d: 'New requests surface once the build is underway and pull at budget and timeline.',
+      m: 'Fixed scope up front, with a pre-approved buffer allowance for out-of-scope asks.' }
+  ];
+  return (
+    <BPSection id="risks" n="14" label="Risk Assessment" tail="EYES OPEN">
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr)', gap: 'clamp(28px, 5vw, 80px)', alignItems: 'end' }}>
+        <BPHeadline>
+          Named upfront,{' '}
+          <BPSerif>managed by design.</BPSerif>
+        </BPHeadline>
+        <p style={{ margin: 0, maxWidth: 380, fontFamily: 'var(--font-serif)', fontSize: 'clamp(15px, 1.3vw, 18px)', lineHeight: 1.5, color: 'var(--fg-2)', textWrap: 'pretty' }}>
+          Every replatform carries risk. Here are the ones we watch — each paired with how we manage it.
+        </p>
+      </div>
+
+      {/* Risk list */}
+      <div style={{ marginTop: 'clamp(30px, 4vw, 52px)', borderTop: '1px solid var(--line-1)' }}>
+        {risks.map((r, i) => (
+          <div key={i} style={{
+            display: 'grid', gridTemplateColumns: 'minmax(0, 1.1fr) minmax(0, 1fr)',
+            gap: 'clamp(20px, 4vw, 56px)', alignItems: 'baseline',
+            padding: 'clamp(20px, 2.4vw, 28px) 0', borderBottom: '1px solid var(--line-1)'
+          }}>
+            <div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                <span style={{ width: 8, height: 8, borderRadius: 999, background: sev[r.sev].c, flexShrink: 0 }}/>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--fg-3)' }}>{sev[r.sev].label} severity</span>
+              </div>
+              <div style={{ fontFamily: 'var(--font-hero)', fontWeight: 700, fontSize: 'clamp(20px, 2vw, 28px)', letterSpacing: '-0.03em', lineHeight: 1.05, color: 'var(--fg-1)' }}>{r.t}</div>
+              <div style={{ marginTop: 8, fontFamily: 'var(--font-serif)', fontSize: 'clamp(14px, 1.2vw, 16px)', lineHeight: 1.5, color: 'var(--fg-2)', textWrap: 'pretty' }}>{r.d}</div>
+            </div>
+            <div>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--fg-1)', borderBottom: '2px solid var(--uc-signal)', paddingBottom: 1 }}>Mitigation</span>
+              <div style={{ marginTop: 10, fontFamily: 'var(--font-serif)', fontSize: 'clamp(14px, 1.2vw, 16px)', lineHeight: 1.5, color: 'var(--fg-1)', textWrap: 'pretty' }}>{r.m}</div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </BPSection>
+  );
+}
+
+// ── 07 TEAM ─────────────────────────────────────────────────────────────────
 function BPTeam() {
   const team = [
     { n: 'Denis Dyli', r: 'CEO, Principal', img: 'assets/team-denis.png' },
@@ -2094,7 +2292,7 @@ function BPTeam() {
     { n: 'Jo Tan', r: 'Head of Design', img: 'assets/team-jo.png' }
   ];
   return (
-    <BPSection id="team" n="13" label="Team" tail="WHO DOES THE WORK">
+    <BPSection id="team" n="17" label="Team" tail="WHO DOES THE WORK">
       <BPHeadline>
         Senior from{' '}
         <BPSerif>day one.</BPSerif>
@@ -2190,6 +2388,8 @@ function BPInvestment() {
     'Shopify theme-based design, configured and branded for ' + brandName(),
     'Front and back-end Shopify development',
     'Essential integrations: payments, shipping, core tools',
+    'Data migration: products, customers, orders, content',
+    'Shopify-side ERP integration guidance',
     'Full B2B enablement: companies, catalogs, checkout',
     'Enriched customer account experience',
     'Workflow automation across your systems',
@@ -2202,7 +2402,7 @@ function BPInvestment() {
     { n: '03', amount: 'TBD', due: 'Due at project completion' }
   ];
   return (
-    <BPSection id="investment" n="11" label="Investment" dark tail="FIXED · NO SURPRISES">
+    <BPSection id="investment" n="15" label="Investment" dark tail="FIXED · NO SURPRISES">
       {/* One package — split panel */}
       <div style={{
         position: 'relative', overflow: 'hidden',
@@ -2212,37 +2412,91 @@ function BPInvestment() {
       }}>
         <span aria-hidden="true" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 3, background: 'var(--uc-signal)', zIndex: 2 }}/>
 
-        {/* LEFT — identity */}
+        {/* LEFT — identity + price */}
         <div style={{ padding: 'clamp(28px, 3.4vw, 52px)', display: 'flex', flexDirection: 'column', gap: 'clamp(18px, 2vw, 26px)' }}>
           <div>
-            <h3 style={{ margin: 0, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(40px, 5vw, 76px)', letterSpacing: '-0.045em', lineHeight: 0.9, color: 'var(--uc-paper)' }}>Growth <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, fontSize: '0.62em', letterSpacing: '-0.02em' }}>Optimized</span></h3>
+            <h3 style={{ margin: 0, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(40px, 5vw, 76px)', letterSpacing: '-0.045em', lineHeight: 0.9, color: 'var(--uc-paper)' }}>Growth <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, fontSize: '0.62em', letterSpacing: '-0.02em' }}>Package</span></h3>
             <div style={{ marginTop: 'clamp(14px, 1.6vw, 20px)', fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 'clamp(17px, 1.6vw, 24px)', lineHeight: 1.25, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>Your store and your integrated systems, working as one.</div>
           </div>
           <p style={{ margin: 0, maxWidth: 460, fontFamily: 'var(--font-serif)', fontSize: 'clamp(14.5px, 1.2vw, 17px)', lineHeight: 1.55, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>
             A modern unified B2C/B2B storefront on Shopify Plus with a tech stack and customer
             experience — everything {brandName()} needs to launch and scale.
           </p>
-        </div>
 
-        {/* RIGHT — price + walk away */}
-        <div style={{ padding: 'clamp(28px, 3.4vw, 52px)', borderLeft: '1px solid #1F1F1F', display: 'flex', flexDirection: 'column', gap: 'clamp(18px, 2vw, 26px)' }}>
-          {/* 6 months label */}
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-            <span aria-hidden="true" style={{ width: 16, height: 2, background: 'var(--uc-signal)' }}/>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--uc-stone-500)' }}>Optimized · 6 months</span>
-          </div>
           {/* price — standout box */}
           <div style={{ padding: 'clamp(18px, 2vw, 26px) clamp(20px, 2.2vw, 28px)', background: 'var(--uc-signal)', borderRadius: 12, boxShadow: '0 22px 60px -26px rgba(232,255,82,0.45)' }}>
-            <div style={{ marginTop: 4, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(52px, 6vw, 88px)', letterSpacing: '-0.05em', lineHeight: 0.85, color: 'var(--uc-black)' }}>TBD<span style={{ fontSize: '0.4em', letterSpacing: '-0.02em' }}> / mo</span></div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--uc-black)' }}>Fixed price</div>
+            <div style={{ marginTop: 4, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(52px, 6vw, 88px)', letterSpacing: '-0.05em', lineHeight: 0.85, color: 'var(--uc-black)' }}>TBD</div>
           </div>
+
           {/* walk away */}
           <div style={{ marginTop: 'auto', padding: 'clamp(16px, 1.8vw, 22px)', background: '#141414', border: '1px solid #1F1F1F', borderRadius: 10 }}>
             <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--uc-stone-500)', marginBottom: 8 }}>You walk away with</div>
             <div style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(15px, 1.3vw, 18px)', lineHeight: 1.4, color: 'var(--uc-paper)', textWrap: 'pretty' }}>Your successful commerce implementation on Shopify, built for growth.</div>
           </div>
         </div>
+
+        {/* RIGHT — the work */}
+        <div style={{ padding: 'clamp(28px, 3.4vw, 52px)', borderLeft: '1px solid #1F1F1F' }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--uc-stone-500)', marginBottom: 'clamp(18px, 2vw, 26px)' }}>The work</div>
+          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 'clamp(13px, 1.5vw, 18px)' }}>
+            {work.map((w, i) => (
+              <li key={i} style={{ display: 'grid', gridTemplateColumns: '20px 1fr', gap: 14, alignItems: 'start' }}>
+                <span style={{ marginTop: 1, width: 18, height: 18, borderRadius: 999, background: 'var(--uc-signal)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M2 6 L5 9 L10 3" stroke="var(--uc-black)" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"/></svg></span>
+                <span style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(14px, 1.15vw, 16.5px)', fontWeight: 500, lineHeight: 1.35, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>{w}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
       </div>
 
+      {/* Payment schedule */}
+      <div style={{ marginTop: 'clamp(28px, 3.2vw, 44px)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 'clamp(16px, 1.8vw, 22px)' }}>
+          <span aria-hidden="true" style={{ width: 16, height: 2, background: 'var(--uc-signal)' }}/>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--uc-stone-500)' }}>Payment schedule</span>
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+          {schedule.map((s, i) => (
+            <div key={i} style={{
+              position: 'relative', overflow: 'hidden',
+              background: 'var(--uc-paper)', border: '1px solid var(--line-2)', borderRadius: 10,
+              padding: 'clamp(20px, 2.2vw, 28px)', display: 'flex', flexDirection: 'column', gap: 'clamp(18px, 2.4vw, 30px)'
+            }}>
+              {i === 0 && <span aria-hidden="true" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 3, background: 'var(--uc-signal)' }}/>}
+              <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-2)' }}>Installment {i + 1}</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.1em', color: 'var(--fg-3)' }}>{s.n} / 03</span>
+              </div>
+              <div style={{ fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(30px, 3.4vw, 46px)', letterSpacing: '-0.04em', lineHeight: 0.9, color: 'var(--fg-1)' }}>{s.amount}</div>
+              <div style={{ paddingTop: 'clamp(12px, 1.4vw, 16px)', borderTop: '1px solid var(--line-1)', fontFamily: 'var(--font-mono)', fontSize: 12, letterSpacing: '0.04em', color: 'var(--fg-2)' }}>{s.due}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Buffer allowance */}
+      <div style={{
+        marginTop: 16, padding: 'clamp(22px, 2.6vw, 32px)',
+        border: '1px dashed #2B2B2B', borderRadius: 12, background: '#0F0F0F',
+        display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, auto)',
+        gap: 'clamp(20px, 4vw, 48px)', alignItems: 'center'
+      }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+            <span aria-hidden="true" style={{ width: 16, height: 2, background: 'var(--uc-signal)' }}/>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--uc-stone-500)' }}>Buffer Allowance</span>
+          </div>
+          <div style={{ fontFamily: 'var(--font-hero)', fontWeight: 700, fontSize: 'clamp(20px, 2vw, 28px)', letterSpacing: '-0.03em', lineHeight: 1.05, color: 'var(--uc-paper)' }}>A reserve for what comes up mid-build.</div>
+          <p style={{ margin: '10px 0 0', maxWidth: 560, fontFamily: 'var(--font-serif)', fontSize: 'clamp(14px, 1.2vw, 16px)', lineHeight: 1.5, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>
+            A pre-agreed pool for out-of-scope requests and wishlist items before launch — so new ideas don&rsquo;t derail budget or timeline. Only charged if you actually use it.
+          </p>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--uc-stone-500)' }}>If needed</div>
+          <div style={{ marginTop: 6, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(34px, 3.6vw, 52px)', letterSpacing: '-0.045em', lineHeight: 0.9, color: 'var(--uc-paper)' }}>TBD</div>
+        </div>
+      </div>
     </BPSection>
   );
 }
@@ -2251,10 +2505,12 @@ function BPInvestment() {
 function BPGrowth() {
   const services = [
     { t: 'Shopify Support', d: 'Design, development, integrations, upgrades, and new-feature enablement — on call.' },
-    { t: 'Performance Optimization', d: 'Constantly optimizing experience, speed, conversion, and the tech stack behind it.' }
+    { t: 'Performance Optimization', d: 'Constantly optimizing experience, speed, conversion, and the tech stack behind it.' },
+    { t: 'Revenue Growth', d: 'Optimizing Product Search & Discovery, AOV, checkout, and self-serve buying.' },
+    { t: 'Retention Growth', d: 'Loyalty programs, email/text automations, optimization, automation and B2B enablement.' }
   ];
   return (
-    <BPSection id="growth" n="12" label="Growth" paper tail="AFTER LAUNCH">
+    <BPSection id="growth" n="16" label="Growth" paper tail="AFTER LAUNCH">
       <BPHeadline>
         Launch is the start.{' '}
         <BPSerif>Growth is the work.</BPSerif>
@@ -2275,7 +2531,7 @@ function BPGrowth() {
             position: 'relative', overflow: 'hidden'
           }}>
             <span aria-hidden="true" style={{ position: 'absolute', top: 0, left: 0, width: 36, height: 3, background: 'var(--uc-signal)' }}/>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--fg-3)', letterSpacing: 0 }}>{String(i + 1).padStart(2, '0')} / 02</div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--fg-3)', letterSpacing: 0 }}>{String(i + 1).padStart(2, '0')} / 04</div>
             <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'clamp(20px, 2vw, 26px)', letterSpacing: '-0.02em', color: 'var(--fg-1)' }}>{s.t}</div>
             <div style={{ fontFamily: 'var(--font-serif)', fontSize: 14.5, lineHeight: 1.45, color: 'var(--fg-2)' }}>{s.d}</div>
           </div>
@@ -2287,10 +2543,10 @@ function BPGrowth() {
         display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap'
       }}>
         <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 15, color: 'var(--fg-1)' }}>
-          Uncap Growth: Core <span style={{ fontFamily: 'var(--font-hero)', fontWeight: 800 }}>$2.5k / mo</span>
+          Uncap Growth: Optimize Package · <span style={{ fontFamily: 'var(--font-hero)', fontWeight: 800 }}>TBD / mo</span>
         </div>
         <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--fg-3)', letterSpacing: '0.06em' }}>
-          MONTH-TO-MONTH · NO LOCK-IN
+          12 MONTH RETAINER
         </div>
       </div>
     </BPSection>
@@ -2307,7 +2563,7 @@ function BPWhy() {
   ];
   const clients = ['blueroot','canon','e3sparkplugs','eea','farmers','garrison','genuinescooter','industryrailway','kbs','microfiberwholesale','pawstruck','phoenixmecano','sanitaire','signwarehouse','thermosoft','ulegroup','vermontwoods','vosges','weldingstore','warehouselighting'];
   return (
-    <BPSection id="why" n="14" label="Uncap" dark tail="THE CASE">
+    <BPSection id="why" n="18" label="Uncap" dark tail="THE CASE">
       <BPHeadline dark>
         Uncap Commerce.{' '}
         <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, color: 'var(--uc-stone-300)' }}>Unified.</span>
@@ -2412,7 +2668,7 @@ function BPProof() {
   );
   const initials = (n) => n.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
   return (
-    <BPSection id="proof" n="15" label="Proof" paper tail="ON THE RECORD">
+    <BPSection id="proof" n="19" label="Proof" paper tail="ON THE RECORD">
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr)', gap: 'clamp(28px, 5vw, 80px)', alignItems: 'end' }}>
         <BPHeadline>
           Don&rsquo;t take{' '}
@@ -2460,7 +2716,6 @@ function BPProof() {
   );
 }
 
-// ── 10 NEXT STEPS ───────────────────────────────────────────────────────────
 // ── Approve & kickoff CTA. Clicking opens an inline signature modal that
 // captures the signer's full name and title; submitting POSTs them to
 // /api/auth/sign which persists a record in KV (1-year TTL) and emails
@@ -2726,14 +2981,15 @@ function BPApproveButton() {
   );
 }
 
+// ── 10 NEXT STEPS ───────────────────────────────────────────────────────────
 function BPNext() {
   const steps = [
     { n: '01', t: 'Approve this Blueprint', d: 'Sign off on scope, timeline, and investment.' },
-    { n: '02', t: 'Onboard this week', d: 'Discovery session + access to systems.' },
-    { n: '03', t: 'Ship in 12 weeks', d: 'Launch live, then move into Growth.' }
+    { n: '02', t: 'Onboard within one week', d: 'Discovery session + access to systems.' },
+    { n: '03', t: 'Ship in 16 weeks', d: 'Launch live, then move into Growth.' }
   ];
   return (
-    <BPSection id="next" n="16" label="Next" paper tail="LET'S GO">
+    <BPSection id="next" n="20" label="Next" paper tail="LET'S GO">
       <BPHeadline>
         Three steps{' '}
         <BPSerif>to start.</BPSerif>
@@ -2778,19 +3034,23 @@ function BPNav() {
     { id: 'summary',     n: '01', l: 'Summary' },
     { id: 'where',       n: '02', l: 'Today' },
     { id: 'objectives',  n: '03', l: 'Objectives' },
-    { id: 'scope',       n: '04', l: 'Scope' },
-    { id: 'performance', n: '05', l: 'Commerce' },
-    { id: 'content',     n: '06', l: 'Content' },
-    { id: 'techstack',   n: '07', l: 'Architecture' },
-    { id: 'b2b',         n: '08', l: 'Unified' },
-    { id: 'agentic',     n: '09', l: 'Agentic' },
-    { id: 'delivery',    n: '10', l: 'Delivery' },
-    { id: 'investment',  n: '11', l: 'Investment' },
-    { id: 'growth',      n: '12', l: 'Growth' },
-    { id: 'team',        n: '13', l: 'Team' },
-    { id: 'why',         n: '14', l: 'Uncap' },
-    { id: 'proof',       n: '15', l: 'Proof' },
-    { id: 'next',        n: '16', l: 'Next' }
+    { id: 'approach',    n: '04', l: 'Approach' },
+    { id: 'scope',       n: '05', l: 'Scope' },
+    { id: 'performance', n: '06', l: 'Commerce' },
+    { id: 'content',     n: '07', l: 'Content' },
+    { id: 'techstack',   n: '08', l: 'Architecture' },
+    { id: 'b2b',         n: '09', l: 'Unified' },
+    { id: 'agentic',     n: '10', l: 'Agentic' },
+    { id: 'integrations',n: '11', l: 'Integrated' },
+    { id: 'migration',   n: '12', l: 'Migration' },
+    { id: 'delivery',    n: '13', l: 'Delivery' },
+    { id: 'risks',       n: '14', l: 'Risks' },
+    { id: 'investment',  n: '15', l: 'Investment' },
+    { id: 'growth',      n: '16', l: 'Growth' },
+    { id: 'team',        n: '17', l: 'Team' },
+    { id: 'why',         n: '18', l: 'Uncap' },
+    { id: 'proof',       n: '19', l: 'Proof' },
+    { id: 'next',        n: '20', l: 'Next' }
   ];
   const [active, setActive] = React.useState('intro');
   const [open, setOpen] = React.useState(false);
@@ -2880,11 +3140,13 @@ window.BPIntro = BPIntro;
 window.BPSummary = BPSummary;
 window.BPWhere = BPWhere;
 window.BPObjectives = BPObjectives;
+window.BPApproach = BPApproach;
 window.BPScope = BPScope;
 window.BPPerformance = BPPerformance;
 window.BPContent = BPContent;
 window.BPTechStack = BPTechStack;
 window.BPB2B = BPB2B;
+window.BPIntegrations = BPIntegrations;
 window.BPGantt = BPGantt;
 window.BPDelivery = BPDelivery;
 window.BPTeam = BPTeam;
@@ -2893,5 +3155,6 @@ window.BPGrowth = BPGrowth;
 window.BPWhy = BPWhy;
 window.BPNext = BPNext;
 window.BPAgentic = BPAgentic;
+window.BPRiskAssessment = BPRiskAssessment;
 window.BPProof = BPProof;
 window.BPApproveButton = BPApproveButton;

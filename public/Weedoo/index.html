@@ -9,6 +9,7 @@
 <meta name="ext-resource-dependency" content="assets/uncap-logo-black.svg" data-resource-id="uncapLogoBlack"/>
 <meta name="ext-resource-dependency" content="assets/uncap-logo-white.svg" data-resource-id="uncapLogoWhite"/>
 <meta name="ext-resource-dependency" content="assets/shopify-platinum-partner-black.svg" data-resource-id="shopifyBadge"/>
+<meta name="ext-resource-dependency" content="assets/brightpearl-screenshot.webp" data-resource-id="brightpearlScreenshot"/>
 
 <script>
   if (!window.__resources) {
@@ -19,9 +20,12 @@
       bgVector1:      'assets/bg-vector-1.svg',
       bgVector2:      'assets/bg-vector-2.svg',
       bgVector3:      'assets/bg-vector-3.svg',
-      reviewBrandt:   'assets/review-brandt.webp'
+      reviewBrandt:   'assets/review-brandt.webp',
+      brightpearlScreenshot: 'assets/brightpearl-screenshot.webp'
     };
   }
+  // ── Brand config — change `name`, or set `logoSrc` to an uploaded image path,
+  //    and the company name + logo update everywhere they're used. ──
   window.__brand = window.__brand || {
     name: 'Weedoo Greenboat'
   };
@@ -53,6 +57,11 @@
 <script type="text/babel" src="/admin/AdminToolbar.jsx?v=DEPLOY_HASH"></script>
 
 <script type="text/babel">
+  // ── Auth gate: email → 6-digit code → 24-hour session token.
+  // Team/admin access comes from the admin dashboard, which silently
+  // mints a preview session via /api/admin/bp-token. Token is held in
+  // window.__bpToken so the BPApproveButton (in BlueprintSections.jsx)
+  // can read it and POST the approve notification when clicked. ──
   const BLUEPRINT_ID = 'weedoo';
   window.__blueprintId = BLUEPRINT_ID;
   const STORAGE_KEY  = 'bp_token_weedoo';
@@ -311,6 +320,7 @@
     );
   }
 
+
   function App() {
     return (
       <Gate>
@@ -321,13 +331,17 @@
             <BPSummary/>
             <BPWhere/>
             <BPObjectives/>
+            <BPApproach/>
             <BPScope/>
             <BPPerformance/>
             <BPContent/>
             <BPTechStack/>
             <BPB2B/>
             <BPAgentic/>
+            <BPIntegrations/>
+            <BPMigration/>
             <BPDelivery/>
+            <BPRiskAssessment/>
             <BPInvestment/>
             <BPGrowth/>
             <BPTeam/>

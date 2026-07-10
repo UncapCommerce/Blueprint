@@ -35,8 +35,8 @@ html { font-optical-sizing: auto; }
   /* Accent — Uncap is restrained; the only consistent accent is a
      warm signal-yellow used on small badges + a Shopify-partner green.
      The ⛯ icon mark itself is monochromatic. */
-  --uc-brand:        #17257d;   /* VIVO primary navy */
-  --uc-brand-hover:  #0f1a5c;   /* darker on hover */
+  --uc-brand:        #495af3;   /* primary CTA blue */
+  --uc-brand-hover:  #3647d8;   /* darker on hover */
   --uc-signal:       #E8FF52;   /* electric lime — used sparingly */
   --uc-signal-soft:  #F4FBC6;   /* tint */
   --uc-shopify:      #5A8A3A;   /* Shopify partner badge green */
