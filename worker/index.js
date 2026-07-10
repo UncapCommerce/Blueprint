@@ -1071,7 +1071,7 @@ const BLUEPRINT_REGISTRY = [
   { id: 'tucsonalternator', dir: 'TucsonAlternator', name: 'Tucson Alternator', num: '009', channel: 'Referral' },
   { id: 'elycattleman',     dir: 'ElyCattleman',     name: 'Ely Cattleman',     num: '010', channel: 'Inbound' },
   { id: 'vivo',             dir: 'VIVO',             name: 'VIVO',              num: '011', channel: 'Inbound' },
-  { id: 'weedoo',           dir: 'Weedoo',           name: 'Weedoo Greenboat',  num: '012', channel: 'Inbound' },
+  { id: 'weedooboats',      dir: 'Weedoo',           name: 'Weedoo Greenboat',  num: '012', channel: 'Inbound' },
 ];
 
 function getCookie(request, name) {

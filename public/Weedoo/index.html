@@ -62,9 +62,9 @@
   // mints a preview session via /api/admin/bp-token. Token is held in
   // window.__bpToken so the BPApproveButton (in BlueprintSections.jsx)
   // can read it and POST the approve notification when clicked. ──
-  const BLUEPRINT_ID = 'weedoo';
+  const BLUEPRINT_ID = 'weedooboats';
   window.__blueprintId = BLUEPRINT_ID;
-  const STORAGE_KEY  = 'bp_token_weedoo';
+  const STORAGE_KEY  = 'bp_token_weedooboats';
 
   function Gate({ children }) {
     const [token, setToken]     = React.useState(
