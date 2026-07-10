@@ -2575,7 +2575,7 @@ function BPGrowth() {
         display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap'
       }}>
         <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 15, color: 'var(--fg-1)' }}>
-          Uncap Growth · Optimize Package · <span style={{ fontFamily: 'var(--font-hero)', fontWeight: 800 }}>$9k / mo</span>
+          Uncap Growth · Optimize Package · <span style={{ fontFamily: 'var(--font-hero)', fontWeight: 800 }}>$5k / mo</span>
         </div>
         <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--fg-3)', letterSpacing: '0.06em' }}>
           12 MONTHS
