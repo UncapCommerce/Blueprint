@@ -124,7 +124,7 @@ function BPIntro() {
           <span style={{ display: 'inline-flex', alignItems: 'center' }}>
             <img src={window.__resources.shopifyBadge} alt="Shopify Platinum Partner" style={{ height: 30, width: 'auto', display: 'block', filter: 'brightness(0) invert(1)' }}/>
           </span>
-          <span>BLUEPRINT 012 · PREPARED JULY 2026 · CONFIDENTIAL</span>
+          <span>BLUEPRINT 012 · PREPARED JUNE 2026 · CONFIDENTIAL</span>
         </div>
 
         {/* Big title */}
@@ -179,7 +179,8 @@ function BPIntro() {
               fontSize: 'clamp(20px, 2.2vw, 32px)', lineHeight: 1.25,
               letterSpacing: '-0.015em', color: 'var(--uc-paper)', textWrap: 'pretty'
             }}>
-              A comprehensive plan to replatform Weedoo Greenboat on Shopify and unify commerce operations for B2C and B2B — with an exceptional customer experience designed for growth.
+              A plan to unify {brandName()}&rsquo;s commerce operation on Shopify — same caliber
+              of technology, without the enterprise drag.
             </div>
           </div>
 
@@ -190,9 +191,9 @@ function BPIntro() {
           }}>
             {[
               { k: 'Prepared by', v: 'Denis Dyli', s: 'CEO, Principal' },
-              { k: 'Client lead',  v: 'TBD',   s: null },
-              { k: 'Company',      v: 'Weedoo Greenboat', s: null, a: null },
-              { k: 'Valid through', v: 'TBD',    s: null }
+              { k: 'Client lead',  v: 'Tara Lordi',  s: 'CEO' },
+              { k: 'Company', v: 'WEEDOO GREENBOAT, Inc.', s: '1340 SW Commerce Way, Stuart, FL 34997' },
+              { k: 'Valid through', v: 'Jul 31, 2026',    s: '30 days' }
             ].map((c, i) => (
               <div key={i} style={{
                 padding: '14px 0', borderBottom: '1px solid #1F1F1F',
@@ -209,14 +210,10 @@ function BPIntro() {
                     display: 'block', fontFamily: 'var(--font-display)', fontWeight: 700,
                     fontSize: 15, letterSpacing: '-0.01em', color: 'var(--uc-paper)'
                   }}>{c.v}</span>
-                  {c.s && <span style={{
+                  <span style={{
                     display: 'block', fontFamily: 'var(--font-mono)', fontSize: 11,
                     color: 'var(--uc-stone-500)', marginTop: 2
-                  }}>{c.s}</span>}
-                  {c.a && <span style={{
-                    display: 'block', fontFamily: 'var(--font-mono)', fontSize: 9,
-                    color: 'var(--uc-stone-500)', marginTop: 4, whiteSpace: 'pre-line', lineHeight: 1.5
-                  }}>{c.a}</span>}
+                  }}>{c.s}</span>
                 </span>
               </div>
             ))}
@@ -260,9 +257,9 @@ function BPSummary() {
       }}>
         {[
           { v: '16 wk', l: 'Estimated timeline to launch on Shopify' },
-          { v: 'Unified', l: 'B2C, B2B, Quotes on Shopify integrated with ERP' },
-          { v: '−52%', l: 'Projected lower cost on Apps' },
-          { v: '+22%', l: 'Targeted increase across KPIs' }
+          { v: 'Unified', l: 'Web, B2C and B2B on Shopify fully integrated' },
+          { v: 'Speed', l: 'Sidekick friendly system to move fast' },
+          { v: 'Growth', l: 'Optimized for conversion and retention' }
         ].map((s, i) => (
           <div key={i} style={{
             padding: 'clamp(24px, 3vw, 36px)',
@@ -333,8 +330,8 @@ function BPWhere() {
   const items = [
     { n: '01', t: 'Aging storefront', tag: 'Storefront', impact: 'High', pct: 82, d: 'Custom-built, patched for years, costing more every renewal cycle.' },
     { n: '02', t: 'Disconnected systems', tag: 'Systems', impact: 'Critical', pct: 94, d: 'Inventory in spreadsheets, quotes in inboxes, an ERP that talks to nothing.' },
-    { n: '03', t: 'Outdated Quote Management', tag: 'Trade', impact: 'Medium', pct: 64, d: 'Account orders re-keyed by hand. Reps spend half the day on data entry.' },
-    { n: '04', t: 'Costly to run', tag: 'Cost', impact: 'High', pct: 78, d: 'Support, upkeep, apps and integrations make BigCommerce very expensive.' }
+    { n: '03', t: 'Manual B2B', tag: 'Trade', impact: 'Medium', pct: 64, d: 'Account orders re-keyed by hand. Reps spend half the day on data entry.' },
+    { n: '04', t: 'Separate CMS', tag: 'Data', impact: 'High', pct: 78, d: 'CMS and commerce live apart — content edits and product data never sync.' }
   ];
   return (
     <BPSection id="where" n="02" label="Today" tail="CURRENT STATE">
@@ -400,8 +397,8 @@ function BPObjectives() {
 // ── 04 RECOMMENDED APPROACH ────────────────────────────────────────────────
 function BPApproach() {
   const steps = [
-    { n: 'Phase 1', t: 'Blueprint', d: 'Architecture, data model, integration map. A plan that holds up under scrutiny.', wk: '2 weeks' },
-    { n: 'Phase 2', t: 'Build', d: 'Storefront, B2B, ERP sync. Fixed scope, senior team, no surprises.', wk: '16 weeks' },
+    { n: 'Phase 1', t: 'Blueprint', d: 'Architecture, data model, integration map. A plan that holds up under scrutiny.', wk: '2–4 weeks' },
+    { n: 'Phase 2', t: 'Build', d: 'Storefront, B2B, ERP sync. Fixed scope, senior team, no surprises.', wk: 'Weeks 16+' },
     { n: 'Phase 3', t: 'Grow', d: 'Migrate, go live, then optimize conversion, AOV, and automation.', wk: 'Months 6–12' }
   ];
   return (
@@ -566,8 +563,8 @@ function BPBuildLayer({ L }) {
 function BPScope() {
   const layers = [
     { code: '01', t: 'Commerce Strategy', d: 'Strategy, R&D, optimisation, and a plan the board can trust.' },
-    { code: '02', t: 'Experience Design', d: 'A modern, conversion-focused storefront, built for growth.' },
-    { code: '03', t: 'Solution Architecture', d: 'Scalable tech stack and implementation roadmap.' },
+    { code: '02', t: 'Experience Design', d: 'A modern, conversion-focused storefront, built to scale.' },
+    { code: '03', t: 'Solution Architecture', d: 'Solution architecture, roadmap and integration.' },
     { code: '04', t: 'B2B Enablement',    d: 'Catalogs, pricing tiers, NET terms, and account portals.' },
     { code: '05', t: 'ERP Integration',   d: 'Bidirectional, real-time sync native to Shopify Plus.' },
     { code: '06', t: 'Data Migration',    d: 'Products, customers, order history, and SEO redirects.' },
@@ -655,16 +652,16 @@ function BPGanttRow({ task }) {
 
 function BPGantt() {
   const groups = [
-    { name: 'Foundation', range: 'WK 01–05', tasks: [
+    { name: 'Foundation', range: 'WK 01–06', tasks: [
       { n: '01', t: 'Onboarding & Kickoff',       tag: 'Setup',    s: 1, e: 2,  range: 'W1–2' },
       { n: '02', t: 'Deep Dive Workshops',        tag: 'Strategy · Solutions · Design',   s: 1, e: 3,  range: 'W1–3' },
       { n: '03', t: 'Experience Design',  tag: 'UX/UI Design · Web · Mobile',   s: 2, e: 5,  range: 'W2–5' },
-      { n: '04', t: 'Approval',                   tag: 'Tech Stack Review & Design Sign-off', s: 4, e: 5,  range: 'W4–5' }
+      { n: '04', t: 'Approval',                   tag: 'Tech Stack Review & Design Sign-off', s: 5, e: 6,  range: 'W5–6' }
     ] },
-    { name: 'Production', range: 'WK 05–14', tasks: [
-      { n: '05', t: 'Development',                tag: 'Build',    s: 5,  e: 13, range: 'W5–13' },
-      { n: '06', t: 'Data Migration',             tag: 'Migrate',  s: 5,  e: 11, range: 'W5–11' },
-      { n: '07', t: 'Integration',                tag: 'Connect',  s: 8,  e: 13, range: 'W8–13' },
+    { name: 'Production', range: 'WK 06–14', tasks: [
+      { n: '05', t: 'Development',                tag: 'Build',    s: 6,  e: 12, range: 'W6–12' },
+      { n: '06', t: 'Data Migration',             tag: 'Migrate',  s: 9,  e: 12, range: 'W9–12' },
+      { n: '07', t: 'Integration',                tag: 'Connect',  s: 9,  e: 13, range: 'W9–13' },
       { n: '08', t: 'QA & Testing',               tag: 'Verify',   s: 12, e: 14, range: 'W12–14' }
     ] },
     { name: 'Audit', range: 'WK 14–16', tasks: [
@@ -714,13 +711,13 @@ function BPGantt() {
 function GfxChrome({ children }) {
   return (
     <div style={{ background: 'var(--uc-paper)', border: '1px solid var(--line-1)', borderRadius: 5, overflow: 'hidden' }}>
-      <div style={{ background:'#1B5272', color:'#fff', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>FREE SHIPPING OVER $100 · UNIVERSITY & HOSPITAL PRICING</div>
+      <div style={{ background:'var(--uc-black)', color:'var(--uc-paper)', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>MADE IN THE U.S.A. · FINANCING AVAILABLE · 844-WEEDOO-2</div>
       <div style={{ display:'flex', alignItems:'center', gap:12, padding:'9px 14px', borderBottom:'1px solid var(--line-1)' }}>
-        <span style={{ display:'flex', alignItems:'center', gap:6 }}><BrandMark fontSize={12} letterSpacing="-0.015em"/></span>
-        <div style={{ display:'flex', gap:11, marginLeft:6 }}>{['Models','Simulators','Charts','Brands'].map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:8.5, fontWeight:700, letterSpacing:'0.04em', color:i===0?'var(--fg-1)':'var(--fg-3)' }}>{x}</span>))}</div>
+        <span style={{ display:'flex', alignItems:'center', gap:6 }}><span style={{ width:16, height:16, borderRadius:999, background:'var(--uc-black)' }}/><BrandMark fontSize={12} letterSpacing="-0.015em"/></span>
+        <div style={{ display:'flex', gap:11, marginLeft:6 }}>{['Workboats','Attachments','Conveyors','Parts'].map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:8.5, fontWeight:700, letterSpacing:'0.04em', color:i===0?'var(--fg-1)':'var(--fg-3)' }}>{x}</span>))}</div>
         <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
           <span style={{ fontFamily:'var(--font-mono)', fontSize:8, color:'var(--fg-3)' }}>Search…</span>
-          <span style={{ fontFamily:'var(--font-mono)', fontSize:8, fontWeight:700, color:'#fff', background:'#1B5272', padding:'3px 8px', borderRadius:3, display:'inline-flex', alignItems:'center' }}><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{display:'inline-block',verticalAlign:'middle',marginRight:2}}><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>Cart 2</span>
+          <span style={{ fontFamily:'var(--font-mono)', fontSize:8, fontWeight:700, color:'var(--uc-paper)', background:'var(--uc-black)', padding:'3px 8px', borderRadius:3 }}>Cart 2</span>
         </div>
       </div>
       {children}
@@ -729,10 +726,10 @@ function GfxChrome({ children }) {
 }
 function GfxMegaNav() {
   const cols = [
-    { h: 'Models', items: ['Skull & Brain','Full Body','Muscular','Skeletal'] },
-    { h: 'Simulators', items: ['IV & Injection','CPR & AED','Birthing','Surgical'] },
-    { h: 'Charts', items: ['Human Body','Muscular','Skeletal','Organ'] },
-    { h: 'Featured', items: ['New Models','Bulk Orders','Institution Pricing'] }
+    { h: 'Workboats', items: ['TC-3012','TC-3014','TC-6450 Amphibious','AquaHarvester'] },
+    { h: 'Attachments', items: ['Marine Boom Cutter','Front-End Loader','170-EBH Harvester','Oil Skimmer Belt'] },
+    { h: 'Power & Trailers', items: ['PowerPack 24V','Kubota Diesel','Torqeedo Electric','T-1305 Trailer'] },
+    { h: 'Featured', items: ['Full Lineup','New · TC-6520','Dealer program'] }
   ];
   return (
     <GfxChrome>
@@ -749,46 +746,47 @@ function GfxMegaNav() {
 }
 function GfxCollection() {
   const prods = [
-    ['Human Skull Model','$89.00','Full size','#B0C4D4','NEW','4.8','212'],
-    ['3B Heart 2-Part','$124.00','Life size','#C4AEAD',null,'4.6','158'],
-    ['Muscular Figure','$219.00','17-part','#B8C8D4','PRO','4.9','64'],
-    ['Anatomy Chart Set','$38.00','4 charts','#8AACBB',null,'4.7','309'],
-    ['IV Training Arm','$159.00','Latex-free','#C8B89A','PRO','4.9','47'],
-    ['Brain Model 4-Pt','$72.00','4-part','#B4B0C0',null,'4.5','521']
+    ['Weed-N-Mud Prop','$385','/pair','#2F6B3A','BULK','4.8','88'],
+    ['170-EBH Harvester','$6,200','ea','#16485A',null,'4.9','24'],
+    ['Marine Boom Cutter','$4,850','ea','#1B6A55','NEW','4.7','36'],
+    ['Oil Skimmer Belt','$1,940','ea','#5E6E5C',null,'4.6','19'],
+    ['Marine Bucket','$2,150','ea','#B8901F','POPULAR','4.9','41'],
+    ['PowerPack 24V','$3,400','ea','#2E8B8B',null,'4.9','12']
   ];
   const facets = [
-    { h: 'Product', items: [['Anatomical Models', true],['Simulators', true],['Anatomy Charts', false],['Specimens', false],['Custom', false]] },
-    { h: 'Brand', items: [['3B Scientific', true],['Axis Scientific', false],['Erler Zimmer', false]] },
-    { h: 'Profession', items: [['Healthcare Ed.', true],['Medical School', false],['Hospital / Clinical', false]] }
+    { h: 'Category', items: [['Workboats', true],['Attachments', true],['Conveyors', false],['Power Systems', false],['Parts', false]] },
+    { h: 'Fits Model', items: [['TC-3012', true],['TC-3014', false],['AquaHarvester', false]] },
+    { h: 'Availability', items: [['In stock', true],['Made to order', false],['Ships freight', false]] }
   ];
   return (
     <div style={{ background:'var(--uc-paper)', border:'1px solid var(--line-1)', borderRadius:5, overflow:'hidden' }}>
       {/* chrome */}
-      <div style={{ background:'#1B5272', color:'#fff', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>FREE SHIPPING OVER $100 · UNIVERSITY & HOSPITAL PRICING</div>
+      <div style={{ background:'var(--uc-black)', color:'var(--uc-paper)', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>MADE IN THE U.S.A. · FINANCING AVAILABLE · 844-WEEDOO-2</div>
       <div style={{ display:'flex', alignItems:'center', gap:11, padding:'8px 14px', borderBottom:'1px solid var(--line-1)' }}>
+        <span style={{ width:14, height:14, borderRadius:999, background:'var(--uc-black)' }}/>
         <BrandMark fontSize={11}/>
-        <div style={{ display:'flex', gap:9, marginLeft:4 }}>{['Models','Simulators','Charts','Brands'].map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:i===1?'var(--fg-1)':'var(--fg-3)' }}>{x}</span>))}</div>
+        <div style={{ display:'flex', gap:9, marginLeft:4 }}>{['Workboats','Attachments','Conveyors','Parts'].map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:i===1?'var(--fg-1)':'var(--fg-3)' }}>{x}</span>))}</div>
         <span style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:7 }}>
           <span style={{ width:110, height:18, borderRadius:999, border:'1px solid var(--line-2)', display:'flex', alignItems:'center', gap:4, padding:'0 9px', fontFamily:'var(--font-mono)', fontSize:7, color:'var(--fg-3)', whiteSpace:'nowrap', overflow:'hidden' }}><span style={{ fontSize:8 }}>⌕</span>Search products…</span>
-          <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'#fff', background:'#1B5272', padding:'3px 8px', borderRadius:3, display:'inline-flex', alignItems:'center' }}><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{display:'inline-block',verticalAlign:'middle',marginRight:2}}><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>Cart 0</span>
+          <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--uc-paper)', background:'var(--uc-black)', padding:'3px 8px', borderRadius:3 }}>Cart 0</span>
         </span>
       </div>
 
       {/* breadcrumb + title + sort */}
       <div style={{ padding:'11px 14px 9px', display:'flex', alignItems:'flex-end', justifyContent:'space-between', gap:10 }}>
         <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
-          <span style={{ fontFamily:'var(--font-mono)', fontSize:7, letterSpacing:'0.1em', color:'var(--fg-3)' }}>HOME / ANATOMICAL MODELS</span>
-          <span style={{ fontFamily:'var(--font-hero)', fontWeight:700, fontSize:19, letterSpacing:'-0.035em', color:'var(--fg-1)' }}>Anatomical Models</span>
+          <span style={{ fontFamily:'var(--font-mono)', fontSize:7, letterSpacing:'0.1em', color:'var(--fg-3)' }}>HOME / ATTACHMENTS & IMPLEMENTS</span>
+          <span style={{ fontFamily:'var(--font-hero)', fontWeight:700, fontSize:19, letterSpacing:'-0.035em', color:'var(--fg-1)' }}>Attachments & Implements</span>
         </div>
         <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-          <span style={{ fontFamily:'var(--font-mono)', fontSize:7, color:'var(--fg-3)' }}>2,400 results</span>
+          <span style={{ fontFamily:'var(--font-mono)', fontSize:7, color:'var(--fg-3)' }}>1,284 results</span>
           <span style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, color:'var(--fg-1)', border:'1px solid var(--line-2)', borderRadius:3, padding:'3px 7px' }}>Sort: Best ▾</span>
         </div>
       </div>
 
       {/* applied filter chips */}
       <div style={{ padding:'0 14px 10px', display:'flex', gap:5, flexWrap:'wrap', alignItems:'center' }}>
-        {['Models ✕','Simulators ✕','In stock ✕'].map((c,i)=>(<span key={i} style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, color:'var(--fg-1)', background:'var(--uc-bone)', border:'1px solid var(--line-2)', borderRadius:999, padding:'2px 8px' }}>{c}</span>))}
+        {['Workboats ✕','Attachments ✕','In stock ✕'].map((c,i)=>(<span key={i} style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, color:'var(--fg-1)', background:'var(--uc-bone)', border:'1px solid var(--line-2)', borderRadius:999, padding:'2px 8px' }}>{c}</span>))}
         <span style={{ fontFamily:'var(--font-mono)', fontSize:7, color:'var(--uc-brand)', fontWeight:700 }}>Clear all</span>
       </div>
 
@@ -819,7 +817,7 @@ function GfxCollection() {
               <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:8.5, letterSpacing:'-0.01em', color:'var(--fg-1)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{p[0]}</span>
               <div style={{ display:'flex', alignItems:'center', gap:3 }}><span style={{ fontFamily:'var(--font-mono)', fontSize:6, color:'var(--uc-brand)' }}>★★★★★</span><span style={{ fontFamily:'var(--font-mono)', fontSize:6, color:'var(--fg-3)' }}>{p[5]} ({p[6]})</span></div>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'baseline' }}><span style={{ fontFamily:'var(--font-mono)', fontSize:9, fontWeight:700, color:'var(--fg-1)' }}>{p[1]}</span><span style={{ fontFamily:'var(--font-mono)', fontSize:6, color:'var(--fg-3)' }}>{p[2]}</span></div>
-              <span style={{ fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, color:'#3F8B5D' }}>Institution pricing ✓</span>
+              <span style={{ fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, color:'#3F8B5D' }}>Dealer price ✓</span>
             </div>
           ))}
         </div>
@@ -833,28 +831,29 @@ function GfxCollection() {
   );
 }
 function GfxCart() {
-  const lines=[['Human Skull Model','2+','$84.00','$168'],['3B Heart 2-Part','5+','$112.00','$560'],['Anatomy Chart Set','10+','$34.00','$340']];
-  const grid=[['Skull Model','$89.00','#B0C4D4','NEW'],['3B Heart','$124.00','#C4AEAD',null],['Muscular Fig.','$219.00','#B8C8D4','PRO'],['IV Training Arm','$159.00','#C8B89A',null],['Brain Model','$72.00','#B4B0C0',null],['Anatomy Charts','$38.00','#8AACBB',null]];
+  const lines=[['Weed-N-Mud Prop · pair','20+','$352','$7,040'],['Shaft Seal Set','50+','$40','$2,000'],['Zinc Anodes · 6pk','40+','$25','$1,000']];
+  const grid=[['Weed-N-Mud Prop','$385','#2F6B3A','BULK'],['Shaft Seal Set','$44','#16485A',null],['Skeg Guard','$78','#1B6A55','NEW'],['Zinc Anodes','$28','#5E6E5C',null],['Prop Hub Kit','$96','#B8901F',null],['Hydraulic Filter','$52','#2E8B8B',null]];
   return (
     <div style={{ position:'relative', background:'var(--uc-paper)', border:'1px solid var(--line-1)', borderRadius:5, overflow:'hidden' }}>
       {/* Full CATEGORY page behind */}
       <div>
-        <div style={{ background:'#1B5272', color:'#fff', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>FREE SHIPPING OVER $100 · UNIVERSITY & HOSPITAL PRICING</div>
+        <div style={{ background:'var(--uc-black)', color:'var(--uc-paper)', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>MADE IN THE U.S.A. · FINANCING AVAILABLE · 844-WEEDOO-2</div>
         <div style={{ display:'flex', alignItems:'center', gap:11, padding:'8px 14px', borderBottom:'1px solid var(--line-1)' }}>
+          <span style={{ width:14, height:14, borderRadius:999, background:'var(--uc-black)' }}/>
           <BrandMark fontSize={11}/>
-          <div style={{ display:'flex', gap:9, marginLeft:4 }}>{['Models','Simulators','Charts','Brands'].map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:i===0?'var(--fg-1)':'var(--fg-3)' }}>{x}</span>))}</div>
-          <span style={{ marginLeft:'auto', fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'#fff', background:'#1B5272', padding:'3px 8px', borderRadius:3, display:'inline-flex', alignItems:'center' }}><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{display:'inline-block',verticalAlign:'middle',marginRight:2}}><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>Cart 3</span>
+          <div style={{ display:'flex', gap:9, marginLeft:4 }}>{['Workboats','Attachments','Conveyors','Parts'].map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:i===0?'var(--fg-1)':'var(--fg-3)' }}>{x}</span>))}</div>
+          <span style={{ marginLeft:'auto', fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--uc-paper)', background:'var(--uc-black)', padding:'3px 8px', borderRadius:3 }}>Cart 3</span>
         </div>
         {/* category title + breadcrumb */}
         <div style={{ padding:'11px 14px 9px', display:'flex', alignItems:'baseline', justifyContent:'space-between' }}>
           <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
-            <span style={{ fontFamily:'var(--font-mono)', fontSize:7, letterSpacing:'0.1em', color:'var(--fg-3)' }}>HOME / ANATOMICAL MODELS</span>
-            <span style={{ fontFamily:'var(--font-hero)', fontWeight:700, fontSize:19, letterSpacing:'-0.035em', color:'var(--fg-1)' }}>Anatomical Models</span>
+            <span style={{ fontFamily:'var(--font-mono)', fontSize:7, letterSpacing:'0.1em', color:'var(--fg-3)' }}>HOME / PARTS & ACCESSORIES</span>
+            <span style={{ fontFamily:'var(--font-hero)', fontWeight:700, fontSize:19, letterSpacing:'-0.035em', color:'var(--fg-1)' }}>Parts & Accessories</span>
           </div>
-          <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, color:'var(--fg-3)' }}>240 products · Sort ▾</span>
+          <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, color:'var(--fg-3)' }}>48 products · Sort ▾</span>
         </div>
         {/* filter chips */}
-        <div style={{ display:'flex', gap:6, padding:'0 14px 11px' }}>{['Skull','Heart','Charts','In stock'].map((f,i)=>(<span key={f} style={{ padding:'3px 9px', borderRadius:999, border:'1px solid', borderColor:i===0?'var(--uc-black)':'var(--line-1)', background:i===0?'var(--uc-black)':'transparent', color:i===0?'var(--uc-paper)':'var(--fg-2)', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700 }}>{f}</span>))}</div>
+        <div style={{ display:'flex', gap:6, padding:'0 14px 11px' }}>{['Propellers','Seals','Anodes','In stock'].map((f,i)=>(<span key={f} style={{ padding:'3px 9px', borderRadius:999, border:'1px solid', borderColor:i===0?'var(--uc-black)':'var(--line-1)', background:i===0?'var(--uc-black)':'transparent', color:i===0?'var(--uc-paper)':'var(--fg-2)', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700 }}>{f}</span>))}</div>
         {/* product grid */}
         <div style={{ padding:'0 14px 14px', display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:9 }}>
           {grid.map((p,i)=>(
@@ -884,7 +883,7 @@ function GfxCart() {
         </div>
         {/* free shipping progress */}
         <div style={{ padding:'9px 13px', borderBottom:'1px solid var(--line-1)', background:'var(--uc-cream)' }}>
-          <div style={{ fontFamily:'var(--font-mono)', fontSize:8, color:'var(--fg-1)', marginBottom:5 }}>🚚 You&rsquo;ve unlocked <span style={{ color:'#3F8B5D', fontWeight:700 }}>FREE shipping</span></div>
+          <div style={{ fontFamily:'var(--font-mono)', fontSize:8, color:'var(--fg-1)', marginBottom:5 }}>🚚 You&rsquo;ve unlocked <span style={{ color:'#3F8B5D', fontWeight:700 }}>FREE freight</span></div>
           <div style={{ height:4, background:'var(--line-1)', borderRadius:999, overflow:'hidden' }}><span style={{ display:'block', width:'100%', height:'100%', background:'#3F8B5D' }}/></div>
         </div>
         {/* lines */}
@@ -898,19 +897,19 @@ function GfxCart() {
         {/* upsells */}
         <div style={{ padding:'9px 13px', background:'var(--uc-cream)', borderBottom:'1px solid var(--line-1)' }}>
           <div style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:6 }}>PAIRS WELL WITH</div>
-          <div style={{ display:'flex', gap:6 }}>{[['Model Stand','$22'],['Carrying Case','$38'],['Display Base','$18']].map((u,i)=>(<div key={i} style={{ flex:1, border:'1px solid var(--line-1)', borderRadius:3, padding:5, display:'flex', flexDirection:'column', gap:3, background:'var(--uc-paper)' }}><div style={{ aspectRatio:'1/1', background:'var(--uc-stone-200)', borderRadius:2 }}/><span style={{ fontFamily:'var(--font-display)', fontWeight:600, fontSize:7, color:'var(--fg-1)' }}>{u[0]}</span><span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--uc-black)' }}>+ {u[1]}</span></div>))}</div>
+          <div style={{ display:'flex', gap:6 }}>{[['Prop Hub Kit','$96'],['Skeg Guard','$78'],['Grease Kit','$34']].map((u,i)=>(<div key={i} style={{ flex:1, border:'1px solid var(--line-1)', borderRadius:3, padding:5, display:'flex', flexDirection:'column', gap:3, background:'var(--uc-paper)' }}><div style={{ aspectRatio:'1/1', background:'var(--uc-stone-200)', borderRadius:2 }}/><span style={{ fontFamily:'var(--font-display)', fontWeight:600, fontSize:7, color:'var(--fg-1)' }}>{u[0]}</span><span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--uc-black)' }}>+ {u[1]}</span></div>))}</div>
         </div>
         {/* StorePro subscription upgrade */}
         <div style={{ padding:'10px 13px', background:'var(--uc-black)', color:'var(--uc-paper)', borderBottom:'1px solid var(--line-1)', display:'flex', gap:9, alignItems:'center' }}>
           <span style={{ width:18, height:18, borderRadius:999, border:'2px solid var(--uc-signal)', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center' }}><span style={{ width:7, height:7, borderRadius:999, background:'var(--uc-signal)' }}/></span>
-          <div style={{ flex:1 }}><div style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:9.5, color:'var(--uc-paper)' }}>Upgrade to Pro Account <span style={{ color:'var(--uc-signal)' }}>−15%</span></div><div style={{ fontFamily:'var(--font-mono)', fontSize:7, color:'var(--uc-stone-300)' }}>$49/mo · free shipping · priority support</div></div>
+          <div style={{ flex:1 }}><div style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:9.5, color:'var(--uc-paper)' }}>Upgrade to FleetPro <span style={{ color:'var(--uc-signal)' }}>−15%</span></div><div style={{ fontFamily:'var(--font-mono)', fontSize:7, color:'var(--uc-stone-300)' }}>$49/mo · free freight · priority parts</div></div>
           <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:800, color:'var(--uc-black)', background:'var(--uc-signal)', padding:'4px 8px', borderRadius:3 }}>ADD</span>
         </div>
         {/* totals + checkout */}
         <div style={{ marginTop:'auto', padding:'10px 13px', borderTop:'1px solid var(--line-1)' }}>
-          <div style={{ display:'flex', justifyContent:'space-between', fontFamily:'var(--font-mono)', fontSize:8.5, color:'var(--fg-3)', marginBottom:3 }}><span>Subtotal</span><span>$1,068</span></div>
-          <div style={{ display:'flex', justifyContent:'space-between', fontFamily:'var(--font-mono)', fontSize:8.5, color:'#3F8B5D', marginBottom:7 }}><span>Volume savings</span><span>−$120</span></div>
-          <span style={{ display:'block', textAlign:'center', padding:'9px', background:'#1B5272', color:'#fff', borderRadius:3, fontSize:10, fontWeight:700 }}>Checkout · NET-30 · $1,068</span>
+          <div style={{ display:'flex', justifyContent:'space-between', fontFamily:'var(--font-mono)', fontSize:8.5, color:'var(--fg-3)', marginBottom:3 }}><span>Subtotal</span><span>$10,040</span></div>
+          <div style={{ display:'flex', justifyContent:'space-between', fontFamily:'var(--font-mono)', fontSize:8.5, color:'#3F8B5D', marginBottom:7 }}><span>Fleet savings</span><span>−$310</span></div>
+          <span style={{ display:'block', textAlign:'center', padding:'9px', background:'var(--uc-black)', color:'var(--uc-paper)', borderRadius:3, fontSize:10, fontWeight:700 }}>Checkout · NET-30 · $9,730</span>
         </div>
       </div>
     </div>
@@ -920,76 +919,43 @@ function GfxPDP() {
   return (
     <div style={{ background:'var(--uc-paper)', border:'1px solid var(--line-1)', borderRadius:5, overflow:'hidden' }}>
       {/* chrome */}
-      <div style={{ background:'#1B5272', color:'#fff', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>FREE SHIPPING OVER $100 · UNIVERSITY & HOSPITAL PRICING</div>
+      <div style={{ background:'var(--uc-black)', color:'var(--uc-paper)', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>MADE IN THE U.S.A. · FINANCING AVAILABLE · 844-WEEDOO-2</div>
       <div style={{ display:'flex', alignItems:'center', gap:11, padding:'8px 14px', borderBottom:'1px solid var(--line-1)' }}>
+        <span style={{ width:14, height:14, borderRadius:999, background:'var(--uc-black)' }}/>
         <BrandMark fontSize={11}/>
-        <div style={{ display:'flex', gap:9, marginLeft:4 }}>{['Models','Simulators','Charts','Brands'].map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:i===0?'var(--fg-1)':'var(--fg-3)' }}>{x}</span>))}</div>
-        <span style={{ marginLeft:'auto', fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'#fff', background:'#1B5272', padding:'3px 8px', borderRadius:3, display:'inline-flex', alignItems:'center' }}><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{display:'inline-block',verticalAlign:'middle',marginRight:2}}><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>Cart 2</span>
+        <div style={{ display:'flex', gap:9, marginLeft:4 }}>{['Workboats','Attachments','Conveyors','Parts'].map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:i===0?'var(--fg-1)':'var(--fg-3)' }}>{x}</span>))}</div>
+        <span style={{ marginLeft:'auto', fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--uc-paper)', background:'var(--uc-black)', padding:'3px 8px', borderRadius:3 }}>Cart 2</span>
       </div>
       {/* breadcrumb */}
-      <div style={{ padding:'8px 14px 0', fontFamily:'var(--font-mono)', fontSize:7, letterSpacing:'0.08em', color:'var(--fg-3)' }}>HOME / MODELS / SKULL & BRAIN</div>
+      <div style={{ padding:'8px 14px 0', fontFamily:'var(--font-mono)', fontSize:7, letterSpacing:'0.08em', color:'var(--fg-3)' }}>HOME / PARTS / PROPELLERS</div>
 
       {/* gallery + buy box */}
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:13, padding:'9px 14px 13px' }}>
         {/* gallery */}
         <div style={{ display:'grid', gridTemplateColumns:'26px 1fr', gap:7 }}>
-          <div style={{ display:'flex', flexDirection:'column', gap:6 }}>{['#1B5272','#2E7EB8','#B0C4D4','#8AACBB'].map((c,i)=>(<div key={i} style={{ aspectRatio:'1/1', borderRadius:3, background:`linear-gradient(140deg, ${c}, var(--uc-bone))`, border:i===0?'1.5px solid var(--uc-black)':'1px solid var(--line-1)' }}/>))}</div>
-          <div style={{ aspectRatio:'4/4.6', borderRadius:4, background:'radial-gradient(120% 90% at 65% 20%, #2E7EB8, #1B5272 60%, #0D2034)', position:'relative', overflow:'hidden' }}>
+          <div style={{ display:'flex', flexDirection:'column', gap:6 }}>{['#2F6B3A','#16485A','#5E6E5C','#B8901F'].map((c,i)=>(<div key={i} style={{ aspectRatio:'1/1', borderRadius:3, background:`linear-gradient(140deg, ${c}, var(--uc-bone))`, border:i===0?'1.5px solid var(--uc-black)':'1px solid var(--line-1)' }}/>))}</div>
+          <div style={{ aspectRatio:'4/4.6', borderRadius:4, background:'radial-gradient(120% 90% at 65% 20%, #2F8B4E, #12442C 60%, #0E2A1E)', position:'relative', overflow:'hidden' }}>
             <span style={{ position:'absolute', top:8, left:8, padding:'2px 7px', background:'#3F8B5D', color:'#fff', borderRadius:999, fontFamily:'var(--font-mono)', fontSize:6, fontWeight:800, letterSpacing:'0.06em' }}>BEST SELLER</span>
-            <svg viewBox="0 0 100 120" style={{ position:'absolute', bottom:'2%', right:0, left:0, margin:'0 auto', width:'75%', opacity:0.95 }}>
-  {/* Cranium + mandible outline */}
-  <path d="M50 5 C74 5 93 22 93 46 C93 64 83 76 70 82 L68 97 C68 101 64 103 60 103 L40 103 C36 103 32 101 32 97 L30 82 C17 76 7 64 7 46 C7 22 26 5 50 5 Z" fill="rgba(180,210,230,0.1)" stroke="rgba(255,255,255,0.78)" strokeWidth="1.6" strokeLinejoin="round"/>
-  {/* Left orbital socket */}
-  <path d="M24 44 C24 33 30 26 39 28 C47 26 52 33 50 44 C48 54 26 56 24 44 Z" fill="rgba(0,0,0,0.4)" stroke="rgba(255,255,255,0.68)" strokeWidth="1.3"/>
-  {/* Right orbital socket */}
-  <path d="M50 44 C50 33 55 26 61 28 C70 26 76 34 76 44 C74 55 52 55 50 44 Z" fill="rgba(0,0,0,0.4)" stroke="rgba(255,255,255,0.68)" strokeWidth="1.3"/>
-  {/* Nasal aperture */}
-  <path d="M45 58 C43 53 44 48 50 46 C56 48 57 53 55 58 C53 65 51 68 50 68 C49 68 47 65 45 58 Z" fill="rgba(0,0,0,0.34)" stroke="rgba(255,255,255,0.52)" strokeWidth="1"/>
-  {/* Left zygomatic arch */}
-  <path d="M7 57 C4 64 6 74 14 78 C21 81 28 80 32 78" fill="none" stroke="rgba(255,255,255,0.42)" strokeWidth="1.3" strokeLinecap="round"/>
-  {/* Right zygomatic arch */}
-  <path d="M93 57 C96 64 94 74 86 78 C79 81 72 80 68 78" fill="none" stroke="rgba(255,255,255,0.42)" strokeWidth="1.3" strokeLinecap="round"/>
-  {/* Upper teeth baseline */}
-  <path d="M34 97 L66 97" stroke="rgba(255,255,255,0.52)" strokeWidth="0.9"/>
-  {/* Individual teeth */}
-  <path d="M37 97 L37 103 M42 97 L42 104 M47 97 L47 104 M50 97 L50 104 M53 97 L53 104 M58 97 L58 104 M63 97 L63 103" stroke="rgba(255,255,255,0.38)" strokeWidth="0.9" strokeLinecap="round"/>
-  {/* Coronal suture */}
-  <path d="M18 30 C30 23 40 20 50 20 C60 20 70 23 82 30" fill="none" stroke="rgba(255,255,255,0.22)" strokeWidth="0.7" strokeDasharray="2.5,2"/>
-  {/* Sagittal suture */}
-  <path d="M50 5 L50 20" fill="none" stroke="rgba(255,255,255,0.22)" strokeWidth="0.7" strokeDasharray="2.5,2"/>
-  {/* Temporal lines */}
-  <path d="M19 24 C15 36 13 48 16 58" fill="none" stroke="rgba(255,255,255,0.17)" strokeWidth="0.7"/>
-  <path d="M81 24 C85 36 87 48 84 58" fill="none" stroke="rgba(255,255,255,0.17)" strokeWidth="0.7"/>
-  {/* Nose bridge */}
-  <path d="M44 42 L46 46 L50 48 L54 46 L56 42" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="0.8" strokeLinejoin="round"/>
-  {/* Infraorbital foramina */}
-  <circle cx="37" cy="59" r="1.4" fill="rgba(255,255,255,0.2)"/>
-  <circle cx="63" cy="59" r="1.4" fill="rgba(255,255,255,0.2)"/>
-  {/* Foramen magnum */}
-  <ellipse cx="50" cy="111" rx="7" ry="4" fill="none" stroke="rgba(255,255,255,0.18)" strokeWidth="0.7"/>
-  {/* Lambdoid suture hint */}
-  <path d="M18 46 C24 56 32 62 30 76" fill="none" stroke="rgba(255,255,255,0.14)" strokeWidth="0.6" strokeDasharray="2,2"/>
-  <path d="M82 46 C76 56 68 62 70 76" fill="none" stroke="rgba(255,255,255,0.14)" strokeWidth="0.6" strokeDasharray="2,2"/>
-</svg>
+            <svg viewBox="0 0 100 100" style={{ position:'absolute', bottom:'4%', right:'2%', width:'80%', opacity:0.92 }}><path d="M16 40 L58 40 L58 30 L74 35 L74 55 L58 60 L58 50 L30 50 L30 66 L16 66 Z" fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth="1.7"/><rect x="22" y="66" width="13" height="20" rx="2" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1.4"/><circle cx="66" cy="45" r="4.5" fill="rgba(255,255,255,0.18)"/></svg>
             <span style={{ position:'absolute', bottom:8, left:8, display:'flex', gap:4 }}>{[0,1,2,3].map(i=>(<span key={i} style={{ width:5, height:5, borderRadius:999, background:i===0?'#fff':'rgba(255,255,255,0.45)' }}/>))}</span>
           </div>
         </div>
 
         {/* buy box */}
         <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
-          <div style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em', color:'#3F8B5D' }}>3B SCIENTIFIC · IN STOCK · SHIPS TODAY</div>
-          <div style={{ fontFamily:'var(--font-hero)', fontWeight:700, fontSize:21, letterSpacing:'-0.04em', lineHeight:0.9, color:'var(--fg-1)' }}>3B Scientific<br/><span style={{ fontFamily:'var(--font-serif)', fontWeight:400, fontSize:16 }}>Skull 4-Part Model</span></div>
-          <div style={{ display:'flex', alignItems:'center', gap:6, fontFamily:'var(--font-mono)', fontSize:8 }}><span style={{ color:'var(--uc-brand)' }}>★★★★★</span><span style={{ color:'var(--fg-3)' }}>4.9 · 312 reviews</span></div>
+          <div style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em', color:'#3F8B5D' }}>WEEDOO · IN STOCK · SHIPS TODAY</div>
+          <div style={{ fontFamily:'var(--font-hero)', fontWeight:700, fontSize:21, letterSpacing:'-0.04em', lineHeight:0.9, color:'var(--fg-1)' }}>Weed-N-Mud<br/><span style={{ fontFamily:'var(--font-serif)', fontWeight:400, fontSize:16 }}>Propeller (Pair)</span></div>
+          <div style={{ display:'flex', alignItems:'center', gap:6, fontFamily:'var(--font-mono)', fontSize:8 }}><span style={{ color:'var(--uc-brand)' }}>★★★★★</span><span style={{ color:'var(--fg-3)' }}>4.9 · 128 reviews</span></div>
           {/* swatches */}
-          <div style={{ display:'flex', gap:5, marginTop:1 }}>{['#1B5272','#2E7EB8','#B0C4D4','#8AACBB'].map((c,i)=>(<span key={i} style={{ width:16, height:16, borderRadius:999, background:c, border:i===0?'1.5px solid var(--uc-black)':'1px solid var(--line-1)', boxShadow:i===0?'0 0 0 2px var(--uc-paper) inset':'none' }}/>))}</div>
+          <div style={{ display:'flex', gap:5, marginTop:1 }}>{['#2F6B3A','#16485A','#B8901F','#5E6E5C'].map((c,i)=>(<span key={i} style={{ width:16, height:16, borderRadius:999, background:c, border:i===0?'1.5px solid var(--uc-black)':'1px solid var(--line-1)', boxShadow:i===0?'0 0 0 2px var(--uc-paper) inset':'none' }}/>))}</div>
           {/* configuration — configurable product */}
           <div style={{ marginTop:1 }}>
             <div style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:4 }}>CONFIGURATION</div>
-            <div style={{ display:'flex', gap:4 }}>{[['4-part',true],['8-part',false],['Classroom 6pk',false]].map(([l,on],i)=>(<span key={i} style={{ flex:1, padding:'5px 2px', textAlign:'center', border:'1px solid', borderColor:on?'var(--uc-black)':'var(--line-1)', borderRadius:3, fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, color:on?'var(--uc-paper)':'var(--fg-2)', background:on?'var(--uc-black)':'transparent', whiteSpace:'nowrap' }}>{l}</span>))}</div>
+            <div style={{ display:'flex', gap:4 }}>{[['Standard',false],['Heavy-Duty',true],['Stainless',false]].map(([l,on],i)=>(<span key={i} style={{ flex:1, padding:'5px 2px', textAlign:'center', border:'1px solid', borderColor:on?'var(--uc-black)':'var(--line-1)', borderRadius:3, fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, color:on?'var(--uc-paper)':'var(--fg-2)', background:on?'var(--uc-black)':'transparent', whiteSpace:'nowrap' }}>{l}</span>))}</div>
           </div>
           {/* tier pricing — minimalist table */}
           <div style={{ marginTop:2, border:'1px solid var(--line-1)', borderRadius:3, overflow:'hidden' }}>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)' }}>{[['1+','$89'],['3+','$82'],['6+','$76'],['12+','$69']].map((t,i)=>(
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)' }}>{[['5+','$370'],['20+','$352'],['50+','$330'],['100+','$305']].map((t,i)=>(
               <div key={i} style={{ padding:'4px 2px', textAlign:'center', borderLeft:i?'1px solid var(--line-1)':'none' }}>
                 <div style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, color:'var(--fg-3)', letterSpacing:'0.04em' }}>{t[0]}</div>
                 <div style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--fg-1)', marginTop:2 }}>{t[1]}</div>
@@ -1003,17 +969,17 @@ function GfxPDP() {
                 <span style={{ padding:'8px 4px', minWidth:18, textAlign:'center', fontFamily:'var(--font-mono)', fontSize:9, fontWeight:700, color:'var(--fg-1)', borderLeft:'1px solid var(--line-1)', borderRight:'1px solid var(--line-1)' }}>1</span>
                 <span style={{ padding:'0 8px', fontFamily:'var(--font-mono)', fontSize:11, fontWeight:700, color:'var(--fg-2)' }}>+</span>
               </div>
-              <span style={{ flex:1, padding:'8px', textAlign:'center', background:'#1B5272', color:'#fff', borderRadius:3, fontFamily:'var(--font-display)', fontSize:9.5, fontWeight:800 }}>Add to cart</span>
+              <span style={{ flex:1, padding:'8px', textAlign:'center', background:'var(--uc-black)', color:'var(--uc-paper)', borderRadius:3, fontFamily:'var(--font-display)', fontSize:9.5, fontWeight:800 }}>Add to cart</span>
             </div>
             <span style={{ padding:'7px', textAlign:'center', border:'1px solid var(--uc-black)', borderRadius:3, fontFamily:'var(--font-display)', fontSize:9, fontWeight:700, color:'var(--fg-1)' }}>Request a Quote</span>
           </div>
           {/* trust row */}
-          <div style={{ display:'flex', gap:8, marginTop:3, flexWrap:'wrap' }}>{['✓ Lifetime guarantee','✓ Free returns','✓ Ships today'].map(t=>(<span key={t} style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, color:'var(--fg-3)' }}>{t}</span>))}</div>
+          <div style={{ display:'flex', gap:8, marginTop:3, flexWrap:'wrap' }}>{['✓ 2-yr warranty','✓ Free returns','✓ Ships today'].map(t=>(<span key={t} style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, color:'var(--fg-3)' }}>{t}</span>))}</div>
           {/* frequently bought together (compact, in buy box) */}
           <div style={{ marginTop:7, paddingTop:9, borderTop:'1px solid var(--line-1)' }}>
             <div style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:6 }}>FREQUENTLY BOUGHT TOGETHER</div>
             <div style={{ display:'flex', alignItems:'center', gap:5, marginBottom:8 }}>
-              {[['Skull 4-Part','$89','#1B5272'],['Brain Model 4Pt','$72','#2E7EB8'],['Anatomy Charts','$38','#B0C4D4']].map((p,i)=>(
+              {[['Weed-N-Mud Prop','$385','#2F6B3A'],['Prop Hub Kit','$96','#16485A'],['Shaft Seal Set','$44','#5E6E5C']].map((p,i)=>(
                 <React.Fragment key={i}>
                   {i>0 && <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:11, color:'var(--fg-3)', flexShrink:0 }}>+</span>}
                   <div style={{ flex:1, display:'flex', flexDirection:'column', gap:3 }}>
@@ -1025,8 +991,8 @@ function GfxPDP() {
               ))}
             </div>
             <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-              <span style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, color:'var(--fg-3)', whiteSpace:'nowrap' }}>Bundle <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:12, color:'var(--fg-1)' }}>$199</span></span>
-              <span style={{ flex:1, padding:'6px', textAlign:'center', background:'#1B5272', color:'#fff', borderRadius:3, fontFamily:'var(--font-display)', fontSize:8.5, fontWeight:700 }}>Add all 3</span>
+              <span style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, color:'var(--fg-3)', whiteSpace:'nowrap' }}>Bundle <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:12, color:'var(--fg-1)' }}>$505</span></span>
+              <span style={{ flex:1, padding:'6px', textAlign:'center', background:'var(--uc-black)', color:'var(--uc-paper)', borderRadius:3, fontFamily:'var(--font-display)', fontSize:8.5, fontWeight:700 }}>Add all 3</span>
             </div>
           </div>
         </div>
@@ -1036,11 +1002,11 @@ function GfxPDP() {
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:1, background:'var(--line-1)', borderTop:'1px solid var(--line-1)' }}>
         <div style={{ background:'var(--uc-paper)', padding:'11px 14px' }}>
           <div style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:7 }}>SPECIFICATIONS</div>
-          {[['Material','High-quality PVC'],['Parts','4-part'],['Scale','Life size'],['Weight','1.2 lb']].map((r,i)=>(<div key={i} style={{ display:'flex', justifyContent:'space-between', padding:'4px 0', borderTop:i?'1px solid var(--line-1)':'none', fontFamily:'var(--font-mono)', fontSize:8 }}><span style={{ color:'var(--fg-3)' }}>{r[0]}</span><span style={{ color:'var(--fg-1)', fontWeight:700 }}>{r[1]}</span></div>))}
+          {[['Material','Bronze alloy'],['Pitch','12°'],['Bore','1 in'],['Fits','TC-Series']].map((r,i)=>(<div key={i} style={{ display:'flex', justifyContent:'space-between', padding:'4px 0', borderTop:i?'1px solid var(--line-1)':'none', fontFamily:'var(--font-mono)', fontSize:8 }}><span style={{ color:'var(--fg-3)' }}>{r[0]}</span><span style={{ color:'var(--fg-1)', fontWeight:700 }}>{r[1]}</span></div>))}
         </div>
         <div style={{ background:'var(--uc-cream)', padding:'11px 14px' }}>
           <div style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:7 }}>WHY BUYERS CHOOSE IT</div>
-          <div style={{ display:'flex', flexDirection:'column', gap:6 }}>{['Used in 500+ medical schools worldwide.','Institution pricing and NET-30 terms available.','Same-day shipping on all in-stock models.'].map((t,i)=>(<div key={i} style={{ display:'grid', gridTemplateColumns:'12px 1fr', gap:7, alignItems:'start' }}><span style={{ width:10, height:10, borderRadius:999, background:'var(--uc-signal)', marginTop:1, display:'flex', alignItems:'center', justifyContent:'center' }}><svg width="6" height="6" viewBox="0 0 12 12" fill="none"><path d="M2 6 L5 9 L10 3" stroke="var(--uc-black)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg></span><span style={{ fontFamily:'var(--font-serif)', fontSize:9, lineHeight:1.35, color:'var(--fg-2)' }}>{t}</span></div>))}</div>
+          <div style={{ display:'flex', flexDirection:'column', gap:6 }}>{['Bites through weed and mud without fouling.','Fleet pricing and NET terms unlock at 5+ pairs.','Ships same day from Stuart, FL.'].map((t,i)=>(<div key={i} style={{ display:'grid', gridTemplateColumns:'12px 1fr', gap:7, alignItems:'start' }}><span style={{ width:10, height:10, borderRadius:999, background:'var(--uc-signal)', marginTop:1, display:'flex', alignItems:'center', justifyContent:'center' }}><svg width="6" height="6" viewBox="0 0 12 12" fill="none"><path d="M2 6 L5 9 L10 3" stroke="var(--uc-black)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg></span><span style={{ fontFamily:'var(--font-serif)', fontSize:9, lineHeight:1.35, color:'var(--fg-2)' }}>{t}</span></div>))}</div>
         </div>
       </div>
 
@@ -1049,7 +1015,7 @@ function GfxPDP() {
         <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:24, letterSpacing:'-0.04em', color:'var(--fg-1)' }}>4.9</span>
         <div style={{ flex:1 }}>
           <div style={{ fontFamily:'var(--font-mono)', fontSize:8, color:'var(--uc-brand)' }}>★★★★★</div>
-          <div style={{ fontFamily:'var(--font-serif)', fontStyle:'italic', fontSize:9, lineHeight:1.35, color:'var(--fg-2)', marginTop:2 }}>“Runs all day on the framing crew. Bought one for every truck.”</div>
+          <div style={{ fontFamily:'var(--font-serif)', fontStyle:'italic', fontSize:9, lineHeight:1.35, color:'var(--fg-2)', marginTop:2 }}>“Cuts through the thickest mats and keeps pushing. Put a set on every boat in the fleet.”</div>
         </div>
         <span style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, color:'var(--fg-3)', whiteSpace:'nowrap' }}>VERIFIED ✓</span>
       </div>
@@ -1057,7 +1023,7 @@ function GfxPDP() {
       {/* you may also like */}
       <div style={{ padding:'11px 14px', borderTop:'1px solid var(--line-1)', background:'var(--uc-bone)' }}>
         <div style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:8 }}>COMPLETE THE SET</div>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:7 }}>{[['Brain Model 4Pt','$72','#1B5272'],['Anatomy Charts','$38','#8AACBB'],['Spine Model','$119','#2E7EB8'],['Muscle Figure','$219','#B0C4D4']].map((p,i)=>(<div key={i} style={{ display:'flex', flexDirection:'column', gap:4 }}><div style={{ aspectRatio:'1/1', borderRadius:3, background:`linear-gradient(140deg, ${p[2]}, var(--uc-bone))` }}/><span style={{ fontFamily:'var(--font-display)', fontWeight:600, fontSize:7.5, color:'var(--fg-1)' }}>{p[0]}</span><span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--fg-1)' }}>{p[1]}</span></div>))}</div>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:7 }}>{[['Prop Hub Kit','$96','#2F6B3A'],['Shaft Seal Set','$44','#16485A'],['Skeg Guard','$78','#5E6E5C'],['Zinc Anodes','$28','#B8901F']].map((p,i)=>(<div key={i} style={{ display:'flex', flexDirection:'column', gap:4 }}><div style={{ aspectRatio:'1/1', borderRadius:3, background:`linear-gradient(140deg, ${p[2]}, var(--uc-bone))` }}/><span style={{ fontFamily:'var(--font-display)', fontWeight:600, fontSize:7.5, color:'var(--fg-1)' }}>{p[0]}</span><span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--fg-1)' }}>{p[1]}</span></div>))}</div>
       </div>
     </div>
   );
@@ -1069,12 +1035,13 @@ function GfxPortal() {
   return (
     <div style={{ background:'var(--uc-paper)', border:'1px solid var(--line-1)', borderRadius:5, overflow:'hidden' }}>
       {/* chrome */}
-      <div style={{ background:'#1B5272', color:'#fff', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>PRIVATE ORDERING PORTAL · INSTITUTION ACCOUNT ACTIVE</div>
+      <div style={{ background:'var(--uc-black)', color:'var(--uc-paper)', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>DEALER ORDERING PORTAL · NET-45 TERMS ACTIVE</div>
       <div style={{ display:'flex', alignItems:'center', gap:11, padding:'8px 14px', borderBottom:'1px solid var(--line-1)' }}>
+        <span style={{ width:14, height:14, borderRadius:999, background:'var(--uc-black)' }}/>
         <BrandMark fontSize={11}/>
         <span style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:7 }}>
-          <span style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, color:'var(--fg-3)' }}>CENTRAL MEDICAL UNIV.</span>
-          <span style={{ width:18, height:18, borderRadius:999, background:'linear-gradient(135deg,#2E7EB8,#1B5272)', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:800, color:'#fff' }}>M</span>
+          <span style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, color:'var(--fg-3)' }}>GULFSTREAM MARINE SERVICES</span>
+          <span style={{ width:18, height:18, borderRadius:999, background:'linear-gradient(135deg,#2F8B4E,#12442C)', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:800, color:'#fff' }}>G</span>
         </span>
       </div>
 
@@ -1082,7 +1049,7 @@ function GfxPortal() {
       <div style={{ display:'grid', gridTemplateColumns:'112px 1fr', gap:1, background:'var(--line-1)' }}>
         {/* sidebar */}
         <div style={{ background:'var(--uc-bone)', padding:'11px 10px', display:'flex', flexDirection:'column', gap:3 }}>
-          {nav.map((n,i)=>(<div key={i} style={{ display:'flex', alignItems:'center', gap:7, padding:'5px 7px', borderRadius:3, background:n[2]?'var(--uc-black)':'transparent' }}><span style={{ fontSize:9, color:n[2]?'#1B5272':'var(--fg-3)' }}>{n[0]}</span><span style={{ fontFamily:'var(--font-mono)', fontSize:8, fontWeight:700, color:n[2]?'var(--uc-paper)':'var(--fg-2)' }}>{n[1]}</span></div>))}
+          {nav.map((n,i)=>(<div key={i} style={{ display:'flex', alignItems:'center', gap:7, padding:'5px 7px', borderRadius:3, background:n[2]?'var(--uc-black)':'transparent' }}><span style={{ fontSize:9, color:n[2]?'var(--uc-signal)':'var(--fg-3)' }}>{n[0]}</span><span style={{ fontFamily:'var(--font-mono)', fontSize:8, fontWeight:700, color:n[2]?'var(--uc-paper)':'var(--fg-2)' }}>{n[1]}</span></div>))}
           <div style={{ marginTop:'auto', padding:'8px 7px 0' }}><div style={{ fontFamily:'var(--font-mono)', fontSize:6.5, color:'var(--fg-3)', lineHeight:1.5 }}>CREDIT LINE<br/><span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:13, letterSpacing:'-0.02em', color:'var(--fg-1)' }}>$118k</span> open</div></div>
         </div>
 
@@ -1119,36 +1086,36 @@ function GfxPortal() {
 }
 
 function GfxHomepage() {
-  const nav = ['Shop','Brands','Deals','New','Trade'];
+  const nav = ['Shop','Workboats','Attachments','Fitment','Dealers'];
   const mega = [
-    { h: 'By Category', items: ['Anatomical Models','Simulators','Anatomy Charts','Specimens','Custom Products','Simulated Meds'] },
-    { h: 'By Audience', items: ['Medical Schools','Nursing Programs','Veterinary','Hospitals'] },
-    { h: 'Quick Links', items: ['New Arrivals','Deals','Institution Pricing','Bulk Orders'] }
+    { h: 'By Boat', items: ['TC-3012','TC-3014','TC-6450 Amphibious','TC-6520 Harvester','AquaHarvester'] },
+    { h: 'By Job', items: ['Weed Cutting','Debris Removal','Oil Skimming','Shoreline Mowing'] },
+    { h: 'Quick Links', items: ['Attachments','Trailers','Parts & Accessories','Financing'] }
   ];
-  const brands = ['3B SCI','AXIS','ERLER','SOMSO','NASCO','VATA'];
-  const feat = [['Human Skull','$89.00','#B0C4D4','NEW'],['3B Heart','$124.00','#C4AEAD',null],['IV Training Arm','$159.00','#C8B89A','PRO'],['Brain Model','$72.00','#1B5272',null]];
+  const brands = ['WEEDOO','TIGERCAT','AQUAHARVESTER','BERKY','TORQEEDO','KUBOTA'];
+  const feat = [['TC-3012 Workboat','From $34,900','#2F6B3A','TC-SERIES'],['Marine Boom Cutter','$4,850','#16485A',null],['AquaHarvester','From $48,500','#1B6A55','NEW'],['T-1305 Trailer','$4,200','#B8901F','POPULAR']];
   return (
     <div style={{ background:'var(--uc-paper)', border:'1px solid var(--line-1)', borderRadius:5, overflow:'hidden' }}>
       {/* announcement */}
-      <div style={{ background:'#1B5272', color:'#fff', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>FREE SHIPPING OVER $100 · UNIVERSITY & HOSPITAL PRICING</div>
+      <div style={{ background:'var(--uc-black)', color:'var(--uc-paper)', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>MADE IN THE U.S.A. · FINANCING AVAILABLE · 844-WEEDOO-2</div>
       {/* header */}
       <div style={{ display:'flex', alignItems:'center', gap:11, padding:'8px 14px', borderBottom:'1px solid var(--line-1)' }}>
         <BrandMark fontSize={12}/>
         <div style={{ display:'flex', gap:11, marginLeft:6 }}>{nav.map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:i===0?'var(--fg-1)':'var(--fg-3)', position:'relative' }}>{x}{i===0 && <span style={{ position:'absolute', left:0, right:0, bottom:-9, height:2, background:'var(--uc-black)' }}/>}</span>))}</div>
         <span style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:7 }}>
-          <span style={{ width:120, height:18, borderRadius:999, border:'1px solid var(--line-2)', display:'flex', alignItems:'center', gap:4, padding:'0 9px', fontFamily:'var(--font-mono)', fontSize:7, color:'var(--fg-3)', whiteSpace:'nowrap', overflow:'hidden' }}><span style={{ fontSize:8 }}>⌕</span>Search anatomy & medical models…</span>
-          <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'#fff', background:'#1B5272', padding:'3px 8px', borderRadius:3, display:'inline-flex', alignItems:'center' }}><svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{display:'inline-block',verticalAlign:'middle',marginRight:2}}><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>Cart 6</span>
+          <span style={{ width:120, height:18, borderRadius:999, border:'1px solid var(--line-2)', display:'flex', alignItems:'center', gap:4, padding:'0 9px', fontFamily:'var(--font-mono)', fontSize:7, color:'var(--fg-3)', whiteSpace:'nowrap', overflow:'hidden' }}><span style={{ fontSize:8 }}>⌕</span>Search boats, parts…</span>
+          <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--uc-paper)', background:'var(--uc-black)', padding:'3px 8px', borderRadius:3 }}>Cart 6</span>
         </span>
       </div>
 
       {/* hero + mega menu overlay */}
-      <div style={{ position:'relative', height:188, background:'linear-gradient(100deg, #0D2034 0%, #1B5272 55%, #2E7EB8 135%)', overflow:'hidden' }}>
+      <div style={{ position:'relative', height:188, background:'linear-gradient(100deg, #0E2A1E 0%, #12442C 55%, #1E6B3A 135%)', overflow:'hidden' }}>
         <svg viewBox="0 0 200 90" preserveAspectRatio="none" style={{ position:'absolute', right:-10, bottom:-10, width:220, opacity:0.16 }}><path d="M5 85 L5 34 L52 34 L52 12 L104 12 L104 34 L195 34 L195 85 Z" fill="none" stroke="#fff" strokeWidth="1.6"/><path d="M28 85 L28 52 M78 85 L78 34 M150 85 L150 50" stroke="#fff" strokeWidth="1"/></svg>
         {/* hero copy (right 1/3) */}
         <div style={{ position:'absolute', right:18, top:0, bottom:0, width:'34%', display:'flex', flexDirection:'column', justifyContent:'center', gap:7 }}>
-          <span style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.16em', color:'var(--uc-signal)' }}>40,000+ EDUCATORS TRUST US</span>
-          <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:24, letterSpacing:'-0.04em', lineHeight:0.9, color:'#fff' }}>Medical education<br/><span style={{ fontFamily:'var(--font-serif)', fontWeight:400 }}>at scale.</span></span>
-          <span style={{ alignSelf:'flex-start', marginTop:2, padding:'5px 13px', background:'#1B5272', color:'#fff', borderRadius:999, fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:800 }}>Shop models →</span>
+          <span style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.16em', color:'var(--uc-signal)' }}>MADE IN THE U.S.A.</span>
+          <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:24, letterSpacing:'-0.04em', lineHeight:0.9, color:'#fff' }}>Nothing cleans<br/><span style={{ fontFamily:'var(--font-serif)', fontWeight:400 }}>waterways better.</span></span>
+          <span style={{ alignSelf:'flex-start', marginTop:2, padding:'5px 13px', background:'var(--uc-signal)', color:'var(--uc-black)', borderRadius:999, fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:800 }}>Explore workboats →</span>
         </div>
         {/* mega menu over 2/3 */}
         <div style={{ position:'absolute', left:0, top:0, bottom:0, width:'64%', background:'rgba(248,246,240,0.97)', borderRight:'1px solid var(--line-2)', boxShadow:'10px 0 30px -16px rgba(0,0,0,0.5)', padding:'14px 16px', display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:14 }}>
@@ -1161,11 +1128,11 @@ function GfxHomepage() {
         </div>
       </div>
 
-      {/* Year / Make / Model fitment */}
+      {/* Boat finder */}
       <div style={{ background:'var(--uc-black)', padding:'10px 14px', display:'flex', alignItems:'center', gap:8 }}>
-        <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, letterSpacing:'0.08em', color:'#B8D4E8', whiteSpace:'nowrap' }}>FIND YOUR FIT</span>
-        {['Product','Brand','Profession'].map((f,i)=>(<span key={f} style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'space-between', height:22, background:'var(--uc-paper)', borderRadius:4, padding:'0 9px', fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--fg-2)' }}>{f}<span style={{ color:'var(--fg-3)' }}>▾</span></span>))}
-        <span style={{ display:'inline-flex', alignItems:'center', height:22, padding:'0 12px', background:'#1B5272', color:'#fff', borderRadius:4, fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:800, whiteSpace:'nowrap' }}>Find Now →</span>
+        <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, letterSpacing:'0.08em', color:'var(--uc-signal)', whiteSpace:'nowrap' }}>FIND YOUR BOAT</span>
+        {['Application','Waterway','Model'].map((f,i)=>(<span key={f} style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'space-between', height:22, background:'var(--uc-paper)', borderRadius:4, padding:'0 9px', fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--fg-2)' }}>{f}<span style={{ color:'var(--fg-3)' }}>▾</span></span>))}
+        <span style={{ display:'inline-flex', alignItems:'center', height:22, padding:'0 12px', background:'var(--uc-signal)', color:'var(--uc-black)', borderRadius:4, fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:800, whiteSpace:'nowrap' }}>Match Me →</span>
       </div>
 
       {/* brand strip */}
@@ -1188,10 +1155,10 @@ function GfxHomepage() {
 
       {/* brand story — image + text */}
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:0, borderTop:'1px solid var(--line-1)' }}>
-        <div style={{ background:'linear-gradient(150deg, #1B5272, #0D2034)', minHeight:96, position:'relative' }}><span style={{ position:'absolute', bottom:8, left:10, padding:'2px 7px', background:'var(--uc-paper)', borderRadius:3, fontFamily:'var(--font-mono)', fontSize:5.5, fontWeight:800, letterSpacing:'0.1em', color:'var(--fg-3)' }}>SKOKIE, IL</span></div>
+        <div style={{ background:'linear-gradient(150deg, #17614A, #0E2A1E)', minHeight:96, position:'relative' }}><span style={{ position:'absolute', bottom:8, left:10, padding:'2px 7px', background:'var(--uc-paper)', borderRadius:3, fontFamily:'var(--font-mono)', fontSize:5.5, fontWeight:800, letterSpacing:'0.1em', color:'var(--fg-3)' }}>20+ YEARS</span></div>
         <div style={{ padding:'16px 16px', display:'flex', flexDirection:'column', justifyContent:'center', gap:7, background:'var(--uc-bone)' }}>
           <span style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, letterSpacing:'0.14em', color:'var(--fg-3)' }}>OUR STORY</span>
-          <span style={{ fontFamily:'var(--font-serif)', fontStyle:'italic', fontSize:14, lineHeight:1.3, letterSpacing:'-0.01em', color:'var(--fg-1)' }}>Serving universities, hospitals and medical schools with the best anatomy education tools.</span>
+          <span style={{ fontFamily:'var(--font-serif)', fontStyle:'italic', fontSize:14, lineHeight:1.3, letterSpacing:'-0.01em', color:'var(--fg-1)' }}>South Florida’s premier maker of environmental workboats — proudly made in the U.S.A.</span>
           <span style={{ alignSelf:'flex-start', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, color:'var(--fg-1)', borderBottom:'1.5px solid var(--uc-signal)', paddingBottom:1 }}>Read our story →</span>
         </div>
       </div>
@@ -1207,7 +1174,7 @@ function BPPerformance() {
       points: [
         { t: 'Customer Journey', d: 'Streamlined and tailored paths from landing to checkout, for both retail and trade buyers.' },
         { t: 'Information Architecture', d: 'Mega navigation with multi-level menus built around how shops actually browse.' },
-        { t: 'Product Finding', d: 'Product, Brand, Profession fitment, quizzes, and creative ways to find products.' }
+        { t: 'Product Finding', d: 'Year / Make / Model fitment, quizzes, and creative ways to find products.' }
       ],
       gfx: <GfxHomepage/>
     },
@@ -1299,7 +1266,7 @@ function BPPerformance() {
 
 // ── 06b CONTENT ──────────────────────────────────────────────────────────────
 function GfxPhone({ kind }) {
-  // Mobile construction-supply storefront. kind: 'home' | 'about' | 'blog'
+  // Mobile Weedoo workboat storefront. kind: 'home' | 'about' | 'blog'
   return (
     <div style={{
       background:'var(--uc-paper)', border:'1px solid var(--line-2)', borderRadius:18,
@@ -1319,15 +1286,15 @@ function GfxPhone({ kind }) {
               <BrandMark fontSize={14} family="var(--font-hero)" weight={800} letterSpacing="-0.045em"/>
             </span>
             <span style={{ display:'inline-flex', gap:6, alignItems:'center' }}>
-              <span style={{ display:'inline-flex', alignItems:'center', gap:5, height:22, padding:'0 9px', background:'#1B5272', borderRadius:5, fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'#fff' }}><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{display:'inline-block',verticalAlign:'middle',marginRight:2}}><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>Cart<span style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', minWidth:11, height:11, padding:'0 2px', background:'#fff', color:'#1B5272', borderRadius:999, fontSize:6, fontWeight:800 }}>6</span></span>
+              <span style={{ display:'inline-flex', alignItems:'center', gap:5, height:22, padding:'0 9px', background:'var(--uc-black)', borderRadius:5, fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--uc-paper)' }}>⛒ Cart<span style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', minWidth:11, height:11, padding:'0 2px', background:'var(--uc-signal)', color:'var(--uc-black)', borderRadius:999, fontSize:6, fontWeight:800 }}>6</span></span>
             </span>
           </div>
           {/* big open search */}
           <div style={{ padding:'0 12px 9px' }}>
             <div style={{ display:'flex', alignItems:'center', gap:8, height:30, border:'1.5px solid var(--uc-black)', borderRadius:5, padding:'0 4px 0 10px' }}>
               <span style={{ fontSize:10, color:'var(--fg-2)' }}>⌕</span>
-              <span style={{ flex:1, fontFamily:'var(--font-mono)', fontSize:8, color:'var(--fg-3)' }}>Search anatomy & medical models…</span>
-              <span style={{ alignSelf:'stretch', display:'flex', alignItems:'center', padding:'0 9px', margin:'3px 0', background:'#1B5272', color:'#fff', borderRadius:3, fontFamily:'var(--font-mono)', fontSize:7, fontWeight:800 }}>GO</span>
+              <span style={{ flex:1, fontFamily:'var(--font-mono)', fontSize:8, color:'var(--fg-3)' }}>Search boats, parts…</span>
+              <span style={{ alignSelf:'stretch', display:'flex', alignItems:'center', padding:'0 9px', margin:'3px 0', background:'var(--uc-signal)', color:'var(--uc-black)', borderRadius:3, fontFamily:'var(--font-mono)', fontSize:7, fontWeight:800 }}>GO</span>
             </div>
           </div>
         </div>
@@ -1336,21 +1303,21 @@ function GfxPhone({ kind }) {
         {kind === 'home' && (
           <div style={{ display:'flex', flexDirection:'column' }}>
             {/* contractor announcement */}
-            <div style={{ background:'#1B5272', color:'#fff', padding:'4px 0', textAlign:'center', fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, letterSpacing:'0.12em' }}>FREE SHIPPING OVER $100 · UNIVERSITY & HOSPITAL PRICING</div>
+            <div style={{ background:'var(--uc-black)', color:'var(--uc-paper)', padding:'4px 0', textAlign:'center', fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, letterSpacing:'0.12em' }}>MADE IN THE U.S.A. · FINANCING AVAILABLE · 844-WEEDOO-2</div>
             {/* SHORT hero banner */}
-            <div style={{ margin:'10px 12px 0', borderRadius:8, background:'linear-gradient(100deg, #0D2034 0%, #1B5272 55%, #2E7EB8 135%)', position:'relative', overflow:'hidden', padding:'12px 13px', display:'flex', flexDirection:'column', gap:5, minHeight:96 }}>
+            <div style={{ margin:'10px 12px 0', borderRadius:8, background:'linear-gradient(100deg, #0E2A1E 0%, #12442C 55%, #1E6B3A 135%)', position:'relative', overflow:'hidden', padding:'12px 13px', display:'flex', flexDirection:'column', gap:5, minHeight:96 }}>
               <svg viewBox="0 0 120 60" style={{ position:'absolute', right:-6, bottom:-6, width:120, opacity:0.18 }}><path d="M5 55 L5 22 L32 22 L32 8 L62 8 L62 22 L115 22 L115 55 Z" fill="none" stroke="#fff" strokeWidth="1.6"/><path d="M16 55 L16 33 M46 55 L46 22 M88 55 L88 32" stroke="#fff" strokeWidth="1"/></svg>
-              <span style={{ fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, letterSpacing:'0.16em', color:'var(--uc-signal)' }}>40,000+ EDUCATORS TRUST US</span>
-              <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:18, letterSpacing:'-0.04em', lineHeight:0.9, color:'#fff' }}>Medical education<br/><span style={{ fontFamily:'var(--font-serif)', fontWeight:400 }}>at scale.</span></span>
-              <span style={{ alignSelf:'flex-start', marginTop:2, padding:'5px 12px', background:'#1B5272', color:'#fff', borderRadius:999, fontFamily:'var(--font-mono)', fontSize:7, fontWeight:800 }}>Shop models →</span>
+              <span style={{ fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, letterSpacing:'0.16em', color:'var(--uc-signal)' }}>MADE IN THE U.S.A.</span>
+              <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:18, letterSpacing:'-0.04em', lineHeight:0.9, color:'#fff' }}>Nothing cleans<br/><span style={{ fontFamily:'var(--font-serif)', fontWeight:400 }}>waterways better.</span></span>
+              <span style={{ alignSelf:'flex-start', marginTop:2, padding:'5px 12px', background:'var(--uc-signal)', color:'var(--uc-black)', borderRadius:999, fontFamily:'var(--font-mono)', fontSize:7, fontWeight:800 }}>Explore workboats →</span>
             </div>
             {/* brand strip */}
-            <div style={{ display:'flex', alignItems:'center', gap:0, margin:'11px 0 0', padding:'8px 12px', borderTop:'1px solid var(--line-1)', borderBottom:'1px solid var(--line-1)', justifyContent:'space-between' }}>{['3B SCI','AXIS','ERLER','SOMSO','NASCO'].map(b=>(<span key={b} style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:9, letterSpacing:'-0.02em', color:'var(--fg-3)' }}>{b}</span>))}</div>
+            <div style={{ display:'flex', alignItems:'center', gap:0, margin:'11px 0 0', padding:'8px 12px', borderTop:'1px solid var(--line-1)', borderBottom:'1px solid var(--line-1)', justifyContent:'space-between' }}>{['WEEDOO','TIGERCAT','AQUAHARVESTER','BERKY','TORQEEDO'].map(b=>(<span key={b} style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:8, letterSpacing:'-0.02em', color:'var(--fg-3)' }}>{b}</span>))}</div>
             {/* product tabs */}
             <div style={{ display:'flex', gap:13, padding:'10px 12px 8px' }}>{['Best Sellers','New','Deals'].map((t,i)=>(<span key={t} style={{ paddingBottom:4, fontFamily:'var(--font-display)', fontWeight:700, fontSize:9, color:i===0?'var(--fg-1)':'var(--fg-3)', borderBottom:i===0?'2px solid var(--uc-black)':'2px solid transparent' }}>{t}</span>))}</div>
             {/* product grid */}
             <div style={{ padding:'0 12px 11px', display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
-              {[['Human Skull','$89.00','#B0C4D4','NEW'],['3B Heart','$124.00','#C4AEAD',null],['IV Training Arm','$159.00','#C8B89A','PRO'],['Brain Model','$72.00','#1B5272','DEAL']].map((p,i)=>(
+              {[['TC-3012 Workboat','From $34,900','#2F6B3A','TC-SERIES'],['Marine Boom Cutter','$4,850','#16485A',null],['Weed-N-Mud Prop','$385','#1B6A55','NEW'],['T-1305 Trailer','$4,200','#B8901F','DEAL']].map((p,i)=>(
                 <div key={i} style={{ display:'flex', flexDirection:'column', gap:4 }}>
                   <div style={{ aspectRatio:'1/0.86', borderRadius:5, background:`linear-gradient(150deg, ${p[2]}, var(--uc-bone))`, position:'relative' }}>{p[3] && <span style={{ position:'absolute', top:5, left:5, padding:'1px 6px', background:p[3]==='DEAL'?'var(--uc-brand)':(p[3]==='NEW'?'var(--uc-black)':'#3F8B5D'), color:'#fff', borderRadius:2, fontFamily:'var(--font-mono)', fontSize:5, fontWeight:800 }}>{p[3]}</span>}<span style={{ position:'absolute', bottom:5, right:5, width:16, height:16, borderRadius:999, background:'var(--uc-paper)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, color:'var(--fg-1)' }}>＋</span></div>
                   <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:8, color:'var(--fg-1)', letterSpacing:'-0.01em' }}>{p[0]}</span>
@@ -1361,7 +1328,7 @@ function GfxPhone({ kind }) {
             {/* categories */}
             <div style={{ padding:'0 12px 12px' }}>
               <div style={{ fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:6 }}>SHOP BY CATEGORY</div>
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:6 }}>{[['Models','#B0C4D4'],['Simulators','#1B5272'],['Charts','#8AACBB'],['Specimens','#C4AEAD']].map((c,i)=>(<div key={i} style={{ display:'flex', flexDirection:'column', gap:3 }}><div style={{ aspectRatio:'1/1', borderRadius:4, background:`linear-gradient(140deg, ${c[1]}, var(--uc-bone))` }}/><span style={{ fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, textAlign:'center', color:'var(--fg-2)' }}>{c[0]}</span></div>))}</div>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:6 }}>{[['Workboats','#2F6B3A'],['Attachments','#16485A'],['Conveyors','#1B6A55'],['Parts','#B8901F']].map((c,i)=>(<div key={i} style={{ display:'flex', flexDirection:'column', gap:3 }}><div style={{ aspectRatio:'1/1', borderRadius:4, background:`linear-gradient(140deg, ${c[1]}, var(--uc-bone))` }}/><span style={{ fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, textAlign:'center', color:'var(--fg-2)' }}>{c[0]}</span></div>))}</div>
             </div>
           </div>
         )}
@@ -1369,19 +1336,19 @@ function GfxPhone({ kind }) {
           <div style={{ display:'flex', flexDirection:'column' }}>
             {/* editorial hero */}
             <div style={{ padding:'14px 13px 10px', display:'flex', flexDirection:'column', gap:6 }}>
-              <span style={{ display:'inline-flex', alignItems:'center', gap:5, fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, letterSpacing:'0.16em', color:'var(--fg-3)' }}><span style={{ width:5, height:5, borderRadius:999, background:'#1B5272' }}/>SKOKIE, IL · ANATOMYWAREHOUSE.COM</span>
-              <span style={{ fontFamily:'var(--font-hero)', fontWeight:700, fontSize:21, letterSpacing:'-0.045em', lineHeight:0.9, color:'var(--fg-1)' }}>Serving medical<br/><span style={{ fontFamily:'var(--font-serif)', fontWeight:400 }}>educators worldwide.</span></span>
+              <span style={{ display:'inline-flex', alignItems:'center', gap:5, fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, letterSpacing:'0.16em', color:'var(--fg-3)' }}><span style={{ width:5, height:5, borderRadius:999, background:'var(--uc-signal)' }}/>20+ YEARS · MADE IN U.S.A.</span>
+              <span style={{ fontFamily:'var(--font-hero)', fontWeight:700, fontSize:21, letterSpacing:'-0.045em', lineHeight:0.9, color:'var(--fg-1)' }}>Cleaning the world’s<br/><span style={{ fontFamily:'var(--font-serif)', fontWeight:400 }}>waterways.</span></span>
             </div>
             {/* overlapping image cards */}
             <div style={{ position:'relative', height:112, margin:'2px 13px 8px' }}>
-              <div style={{ position:'absolute', left:0, top:8, width:'58%', aspectRatio:'4/3', borderRadius:5, background:'linear-gradient(150deg, #B0C4D4, var(--uc-bone))', transform:'rotate(-4deg)', boxShadow:'0 8px 16px -10px rgba(10,10,10,0.45)' }}/>
-              <div style={{ position:'absolute', right:6, top:0, width:'52%', aspectRatio:'3/4', borderRadius:5, background:'linear-gradient(150deg, #1B5272, var(--uc-bone))', transform:'rotate(6deg)', boxShadow:'0 8px 16px -10px rgba(10,10,10,0.4)' }}/>
-              <span style={{ position:'absolute', left:'33%', bottom:2, padding:'3px 8px', background:'var(--uc-paper)', border:'1px solid var(--line-1)', borderRadius:3, fontFamily:'var(--font-mono)', fontSize:5.5, fontWeight:800, letterSpacing:'0.1em', color:'var(--fg-3)', transform:'rotate(-3deg)' }}>ORIGINAL LOCATION</span>
+              <div style={{ position:'absolute', left:0, top:8, width:'58%', aspectRatio:'4/3', borderRadius:5, background:'linear-gradient(150deg, #2F8B4E, var(--uc-bone))', transform:'rotate(-4deg)', boxShadow:'0 8px 16px -10px rgba(10,10,10,0.45)' }}/>
+              <div style={{ position:'absolute', right:6, top:0, width:'52%', aspectRatio:'3/4', borderRadius:5, background:'linear-gradient(150deg, #16485A, var(--uc-bone))', transform:'rotate(6deg)', boxShadow:'0 8px 16px -10px rgba(10,10,10,0.4)' }}/>
+              <span style={{ position:'absolute', left:'33%', bottom:2, padding:'3px 8px', background:'var(--uc-paper)', border:'1px solid var(--line-1)', borderRadius:3, fontFamily:'var(--font-mono)', fontSize:5.5, fontWeight:800, letterSpacing:'0.1em', color:'var(--fg-3)', transform:'rotate(-3deg)' }}>STUART, FL</span>
             </div>
             {/* manifesto */}
-            <div style={{ padding:'4px 13px 8px' }}><span style={{ fontFamily:'var(--font-serif)', fontStyle:'italic', fontSize:10.5, lineHeight:1.45, color:'var(--fg-2)' }}>“One yard became fourteen branches. Same promise: the right material, on the truck, on time.”</span></div>
+            <div style={{ padding:'4px 13px 8px' }}><span style={{ fontFamily:'var(--font-serif)', fontStyle:'italic', fontSize:10.5, lineHeight:1.45, color:'var(--fg-2)' }}>“Based in South Florida with 20+ years — the industry’s premier maker of environmental workboats.”</span></div>
             {/* stat strip */}
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:6, padding:'8px 13px', borderTop:'1px solid var(--line-1)', background:'var(--uc-paper)' }}>{[['14','Branches'],['40k','SKUs'],['50yr','In trade']].map((s,i)=>(<div key={i}><div style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:14, letterSpacing:'-0.035em', color:'var(--fg-1)' }}>{s[0]}</div><div style={{ fontFamily:'var(--font-mono)', fontSize:5.5, color:'var(--fg-3)', letterSpacing:'0.08em', textTransform:'uppercase' }}>{s[1]}</div></div>))}</div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:6, padding:'8px 13px', borderTop:'1px solid var(--line-1)', background:'var(--uc-paper)' }}>{[['500','lb/min'],['20+','Years'],['USA','Made']].map((s,i)=>(<div key={i}><div style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:14, letterSpacing:'-0.035em', color:'var(--fg-1)' }}>{s[0]}</div><div style={{ fontFamily:'var(--font-mono)', fontSize:5.5, color:'var(--fg-3)', letterSpacing:'0.08em', textTransform:'uppercase' }}>{s[1]}</div></div>))}</div>
           </div>
         )}
         {kind === 'blog' && (
@@ -1389,15 +1356,15 @@ function GfxPhone({ kind }) {
             <div style={{ padding:'12px 13px 8px' }}><span style={{ fontFamily:'var(--font-hero)', fontWeight:700, fontSize:19, letterSpacing:'-0.04em', color:'var(--fg-1)' }}>Field Guides</span></div>
             {/* featured story */}
             <div style={{ margin:'0 13px', borderRadius:6, overflow:'hidden', border:'1px solid var(--line-1)' }}>
-              <div style={{ aspectRatio:'16/9', background:'radial-gradient(120% 100% at 30% 10%, #C2A878, #6E5235)', position:'relative' }}><span style={{ position:'absolute', top:7, left:7, padding:'2px 7px', background:'var(--uc-signal)', color:'var(--uc-black)', borderRadius:999, fontFamily:'var(--font-mono)', fontSize:6, fontWeight:800, letterSpacing:'0.06em' }}>FEATURED</span></div>
+              <div style={{ aspectRatio:'16/9', background:'radial-gradient(120% 100% at 30% 10%, #2F8B4E, #12442C)', position:'relative' }}><span style={{ position:'absolute', top:7, left:7, padding:'2px 7px', background:'var(--uc-signal)', color:'var(--uc-black)', borderRadius:999, fontFamily:'var(--font-mono)', fontSize:6, fontWeight:800, letterSpacing:'0.06em' }}>FEATURED</span></div>
               <div style={{ padding:'9px 11px', background:'var(--uc-paper)', display:'flex', flexDirection:'column', gap:4 }}>
-                <span style={{ fontFamily:'var(--font-mono)', fontSize:5.5, fontWeight:700, letterSpacing:'0.12em', color:'var(--fg-3)' }}>CONCRETE · 7 MIN</span>
-                <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:12.5, letterSpacing:'-0.018em', lineHeight:1.08, color:'var(--fg-1)' }}>Concrete cure times, by the spec.</span>
+                <span style={{ fontFamily:'var(--font-mono)', fontSize:5.5, fontWeight:700, letterSpacing:'0.12em', color:'var(--fg-3)' }}>WEED CONTROL · 7 MIN</span>
+                <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:12.5, letterSpacing:'-0.018em', lineHeight:1.08, color:'var(--fg-1)' }}>Choosing the right workboat for your lake.</span>
               </div>
             </div>
             {/* article list */}
             <div style={{ padding:'10px 13px', display:'flex', flexDirection:'column', gap:9 }}>
-              {[['Rebar bending basics','5 min','#9C8F7A'],['Choosing the right fastener','6 min','#8A8780'],['Conduit fill calculations','8 min','#C8A14E']].map((a,i)=>(
+              {[['Cutting vs. harvesting, explained','5 min','#2F6B3A'],['Electric vs. diesel PowerPacks','6 min','#16485A'],['Sizing a boat to your waterway','8 min','#B8901F']].map((a,i)=>(
                 <div key={i} style={{ display:'grid', gridTemplateColumns:'42px 1fr', gap:9, alignItems:'center' }}>
                   <div style={{ aspectRatio:'1/1', borderRadius:4, background:`linear-gradient(150deg, ${a[2]}, var(--uc-bone))` }}/>
                   <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
@@ -1417,8 +1384,8 @@ function GfxPhone({ kind }) {
 // ── 06b CONTENT ──────────────────────────────────────────────────────────────
 function BPContent() {
   const screens = [
-    { kind: 'home',  label: 'Landing Pages', d: 'Short hero, brand wall, live product tabs, and a department grid — a merchandising surface that gets pros to the full catalog fast.' },
-    { kind: 'about', label: 'Brand Story', d: 'Supplier story and proof — branch network and credentials that win contractor trust and rank for branded search.' },
+    { kind: 'home',  label: 'Landing Pages', d: 'Short hero, brand wall, live product tabs, and a boat lineup grid — a merchandising surface that gets buyers to the full catalog fast.' },
+    { kind: 'about', label: 'Brand Story', d: 'Manufacturer story and proof — 20+ years, made in the U.S.A., and the credentials that win buyer trust and rank for branded search.' },
     { kind: 'blog',  label: 'Guides & Resources', d: 'How-to and spec content engineered for SEO, GEO, and paid landing — each guide a destination that routes to product.' }
   ];
   return (
@@ -1432,7 +1399,7 @@ function BPContent() {
         fontFamily:'var(--font-serif)', fontSize:'clamp(15px, 1.3vw, 18px)',
         lineHeight:1.55, color:'var(--fg-2)'
       }}>
-        We build the full mobile content surface for a large-catalog supplier — homepage,
+        We build the full mobile content surface for an equipment manufacturer — homepage,
         brand story, and field guides. Each screen is structured for SEO and generative
         (GEO) discovery, and tuned as a destination for paid media.
       </p>
@@ -1524,28 +1491,19 @@ function BPContent() {
 // ── 07 TECH STACK ──────────────────────────────────────────────────────────
 function BPTechStack() {
   const rows = [
-    { name: 'Shopify Plus',              fn: 'Commerce platform foundation',      pri: 'start',  cost: '$2,300/mo' },
-    { name: 'Shopify B2B',               fn: 'Native B2B ordering portal',         pri: 'start',  cost: 'Included' },
-    { name: 'Shopify Search & Discovery',fn: 'Product search + merchandising',    pri: 'start',  cost: 'Free' },
-    { name: 'Shopify Checkout Blocks',   fn: 'Custom checkout experience',         pri: 'start',  cost: 'Free' },
-    { name: 'Shopify Flow',              fn: 'Automation + workflows',             pri: 'start',  cost: 'Free' },
-    { name: 'Shopify Digital Downloads', fn: 'Digital product delivery',          pri: 'start',  cost: 'Free' },
-    { name: 'Shopify Knowledge Base',    fn: 'Help center + product docs',        pri: 'start',  cost: 'Free' },
-    { name: 'Google & Facebook Apps',    fn: 'Free Shopify channels for catalog + ads',pri: 'start',  cost: '$0' },
-    { name: 'Uncap Quotes',              fn: 'Quote management + B2B sales',      pri: 'start',  cost: '$100/mo' },
-    { name: 'TaxCloud App',              fn: 'Tax compliance',                    pri: 'launch', cost: 'Free' },
-    { name: 'Brightpearl App',           fn: 'ERP + inventory sync',              pri: 'launch', cost: 'Free' },
-    { name: 'HubSpot App',               fn: 'CRM + marketing automation',        pri: 'launch', cost: 'Free' },
-    { name: 'JudgeMe',                   fn: 'Reviews + social proof',            pri: 'launch', cost: '$15/mo' },
-    { name: 'Rewind Backups',            fn: 'Store backup + restore',            pri: 'launch', cost: '$50/mo' },
-    { name: 'Affiliatly',                fn: 'Affiliate marketing',               pri: 'launch', cost: '$40/mo' },
-    { name: 'Matrixify',                 fn: 'Data import + migration',           pri: 'optional', cost: '~$20/mo' }
+    { name: 'Shopify Plus',               fn: 'Commerce platform + B2B',              pri: 'start',  cost: '$2,300/mo' },
+    { name: 'Shopify Search & Discovery', fn: 'Faceted filters + on-site search',     pri: 'start',  cost: 'Included' },
+    { name: 'Shopify Checkout Blocks',    fn: 'Custom, high-converting checkout',     pri: 'launch', cost: 'Included' },
+    { name: 'Shopify Flow',               fn: 'Back-office automation',               pri: 'launch', cost: 'Included' },
+    { name: 'Shopify Knowledge Base',     fn: 'Help center + support content',        pri: 'launch', cost: 'Included' },
+    { name: 'Uncap Quotes',               fn: 'Quote management',                     pri: 'start',  cost: '$199/mo' },
+    { name: 'Uncap Connect',              fn: 'Salesforce integration',               pri: 'start',  cost: '$600/mo' },
+    { name: 'accessiBe',                  fn: 'ADA / WCAG accessibility compliance',  pri: 'launch', cost: '$490/mo' }
   ];
   const priMeta = {
     start:  { l: 'Needed to start',  c: 'var(--uc-signal)', fg: 'var(--uc-black)' },
     launch: { l: 'Needed on launch', c: '#FF8B37',          fg: 'var(--uc-black)' },
-    future: { l: 'Future phase',     c: 'transparent',      fg: 'var(--fg-3)', outline: true },
-    optional:{ l: 'Optional',        c: 'transparent',      fg: 'var(--uc-stone-300)', outline: true }
+    future: { l: 'Future phase',     c: 'transparent',      fg: 'var(--fg-3)', outline: true }
   };
   return (
     <BPSection id="techstack" n="08" label="Architecture" dark grid tail="WHAT IT RUNS ON">
@@ -1567,9 +1525,9 @@ function BPTechStack() {
 
         {(() => {
           const layers = [
-            { tier:'04', name:'Growth & Retention', note:'After launch', tools:[['JudgeMe','launch'],['Rewind Backups','launch'],['Affiliatly','future'],['HubSpot App','future']] },
-            { tier:'03', name:'Data & Integrations', note:'Operations', tools:[['Brightpearl App','launch'],['TaxCloud App','launch']] },
-            { tier:'02', name:'Commerce Tools', note:'Built on Shopify', tools:[['Shopify B2B','start'],['Uncap Quotes','start'],['Google & Facebook Apps','start'],['Search & Discovery','start'],['Checkout Blocks','start'],['Flow','start']] },
+            { tier:'04', name:'Automation & Content', note:'Runs itself', tools:[['Shopify Flow','launch'],['Knowledge Base','launch']] },
+            { tier:'03', name:'Experience & Engagement', note:'Customer-facing', tools:[['Search & Discovery','start'],['Checkout Blocks','launch'],['accessiBe','launch']] },
+            { tier:'02', name:'Data & Integration', note:'System of record', tools:[['Uncap Connect','start'],['Uncap Quotes','start']] },
             { tier:'01', name:'Commerce Core', note:'Foundation', tools:[['Shopify Plus','start']], core:true }
           ];
           const chip = { start:{ bg:'var(--uc-signal)', fg:'var(--uc-black)' }, launch:{ bg:'#FF8B37', fg:'var(--uc-black)' }, future:{ bg:'transparent', fg:'var(--uc-stone-300)', outline:true } };
@@ -1626,14 +1584,14 @@ function BPTechStack() {
       <div style={{ marginTop:'clamp(28px, 3.5vw, 44px)', background:'#15120D', border:'1px solid #241F18', borderRadius:12, padding:'clamp(18px, 2.4vw, 32px)' }}>
       <div style={{ border:'1px solid #1F1F1F', borderRadius:6, overflow:'hidden' }}>
         {/* Header */}
-        <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1.1fr) minmax(0,1.6fr) minmax(0,1.1fr) 96px', gap:16, padding:'12px 18px', background:'#0F0F0F', borderBottom:'1px solid #1F1F1F', fontFamily:'var(--font-mono)', fontSize:10, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'var(--uc-stone-500)' }}>
-          <span>Name</span><span>Functionality</span><span style={{ textAlign:'center' }}>Priority</span><span style={{ textAlign:'right' }}>Cost</span>
+        <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1.1fr) minmax(0,1.6fr) minmax(0,1.1fr)', gap:16, padding:'12px 18px', background:'#0F0F0F', borderBottom:'1px solid #1F1F1F', fontFamily:'var(--font-mono)', fontSize:10, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'var(--uc-stone-500)' }}>
+          <span>Name</span><span>Functionality</span><span style={{ textAlign:'center' }}>Priority</span>
         </div>
         {/* Rows */}
         {rows.map((r, i) => {
           const m = priMeta[r.pri];
           return (
-            <div key={i} style={{ display:'grid', gridTemplateColumns:'minmax(0,1.1fr) minmax(0,1.6fr) minmax(0,1.1fr) 96px', gap:16, padding:'14px 18px', borderBottom: i < rows.length-1 ? '1px solid #1F1F1F' : 'none', alignItems:'center' }}>
+            <div key={i} style={{ display:'grid', gridTemplateColumns:'minmax(0,1.1fr) minmax(0,1.6fr) minmax(0,1.1fr)', gap:16, padding:'14px 18px', borderBottom: i < rows.length-1 ? '1px solid #1F1F1F' : 'none', alignItems:'center' }}>
               <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:'clamp(14px,1.3vw,17px)', letterSpacing:'-0.012em', color:'var(--uc-paper)' }}>{r.name}</span>
               <span style={{ fontFamily:'var(--font-serif)', fontSize:14, color:'var(--uc-stone-300)' }}>{r.fn}</span>
               <span style={{ justifySelf:'center' }}>
@@ -1642,23 +1600,14 @@ function BPTechStack() {
                   {m.l}
                 </span>
               </span>
-              <span style={{ fontFamily:'var(--font-mono)', fontSize:13, fontWeight:700, color:'var(--uc-paper)', textAlign:'right' }}>{r.cost}</span>
             </div>
           );
         })}
-        {/* Footer total */}
-        <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1.1fr) minmax(0,1.6fr) minmax(0,1.1fr) 120px', gap:16, padding:'14px 18px', borderTop:'1px solid #2B2B2B', background:'#0F0F0F', alignItems:'center' }}>
-          <span style={{ fontFamily:'var(--font-mono)', fontSize:10, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'var(--uc-signal)' }}>Est. monthly</span>
-          <span style={{ fontFamily:'var(--font-serif)', fontSize:13, color:'var(--uc-stone-500)' }}>Start + launch stack, before optional &amp; future phases</span>
-          <span/>
-          <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:'clamp(18px,1.8vw,24px)', letterSpacing:'-0.03em', color:'var(--uc-paper)', textAlign:'right' }}>~$2,505/mo</span>
-        </div>
       </div>
       <div style={{ marginTop:16, display:'flex', gap:18, flexWrap:'wrap', fontFamily:'var(--font-mono)', fontSize:10, color:'var(--uc-stone-500)', letterSpacing:'0.06em' }}>
         <span style={{ display:'inline-flex', alignItems:'center', gap:6 }}><span style={{ width:8,height:8,borderRadius:999,background:'var(--uc-signal)' }}/>NEEDED TO START</span>
         <span style={{ display:'inline-flex', alignItems:'center', gap:6 }}><span style={{ width:8,height:8,borderRadius:999,background:'#FF8B37' }}/>NEEDED ON LAUNCH</span>
         <span style={{ display:'inline-flex', alignItems:'center', gap:6 }}><span style={{ width:8,height:8,borderRadius:999,border:'1px solid #2B2B2B' }}/>FUTURE PHASE</span>
-        <span style={{ display:'inline-flex', alignItems:'center', gap:6 }}><span style={{ width:8,height:8,borderRadius:999,border:'1px solid #3B3B3B' }}/>OPTIONAL</span>
         <span style={{ marginLeft:'auto' }}>↳ Swappable to your existing vendors</span>
       </div>
       </div>
@@ -1841,7 +1790,7 @@ function BPB2B() {
     { t: 'Sales rep tools', d: 'Order on behalf of, account dashboards, and assisted selling.' },
     { t: 'Quote request management', d: 'Capture, review, negotiate, and convert quote requests into orders — powered by the Uncap Quotes Shopify app.' }
   ];
-  const channels = ['DTC Storefront', 'B2B Portal', 'Quote Management', 'Sales Reps'];
+  const channels = ['DTC Storefront', 'B2B Portal', 'Point of Sale', 'Sales Reps'];
   return (
     <BPSection id="b2b" n="09" label="Unified" paper tail="ONE OPERATION">
       <BPHeadline>
@@ -1910,8 +1859,6 @@ function BPB2B() {
       <div style={{ marginTop:20, fontFamily:'var(--font-mono)', fontSize:11, color:'var(--fg-3)', letterSpacing:'0.06em' }}>
         ↳ Built on Shopify B2B (Plus) · extended by Uncap products where needed
       </div>
-
-
     </BPSection>
   );
 }
@@ -1926,13 +1873,13 @@ function BPAgentic() {
     { t: 'AEO optimized', d: 'FAQ content, JSON-LD, and the technical components that make products discoverable to AI.' }
   ];
   const chat = [
-    { who: 'buyer', text: 'I need rebar and tie wire for a 40-ft footing.' },
-    { who: 'agent', text: 'Here are the right SKUs at your contractor pricing:' },
+    { who: 'buyer', text: 'I need a workboat to clear cattails on a 12-acre pond.' },
+    { who: 'agent', text: 'Here’s the right setup at your dealer pricing:' },
     { who: 'cards', items: [
-      { t: '½" #4 Rebar · 20 ft', price: '$8.40', c: '#9C8F7A', qty: '×24', icon: <g stroke="#fff" strokeWidth="2.4" strokeLinecap="round"><path d="M10 14 L40 14 M8 24 L38 24 M10 34 L40 34"/><path d="M10 14 q3 5 0 10 q-3 5 0 10 M24 14 q3 5 0 10 q-3 5 0 10 M38 14 q3 5 0 10 q-3 5 0 10"/></g> },
-      { t: '16-ga Tie Wire · 3.5 lb', price: '$18.00', c: '#8A8780', qty: '×2', icon: <g stroke="#fff" strokeWidth="2.4" fill="none"><circle cx="24" cy="24" r="14"/><circle cx="24" cy="24" r="8"/><path d="M24 10 L24 4 M38 24 q5 -1 6 -4" strokeLinecap="round"/></g> }
+      { t: 'TC-3012 Workboat', price: 'From $34,900', c: '#2F6B3A', qty: '×1', icon: <g stroke="#fff" strokeWidth="2.2" fill="none" strokeLinecap="round" strokeLinejoin="round"><path d="M8 30 L40 30 L36 38 L12 38 Z"/><path d="M14 30 L16 20 L32 20 L34 30"/><path d="M24 20 L24 12 L34 15"/></g> },
+      { t: 'Marine Boom Cutter', price: '$4,850', c: '#16485A', qty: '×1', icon: <g stroke="#fff" strokeWidth="2.4" fill="none" strokeLinecap="round"><path d="M10 12 L10 36 M10 24 L34 24"/><path d="M30 18 L40 24 L30 30 Z"/></g> }
     ] },
-    { who: 'buyer', text: 'Add both, ship to the Adams St. yard, NET-30.' }
+    { who: 'buyer', text: 'Add both, ship to the Stuart, FL yard, NET-30.' }
   ];
   return (
     <BPSection id="agentic" n="10" label="Agentic" dark tail="THE AI-ENABLED STORE">
@@ -2020,16 +1967,16 @@ function BPAgentic() {
 function BPIntegrations() {
   const pFont = '-apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
   const maps = [
-    { l:'Order',       d:'→', r:'Sales Order' },
+    { l:'Order',       d:'→', r:'Order' },
     { l:'Customer',    d:'→', r:'Account' },
-    { l:'Line items',  d:'→', r:'SO Lines' },
-    { l:'Inventory',   d:'←', r:'Stock on hand' },
-    { l:'Fulfillment', d:'←', r:'Item Fulfillment' }
+    { l:'Contact',     d:'→', r:'Contact' },
+    { l:'Line items',  d:'→', r:'Order Products' },
+    { l:'Order status',d:'←', r:'Opportunity Stage' }
   ];
   const activity = [
-    ['Order #SO-48217 pushed to NetSuite', '2 min ago'],
+    ['Order #SO-48217 pushed to Salesforce', '2 min ago'],
     ['Inventory delta · 1,284 items reconciled', '9 min ago'],
-    ['Customer ACME Contracting created in ERP', '14 min ago']
+    ['Customer ACME Contracting created in Salesforce', '14 min ago']
   ];
   const Card = ({ children, pad=true }) => (
     <div style={{ background:'#FFFFFF', border:'1px solid #E3E3E3', borderRadius:12, boxShadow:'0 1px 0 rgba(0,0,0,0.05)', padding: pad ? '14px 16px' : 0 }}>{children}</div>
@@ -2045,17 +1992,106 @@ function BPIntegrations() {
         <BPSerif>not five silos.</BPSerif>
       </BPHeadline>
       <p style={{ marginTop:'clamp(18px, 2.2vw, 26px)', maxWidth:640, fontFamily:'var(--font-serif)', fontSize:'clamp(15px, 1.3vw, 18px)', lineHeight:1.5, color:'var(--fg-2)' }}>
-        Shopify and Brightpearl will be connected via the <strong style={{ fontFamily:'var(--font-display)', fontWeight:700, color:'var(--fg-1)' }}>Brightpearl by Sage Shopify App</strong> — enabling real-time, bidirectional sync of orders, inventory, customers, and fulfilment between your storefront and ERP. No middleware, no reconciling.
+        Uncap Connect runs as a Shopify-embedded app — a real-time, bidirectional Salesforce
+        integration with field-level mapping and a live sync log, managed right inside admin.
       </p>
 
-      {/* Brightpearl screenshot */}
-      <div style={{ marginTop:'clamp(30px, 4vw, 52px)', borderRadius:12, overflow:'hidden', border:'1px solid var(--line-2)', boxShadow:'0 24px 60px -32px rgba(10,10,10,0.45)' }}>
-        <img src={window.__resources.brightpearlScreenshot} alt="Brightpearl by Sage — Sales and Inventory view" style={{ width:'100%', display:'block' }}/>
-      </div>
-      <div style={{ marginTop:20, fontFamily:'var(--font-mono)', fontSize:11, color:'var(--fg-3)', letterSpacing:'0.06em' }}>
-        ↳ Brightpearl by Sage Shopify App · real-time bidirectional sync · no manual re-keying
+      {/* Shopify-embedded app (Polaris) */}
+      <div style={{ marginTop:'clamp(30px, 4vw, 52px)', border:'1px solid var(--line-2)', borderRadius:12, overflow:'hidden', boxShadow:'0 24px 60px -32px rgba(10,10,10,0.45)' }}>
+        {/* Shopify admin top bar */}
+        <div style={{ display:'flex', alignItems:'center', gap:12, padding:'9px 14px', background:'#1A1A1A' }}>
+          <span style={{ display:'inline-flex', alignItems:'center', gap:7 }}>
+            <span style={{ width:20, height:20, borderRadius:5, background:'#95BF47', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:pFont, fontSize:12, fontWeight:800, color:'#1A1A1A' }}>S</span>
+            <span style={{ fontFamily:pFont, fontSize:11.5, fontWeight:600, color:'#E3E3E3' }}>{brandHandle()}-supply</span>
+          </span>
+          <span style={{ flex:1, maxWidth:360, margin:'0 auto', display:'flex', alignItems:'center', gap:7, background:'#303030', borderRadius:8, padding:'6px 11px' }}>
+            <span style={{ color:'#8A8A8A', fontSize:11 }}>⌕</span>
+            <span style={{ fontFamily:pFont, fontSize:11, color:'#8A8A8A' }}>Search</span>
+          </span>
+          <span style={{ width:22, height:22, borderRadius:999, background:'linear-gradient(135deg,#5C6AC4,#202E78)', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:pFont, fontSize:10, fontWeight:700, color:'#fff' }}>D</span>
+        </div>
+
+        {/* admin nav + Polaris page */}
+        <div style={{ display:'flex', background:'#F1F1F1' }}>
+          {/* Shopify standard left navigation */}
+          <ShopAdminNav activeApp="connect"/>
+
+          {/* Polaris page */}
+          <div style={{ flex:1, minWidth:0, padding:'clamp(16px,2vw,24px)', display:'flex', flexDirection:'column', gap:14 }}>
+          {/* page header */}
+          <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:14, flexWrap:'wrap' }}>
+            <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
+              <span style={{ fontFamily:pFont, fontSize:11.5, color:'#005BD3', fontWeight:600 }}>‹ Apps</span>
+              <span style={{ display:'inline-flex', alignItems:'center', gap:10 }}>
+                <span style={{ fontFamily:pFont, fontSize:'clamp(18px,1.8vw,22px)', fontWeight:700, color:'#1A1A1A', letterSpacing:'-0.01em' }}>Uncap Connect</span>
+                <Badge tone="success"><span style={{ width:6, height:6, borderRadius:999, background:'#29845A' }}/>Connected</Badge>
+              </span>
+              <span style={{ fontFamily:pFont, fontSize:12.5, color:'#616161' }}>Salesforce CRM integration</span>
+            </div>
+            <div style={{ display:'flex', gap:8 }}>
+              <span style={{ fontFamily:pFont, fontSize:12, fontWeight:600, color:'#303030', background:'#FFFFFF', border:'1px solid #E3E3E3', borderRadius:8, padding:'7px 13px', boxShadow:'0 1px 0 rgba(0,0,0,0.05)' }}>View logs</span>
+              <span style={{ fontFamily:pFont, fontSize:12, fontWeight:600, color:'#FFFFFF', background:'#303030', borderRadius:8, padding:'7px 13px' }}>Sync now</span>
+            </div>
+          </div>
+
+          {/* connection card */}
+          <Card>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, flexWrap:'wrap' }}>
+              <div style={{ display:'flex', alignItems:'center', gap:11 }}>
+                <span style={{ width:34, height:34, borderRadius:8, background:'#01426A', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:pFont, fontSize:13, fontWeight:800, color:'#7FCDF6' }}>SF</span>
+                <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
+                  <span style={{ fontFamily:pFont, fontSize:13.5, fontWeight:700, color:'#1A1A1A' }}>Salesforce</span>
+                  <span style={{ fontFamily:pFont, fontSize:11.5, color:'#616161' }}>Org 00D-PROD · Last sync 2 min ago</span>
+                </div>
+              </div>
+              <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
+                <Badge tone="info">Real-time</Badge>
+                <Badge tone="info">Bidirectional</Badge>
+                <span style={{ display:'inline-flex', border:'1px solid #E3E3E3', borderRadius:8, overflow:'hidden' }}>
+                  {['Real-time','Scheduled'].map((m,i)=>(<span key={m} style={{ fontFamily:pFont, fontSize:11, fontWeight:600, padding:'6px 11px', background:i===0?'#303030':'#FFFFFF', color:i===0?'#FFFFFF':'#616161' }}>{m}</span>))}
+                </span>
+              </div>
+            </div>
+          </Card>
+
+          {/* field mapping card */}
+          <Card pad={false}>
+            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:10, padding:'13px 16px', borderBottom:'1px solid #E3E3E3' }}>
+              <span style={{ fontFamily:pFont, fontSize:13.5, fontWeight:700, color:'#1A1A1A' }}>Field mapping · Order ⇄ Salesforce Order</span>
+              <span style={{ fontFamily:pFont, fontSize:12, fontWeight:600, color:'#005BD3' }}>Edit</span>
+            </div>
+            {/* table header */}
+            <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1.3fr) clamp(48px,6vw,72px) minmax(0,1.3fr) minmax(0,90px)', gap:'clamp(8px,1.2vw,16px)', padding:'8px 16px', background:'#FAFAFA', borderBottom:'1px solid #E3E3E3' }}>
+              {['Shopify','','Salesforce','Status'].map((h,i)=>(<span key={i} style={{ fontFamily:pFont, fontSize:10.5, fontWeight:600, color:'#616161', textAlign:i===3?'right':'left' }}>{h}</span>))}
+            </div>
+            {maps.map((m,i)=>(
+              <div key={i} style={{ display:'grid', gridTemplateColumns:'minmax(0,1.3fr) clamp(48px,6vw,72px) minmax(0,1.3fr) minmax(0,90px)', gap:'clamp(8px,1.2vw,16px)', padding:'10px 16px', borderBottom: i<maps.length-1?'1px solid #F1F1F1':'none', alignItems:'center' }}>
+                <span style={{ fontFamily:pFont, fontSize:12.5, fontWeight:600, color:'#1A1A1A', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{m.l}</span>
+                <span style={{ fontFamily:pFont, fontSize:13, fontWeight:700, color: m.d==='←' ? '#B98900' : '#616161', textAlign:'center' }}>{m.d}</span>
+                <span style={{ fontFamily:pFont, fontSize:12.5, color:'#303030', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{m.r}</span>
+                <span style={{ justifySelf:'end' }}><Badge tone="success">Synced</Badge></span>
+              </div>
+            ))}
+          </Card>
+
+          {/* activity card */}
+          <Card pad={false}>
+            <div style={{ padding:'13px 16px', borderBottom:'1px solid #E3E3E3', fontFamily:pFont, fontSize:13.5, fontWeight:700, color:'#1A1A1A' }}>Recent activity</div>
+            {activity.map((a,i)=>(
+              <div key={i} style={{ display:'flex', alignItems:'center', gap:11, padding:'10px 16px', borderBottom: i<activity.length-1?'1px solid #F1F1F1':'none' }}>
+                <span style={{ width:7, height:7, borderRadius:999, background:'#29845A', flexShrink:0 }}/>
+                <span style={{ fontFamily:pFont, fontSize:12.5, color:'#303030', flex:1, minWidth:0, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{a[0]}</span>
+                <span style={{ fontFamily:pFont, fontSize:11.5, color:'#8A8A8A', whiteSpace:'nowrap' }}>{a[1]}</span>
+              </div>
+            ))}
+          </Card>
+          </div>
+        </div>
       </div>
 
+      <div style={{ marginTop:20, fontFamily:'var(--font-mono)', fontSize:11, color:'var(--fg-3)', letterSpacing:'0.06em' }}>
+        ↳ Native Shopify-embedded app · field maps owned and versioned · no manual re-keying
+      </div>
     </BPSection>
   );
 }
@@ -2067,7 +2103,7 @@ function BPMigration() {
     { t: 'Stage & verify', s: 'Dry-run into staging. Reconcile counts, spot-check edge cases.' },
     { t: 'Cutover', s: 'Final delta sync, 301 redirect map, DNS switch with zero lost orders.' }
   ];
-  const items = ['Products', 'Collections', 'Orders', 'Customers', 'Pages', 'Blogs'];
+  const stats = ['Products', 'Collections', 'Pages', 'Blogs', 'Orders', 'Customers'];
   return (
     <BPSection id="migration" n="12" label="Migration" paper tail="MOVE WITHOUT LOSS" vec="bgVector2">
       <BPHeadline>
@@ -2092,9 +2128,9 @@ function BPMigration() {
             {/* platform header */}
             <div style={{ display:'grid', gridTemplateColumns:cols, alignItems:'center', borderBottom:'1px solid var(--line-1)', background:'var(--uc-bone)' }}>
               <div style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 16px' }}>
-                <span style={{ width:26, height:26, borderRadius:6, background:'#121118', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'var(--font-hero)', fontSize:12, fontWeight:800, color:'#8FA0FF' }}>B</span>
+                <span style={{ width:26, height:26, borderRadius:6, background:'#2B1A45', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'var(--font-hero)', fontSize:12, fontWeight:800, color:'#C6A8F0' }}>W</span>
                 <div style={{ display:'flex', flexDirection:'column', gap:1 }}>
-                  <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:14, letterSpacing:'-0.01em', color:'var(--fg-1)' }}>BigCommerce</span>
+                  <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:14, letterSpacing:'-0.01em', color:'var(--fg-1)' }}>WooCommerce</span>
                   <span style={{ fontFamily:'var(--font-mono)', fontSize:9, color:'var(--fg-3)' }}>Legacy store · 12,480 records</span>
                 </div>
               </div>
@@ -2154,12 +2190,12 @@ function BPMigration() {
         );
       })()}
 
-      {/* what we migrate */}
+      {/* migrated records */}
       <div style={{ marginTop: 'clamp(28px, 3vw, 40px)', display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 0, borderTop: '1px solid var(--line-1)', borderBottom: '1px solid var(--line-1)' }}>
-        {items.map((item, i) => (
-          <div key={i} style={{ padding: '24px 24px 24px 0', paddingLeft: i > 0 ? 24 : 0, borderLeft: i > 0 ? '1px solid var(--line-1)' : 'none', position: 'relative' }}>
-            <span aria-hidden="true" style={{ position: 'absolute', top: 0, left: i > 0 ? 24 : 0, width: 16, height: 2, background: 'var(--uc-signal)' }}/>
-            <div style={{ fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(20px, 2.2vw, 32px)', letterSpacing: '-0.035em', lineHeight: 1, color: 'var(--fg-1)' }}>{item}</div>
+        {stats.map((s, i) => (
+          <div key={i} style={{ padding: '22px 20px 22px 0', paddingLeft: i > 0 ? 20 : 0, borderLeft: i > 0 ? '1px solid var(--line-1)' : 'none', position: 'relative' }}>
+            <span aria-hidden="true" style={{ position: 'absolute', top: 0, left: i > 0 ? 20 : 0, width: 16, height: 2, background: 'var(--uc-signal)' }}/>
+            <div style={{ fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(16px, 1.5vw, 22px)', letterSpacing: '-0.025em', lineHeight: 1.0, color: 'var(--fg-1)' }}>{s}</div>
           </div>
         ))}
       </div>
@@ -2172,10 +2208,10 @@ function BPDelivery() {
   const milestones = [
     { wk: 'WK 01', t: 'Kickoff + Blueprint start', s: 'Discovery, architecture, data model.' },
     { wk: 'WK 03', t: 'Blueprint sign-off', s: 'Plan, prototype, and budget locked.' },
-    { wk: 'WK 05', t: 'Storefront alpha + Migration start', s: 'Core theme + catalog in staging. Data migration begins.' },
-    { wk: 'WK 08', t: 'Integrations live', s: 'ERP sync + B2B flows validated.' },
-    { wk: 'WK 12', t: 'Migration + QA', s: 'Data moved, redirects, full QA pass.' },
-    { wk: 'WK 16', t: 'Launch', s: 'Go live + 30-day support begins.' }
+    { wk: 'WK 06', t: 'Storefront alpha', s: 'Core theme + catalog in staging.' },
+    { wk: 'WK 09', t: 'Integrations live', s: 'ERP sync + B2B flows validated.' },
+    { wk: 'WK 11', t: 'Migration + QA', s: 'Data moved, redirects, full QA pass.' },
+    { wk: 'WK 12', t: 'Launch', s: 'Go live + 30-day support begins.' }
   ];
   return (
     <BPSection id="delivery" n="13" label="Delivery" paper tail="TIMELINE">
@@ -2229,22 +2265,18 @@ function BPRiskAssessment() {
     High:   { c: 'var(--uc-error)',  label: 'High' }
   };
   const risks = [
-    { t: 'Third party vendor delays', sev: 'High',
-      d: 'When other third parties involved delay what’s needed for the project, our delivery will get delayed.',
-      m: 'Constant communication to all stakeholders throughout the project.' },
-    { t: 'ERP Integration', sev: 'Medium',
-      d: 'Depending on how ERP data is set up, the ERP consultant may delay the integration and postpone launch.',
-      m: 'Loop them in the process as early as the kickoff day.' },
-    { t: 'Product information changes', sev: 'Medium',
-      d: 'If there are product information sections that change during this migration, or product linking updates, this will affect the timeline.',
-      m: 'Identify these during the deep dive workshops.' },
-
-    { t: 'Scope creep mid-build', sev: 'Low',
+    { t: 'Data migration integrity', sev: 'High',
+      d: 'Products, customers, and orders don\u2019t map cleanly off the legacy stack.',
+      m: 'Dry-run into staging, reconcile counts, and spot-check edge cases before cutover.' },
+    { t: 'ERP integration complexity', sev: 'High',
+      d: 'Bidirectional ERP sync is the hardest dependency — mismatches can block orders.',
+      m: 'Field-level mapping validated early via Uncap Connect, with a live sync log.' },
+    { t: 'Scope creep mid-build', sev: 'Medium',
       d: 'New requests surface once the build is underway and pull at budget and timeline.',
       m: 'Fixed scope up front, with a pre-approved buffer allowance for out-of-scope asks.' }
   ];
   return (
-    <BPSection id="risks" n="14" label="Risk Assessment" tail="EYES OPEN">
+    <BPSection id="risks" n="14" label="Risks" tail="EYES OPEN">
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr)', gap: 'clamp(28px, 5vw, 80px)', alignItems: 'end' }}>
         <BPHeadline>
           Named upfront,{' '}
@@ -2397,9 +2429,9 @@ function BPInvestment() {
     'Go live, a clean handoff, and a 30-day warranty'
   ];
   const schedule = [
-    { n: '01', amount: 'TBD', due: 'Due at signup' },
-    { n: '02', amount: 'TBD', due: 'Due at design approval' },
-    { n: '03', amount: 'TBD', due: 'Due at project completion' }
+    { n: '01', amount: '$43,000', due: 'Due at signup' },
+    { n: '02', amount: '$21,500', due: 'Due at design approval' },
+    { n: '03', amount: '$21,500', due: 'Due at project completion' }
   ];
   return (
     <BPSection id="investment" n="15" label="Investment" dark tail="FIXED · NO SURPRISES">
@@ -2426,7 +2458,7 @@ function BPInvestment() {
           {/* price — standout box */}
           <div style={{ padding: 'clamp(18px, 2vw, 26px) clamp(20px, 2.2vw, 28px)', background: 'var(--uc-signal)', borderRadius: 12, boxShadow: '0 22px 60px -26px rgba(232,255,82,0.45)' }}>
             <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--uc-black)' }}>Fixed price</div>
-            <div style={{ marginTop: 4, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(52px, 6vw, 88px)', letterSpacing: '-0.05em', lineHeight: 0.85, color: 'var(--uc-black)' }}>TBD</div>
+            <div style={{ marginTop: 4, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(52px, 6vw, 88px)', letterSpacing: '-0.05em', lineHeight: 0.85, color: 'var(--uc-black)' }}>$86k</div>
           </div>
 
           {/* walk away */}
@@ -2494,7 +2526,7 @@ function BPInvestment() {
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--uc-stone-500)' }}>If needed</div>
-          <div style={{ marginTop: 6, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(34px, 3.6vw, 52px)', letterSpacing: '-0.045em', lineHeight: 0.9, color: 'var(--uc-paper)' }}>TBD</div>
+          <div style={{ marginTop: 6, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(34px, 3.6vw, 52px)', letterSpacing: '-0.045em', lineHeight: 0.9, color: 'var(--uc-paper)' }}>$18k</div>
         </div>
       </div>
     </BPSection>
@@ -2507,7 +2539,7 @@ function BPGrowth() {
     { t: 'Shopify Support', d: 'Design, development, integrations, upgrades, and new-feature enablement — on call.' },
     { t: 'Performance Optimization', d: 'Constantly optimizing experience, speed, conversion, and the tech stack behind it.' },
     { t: 'Revenue Growth', d: 'Optimizing Product Search & Discovery, AOV, checkout, and self-serve buying.' },
-    { t: 'Retention Growth', d: 'Loyalty programs, email/text automations, optimization, automation and B2B enablement.' }
+    { t: 'Retention Growth', d: 'Loyalty and VIP programs, email/text lifecycle, and subscriptions.' }
   ];
   return (
     <BPSection id="growth" n="16" label="Growth" paper tail="AFTER LAUNCH">
@@ -2543,10 +2575,10 @@ function BPGrowth() {
         display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap'
       }}>
         <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 15, color: 'var(--fg-1)' }}>
-          Uncap Growth: Optimize Package · <span style={{ fontFamily: 'var(--font-hero)', fontWeight: 800 }}>TBD / mo</span>
+          Uncap Growth · Optimize Package · <span style={{ fontFamily: 'var(--font-hero)', fontWeight: 800 }}>$9k / mo</span>
         </div>
         <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--fg-3)', letterSpacing: '0.06em' }}>
-          12 MONTH RETAINER
+          12 MONTHS
         </div>
       </div>
     </BPSection>
@@ -2716,12 +2748,7 @@ function BPProof() {
   );
 }
 
-// ── Approve & kickoff CTA. Clicking opens an inline signature modal that
-// captures the signer's full name and title; submitting POSTs them to
-// /api/auth/sign which persists a record in KV (1-year TTL) and emails
-// denis@uncap.com with the signer + timestamp + IP + user-agent. The
-// button only flips to the disabled "Approved ✓" pill after the server
-// confirms the signature was recorded. ──
+// ── 10 NEXT STEPS ───────────────────────────────────────────────────────────
 function BPApproveButton() {
   const APPROVED_KEY = 'weedoo_approved_v1';
   const [state, setState]       = React.useState(
@@ -2981,7 +3008,6 @@ function BPApproveButton() {
   );
 }
 
-// ── 10 NEXT STEPS ───────────────────────────────────────────────────────────
 function BPNext() {
   const steps = [
     { n: '01', t: 'Approve this Blueprint', d: 'Sign off on scope, timeline, and investment.' },
@@ -3154,7 +3180,3 @@ window.BPInvestment = BPInvestment;
 window.BPGrowth = BPGrowth;
 window.BPWhy = BPWhy;
 window.BPNext = BPNext;
-window.BPAgentic = BPAgentic;
-window.BPRiskAssessment = BPRiskAssessment;
-window.BPProof = BPProof;
-window.BPApproveButton = BPApproveButton;
