@@ -1442,12 +1442,20 @@ async function handleAdminBlueprints(request, env) {
 
   const items = BLUEPRINT_REGISTRY.map((bp) => ({ ...bp, kind: 'live', signature: null }));
 
+  // Once a draft has been promoted to a shipped (live) blueprint, its KV
+  // draft record can linger. Suppress any draft that a live blueprint now
+  // supersedes — matched by id or by normalized company name — so it stops
+  // showing as a separate "draft" row.
+  const liveIds = new Set(items.map((i) => i.id));
+  const liveNames = new Set(items.map((i) => normalizeBlueprintId(i.name)));
+
   const draftList = await env.BLUEPRINT_AUTH.list({ prefix: 'bp:', limit: 100 });
   const draftRecs = await Promise.all(draftList.keys.map((k) => env.BLUEPRINT_AUTH.get(k.name)));
   for (const raw of draftRecs) {
     if (!raw) continue;
     try {
       const rec = JSON.parse(raw);
+      if (liveIds.has(rec.id) || liveNames.has(normalizeBlueprintId(rec.name))) continue;
       items.push({
         id: rec.id, dir: '', name: rec.name, num: '', kind: 'draft', signature: null,
         website: rec.website || '', leadClient: rec.leadClient || '', address: rec.address || '',
