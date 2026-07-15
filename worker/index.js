@@ -26,6 +26,7 @@
 //     own signed copy without needing admin/self-test privileges.
 
 import { EmailMessage } from "cloudflare:email";
+import { buildDiscoveryProfile } from "./discovery-profile.js";
 
 const CODE_TTL_SECONDS       = 10 * 60;             // 10 minutes
 const SESSION_TTL_SECONDS    = 2 * 60 * 60;         // 2 hours (client blueprint sessions)
@@ -1727,11 +1728,17 @@ async function handleAdminListDiscoveries(request, env) {
       const id = k.name.slice('discovery:'.length);
       const rec = JSON.parse(raw);
       // Backfill a handle for discoveries created before the experience
-      // shipped, so their View/Transcript links work.
+      // shipped, so their View/Transcript links work. Expiration was
+      // removed from discoveries entirely; purge it from old records the
+      // same lazy way.
+      const dirty = ('expiresAt' in rec);
+      if (dirty) delete rec.expiresAt;
       if (!rec.handle) {
         rec.handle = await uniqueDiscoveryHandle(env, discoveryHandleFromWebsite(rec.website, rec.company));
         await env.BLUEPRINT_AUTH.put(k.name, JSON.stringify(rec)).catch(() => {});
         await env.BLUEPRINT_AUTH.put(`dischandle:${rec.handle}`, id).catch(() => {});
+      } else if (dirty) {
+        await env.BLUEPRINT_AUTH.put(k.name, JSON.stringify(rec)).catch(() => {});
       }
       return { id, ...rec };
     } catch { return null; }
@@ -1819,7 +1826,6 @@ async function handleAdminCreateDiscovery(request, env) {
   const company = (body.company || '').toString().trim().slice(0, 200);
   const address = (body.address || '').toString().trim().slice(0, 300);
   const website = (body.website || '').toString().trim().slice(0, 300);
-  const expiresAt = (body.expiresAt || '').toString().trim();
   const companyAttioId = (body.companyAttioId || '').toString().trim().slice(0, 100);
   const leadContact       = sanitizeContact(body.leadContact);
   const associatedContacts = sanitizeContacts(body.associatedContacts).filter(
@@ -1828,9 +1834,12 @@ async function handleAdminCreateDiscovery(request, env) {
   const client = leadContact ? (leadContact.name || leadContact.email) : '';
   if (!company || !companyAttioId) return json(400, { ok: false, error: 'Pick a company from Attio' });
   if (!leadContact) return json(400, { ok: false, error: 'Pick a Client Lead from Attio' });
-  if (expiresAt && !/^\d{4}-\d{2}-\d{2}$/.test(expiresAt)) {
-    return json(400, { ok: false, error: 'Expiration must be a YYYY-MM-DD date' });
-  }
+
+  // Personalize the wireframe scenes: scrape the client's site once and
+  // build the swap profile now, so the experience is branded from the
+  // first open. Never let a slow or dead site block creation.
+  let profile = null;
+  try { profile = await buildDiscoveryProfile({ website, company, address }); } catch (_) {}
 
   const ts = Date.now();
   const id = `${(9_999_999_999_999 - ts).toString(36).padStart(10, '0')}:${genRandSlug()}`;
@@ -1838,8 +1847,8 @@ async function handleAdminCreateDiscovery(request, env) {
   // https://www.maplewoodfab.com → "maplewoodfab". Unique across discoveries.
   const handle = await uniqueDiscoveryHandle(env, discoveryHandleFromWebsite(website, company));
   const rec = {
-    company, client, address, website, expiresAt, handle,
-    companyAttioId, leadContact, associatedContacts,
+    company, client, address, website, handle,
+    companyAttioId, leadContact, associatedContacts, profile,
     status: 'new',
     createdAt: new Date(ts).toISOString(),
     createdBy: sess.email,
@@ -2091,6 +2100,8 @@ async function handleDiscoveryMeta(request, env) {
     handle: disc.handle,
     company: disc.company || '',
     clientName: disc.company || disc.client || '',
+    address: disc.address || '',
+    profile: disc.profile || null,
     status: disc.status || 'new',
     isAdmin: !!admin,
   });
@@ -2197,6 +2208,8 @@ async function handleDiscoveryGetAnswers(request, env) {
     role: actor.role,
     company: disc.company || '',
     clientName: disc.company || disc.client || '',
+    address: disc.address || '',
+    profile: disc.profile || null,
     handle: disc.handle,
     answers: data.answers,
     activeStepIdx: data.activeStepIdx,

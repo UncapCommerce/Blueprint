@@ -682,7 +682,6 @@
     const [address, setAddress] = useState('');
     const [leadContact, setLeadContact] = useState(null); // {attioId, name, email}
     const [associatedContacts, setAssociatedContacts] = useState([]);
-    const [expiresAt, setExpiresAt] = useState('');
     const [busy, setBusy]       = useState(false);
     const [error, setError]     = useState('');
 
@@ -704,7 +703,7 @@
           body: JSON.stringify({
             company: company.name, companyAttioId: company.attioId,
             website: website.trim(), address: address.trim(),
-            leadContact, associatedContacts, expiresAt,
+            leadContact, associatedContacts,
           }),
         });
         onSaved(d.discovery || null);
@@ -723,7 +722,6 @@
           )}
           <LeadContactPicker contact={leadContact} onPick={setLeadContact} onClear={() => setLeadContact(null)}/>
           <AssociatedContactsPicker contacts={associatedContacts} onChange={setAssociatedContacts} excludeEmail={leadContact && leadContact.email}/>
-          <Field label="Expiration date (valid through)" type="date" value={expiresAt} onChange={setExpiresAt}/>
           {error && <div style={{ color: '#B3261E', fontFamily: T.sans, fontSize: 13 }}>{error}</div>}
           <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', paddingTop: 4 }}>
             <button type="button" style={S.btnGhost} onClick={onClose} disabled={busy}>Cancel</button>

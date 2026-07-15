@@ -148,7 +148,7 @@
   }
 
   // ── The experience ────────────────────────────────────────────────────
-  function Experience({ role, company, initial, token }) {
+  function Experience({ role, company, address, profile, initial, token }) {
     const steps = window.DISCOVERY_STEPS || [];
     const hashStep = stepFromHash();
     const [answers, setAnswers] = useState(initial.answers || {});
@@ -456,7 +456,11 @@
     // Scene HTML (1-9 static); scene 10 rendered in JSX.
     const isRich = isRichScene(activeStepIdx);
     let sceneHtml = (window.DISCOVERY_SCENES || {})[activeStepIdx + 1] || '';
-    if (activeStepIdx === 0) sceneHtml = sceneHtml.replace(/__CLIENT_NAME__/g, escapeText(company || 'there'));
+    if (activeStepIdx === 0) {
+      sceneHtml = sceneHtml.replace(/__CLIENT_NAME__/g, escapeText(company || 'there'));
+      sceneHtml = sceneHtml.replace(/__CLIENT_ADDRESS__/g, escapeText((address || '').toUpperCase()));
+    }
+    sceneHtml = applyProfileSwaps(sceneHtml, profile);
 
     return (
       <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#F2EFE7', color: '#0A0A0A' }}>
@@ -704,10 +708,38 @@
     return String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
   }
 
+  // Rebrand the stock wireframe scenes with the discovery's profile: a
+  // server-built list of [from, to] text swaps (company name, categories,
+  // products, copy) applied in ONE alternation pass, longest token first,
+  // so nested tokens resolve cleanly and replaced text is never re-matched.
+  // Discoveries without a profile (pre-profile records, the uncap demo)
+  // render the stock scenes untouched.
+  function escapeRegExp(s) {
+    return String(s).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  }
+  function applyProfileSwaps(html, profile) {
+    const swaps = (profile && Array.isArray(profile.swaps) ? profile.swaps : [])
+      .filter((s) => Array.isArray(s) && typeof s[0] === 'string' && s[0]);
+    if (!swaps.length) return html;
+    const map = {};
+    swaps.forEach(([from, to]) => { if (!(from in map)) map[from] = to == null ? '' : String(to); });
+    const keys = Object.keys(map).sort((a, b) => b.length - a.length);
+    const re = new RegExp(keys.map(escapeRegExp).join('|'), 'g');
+    html = html.replace(re, (m) => escapeText(map[m]));
+    // The masthead logo letter sits between tags, so it gets its own
+    // markup-anchored swap instead of a text token.
+    if (profile.initial) {
+      html = html.split('font-size:16px">H</span>').join('font-size:16px">' + escapeText(profile.initial) + '</span>');
+    }
+    return html;
+  }
+
   // ── Root: resolve auth then render gate or experience ─────────────────
   function Root() {
     const [phase, setPhase] = useState('loading'); // loading | gate | ready | error
     const [company, setCompany] = useState('');
+    const [address, setAddress] = useState('');
+    const [profile, setProfile] = useState(null);
     const [role, setRole] = useState('');
     const [initial, setInitial] = useState(null);
     const [token, setToken] = useState('');
@@ -718,6 +750,8 @@
       const d = await api(q);
       setRole(d.role);
       setCompany(d.company || d.clientName || '');
+      setAddress(d.address || '');
+      setProfile(d.profile || null);
       setInitial({ answers: d.answers || {}, activeStepIdx: d.activeStepIdx || 0, unlockedIdx: d.unlockedIdx || 0, status: d.status });
       setPhase('ready');
     }, []);
@@ -737,6 +771,8 @@
         try {
           const m = await api('/api/discovery/meta?handle=' + encodeURIComponent(HANDLE));
           setCompany(m.company || m.clientName || '');
+          setAddress(m.address || '');
+          setProfile(m.profile || null);
         } catch (e) { setErr(e.message); setPhase('error'); return; }
         setPhase('gate');
       })();
@@ -755,7 +791,7 @@
     if (phase === 'gate') {
       return <Gate onToken={(tok) => { setToken(tok); loadAnswers(tok).catch((e) => setErr(e.message)); }}/>;
     }
-    return <Experience role={role} company={company} initial={initial} token={token}/>;
+    return <Experience role={role} company={company} address={address} profile={profile} initial={initial} token={token}/>;
   }
 
   ReactDOM.render(<Root/>, document.getElementById('disc-root'));
