@@ -303,6 +303,9 @@ export default {
     if (url.pathname === '/api/admin/discovery/submission' && request.method === 'GET') {
       return handleAdminDiscoverySubmission(request, env);
     }
+    if (url.pathname === '/api/admin/discovery/delete' && request.method === 'POST') {
+      return handleAdminDeleteDiscovery(request, env);
+    }
 
     // ── Discovery experience (public /discovery/<handle>/) ───────────────
     if (url.pathname === '/api/discovery/meta' && request.method === 'GET') {
@@ -1812,6 +1815,38 @@ async function handleAdminActivity(request, env) {
 
   events.sort((a, b) => new Date(b.ts || 0) - new Date(a.ts || 0));
   return json(200, { ok: true, events: events.slice(0, 300) });
+}
+
+// Permanently removes a discovery: the record, its public handle, the
+// saved answers, and any submission snapshots. The /discovery/uncap/
+// training demo never lives in KV, so it can't be deleted here.
+async function handleAdminDeleteDiscovery(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+
+  let body;
+  try { body = await request.json(); }
+  catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  const id = (body.id || '').toString().slice(0, 120);
+  if (!id) return json(400, { ok: false, error: 'Missing discovery id' });
+
+  const raw = await env.BLUEPRINT_AUTH.get(`discovery:${id}`);
+  if (!raw) return json(404, { ok: false, error: 'Discovery not found' });
+  let rec = {};
+  try { rec = JSON.parse(raw); } catch {}
+
+  const deletes = [
+    env.BLUEPRINT_AUTH.delete(`discovery:${id}`),
+    env.BLUEPRINT_AUTH.delete(`discans:${id}`),
+  ];
+  if (rec.handle) deletes.push(env.BLUEPRINT_AUTH.delete(`dischandle:${rec.handle}`));
+  const subs = await env.BLUEPRINT_AUTH.list({ prefix: `discsub:${id}:`, limit: 100 }).catch(() => null);
+  if (subs) for (const k of subs.keys) deletes.push(env.BLUEPRINT_AUTH.delete(k.name));
+  await Promise.all(deletes.map((p) => p.catch(() => {})));
+
+  await logActivity(env, null, { type: 'deleted', entity: 'discovery', id, name: rec.company || id, actor: sess.email, detail: 'Discovery deleted' });
+  return json(200, { ok: true });
 }
 
 async function handleAdminCreateDiscovery(request, env, ctx) {

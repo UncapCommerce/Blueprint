@@ -84,6 +84,9 @@
   const IconCheck = () => (
     <svg {...iconProps} strokeWidth={2.5}><polyline points="20 6 9 17 4 12"/></svg>
   );
+  const IconTrash = () => (
+    <svg {...iconProps}><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+  );
 
   // ── path router ───────────────────────────────────────────────────────
   // Real paths (/blueprints, /discoveries) instead of #/ hash routes, so
@@ -528,6 +531,14 @@
       setTimeout(() => setCopied(''), 1600);
     };
 
+    const deleteDisc = async (r) => {
+      if (!window.confirm(`Delete the "${r.company}" discovery?\n\nThis permanently removes the discovery, its client link, and every recorded answer. There is no undo.`)) return;
+      try {
+        await api('/api/admin/discovery/delete', { method: 'POST', body: JSON.stringify({ id: r.id }) });
+        load();
+      } catch (err) { setError(err.message); }
+    };
+
     const discActions = (r) => (
       <span style={{ display: 'inline-flex', gap: 8, flexWrap: 'wrap', justifyContent: isMobile ? 'flex-start' : 'flex-end' }}>
         <a href={'/discovery/' + r.handle + '/'} target="_blank" rel="noreferrer" title="Open discovery" aria-label="Open discovery"
@@ -536,6 +547,8 @@
           {copied === r.id ? <IconCheck/> : <IconShare/>}
         </button>
         <button type="button" style={S.btnGhost} onClick={() => setTranscriptFor(r)}>Transcript</button>
+        <button type="button" title="Delete discovery" aria-label="Delete discovery"
+          style={{ ...S.btnIcon, color: '#B3261E', borderColor: '#F0A9A9' }} onClick={() => deleteDisc(r)}><IconTrash/></button>
       </span>
     );
 
@@ -1459,6 +1472,7 @@
         case 'status':      return { l: 'Status',  bg: T.black,   fg: '#fff',    bd: T.black };
         case 'view':        return { l: 'Viewed',  bg: T.cream,   fg: T.fg2,     bd: T.line };
         case 'disc-update': return { l: 'Updated', bg: '#E8FF52', fg: '#0A0A0A', bd: T.black };
+        case 'deleted':     return { l: 'Deleted', bg: '#FDE8E8', fg: '#8A1C1C', bd: '#F0A9A9' };
         default:            return { l: type || 'Event', bg: T.cream, fg: T.fg2, bd: T.line };
       }
     };
