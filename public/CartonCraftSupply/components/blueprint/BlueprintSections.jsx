@@ -1608,7 +1608,7 @@ function BPTechStack() {
         {/* Footer total */}
         <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1.2fr) minmax(0,1.5fr) minmax(0,1fr) 120px', gap:16, padding:'14px 18px', borderTop:'1px solid #2B2B2B', background:'#0F0F0F', alignItems:'center' }}>
           <span style={{ fontFamily:'var(--font-mono)', fontSize:10, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'var(--uc-signal)' }}>Est. monthly</span>
-          <span style={{ fontFamily:'var(--font-serif)', fontSize:13, color:'var(--uc-stone-500)' }}>Platform + apps, before ERP integration</span>
+          <span style={{ fontFamily:'var(--font-serif)', fontSize:13, color:'var(--uc-stone-500)' }}>Platform + apps</span>
           <span/>
           <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:'clamp(16px,1.5vw,20px)', letterSpacing:'-0.03em', color:'var(--uc-paper)', textAlign:'right', whiteSpace:'nowrap' }}>~$2,450<span style={{ fontFamily:'var(--font-mono)', fontWeight:700, fontSize:11, letterSpacing:'0.04em', color:'var(--uc-stone-300)', marginLeft:3 }}>/mo</span></span>
         </div>
@@ -2084,7 +2084,7 @@ function BPDelivery() {
     { wk: 'WK 01', t: 'Kickoff + Blueprint start', s: 'Discovery, architecture, data model.' },
     { wk: 'WK 03', t: 'Blueprint sign-off', s: 'Plan, prototype, and budget locked.' },
     { wk: 'WK 06', t: 'Storefront alpha', s: 'Core theme + catalog in staging.' },
-    { wk: 'WK 09', t: 'Integrations live', s: 'ERP sync + B2B flows validated.' },
+    { wk: 'WK 09', t: 'Integrations live', s: 'App integrations + B2B flows validated.' },
     { wk: 'WK 11', t: 'Migration + QA', s: 'Data moved, redirects, full QA pass.' },
     { wk: 'WK 12', t: 'Launch', s: 'Go live + 30-day support begins.' }
   ];
@@ -2140,13 +2140,10 @@ function BPRiskAssessment() {
     High:   { c: 'var(--uc-error)',  label: 'High' }
   };
   const risks = [
-    { t: 'Data migration integrity', sev: 'High',
+    { t: 'Data migration integrity', sev: 'Low',
       d: 'Products, customers, and orders don\u2019t map cleanly off the legacy stack.',
       m: 'Dry-run into staging, reconcile counts, and spot-check edge cases before cutover.' },
-    { t: 'ERP integration complexity', sev: 'High',
-      d: 'Bidirectional ERP sync is the hardest dependency — mismatches can block orders.',
-      m: 'Field-level mapping validated early via Uncap Connect, with a live sync log.' },
-    { t: 'Scope creep mid-build', sev: 'Medium',
+    { t: 'Scope creep mid-build', sev: 'Low',
       d: 'New requests surface once the build is underway and pull at budget and timeline.',
       m: 'Fixed scope up front, with a pre-approved buffer allowance for out-of-scope asks.' }
   ];
@@ -2296,7 +2293,7 @@ function BPInvestment() {
     'Front and back-end Shopify development',
     'Essential integrations: payments, shipping, core tools',
     'Data migration: products, customers, orders, content',
-    'Shopify-side ERP integration guidance',
+    'Shopify-side integration guidance',
     'Full B2B enablement: companies, catalogs, checkout',
     'Enriched customer account experience',
     'Workflow automation across your systems',
@@ -2563,10 +2560,10 @@ function BPProof() {
   const cards = [
     { v: 'dark', q: 'I cannot praise Uncap enough. They are a hell of a team.', n: 'Andy Blechschmidt', c: 'Jerico' },
     { v: 'dotted', q: 'The integration of our platforms created an easy solution that even our complex systems sales teams can use.', stat: '83% Lower TCO', statL: 'Total cost of ownership on Shopify', n: 'Bryan Snyder', c: 'Canon Medical' },
-    { v: 'paper', q: 'During the Blueprint, Uncap walked through every requirement — what was native, what needed an app, and what was custom.', stat: '1M SKUs', statL: 'Mapped to sync from Epicor to Shopify', n: 'Denise Foley', c: 'ULE Group' },
+    { v: 'paper', q: 'During the Blueprint, Uncap walked through every requirement — what was native, what needed an app, and what was custom.', stat: '1M SKUs', statL: 'Mapped to sync into Shopify', n: 'Denise Foley', c: 'ULE Group' },
     { v: 'paper', q: 'The professionalism, high quality of the design, timely communication and responsiveness have been greatly appreciated (especially compared to our previous dev agency partner).', stat: 'BigCommerce\nMigration', statL: 'Migrated to Shopify with Uncap', n: 'Kiki Fischer', c: 'Rescue Essentials' },
     { v: 'signal', q: 'They are brilliant and very knowledgeable of all that Shopify can do.', stat: 'Product Configurations', statL: 'Custom product ordering for manufacturing', n: 'Peggy Farabaugh', c: 'Vermont Woods' },
-    { v: 'dotted', q: 'Uncap demonstrated a deep understanding of the Shopify ecosystem from the get-go.', stat: 'Custom ERP', statL: 'Integration data mapping for Shopify', n: 'Andy Morgan', c: 'ScooterWorks' },
+    { v: 'dotted', q: 'Uncap demonstrated a deep understanding of the Shopify ecosystem from the get-go.', stat: 'Custom Integrations', statL: 'Data mapping for Shopify', n: 'Andy Morgan', c: 'ScooterWorks' },
     { v: 'paper', q: 'The personal touch and constant communication is what separates them from other companies with a 50+ person team where the attention to detail may be lost.', n: 'Brandt DeVries', c: 'WeldingStore' },
     { v: 'dark', q: 'The team and internal stakeholders were impressed with Uncap\u2019s vast technical expertise.', stat: '60 Days', statL: 'Migrating to Shopify after Blueprint', n: 'Todd Arey', c: 'E3 Spark Plugs' }
   ];
