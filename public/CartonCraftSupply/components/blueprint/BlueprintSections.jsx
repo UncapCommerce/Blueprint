@@ -1977,15 +1977,15 @@ function BPIntegrations() {
   const pFont = '-apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
   const maps = [
     { l:'Order',       d:'→', r:'Sales Order' },
-    { l:'Customer',    d:'→', r:'Account' },
-    { l:'Line items',  d:'→', r:'SO Lines' },
+    { l:'Customer',    d:'→', r:'Business Partner' },
+    { l:'Line items',  d:'→', r:'Order Lines' },
     { l:'Inventory',   d:'←', r:'Stock on hand' },
-    { l:'Fulfillment', d:'←', r:'Item Fulfillment' }
+    { l:'Fulfillment', d:'←', r:'Delivery' }
   ];
   const activity = [
-    ['Order #SO-48217 pushed to NetSuite', '2 min ago'],
+    ['Order #SO-48217 pushed to Sage X3', '2 min ago'],
     ['Inventory delta · 1,284 items reconciled', '9 min ago'],
-    ['Customer ACME Contracting created in ERP', '14 min ago']
+    ['Customer ACME Contracting created in Sage X3', '14 min ago']
   ];
   const Card = ({ children, pad=true }) => (
     <div style={{ background:'#FFFFFF', border:'1px solid #E3E3E3', borderRadius:12, boxShadow:'0 1px 0 rgba(0,0,0,0.05)', padding: pad ? '14px 16px' : 0 }}>{children}</div>
@@ -2001,7 +2001,7 @@ function BPIntegrations() {
         <BPSerif>not five silos.</BPSerif>
       </BPHeadline>
       <p style={{ marginTop:'clamp(18px, 2.2vw, 26px)', maxWidth:640, fontFamily:'var(--font-serif)', fontSize:'clamp(15px, 1.3vw, 18px)', lineHeight:1.5, color:'var(--fg-2)' }}>
-        Uncap Connect runs as a Shopify-embedded app — a real-time, bidirectional ERP
+        Uncap Connect runs as a Shopify-embedded app — a real-time, bidirectional Sage X3
         integration with field-level mapping and a live sync log, managed right inside admin.
       </p>
 
@@ -2035,7 +2035,7 @@ function BPIntegrations() {
                 <span style={{ fontFamily:pFont, fontSize:'clamp(18px,1.8vw,22px)', fontWeight:700, color:'#1A1A1A', letterSpacing:'-0.01em' }}>Uncap Connect</span>
                 <Badge tone="success"><span style={{ width:6, height:6, borderRadius:999, background:'#29845A' }}/>Connected</Badge>
               </span>
-              <span style={{ fontFamily:pFont, fontSize:12.5, color:'#616161' }}>NetSuite ERP integration</span>
+              <span style={{ fontFamily:pFont, fontSize:12.5, color:'#616161' }}>Sage X3 integration</span>
             </div>
             <div style={{ display:'flex', gap:8 }}>
               <span style={{ fontFamily:pFont, fontSize:12, fontWeight:600, color:'#303030', background:'#FFFFFF', border:'1px solid #E3E3E3', borderRadius:8, padding:'7px 13px', boxShadow:'0 1px 0 rgba(0,0,0,0.05)' }}>View logs</span>
@@ -2047,10 +2047,10 @@ function BPIntegrations() {
           <Card>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, flexWrap:'wrap' }}>
               <div style={{ display:'flex', alignItems:'center', gap:11 }}>
-                <span style={{ width:34, height:34, borderRadius:8, background:'#101A2B', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:pFont, fontSize:13, fontWeight:800, color:'#9FB4FF' }}>NS</span>
+                <span style={{ width:34, height:34, borderRadius:8, background:'#0B2E1D', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:pFont, fontSize:13, fontWeight:800, color:'#7CE3A8' }}>X3</span>
                 <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
-                  <span style={{ fontFamily:pFont, fontSize:13.5, fontWeight:700, color:'#1A1A1A' }}>NetSuite ERP</span>
-                  <span style={{ fontFamily:pFont, fontSize:11.5, color:'#616161' }}>Account 4827-PROD · Last sync 2 min ago</span>
+                  <span style={{ fontFamily:pFont, fontSize:13.5, fontWeight:700, color:'#1A1A1A' }}>Sage X3</span>
+                  <span style={{ fontFamily:pFont, fontSize:11.5, color:'#616161' }}>Folder X3-PROD · Last sync 2 min ago</span>
                 </div>
               </div>
               <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
@@ -2071,7 +2071,7 @@ function BPIntegrations() {
             </div>
             {/* table header */}
             <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1.3fr) clamp(48px,6vw,72px) minmax(0,1.3fr) minmax(0,90px)', gap:'clamp(8px,1.2vw,16px)', padding:'8px 16px', background:'#FAFAFA', borderBottom:'1px solid #E3E3E3' }}>
-              {['Shopify','','NetSuite','Status'].map((h,i)=>(<span key={i} style={{ fontFamily:pFont, fontSize:10.5, fontWeight:600, color:'#616161', textAlign:i===3?'right':'left' }}>{h}</span>))}
+              {['Shopify','','Sage X3','Status'].map((h,i)=>(<span key={i} style={{ fontFamily:pFont, fontSize:10.5, fontWeight:600, color:'#616161', textAlign:i===3?'right':'left' }}>{h}</span>))}
             </div>
             {maps.map((m,i)=>(
               <div key={i} style={{ display:'grid', gridTemplateColumns:'minmax(0,1.3fr) clamp(48px,6vw,72px) minmax(0,1.3fr) minmax(0,90px)', gap:'clamp(8px,1.2vw,16px)', padding:'10px 16px', borderBottom: i<maps.length-1?'1px solid #F1F1F1':'none', alignItems:'center' }}>
