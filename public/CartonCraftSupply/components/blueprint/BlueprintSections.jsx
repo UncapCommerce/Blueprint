@@ -191,7 +191,7 @@ function BPIntro() {
           }}>
             {[
               { k: 'Prepared by', v: 'Denis Dyli', s: 'Principal' },
-              { k: 'Client lead',  v: 'Mark Doxtader',  s: 'President' },
+              { k: 'Client lead',  v: 'Monica Spieles',  s: 'Chief Marketing Officer' },
               { k: 'Company', v: 'Carton Craft Supply', s: '6840 Meadow Lane, Alpharetta, GA 30005' },
               { k: 'Valid through', v: 'Jul 31, 2026',    s: '30 days' }
             ].map((c, i) => (
@@ -2438,10 +2438,9 @@ function BPInvestment() {
     'Go live, a clean handoff, and a 30-day warranty'
   ];
   const schedule = [
-    { n: '01', amount: '$32,000', due: 'Due at signup' },
-    { n: '02', amount: '$32,000', due: 'Due at design approval' },
-    { n: '03', amount: '$32,000', due: 'Due at development milestone' },
-    { n: '04', amount: '$32,000', due: 'Due at project completion' }
+    { n: '01', amount: '$25,000', due: 'Due at signup' },
+    { n: '02', amount: '$12,500', due: 'Due at design approval' },
+    { n: '03', amount: '$12,500', due: 'Due at project completion' }
   ];
   return (
     <BPSection id="investment" n="15" label="Investment" dark tail="FIXED · NO SURPRISES">
@@ -2468,8 +2467,8 @@ function BPInvestment() {
           {/* price — standout box */}
           <div style={{ padding: 'clamp(18px, 2vw, 26px) clamp(20px, 2.2vw, 28px)', background: 'var(--uc-signal)', borderRadius: 12, boxShadow: '0 22px 60px -26px rgba(232,255,82,0.45)' }}>
             <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--uc-black)' }}>Fixed price</div>
-            <div style={{ marginTop: 4, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(52px, 6vw, 88px)', letterSpacing: '-0.05em', lineHeight: 0.85, color: 'var(--uc-black)' }}>$128k</div>
-            <div style={{ marginTop: 10, fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700, letterSpacing: '0.04em', color: 'var(--uc-black)' }}>4 equal installments of $32,000</div>
+            <div style={{ marginTop: 4, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(52px, 6vw, 88px)', letterSpacing: '-0.05em', lineHeight: 0.85, color: 'var(--uc-black)' }}>$50k</div>
+            <div style={{ marginTop: 10, fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700, letterSpacing: '0.04em', color: 'var(--uc-black)' }}>Half at signup, then two installments of $12,500</div>
           </div>
 
           {/* walk away */}
@@ -2499,7 +2498,7 @@ function BPInvestment() {
           <span aria-hidden="true" style={{ width: 16, height: 2, background: 'var(--uc-signal)' }}/>
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--uc-stone-500)' }}>Payment schedule</span>
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
           {schedule.map((s, i) => (
             <div key={i} style={{
               position: 'relative', overflow: 'hidden',
@@ -2509,7 +2508,7 @@ function BPInvestment() {
               {i === 0 && <span aria-hidden="true" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 3, background: 'var(--uc-signal)' }}/>}
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 }}>
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-2)' }}>Installment {i + 1}</span>
-                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.1em', color: 'var(--fg-3)' }}>{s.n} / 04</span>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.1em', color: 'var(--fg-3)' }}>{s.n} / 03</span>
               </div>
               <div style={{ fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(30px, 3.4vw, 46px)', letterSpacing: '-0.04em', lineHeight: 0.9, color: 'var(--fg-1)' }}>{s.amount}</div>
               <div style={{ paddingTop: 'clamp(12px, 1.4vw, 16px)', borderTop: '1px solid var(--line-1)', fontFamily: 'var(--font-mono)', fontSize: 12, letterSpacing: '0.04em', color: 'var(--fg-2)' }}>{s.due}</div>
@@ -2537,7 +2536,8 @@ function BPInvestment() {
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--uc-stone-500)' }}>If needed</div>
-          <div style={{ marginTop: 6, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(34px, 3.6vw, 52px)', letterSpacing: '-0.045em', lineHeight: 0.9, color: 'var(--uc-paper)' }}>$24k</div>
+          <div style={{ marginTop: 6, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(34px, 3.6vw, 52px)', letterSpacing: '-0.045em', lineHeight: 0.9, color: 'var(--uc-paper)' }}>$10k</div>
+          <div style={{ marginTop: 6, fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--uc-stone-500)' }}>75 hrs</div>
         </div>
       </div>
     </BPSection>
