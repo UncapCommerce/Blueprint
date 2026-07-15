@@ -257,7 +257,7 @@ function BPSummary() {
       }}>
         {[
           { v: '20 wk', l: 'Estimated timeline to launch on Shopify' },
-          { v: 'Unified', l: 'B2C and B2B on Shopify integrated with ERP' },
+          { v: 'Unified', l: 'B2C and B2B on Shopify and Integrated Systems' },
           { v: 'Speed', l: 'Sidekick-friendly system to self-manage your store' },
           { v: 'Growth', l: 'Experience optimized for conversion and retention' }
         ].map((s, i) => (
@@ -398,7 +398,7 @@ function BPObjectives() {
 function BPApproach() {
   const steps = [
     { n: 'Phase 1', t: 'Blueprint', d: 'Architecture, data model, integration map. A plan that holds up under scrutiny.', wk: '2–4 weeks' },
-    { n: 'Phase 2', t: 'Build', d: 'Storefront, B2B, ERP sync. Fixed scope, senior team, no surprises.', wk: 'Weeks 20+' },
+    { n: 'Phase 2', t: 'Build', d: 'Storefront, B2B, B2C sync. Fixed scope, senior team, no surprises.', wk: 'Weeks 20+' },
     { n: 'Phase 3', t: 'Grow', d: 'Migrate, go live, then optimize conversion, AOV, and automation.', wk: 'Months 6–12' }
   ];
   return (
@@ -566,7 +566,7 @@ function BPScope() {
     { code: '02', t: 'Experience Design', d: 'A modern, conversion-focused storefront, built to scale.' },
     { code: '03', t: 'Solution Architecture', d: 'Solution architecture, roadmap and integration.' },
     { code: '04', t: 'B2B Enablement',    d: 'Catalogs, pricing tiers, NET terms, and account portals.' },
-    { code: '05', t: 'ERP Integration',   d: 'Bidirectional, real-time sync native to Shopify Plus.' },
+    { code: '05', t: 'Shopify Setup',   d: 'Apps, themes, settings, shipping, taxes, payments.' },
     { code: '06', t: 'Data Migration',    d: 'Products, customers, order history, and SEO redirects.' },
     { code: '07', t: 'Launch & Hypercare Support',  d: 'QA, a go-live runbook, and 30-day post-launch care.', kind: 'base' }
   ];
