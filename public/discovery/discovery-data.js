@@ -11,16 +11,16 @@ window.DISCOVERY_STEPS = [
     ],
     groups: [
       { id: 'g-company', hotspotId: 'c-company', title: 'The company', questions: [
-        { id: 'q-name', type: 'text', label: 'Company name', placeholder: 'Legal or trade name', required: true },
-        { id: 'q-what', type: 'textarea', label: 'What do you make or distribute?', placeholder: 'Products, lines, who buys them…', required: true },
+        { id: 'q-name', type: 'text', label: 'Company name', placeholder: 'Legal or trade name' },
+        { id: 'q-what', type: 'textarea', label: 'What do you make or distribute?', placeholder: 'Products, lines, who buys them…' },
         { id: 'q-rev', type: 'chips', label: 'Annual revenue', options: ['<$10M', '$10–50M', '$50–250M', '$250M+'] }
       ]},
       { id: 'g-people', hotspotId: 'c-people', title: 'The people', questions: [
-        { id: 'q-stake', type: 'textarea', label: 'Who are the key stakeholders?', placeholder: 'Names, roles, who\'s on this call…', required: true },
+        { id: 'q-stake', type: 'textarea', label: 'Who are the key stakeholders?', placeholder: 'Names, roles, who\'s on this call…' },
         { id: 'q-owner', type: 'text', label: 'Who owns the ecommerce P&L?', placeholder: 'Name and title' }
       ]},
       { id: 'g-goal', hotspotId: 'c-goal', title: 'The goal', questions: [
-        { id: 'q-why', type: 'textarea', label: 'Why now — what triggered this project?', placeholder: 'The moment this became a priority…', required: true },
+        { id: 'q-why', type: 'textarea', label: 'Why now — what triggered this project?', placeholder: 'The moment this became a priority…' },
         { id: 'q-success', type: 'textarea', label: 'What does success look like in 12 months?', placeholder: 'Numbers if you have them…' },
         { id: 'q-channels', type: 'chips-multi', label: 'How do you sell today?', options: ['Sales reps', 'Phone / email', 'Legacy site', 'Marketplaces', 'EDI'] }
       ]}
@@ -36,16 +36,16 @@ window.DISCOVERY_STEPS = [
     groups: [
       { id: 'g-core', hotspotId: 'a-core', title: 'Commerce core', questions: [
         { id: 'q-platform', type: 'chips', label: 'Current commerce platform', options: ['None', 'Magento', 'Shopify', 'BigCommerce', 'Custom', 'Other'] },
-        { id: 'q-breaking', type: 'textarea', label: 'What\'s breaking today?', placeholder: 'The duct tape. Be honest…', required: true }
+        { id: 'q-breaking', type: 'textarea', label: 'What\'s breaking today?', placeholder: 'The duct tape. Be honest…' }
       ]},
       { id: 'g-record', hotspotId: 'a-record', title: 'Systems of record', questions: [
-        { id: 'q-erp', type: 'text', label: 'Which ERP do you run?', placeholder: 'e.g. Epicor, NetSuite, SAP B1, homegrown', required: true },
+        { id: 'q-erp', type: 'text', label: 'Which ERP do you run?', placeholder: 'e.g. Epicor, NetSuite, SAP B1, homegrown' },
         { id: 'q-pim', type: 'textarea', label: 'Where does product data live today?', placeholder: 'PIM, spreadsheets, the ERP, someone\'s head…' },
         { id: 'q-locations', type: 'chips', label: 'Inventory locations', options: ['1', '2–5', '6–20', '20+'] }
       ]},
       { id: 'g-connect', hotspotId: 'a-connect', title: 'The connections', questions: [
         { id: 'q-integrations', type: 'textarea', label: 'Existing integrations or middleware?', placeholder: 'What connects to what, and how…' },
-        { id: 'q-edi', type: 'chips', label: 'EDI requirements?', options: ['Yes', 'No', 'Not sure'], required: true },
+        { id: 'q-edi', type: 'chips', label: 'EDI requirements?', options: ['Yes', 'No', 'Not sure'] },
         { id: 'q-maintains', type: 'text', label: 'Who maintains integrations today?', placeholder: 'Internal IT, a vendor, nobody…' }
       ]}
     ]
@@ -60,19 +60,19 @@ window.DISCOVERY_STEPS = [
     ],
     groups: [
       { id: 'g-hero', hotspotId: 'e-hero', title: 'First impression', questions: [
-        { id: 'q-5sec', type: 'textarea', label: 'What should a buyer understand in 5 seconds?', placeholder: 'The one thing the homepage must say…', required: true },
+        { id: 'q-5sec', type: 'textarea', label: 'What should a buyer understand in 5 seconds?', placeholder: 'The one thing the homepage must say…' },
         { id: 'q-brand', type: 'chips', label: 'Brand assets ready?', options: ['Full brand kit', 'Logo only', 'Needs work'] }
       ]},
       { id: 'g-nav', hotspotId: 'e-nav', title: 'Navigation & search', questions: [
-        { id: 'q-lookup', type: 'textarea', label: 'How do buyers look for products?', placeholder: 'Part numbers, categories, brand, application…', required: true },
-        { id: 'q-skus', type: 'chips', label: 'SKU count', options: ['<1K', '1–10K', '10–100K', '100K+'], required: true }
+        { id: 'q-lookup', type: 'textarea', label: 'How do buyers look for products?', placeholder: 'Part numbers, categories, brand, application…' },
+        { id: 'q-skus', type: 'chips', label: 'SKU count', options: ['<1K', '1–10K', '10–100K', '100K+'] }
       ]},
       { id: 'g-merch', hotspotId: 'e-merch', title: 'Merchandising', questions: [
         { id: 'q-topcats', type: 'text', label: 'Top categories to feature', placeholder: 'The 3–4 that drive revenue' },
         { id: 'q-convince', type: 'textarea', label: 'What convinces a new account to buy?', placeholder: 'Terms, speed, expertise, price…' }
       ]},
       { id: 'g-account', hotspotId: 'e-account', title: 'Accounts & pricing', questions: [
-        { id: 'q-guest', type: 'chips', label: 'Pricing visible to guests?', options: ['Yes, list price', 'Login to see', 'Partial'], required: true },
+        { id: 'q-guest', type: 'chips', label: 'Pricing visible to guests?', options: ['Yes, list price', 'Login to see', 'Partial'] },
         { id: 'q-custpricing', type: 'chips', label: 'Customer-specific pricing?', options: ['Yes', 'No', 'Phase 2'] }
       ]}
     ]
@@ -86,15 +86,15 @@ window.DISCOVERY_STEPS = [
     ],
     groups: [
       { id: 'g-facets', hotspotId: 'd-facets', title: 'Filters', questions: [
-        { id: 'q-attrs', type: 'textarea', label: 'Which attributes do buyers filter by?', placeholder: 'Size, material, brand, spec…', required: true },
-        { id: 'q-dataq', type: 'chips', label: 'Attribute data quality', options: ['Clean', 'Messy', 'Nonexistent'], required: true }
+        { id: 'q-attrs', type: 'textarea', label: 'Which attributes do buyers filter by?', placeholder: 'Size, material, brand, spec…' },
+        { id: 'q-dataq', type: 'chips', label: 'Attribute data quality', options: ['Clean', 'Messy', 'Nonexistent'] }
       ]},
       { id: 'g-grid', hotspotId: 'd-grid', title: 'The grid', questions: [
-        { id: 'q-card', type: 'textarea', label: 'What must a product card show?', placeholder: 'Part #, price, stock, brand…', required: true },
+        { id: 'q-card', type: 'textarea', label: 'What must a product card show?', placeholder: 'Part #, price, stock, brand…' },
         { id: 'q-stock', type: 'chips', label: 'Stock visibility', options: ['Exact qty', 'In / out', 'By location'] }
       ]},
       { id: 'g-toolbar', hotspotId: 'd-toolbar', title: 'Search & sort', questions: [
-        { id: 'q-partsearch', type: 'chips', label: 'Part-number search', options: ['Critical', 'Nice to have', 'Not needed'], required: true },
+        { id: 'q-partsearch', type: 'chips', label: 'Part-number search', options: ['Critical', 'Nice to have', 'Not needed'] },
         { id: 'q-crossref', type: 'chips', label: 'Cross-reference / alternates?', options: ['Yes', 'No', 'Not sure'] },
         { id: 'q-ordersize', type: 'chips', label: 'Typical lines per order', options: ['1–5', '5–20', '20+'] },
         { id: 'q-compare', type: 'chips', label: 'Product compare needed?', options: ['Yes', 'No'] }
@@ -110,17 +110,17 @@ window.DISCOVERY_STEPS = [
     ],
     groups: [
       { id: 'g-buybox', hotspotId: 'v-buybox', title: 'The buy box', questions: [
-        { id: 'q-pricing', type: 'textarea', label: 'How is pricing structured?', placeholder: 'List, tiers, contract, negotiated…', required: true },
+        { id: 'q-pricing', type: 'textarea', label: 'How is pricing structured?', placeholder: 'List, tiers, contract, negotiated…' },
         { id: 'q-qtybreaks', type: 'chips', label: 'Show quantity-break pricing?', options: ['Yes', 'No'] },
-        { id: 'q-uom', type: 'chips', label: 'Units of measure', options: ['Single', 'Each / case', 'Complex'], required: true }
+        { id: 'q-uom', type: 'chips', label: 'Units of measure', options: ['Single', 'Each / case', 'Complex'] }
       ]},
       { id: 'g-specs', hotspotId: 'v-specs', title: 'Specs & documents', questions: [
-        { id: 'q-techcontent', type: 'textarea', label: 'What technical content closes the sale?', placeholder: 'Spec tables, datasheets, CAD, videos…', required: true },
+        { id: 'q-techcontent', type: 'textarea', label: 'What technical content closes the sale?', placeholder: 'Spec tables, datasheets, CAD, videos…' },
         { id: 'q-assets', type: 'text', label: 'Where do spec sheets / CAD live today?', placeholder: 'Shared drive, vendor portals, PDFs…' }
       ]},
       { id: 'g-trust', hotspotId: 'v-trust', title: 'Trust & support', questions: [
         { id: 'q-leadtime', type: 'chips', label: 'Can you promise lead times?', options: ['Yes', 'Varies', 'No'] },
-        { id: 'q-quote', type: 'chips', label: 'Quote instead of buy for some items?', options: ['Yes', 'No'], required: true },
+        { id: 'q-quote', type: 'chips', label: 'Quote instead of buy for some items?', options: ['Yes', 'No'] },
         { id: 'q-rep', type: 'chips', label: 'Show the rep on the product page?', options: ['Yes', 'No'] }
       ]}
     ]
@@ -134,15 +134,15 @@ window.DISCOVERY_STEPS = [
     ],
     groups: [
       { id: 'g-cart', hotspotId: 'r-items', title: 'The cart', questions: [
-        { id: 'q-aov', type: 'chips', label: 'Typical order value', options: ['<$500', '$500–5K', '$5–50K', '$50K+'], required: true },
-        { id: 'q-friction', type: 'textarea', label: 'What kills orders at checkout today?', placeholder: 'Where buyers give up and call instead…', required: true }
+        { id: 'q-aov', type: 'chips', label: 'Typical order value', options: ['<$500', '$500–5K', '$5–50K', '$50K+'] },
+        { id: 'q-friction', type: 'textarea', label: 'What kills orders at checkout today?', placeholder: 'Where buyers give up and call instead…' }
       ]},
       { id: 'g-payment', hotspotId: 'r-payment', title: 'Payment', questions: [
-        { id: 'q-paymethods', type: 'chips-multi', label: 'Payment methods needed', options: ['Credit card', 'PO / net terms', 'ACH', 'Credit line'], required: true },
+        { id: 'q-paymethods', type: 'chips-multi', label: 'Payment methods needed', options: ['Credit card', 'PO / net terms', 'ACH', 'Credit line'] },
         { id: 'q-terms', type: 'textarea', label: 'How are net terms approved?', placeholder: 'Credit application, who reviews it, how long…' }
       ]},
       { id: 'g-shipping', hotspotId: 'r-shipping', title: 'Shipping & checkout', questions: [
-        { id: 'q-freight', type: 'textarea', label: 'Shipping complexity?', placeholder: 'Parcel, LTL, hazmat, will-call…', required: true },
+        { id: 'q-freight', type: 'textarea', label: 'Shipping complexity?', placeholder: 'Parcel, LTL, hazmat, will-call…' },
         { id: 'q-split', type: 'chips', label: 'Split shipments?', options: ['Yes', 'No'] },
         { id: 'q-freightquote', type: 'chips', label: 'Real-time freight quotes?', options: ['Yes', 'No', 'Not sure'] },
         { id: 'q-taxexempt', type: 'chips', label: 'Tax-exempt customers?', options: ['Yes', 'No', 'Not sure'] }
@@ -158,15 +158,15 @@ window.DISCOVERY_STEPS = [
     ],
     groups: [
       { id: 'g-roles', hotspotId: 'u-roles', title: 'Accounts & roles', questions: [
-        { id: 'q-roles', type: 'textarea', label: 'Do buyer accounts need roles or approvals?', placeholder: 'Who orders, who approves, spending limits…', required: true },
+        { id: 'q-roles', type: 'textarea', label: 'Do buyer accounts need roles or approvals?', placeholder: 'Who orders, who approves, spending limits…' },
         { id: 'q-accounts', type: 'chips', label: 'Active customer accounts', options: ['<100', '100–1K', '1–10K', '10K+'] }
       ]},
       { id: 'g-quotes', hotspotId: 'u-quotes', title: 'Quotes & orders', questions: [
-        { id: 'q-quoteflow', type: 'textarea', label: 'How does quote-to-order work today?', placeholder: 'Email, PDFs, phone, ERP…', required: true },
+        { id: 'q-quoteflow', type: 'textarea', label: 'How does quote-to-order work today?', placeholder: 'Email, PDFs, phone, ERP…' },
         { id: 'q-repsorder', type: 'chips', label: 'Do reps place orders for customers?', options: ['Yes', 'Sometimes', 'No'] }
       ]},
       { id: 'g-selfserve', hotspotId: 'u-selfserve', title: 'Self-serve', questions: [
-        { id: 'q-calls', type: 'textarea', label: 'What do customers call for that they should self-serve?', placeholder: 'Invoices, order status, tracking, returns…', required: true },
+        { id: 'q-calls', type: 'textarea', label: 'What do customers call for that they should self-serve?', placeholder: 'Invoices, order status, tracking, returns…' },
         { id: 'q-payinvoice', type: 'chips', label: 'Pay invoices online?', options: ['Yes', 'No'] },
         { id: 'q-repeat', type: 'chips', label: 'Scheduled / repeat orders?', options: ['Yes', 'No'] },
         { id: 'q-punchout', type: 'chips', label: 'Punchout (Ariba, Coupa)?', options: ['Yes', 'No', 'Not sure'] }
@@ -182,16 +182,16 @@ window.DISCOVERY_STEPS = [
     ],
     groups: [
       { id: 'g-timeline', hotspotId: 'p-timeline', title: 'Timeline', questions: [
-        { id: 'q-launch', type: 'text', label: 'Target launch date — and what\'s driving it?', placeholder: 'e.g. Q2, before trade-show season', required: true },
+        { id: 'q-launch', type: 'text', label: 'Target launch date — and what\'s driving it?', placeholder: 'e.g. Q2, before trade-show season' },
         { id: 'q-deadlines', type: 'textarea', label: 'Hard deadlines we should know about?', placeholder: 'Contract expirations, ERP cutover, events…' },
         { id: 'q-phased', type: 'chips', label: 'Rollout approach', options: ['Phased', 'All at once', 'You tell us'] }
       ]},
       { id: 'g-budget', hotspotId: 'p-budget', title: 'Budget', questions: [
-        { id: 'q-budget', type: 'chips', label: 'Budget range', options: ['<$75K', '$75–150K', '$150–300K', '$300K+', 'Not set'], required: true },
-        { id: 'q-signoff', type: 'text', label: 'Who signs off on this spend?', placeholder: 'Name and title', required: true }
+        { id: 'q-budget', type: 'chips', label: 'Budget range', options: ['<$75K', '$75–150K', '$150–300K', '$300K+', 'Not set'] },
+        { id: 'q-signoff', type: 'text', label: 'Who signs off on this spend?', placeholder: 'Name and title' }
       ]},
       { id: 'g-team', hotspotId: 'p-team', title: 'The team', questions: [
-        { id: 'q-internal', type: 'textarea', label: 'Your internal team — who owns what?', placeholder: 'Project owner, IT, product data, marketing…', required: true },
+        { id: 'q-internal', type: 'textarea', label: 'Your internal team — who owns what?', placeholder: 'Project owner, IT, product data, marketing…' },
         { id: 'q-capacity', type: 'chips', label: 'In-house dev / IT capacity', options: ['Strong', 'Some', 'None'] },
         { id: 'q-procurement', type: 'textarea', label: 'Decision process from here?', placeholder: 'Proposal review, legal, procurement steps…' }
       ]}
@@ -206,11 +206,11 @@ window.DISCOVERY_STEPS = [
     ],
     groups: [
       { id: 'g-support', hotspotId: 'w-tiers', title: 'Support model', questions: [
-        { id: 'q-support', type: 'chips', label: 'Post-launch support level', options: ['Growth retainer', 'On-call', 'Full handoff'], required: true },
-        { id: 'q-dayto', type: 'text', label: 'Who runs the site day-to-day after launch?', placeholder: 'Name, role, or "that\'s the problem"', required: true }
+        { id: 'q-support', type: 'chips', label: 'Post-launch support level', options: ['Growth retainer', 'On-call', 'Full handoff'] },
+        { id: 'q-dayto', type: 'text', label: 'Who runs the site day-to-day after launch?', placeholder: 'Name, role, or "that\'s the problem"' }
       ]},
       { id: 'g-optimize', hotspotId: 'w-chart', title: 'Optimization', questions: [
-        { id: 'q-metrics', type: 'textarea', label: 'Which metrics will you watch monthly?', placeholder: 'Online revenue %, new accounts, reorder rate…', required: true },
+        { id: 'q-metrics', type: 'textarea', label: 'Which metrics will you watch monthly?', placeholder: 'Online revenue %, new accounts, reorder rate…' },
         { id: 'q-analytics', type: 'text', label: 'Current analytics stack', placeholder: 'GA4, ERP reports, gut feel…' },
         { id: 'q-testing', type: 'chips', label: 'A/B testing appetite', options: ['Yes', 'Later', 'No'] }
       ]},
@@ -230,15 +230,15 @@ window.DISCOVERY_STEPS = [
     ],
     groups: [
       { id: 'g-gaps', hotspotId: 'n-summary', title: 'The gaps', questions: [
-        { id: 'q-missed', type: 'textarea', label: 'What haven\'t we asked that we should have?', placeholder: 'The thing on your mind we didn\'t cover…', required: true },
-        { id: 'q-risk', type: 'textarea', label: 'Biggest risk to this project?', placeholder: 'Internal or external…', required: true }
+        { id: 'q-missed', type: 'textarea', label: 'What haven\'t we asked that we should have?', placeholder: 'The thing on your mind we didn\'t cover…' },
+        { id: 'q-risk', type: 'textarea', label: 'Biggest risk to this project?', placeholder: 'Internal or external…' }
       ]},
       { id: 'g-relationship', hotspotId: 'n-relationship', title: 'The relationship', questions: [
         { id: 'q-agencies', type: 'textarea', label: 'Past agency experiences — good and bad?', placeholder: 'What worked, what burned you…' },
         { id: 'q-comms', type: 'text', label: 'How do you want to work together?', placeholder: 'Cadence, tools, meeting style…' }
       ]},
       { id: 'g-next', hotspotId: 'n-next', title: 'Next steps', questions: [
-        { id: 'q-proposal', type: 'text', label: 'When do you want the proposal?', placeholder: 'A real date', required: true },
+        { id: 'q-proposal', type: 'text', label: 'When do you want the proposal?', placeholder: 'A real date' },
         { id: 'q-audience', type: 'text', label: 'Who else needs to see it?', placeholder: 'Names and roles' },
         { id: 'q-confidential', type: 'textarea', label: 'Anything confidential we should know?', placeholder: 'Stays in the room…' },
         { id: 'q-homerun', type: 'textarea', label: 'What would make this a home run?', placeholder: 'Beyond the obvious…' }
