@@ -26,7 +26,7 @@
 //     own signed copy without needing admin/self-test privileges.
 
 import { EmailMessage } from "cloudflare:email";
-import { buildDiscoveryProfile } from "./discovery-profile.js";
+import { buildDiscoveryProfile, buildDiscoveryProfileWithAI } from "./discovery-profile.js";
 
 const CODE_TTL_SECONDS       = 10 * 60;             // 10 minutes
 const SESSION_TTL_SECONDS    = 2 * 60 * 60;         // 2 hours (client blueprint sessions)
@@ -324,7 +324,7 @@ export default {
       return handleDiscoverySubmit(request, env);
     }
     if (url.pathname === '/api/admin/discoveries' && request.method === 'POST') {
-      return handleAdminCreateDiscovery(request, env);
+      return handleAdminCreateDiscovery(request, env, ctx);
     }
     if (url.pathname === '/api/admin/attio/companies' && request.method === 'GET') {
       return handleAdminAttioSearchCompanies(request, env);
@@ -1814,7 +1814,7 @@ async function handleAdminActivity(request, env) {
   return json(200, { ok: true, events: events.slice(0, 300) });
 }
 
-async function handleAdminCreateDiscovery(request, env) {
+async function handleAdminCreateDiscovery(request, env, ctx) {
   const sess = await getAdminSession(request, env);
   if (!sess) return json(401, { ok: false, error: 'Not signed in' });
   if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
@@ -1856,6 +1856,24 @@ async function handleAdminCreateDiscovery(request, env) {
   await env.BLUEPRINT_AUTH.put(`discovery:${id}`, JSON.stringify(rec));
   await env.BLUEPRINT_AUTH.put(`dischandle:${handle}`, id);
   await logActivity(env, null, { type: 'created', entity: 'discovery', id, name: company, actor: sess.email, detail: 'Discovery created' });
+
+  // Upgrade the wireframe profile with Claude-written content in the
+  // background, so creation stays fast. The deterministic profile above is
+  // the fallback and stays in place if the model call fails or the
+  // ANTHROPIC_API_KEY secret isn't configured.
+  if (env.ANTHROPIC_API_KEY && ctx && ctx.waitUntil) {
+    ctx.waitUntil((async () => {
+      try {
+        const aiProfile = await buildDiscoveryProfileWithAI(env, { website, company, address });
+        const raw = await env.BLUEPRINT_AUTH.get(`discovery:${id}`);
+        if (!raw) return;
+        const cur = JSON.parse(raw);
+        cur.profile = aiProfile;
+        await env.BLUEPRINT_AUTH.put(`discovery:${id}`, JSON.stringify(cur));
+      } catch (_) { /* deterministic profile stays */ }
+    })());
+  }
+
   return json(200, { ok: true, discovery: { id, ...rec } });
 }
 

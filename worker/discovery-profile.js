@@ -477,31 +477,54 @@ function skuPrefixFor(company) {
   return p;
 }
 
-export async function buildDiscoveryProfile({ website, company, address }, opts = {}) {
-  const html = typeof opts.html === 'string' ? opts.html : await fetchSiteHtml(website);
-  const pageText = html ? html.replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<[^>]+>/g, ' ') : '';
-  const corpus = `${pageText.slice(0, 200_000)} ${website || ''} ${company || ''}`;
+async function collectSite(website, htmlOverride) {
+  const html = typeof htmlOverride === 'string' ? htmlOverride : await fetchSiteHtml(website);
+  const pageText = html
+    ? html.replace(/<script[\s\S]*?<\/script>/gi, ' ').replace(/<style[\s\S]*?<\/style>/gi, ' ')
+        .replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ')
+    : '';
+  return {
+    html,
+    pageText,
+    metaDesc: html ? extractMetaDescription(html) : '',
+    siteCats: html ? extractNavCategories(html) : [],
+    siteProds: html ? extractJsonLdProducts(html) : [],
+  };
+}
+
+// The deterministic content pack: industry preset merged with whatever the
+// site scrape yielded. Both the plain and the AI-upgraded profile builds
+// start from this; the AI pass overwrites its fields with generated copy.
+function deterministicParts({ website, company }, site) {
+  const corpus = `${site.pageText.slice(0, 200_000)} ${website || ''} ${company || ''}`;
   const industry = classifyIndustry(corpus);
   const P = { ...DEFAULTS, ...(PRESETS[industry] || PRESETS.general) };
   const prod = { ...PRESETS.general.products, ...(P.products || {}) };
 
-  const metaDesc = html ? extractMetaDescription(html) : '';
-  const siteCats = html ? extractNavCategories(html) : [];
-  const siteProds = html ? extractJsonLdProducts(html) : [];
-
-  const cats = (siteCats.length >= 5 ? siteCats : []).concat(P.cats || PRESETS.general.cats).slice(0, 8);
+  const cats = (site.siteCats.length >= 5 ? site.siteCats : []).concat(P.cats || PRESETS.general.cats).slice(0, 8);
   const pSlots = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8'];
-  siteProds.forEach((name, i) => { if (i < pSlots.length) prod[pSlots[i]] = name; });
+  site.siteProds.forEach((name, i) => { if (i < pSlots.length) prod[pSlots[i]] = name; });
 
-  const heroS = metaDesc && metaDesc.length >= 34
-    ? (metaDesc.length > 170 ? metaDesc.slice(0, 170).replace(/\s+\S*$/, '') + '.' : metaDesc)
+  const heroS = site.metaDesc && site.metaDesc.length >= 34
+    ? (site.metaDesc.length > 170 ? site.metaDesc.slice(0, 170).replace(/\s+\S*$/, '') + '.' : site.metaDesc)
     : P.heroS;
 
+  const pdpTitle = site.siteProds.length ? prod.p1 : `${prod.p1}, ${P.pdpVar}`;
+  return { industry, P, prod, cats, heroS, pdpTitle };
+}
+
+export async function buildDiscoveryProfile({ website, company, address }, opts = {}) {
+  const site = await collectSite(website, opts.html);
+  const parts = deterministicParts({ website, company }, site);
+  return assembleProfile({ company, address }, site, parts);
+}
+
+function assembleProfile({ company, address }, site, parts) {
+  const { industry, P, prod, cats, heroS, pdpTitle } = parts;
   const { city, cityState } = parseCity(address);
   const cityUpper = city ? city.toUpperCase() : '';
   const year = new Date().getUTCFullYear();
   const brand = String(company || '').trim() || 'Your Company';
-  const pdpTitle = siteProds.length ? prod.p1 : `${prod.p1}, ${P.pdpVar}`;
 
   // [from token in the stock scenes] → [replacement]. The frontend applies
   // these in a single alternation pass, longest token first, so nested
@@ -597,7 +620,182 @@ export async function buildDiscoveryProfile({ website, company, address }, opts 
     v: 1,
     industry,
     initial: (brand.match(/[A-Za-z0-9]/) || ['H'])[0].toUpperCase(),
-    src: { fetched: !!html, desc: !!metaDesc, cats: siteCats.length, prods: siteProds.length },
+    src: { fetched: !!site.html, desc: !!site.metaDesc, cats: site.siteCats.length, prods: site.siteProds.length, ai: !!parts.ai },
     swaps: cleaned,
   };
+}
+
+// ── AI-personalized profile (Claude API) ──────────────────────────────────
+// Rewrites the whole content pack in the client's own voice, grounded in
+// the scraped site text. Runs in the background after discovery creation
+// (ctx.waitUntil), replacing the deterministic profile when it lands. Any
+// failure (no key, timeout, refusal, invalid JSON) leaves the deterministic
+// profile in place, so this is purely an upgrade path.
+
+const AI_MODEL = 'claude-opus-4-8';
+
+const AI_FIELDS = [
+  // [key, max chars, description for the model]
+  ['vertical', 24, 'Market label for the masthead spec line, ALL CAPS, e.g. "PACKAGING SUPPLY"'],
+  ['heroH', 64, 'Homepage hero headline. Two short sentences max, confident, concrete, in their voice'],
+  ['heroS', 110, 'Hero subline. Their strongest buyer promises as short sentences'],
+  ['search', 52, 'Search box placeholder. Must start with "Search "'],
+  ['nav1', 12, 'Account-nav label for a saved-items feature, e.g. "My Lists"'],
+  ['fitT', 22, 'Product-finder widget title, e.g. "Find the right box"'],
+  ['fitS', 26, 'Product-finder subtitle'],
+  ['fitC', 14, 'Product-finder button label, no arrow, e.g. "Find boxes"'],
+  ['fitF1', 10, 'First finder dropdown label'],
+  ['fitF2', 10, 'Second finder dropdown label'],
+  ['fitF3', 10, 'Third finder dropdown label'],
+  ['bestSub', 44, 'Best-sellers section subtitle: "Reordered most by <their buyers> like yours"'],
+  ['footer', 130, 'Footer blurb: one sentence on what they sell and for whom, then "Net-30 terms, same-day shipping, a rep who answers."'],
+  ['attr', 10, 'The key spec attribute buyers filter by, e.g. "Grit", "Size", "Count"'],
+  ['plpSub', 22, 'A flagship subcategory used as the demo category page, e.g. "Mailer boxes"'],
+  ['plpDesc', 200, 'Two-sentence intro for that category page ending "Filter by spec on the left, or paste a part number."'],
+  ['pdpVar', 22, 'Variant descriptor of the flagship product, e.g. "32 ECT kraft"'],
+  ['buyer', 24, 'Plausible fictional B2B customer company name for their vertical'],
+];
+
+const AI_PRODUCT_SLOTS = [
+  ['p1', 32, 'Flagship product, also used as the demo product page'],
+  ['p2', 32, 'Best seller 2'], ['p3', 32, 'Best seller 3'], ['p4', 32, 'Best seller 4'],
+  ['p5', 32, 'Best seller 5'], ['p6', 32, 'Best seller 6'], ['p7', 32, 'Best seller 7'],
+  ['p8', 32, 'Best seller 8'], ['p9', 32, 'A bulk/case-pack item shown in the cart'],
+  ['a1', 33, 'A small add-on accessory for the flagship product'],
+  ['a2', 35, 'A second add-on accessory'],
+  ['r1', 20, 'Quick-reorder shorthand for the flagship product'],
+  ['r2', 18, 'Quick-reorder item 2'], ['r3', 20, 'Quick-reorder item 3'],
+  ['q1', 22, 'B2B quote line, format "<Product> × 400"'],
+  ['q2', 22, 'B2B quote line, a seasonal restock, e.g. "Warehouse restock, Q3"'],
+  ['q3', 22, 'B2B quote line, format "<Product>, bulk"'],
+  ['q4', 22, 'B2B quote line, format "<Product> × 200"'],
+];
+
+function aiSchema() {
+  const str = { type: 'string' };
+  const props = {};
+  AI_FIELDS.forEach(([k]) => { props[k] = str; });
+  props.opts = { type: 'array', items: str };
+  props.brands = { type: 'array', items: str };
+  props.cats = { type: 'array', items: str };
+  const pProps = {};
+  AI_PRODUCT_SLOTS.forEach(([k]) => { pProps[k] = str; });
+  props.products = { type: 'object', properties: pProps, required: Object.keys(pProps), additionalProperties: false };
+  return { type: 'object', properties: props, required: Object.keys(props), additionalProperties: false };
+}
+
+function aiPrompt({ website, company, address }, site, parts) {
+  const fieldGuide = AI_FIELDS.map(([k, max, d]) => `- ${k} (max ${max} chars): ${d}`).join('\n')
+    + '\n- opts: array of exactly 3 variant options of the flagship product, each max 22 chars, format "<Variant> · <Label>", e.g. "32 ECT · Standard"'
+    + '\n- brands: array of exactly 5 brand names (max 14 chars each) this store would plausibly carry'
+    + '\n- cats: array of exactly 8 top-level shop categories (max 20 chars each), most important first'
+    + '\n- products (each with its own max):\n' + AI_PRODUCT_SLOTS.map(([k, max, d]) => `  - ${k} (max ${max} chars): ${d}`).join('\n');
+
+  return [
+    `Company: ${company}`,
+    `Website: ${website || 'unknown'}`,
+    address ? `Address: ${address}` : '',
+    `Industry guess: ${parts.industry}`,
+    site.metaDesc ? `Site meta description: ${site.metaDesc}` : '',
+    site.siteCats.length ? `Site nav links: ${site.siteCats.join(' | ')}` : '',
+    site.siteProds.length ? `Site product names: ${site.siteProds.join(' | ')}` : '',
+    site.pageText ? `Website text (excerpt):\n${site.pageText.slice(0, 6000)}` : 'Website text: unavailable',
+    '',
+    'Fill every field:',
+    fieldGuide,
+  ].filter(Boolean).join('\n');
+}
+
+const AI_SYSTEM = 'You write placeholder content for a B2B ecommerce wireframe mockup (storefront home, category page, product page, cart, and a buyer portal) shown to a prospective client during a discovery call. The mockup must read as THEIR future store. Ground everything in the provided website content: their real products, categories, vocabulary, and tone. Where the site gives too little, invent plausible content for their exact industry. Product names must read like real catalog lines with a size, spec, or pack quantity. Hard rules: never use em dashes or en dashes; respect every character limit; return only JSON matching the schema.';
+
+async function generateAiSlots(env, info, site, parts) {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 25_000);
+  try {
+    // No thinking pass: this is constrained copywriting with all source
+    // material supplied, and the call must fit the ~30s ctx.waitUntil
+    // window that remains after the creation response is sent.
+    const resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      signal: ctrl.signal,
+      headers: {
+        'x-api-key': env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: AI_MODEL,
+        max_tokens: 16000,
+        system: AI_SYSTEM,
+        output_config: { format: { type: 'json_schema', schema: aiSchema() } },
+        messages: [{ role: 'user', content: aiPrompt(info, site, parts) }],
+      }),
+    });
+    if (!resp.ok) throw new Error(`claude api ${resp.status}`);
+    const data = await resp.json();
+    if (data.stop_reason === 'refusal') throw new Error('claude api refusal');
+    const text = (data.content || []).filter((b) => b.type === 'text').map((b) => b.text).join('');
+    return JSON.parse(text);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+// Sanitize one generated string: kill banned dashes, collapse whitespace,
+// clip at a word boundary. Returns undefined when unusable so the caller
+// keeps the deterministic value for that slot.
+function aiClean(value, max) {
+  if (typeof value !== 'string') return undefined;
+  let s = value.replace(/\s+[—–]\s+/g, ', ').replace(/[—–]/g, '-').replace(/\s+/g, ' ').trim();
+  if (s.length > max) s = s.slice(0, max).replace(/\s+\S*$/, '').replace(/[،,;:\s]+$/, '');
+  return s.length >= 2 ? s : undefined;
+}
+
+function applyAiSlots(parts, ai) {
+  if (!ai || typeof ai !== 'object') return parts;
+  const P = { ...parts.P };
+  const prod = { ...parts.prod };
+  let heroS = parts.heroS;
+
+  for (const [key, max] of AI_FIELDS) {
+    const v = aiClean(ai[key], max);
+    if (!v) continue;
+    if (key === 'vertical') P.label = v.toUpperCase();
+    else if (key === 'heroS') heroS = v;
+    else if (key === 'fitC') P.fitC = v.replace(/\s*→$/, '') + ' →';
+    else P[key] = v;
+  }
+  if (P.search && !/^Search /.test(P.search)) P.search = 'Search ' + P.search;
+
+  const fixedList = (arr, max, fallback) => {
+    const out = Array.isArray(arr) ? arr.map((x) => aiClean(x, max)).filter(Boolean) : [];
+    return out.length >= fallback.length ? out.slice(0, fallback.length) : fallback;
+  };
+  P.opts = fixedList(ai.opts, 22, P.opts);
+  P.brands = fixedList(ai.brands, 14, P.brands);
+  const cats = fixedList(ai.cats, 20, parts.cats);
+
+  for (const [key, max] of AI_PRODUCT_SLOTS) {
+    const v = aiClean(ai.products && ai.products[key], max);
+    if (v) prod[key] = v;
+  }
+
+  return {
+    ...parts,
+    P, prod, cats, heroS,
+    // Skip the variant suffix when the generated name already carries any
+    // of its tokens (e.g. name "... 32 ECT" + variant "32 ECT kraft").
+    pdpTitle: P.pdpVar.toLowerCase().split(/[^a-z0-9]+/).some((w) => w.length >= 2 && prod.p1.toLowerCase().includes(w))
+      ? prod.p1 : `${prod.p1}, ${P.pdpVar}`,
+    ai: true,
+  };
+}
+
+export async function buildDiscoveryProfileWithAI(env, { website, company, address }, opts = {}) {
+  if (!env || !env.ANTHROPIC_API_KEY) throw new Error('ANTHROPIC_API_KEY not configured');
+  const site = await collectSite(website, opts.html);
+  let parts = deterministicParts({ website, company }, site);
+  const ai = opts.ai || await generateAiSlots(env, { website, company, address }, site, parts);
+  parts = applyAiSlots(parts, ai);
+  return assembleProfile({ company, address }, site, parts);
 }
