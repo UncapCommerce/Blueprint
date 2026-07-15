@@ -39,6 +39,7 @@ const files = [
   'public/ElyCattleman/index.html',
   'public/VIVO/index.html',
   'public/Weedoo/index.html',
+  'public/CartonCraftSupply/index.html',
   'public/demo/blueprint/index.html',
   'public/discovery/index.html',
 ];
