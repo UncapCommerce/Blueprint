@@ -2548,9 +2548,7 @@ function BPInvestment() {
 function BPGrowth() {
   const services = [
     { t: 'Shopify Support', d: 'Design, development, integrations, upgrades, and new-feature enablement — on call.' },
-    { t: 'Performance Optimization', d: 'Constantly optimizing experience, speed, conversion, and the tech stack behind it.' },
-    { t: 'Revenue Growth', d: 'Optimizing Product Search & Discovery, AOV, checkout, and self-serve buying.' },
-    { t: 'Retention Growth', d: 'Loyalty and VIP programs, email/text lifecycle, and subscriptions.' }
+    { t: 'Performance Optimization', d: 'Constantly optimizing experience, speed, conversion, and the tech stack behind it.' }
   ];
   return (
     <BPSection id="growth" n="16" label="Growth" paper tail="AFTER LAUNCH">
@@ -2574,7 +2572,7 @@ function BPGrowth() {
             position: 'relative', overflow: 'hidden'
           }}>
             <span aria-hidden="true" style={{ position: 'absolute', top: 0, left: 0, width: 36, height: 3, background: 'var(--uc-signal)' }}/>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--fg-3)', letterSpacing: 0 }}>{String(i + 1).padStart(2, '0')} / 04</div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--fg-3)', letterSpacing: 0 }}>{String(i + 1).padStart(2, '0')} / 02</div>
             <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'clamp(20px, 2vw, 26px)', letterSpacing: '-0.02em', color: 'var(--fg-1)' }}>{s.t}</div>
             <div style={{ fontFamily: 'var(--font-serif)', fontSize: 14.5, lineHeight: 1.45, color: 'var(--fg-2)' }}>{s.d}</div>
           </div>
@@ -2586,10 +2584,10 @@ function BPGrowth() {
         display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap'
       }}>
         <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 15, color: 'var(--fg-1)' }}>
-          Uncap Growth — Optimize Package · from <span style={{ fontFamily: 'var(--font-hero)', fontWeight: 800 }}>$5k / mo</span>
+          Uncap Growth — Core · from <span style={{ fontFamily: 'var(--font-hero)', fontWeight: 800 }}>$2.5k / mo</span>
         </div>
         <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--fg-3)', letterSpacing: '0.06em' }}>
-          12 MONTHS
+          MONTH-TO-MONTH
         </div>
       </div>
     </BPSection>
