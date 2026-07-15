@@ -3,7 +3,7 @@
 // lime accent, mono labels, Inter + Fraunces + JetBrains Mono.
 
 // ── Central brand (name + logo) — change window.__brand to rebrand everywhere ──
-function brandName() { return (window.__brand && window.__brand.name) || 'STOCKYARD'; }
+function brandName() { return (window.__brand && window.__brand.name) || 'Carton Craft Supply'; }
 function brandHandle() { return brandName().toLowerCase().replace(/[^a-z0-9]+/g, ''); }
 function BrandMark({ fontSize = 11, color = 'var(--fg-1)', family = 'var(--font-display)', weight = 700, letterSpacing = '-0.01em', dotColor = 'var(--uc-brand)', height }) {
   const b = window.__brand || {};
@@ -2613,8 +2613,10 @@ function BPWhy() {
       </BPHeadline>
 
       {/* Platinum partner badge */}
-      <div style={{ marginTop: 'clamp(28px, 3vw, 40px)', display: 'inline-flex', alignItems: 'center', gap: 14, padding: '12px 18px', background: 'var(--uc-paper)', borderRadius: 6 }}>
-        <img src="assets/shopify-platinum-partner-black.svg" alt="Shopify Platinum Partner" style={{ height: 26, display: 'block' }}/>
+      <div style={{ marginTop: 'clamp(28px, 3vw, 40px)', display: 'inline-flex', alignItems: 'center', gap: 16, padding: '12px 20px', background: '#111', border: '1px solid #2B2B2B', borderRadius: 6 }}>
+        <img src={window.__resources.uncapLogoWhite} alt="Uncap" style={{ height: 22, display: 'block' }}/>
+        <span style={{ width: 1, height: 22, background: '#2B2B2B' }}/>
+        <img src={window.__resources.shopifyBadge} alt="Shopify Platinum Partner" style={{ height: 22, display: 'block', filter: 'brightness(0) invert(1)' }}/>
       </div>
 
       {/* About Uncap intro + stats */}
@@ -2628,7 +2630,7 @@ function BPWhy() {
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', borderTop: '1px solid #1F1F1F' }}>
           {[
-            { v: '2014', l: 'Shopify experts since' },
+            { v: '2013', l: 'Shopify experts since' },
             { v: '380+', l: 'Projects launched' }
           ].map((s, i) => (
             <div key={i} style={{ padding: '16px 0', borderBottom: '1px solid #1F1F1F', display: 'flex', alignItems: 'baseline', gap: 16 }}>
@@ -2695,13 +2697,14 @@ function BPProof() {
     dotted: { bg: 'var(--uc-bone)', border: 'var(--uc-stone-300)', fg: 'var(--fg-1)', sub: 'var(--fg-2)', faint: 'var(--fg-3)', line: 'var(--line-1)', avBg: 'var(--uc-paper)', avFg: 'var(--fg-1)', avLine: 'var(--line-1)', borderStyle: 'dotted' }
   };
   const cards = [
-    { v: 'dark', q: 'The team communicated consistently and efficiently — internal stakeholders were impressed with Uncap\u2019s vast technical expertise.', stat: '60 Days', statL: 'Migrating to Shopify after Blueprint', n: 'Todd Arey', c: 'E3 Spark Plugs' },
+    { v: 'dark', q: 'I cannot praise Uncap enough. They are a hell of a team.', n: 'Andy Blechschmidt', c: 'Jerico' },
     { v: 'dotted', q: 'The integration of our platforms created an easy solution that even our complex systems sales teams can use.', stat: '83% Lower TCO', statL: 'Total cost of ownership on Shopify', n: 'Bryan Snyder', c: 'Canon Medical' },
     { v: 'paper', q: 'During the Blueprint, Uncap walked through every requirement — what was native, what needed an app, and what was custom.', stat: '1M SKUs', statL: 'Mapped to sync from Epicor to Shopify', n: 'Denise Foley', c: 'ULE Group' },
+    { v: 'paper', q: 'The professionalism, high quality of the design, timely communication and responsiveness have been greatly appreciated (especially compared to our previous dev agency partner).', stat: 'BigCommerce\nMigration', statL: 'Migrated to Shopify with Uncap', n: 'Kiki Fischer', c: 'Rescue Essentials' },
     { v: 'signal', q: 'They are brilliant and very knowledgeable of all that Shopify can do.', stat: 'Product Configurations', statL: 'Custom product ordering for manufacturing', n: 'Peggy Farabaugh', c: 'Vermont Woods' },
-    { v: 'paper', q: 'Uncap demonstrated a deep understanding of the Shopify ecosystem from the get-go.', stat: 'Custom ERP', statL: 'Integration data mapping for Shopify', n: 'Andy Morgan', c: 'ScooterWorks' },
+    { v: 'dotted', q: 'Uncap demonstrated a deep understanding of the Shopify ecosystem from the get-go.', stat: 'Custom ERP', statL: 'Integration data mapping for Shopify', n: 'Andy Morgan', c: 'ScooterWorks' },
     { v: 'paper', q: 'The personal touch and constant communication is what separates them from other companies with a 50+ person team where the attention to detail may be lost.', n: 'Brandt DeVries', c: 'WeldingStore' },
-    { v: 'dark', q: 'I cannot praise Uncap enough. They are a hell of a team.', n: 'Andy Blechschmidt', c: 'Jerico' }
+    { v: 'dark', q: 'The team and internal stakeholders were impressed with Uncap\u2019s vast technical expertise.', stat: '60 Days', statL: 'Migrating to Shopify after Blueprint', n: 'Todd Arey', c: 'E3 Spark Plugs' }
   ];
   const Stars = ({ color }) => (
     <div style={{ display: 'flex', gap: 3 }}>{[0,1,2,3,4].map(i => (<span key={i} style={{ color, fontSize: 12 }}>★</span>))}</div>
@@ -2735,9 +2738,9 @@ function BPProof() {
               <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 'clamp(15px, 1.4vw, 18px)', lineHeight: 1.35, letterSpacing: '-0.01em', color: t.fg, textWrap: 'pretty' }}>&ldquo;{card.q}&rdquo;</div>
 
               {card.stat && (
-                <div style={{ paddingTop: 14, borderTop: '1px solid ' + t.line, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 0.9fr)', gap: 12, alignItems: 'start' }}>
-                  <span style={{ fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(22px, 2.2vw, 30px)', letterSpacing: '-0.04em', lineHeight: 0.95, color: t.fg, textTransform: 'uppercase' }}>{card.stat}</span>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.faint, textAlign: 'right', lineHeight: 1.4 }}>{card.statL}</span>
+                <div style={{ paddingTop: 14, borderTop: '1px solid ' + t.line, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <span style={{ fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(22px, 2.2vw, 30px)', letterSpacing: '-0.04em', lineHeight: 0.95, color: t.fg, textTransform: 'uppercase', overflowWrap: 'anywhere', whiteSpace: 'pre-line' }}>{card.stat}</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.faint, lineHeight: 1.4 }}>{card.statL}</span>
                 </div>
               )}
 
