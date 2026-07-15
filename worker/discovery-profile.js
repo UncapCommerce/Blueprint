@@ -501,7 +501,12 @@ function deterministicParts({ website, company }, site) {
   const P = { ...DEFAULTS, ...(PRESETS[industry] || PRESETS.general) };
   const prod = { ...PRESETS.general.products, ...(P.products || {}) };
 
-  const cats = (site.siteCats.length >= 5 ? site.siteCats : []).concat(P.cats || PRESETS.general.cats).slice(0, 8);
+  // The wireframe layout is fixed by design: categories stay a curated
+  // 8-slot product taxonomy from the industry preset (or the AI rewrite),
+  // never the site's own navigation links. Scraped nav text is only an
+  // input hint for classification and the AI prompt. Real product names
+  // from the site's structured data DO replace the card slots directly.
+  const cats = (P.cats || PRESETS.general.cats).slice(0, 8);
   const pSlots = ['p1', 'p2', 'p3', 'p4', 'p5', 'p6', 'p7', 'p8'];
   site.siteProds.forEach((name, i) => { if (i < pSlots.length) prod[pSlots[i]] = name; });
 
@@ -688,7 +693,7 @@ function aiPrompt({ website, company, address }, site, parts) {
   const fieldGuide = AI_FIELDS.map(([k, max, d]) => `- ${k} (max ${max} chars): ${d}`).join('\n')
     + '\n- opts: array of exactly 3 variant options of the flagship product, each max 22 chars, format "<Variant> · <Label>", e.g. "32 ECT · Standard"'
     + '\n- brands: array of exactly 5 brand names (max 14 chars each) this store would plausibly carry'
-    + '\n- cats: array of exactly 8 top-level shop categories (max 20 chars each), most important first'
+    + '\n- cats: array of exactly 8 top-level PRODUCT categories (max 20 chars each), most important first. A shop-by-category taxonomy of what they SELL. Never copy their site menu or sitemap: no About, Resources, Blog, Support, Contact, or company pages'
     + '\n- products (each with its own max):\n' + AI_PRODUCT_SLOTS.map(([k, max, d]) => `  - ${k} (max ${max} chars): ${d}`).join('\n');
 
   return [
@@ -697,7 +702,7 @@ function aiPrompt({ website, company, address }, site, parts) {
     address ? `Address: ${address}` : '',
     `Industry guess: ${parts.industry}`,
     site.metaDesc ? `Site meta description: ${site.metaDesc}` : '',
-    site.siteCats.length ? `Site nav links: ${site.siteCats.join(' | ')}` : '',
+    site.siteCats.length ? `Site nav links (hints about what they sell only, never copy into any field): ${site.siteCats.join(' | ')}` : '',
     site.siteProds.length ? `Site product names: ${site.siteProds.join(' | ')}` : '',
     site.pageText ? `Website text (excerpt):\n${site.pageText.slice(0, 6000)}` : 'Website text: unavailable',
     '',
@@ -706,7 +711,7 @@ function aiPrompt({ website, company, address }, site, parts) {
   ].filter(Boolean).join('\n');
 }
 
-const AI_SYSTEM = 'You write placeholder content for a B2B ecommerce wireframe mockup (storefront home, category page, product page, cart, and a buyer portal) shown to a prospective client during a discovery call. The mockup must read as THEIR future store. Ground everything in the provided website content: their real products, categories, vocabulary, and tone. Where the site gives too little, invent plausible content for their exact industry. Product names must read like real catalog lines with a size, spec, or pack quantity. Hard rules: never use em dashes or en dashes; respect every character limit; return only JSON matching the schema.';
+const AI_SYSTEM = 'You write placeholder content for a B2B ecommerce wireframe mockup (storefront home, category page, product page, cart, and a buyer portal) shown to a prospective client during a discovery call. The mockup must read as THEIR future store. The wireframe layout, navigation structure, and section design are fixed and never change: you only supply the words that fill the existing slots. Ground everything in the provided website content: their real products, product categories, vocabulary, and tone. Never reproduce their current website navigation, menu structure, or sitemap; categories describe what they sell, not the pages their site has. Where the site gives too little, invent plausible content for their exact industry. Product names must read like real catalog lines with a size, spec, or pack quantity. Hard rules: never use em dashes or en dashes; respect every character limit; return only JSON matching the schema.';
 
 async function generateAiSlots(env, info, site, parts) {
   const ctrl = new AbortController();
@@ -773,7 +778,10 @@ function applyAiSlots(parts, ai) {
   };
   P.opts = fixedList(ai.opts, 22, P.opts);
   P.brands = fixedList(ai.brands, 14, P.brands);
-  const cats = fixedList(ai.cats, 20, parts.cats);
+  // Categories must stay a product taxonomy: drop anything that reads like
+  // a site-menu page before validating, falling back to the preset set.
+  const catInput = Array.isArray(ai.cats) ? ai.cats.filter((c) => !NAV_NOISE.test(String(c).trim())) : [];
+  const cats = fixedList(catInput, 20, parts.cats);
 
   for (const [key, max] of AI_PRODUCT_SLOTS) {
     const v = aiClean(ai.products && ai.products[key], max);
