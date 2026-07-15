@@ -1978,7 +1978,7 @@ function BPMigration() {
     { t: 'Stage & verify', s: 'Dry-run into staging. Reconcile counts, spot-check edge cases.' },
     { t: 'Cutover', s: 'Final delta sync, 301 redirect map, DNS switch with zero lost orders.' }
   ];
-  const stats = ['Products', 'Collections', 'Pages', 'Blogs', 'Customers', 'Companies', 'Orders'];
+  const stats = ['Products', 'Collections', 'Pages', 'Blogs'];
   return (
     <BPSection id="migration" n="11" label="Migration" paper tail="MOVE WITHOUT LOSS" vec="bgVector2">
       <BPHeadline>
@@ -2065,10 +2065,10 @@ function BPMigration() {
         );
       })()}
 
-      {/* guarantee strip */}
-      <div style={{ marginTop: 'clamp(28px, 3vw, 40px)', paddingTop: 'clamp(24px, 3vw, 36px)', borderTop: '1px solid var(--line-1)', display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+      {/* guarantee strip: one pill per record type, stretched edge to edge */}
+      <div style={{ marginTop: 'clamp(28px, 3vw, 40px)', paddingTop: 'clamp(24px, 3vw, 36px)', borderTop: '1px solid var(--line-1)', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
         {stats.map((s, i) => (
-          <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '10px 16px', border: '1px solid var(--line-2)', borderRadius: 999, fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'clamp(14px, 1.3vw, 17px)', letterSpacing: '-0.01em', color: 'var(--fg-1)' }}>
+          <span key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 9, padding: '12px 16px', border: '1px solid var(--line-2)', borderRadius: 999, fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'clamp(14px, 1.3vw, 17px)', letterSpacing: '-0.01em', color: 'var(--fg-1)' }}>
             <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: 999, background: 'var(--uc-signal)' }}/>
             {s}
           </span>
