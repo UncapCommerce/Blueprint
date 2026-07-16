@@ -63,6 +63,10 @@ window.DISCOVERY_STEPS = [
         { id: 'q-locations', type: 'text', label: 'Number of fulfillment locations', placeholder: 'e.g. 3' }
       ]},
       { id: 'g-b2b', hotspotId: 'a-b2b', title: 'B2B', questions: [
+        { id: 'q-b2b-contract', type: 'chips', label: 'Do you offer contract pricing?', options: ['Yes', 'No'] },
+        { id: 'q-b2b-pricegroups', type: 'text', label: 'How many price groups do you have?', placeholder: 'e.g. 12' },
+        { id: 'q-b2b-collections', type: 'chips', label: 'Do you offer private product collections for specific customers?', options: ['Yes', 'No'] },
+        { id: 'q-b2b-qtyrules', type: 'chips-multi', label: 'Which pricing and quantity rules do you use?', options: ['Tier Pricing', 'Min QTY', 'Max QTY', 'Increments'] },
         { id: 'q-edi', type: 'chips', label: 'EDI requirements?', options: ['Yes', 'No', 'Not sure'] },
         { id: 'q-punchout', type: 'chips', label: 'PunchOut (Ariba, Coupa)?', options: ['Yes', 'No', 'Not sure'] }
       ]},
