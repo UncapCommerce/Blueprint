@@ -42,6 +42,11 @@ export const QUESTION_CATALOG = [
   { id: 'q-locations', step: 'Architecture', label: 'Number of fulfillment locations', type: 'text' },
   { id: 'q-integrations', step: 'Architecture', label: 'Existing integrations or middleware?', type: 'textarea' },
   { id: 'q-edi', step: 'Architecture', label: 'EDI requirements?', type: 'chips', options: ['Yes', 'No', 'Not sure'] },
+  { id: 'q-punchout', step: 'Architecture', label: 'PunchOut (Ariba, Coupa)?', type: 'chips', options: ['Yes', 'No', 'Not sure'] },
+  { id: 'q-paygateway', step: 'Architecture', label: 'Payment gateway / processor', type: 'text' },
+  // Rendered as a dropdown in the UI; prefer a product name, "No CRM" when none.
+  { id: 'q-crm', step: 'Architecture', label: 'Their CRM platform, e.g. "Salesforce" or "HubSpot"; write "No CRM" when the document says they have none', type: 'text' },
+  { id: 'q-crm-quotes', step: 'Architecture', label: 'How do you manage quotes?', type: 'textarea' },
   { id: 'q-maintains', step: 'Architecture', label: 'Who maintains integrations today?', type: 'text' },
   // 3 · Experience
   { id: 'q-5sec', step: 'Experience', label: 'What should a buyer understand in 5 seconds?', type: 'textarea' },
@@ -87,7 +92,6 @@ export const QUESTION_CATALOG = [
   { id: 'q-calls', step: 'Unified', label: 'What do customers call for that they should self-serve?', type: 'textarea' },
   { id: 'q-payinvoice', step: 'Unified', label: 'Pay invoices online?', type: 'chips', options: ['Yes', 'No'] },
   { id: 'q-repeat', step: 'Unified', label: 'Scheduled / repeat orders?', type: 'chips', options: ['Yes', 'No'] },
-  { id: 'q-punchout', step: 'Unified', label: 'Punchout (Ariba, Coupa)?', type: 'chips', options: ['Yes', 'No', 'Not sure'] },
   // 8 · Project
   { id: 'q-launch', step: 'Project', label: 'Target launch date, and what is driving it?', type: 'text' },
   { id: 'q-deadlines', step: 'Project', label: 'Hard deadlines we should know about?', type: 'textarea' },

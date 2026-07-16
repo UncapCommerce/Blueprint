@@ -136,8 +136,15 @@
     'Jasper PIM', 'Ergonode',
   ].map((name) => ({ name, editions: [] }));
 
+  // CRM platform catalog for the q-crm dropdown (flat, no editions).
+  const CRM_CATALOG = [
+    'No CRM', 'Salesforce', 'HubSpot', 'Microsoft Dynamics 365 Sales', 'Zoho CRM', 'Pipedrive',
+    'SugarCRM', 'monday CRM', 'Freshsales', 'Copper', 'Insightly', 'Nutshell', 'Close', 'Keap',
+    'Attio', 'NetSuite CRM', 'SAP Sales Cloud', 'Oracle CX Sales',
+  ].map((name) => ({ name, editions: [] }));
+
   // Question type → catalog for the cascading vendor/edition dropdowns.
-  const CASCADE_CATALOGS = { erp: ERP_CATALOG, platform: PLATFORM_CATALOG, pim: PIM_CATALOG };
+  const CASCADE_CATALOGS = { erp: ERP_CATALOG, platform: PLATFORM_CATALOG, pim: PIM_CATALOG, crm: CRM_CATALOG };
 
   // Map a stored answer string back onto the dropdowns: "Vendor · Edition",
   // a bare vendor, a bare edition (e.g. a prefilled "NetSuite"), or anything
@@ -733,7 +740,7 @@
                               <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                                 <select value={p.vendor} style={selStyle}
                                   onChange={(e) => { const nv = e.target.value; setCascadeOther((o) => ({ ...o, [q.id]: nv === 'Other' })); setAnswer(q.id, nv); }}>
-                                  <option value="">{q.type === 'erp' ? 'Select your ERP…' : q.type === 'pim' ? 'Select your PIM…' : 'Select your platform…'}</option>
+                                  <option value="">{q.type === 'erp' ? 'Select your ERP…' : q.type === 'pim' ? 'Select your PIM…' : q.type === 'crm' ? 'Select your CRM…' : 'Select your platform…'}</option>
                                   {catalog.map((e) => <option key={e.name} value={e.name}>{e.name}</option>)}
                                   <option value="Other">Other</option>
                                 </select>

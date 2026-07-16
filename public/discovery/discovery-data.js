@@ -33,12 +33,16 @@ window.DISCOVERY_STEPS = [
       { id: 'a-erp', x: 88, y: 208, w: 364, h: 136, label: 'ERP', info: 'Orders, customers, credit, invoicing. The system of financial record already runs your business — we connect to it, we don\'t replace it.' },
       { id: 'a-pim', x: 88, y: 348, w: 364, h: 136, label: 'PIM & product data', info: 'Where specs, attributes, images, and documents live — and how much of it there is. Catalog counts size the data work ahead.' },
       { id: 'a-fulfill', x: 88, y: 488, w: 364, h: 136, label: 'Fulfillment', info: 'Warehouse, inventory, order, and fulfillment systems — every hop an order makes after checkout, and how many locations ship.' },
-      { id: 'a-connect', x: 980, y: 170, w: 380, h: 500, label: 'The connections', info: 'EDI, payments, customer comms. The duct tape usually lives here. We want to know every hop an order makes.' }
+      { id: 'a-b2b', x: 988, y: 208, w: 364, h: 136, label: 'B2B', info: 'EDI and PunchOut — the channels enterprise and big-box buyers order through, and what their procurement systems expect from yours.' },
+      { id: 'a-payments', x: 988, y: 348, w: 364, h: 136, label: 'Payments', info: 'Cards, ACH, terms, credit lines — and the gateway that processes them. B2B checkout lives or dies on payment flexibility.' },
+      { id: 'a-crm', x: 988, y: 488, w: 364, h: 136, label: 'CRM', info: 'Where reps, accounts, and quotes live today. The storefront has to feed this system, not fight it.' }
     ],
     groups: [
       { id: 'g-core', hotspotId: 'a-core', title: 'Commerce core', questions: [
         { id: 'q-platform', type: 'platform', label: 'Current commerce platform' },
-        { id: 'q-breaking', type: 'textarea', label: 'What\'s breaking today?', placeholder: 'The duct tape. Be honest…' }
+        { id: 'q-breaking', type: 'textarea', label: 'What\'s breaking today?', placeholder: 'The duct tape. Be honest…' },
+        { id: 'q-integrations', type: 'textarea', label: 'Existing integrations or middleware?', placeholder: 'What connects to what, and how…' },
+        { id: 'q-maintains', type: 'text', label: 'Who maintains integrations today?', placeholder: 'Internal IT, a vendor, nobody…' }
       ]},
       { id: 'g-erp', hotspotId: 'a-erp', title: 'ERP', questions: [
         { id: 'q-erp', type: 'erp', label: 'Which ERP do you run?' }
@@ -58,10 +62,16 @@ window.DISCOVERY_STEPS = [
         { id: 'q-fulfilsys', type: 'text', label: 'Fulfillment Management System', placeholder: 'ShipStation, 3PL portal, custom…' },
         { id: 'q-locations', type: 'text', label: 'Number of fulfillment locations', placeholder: 'e.g. 3' }
       ]},
-      { id: 'g-connect', hotspotId: 'a-connect', title: 'The connections', questions: [
-        { id: 'q-integrations', type: 'textarea', label: 'Existing integrations or middleware?', placeholder: 'What connects to what, and how…' },
+      { id: 'g-b2b', hotspotId: 'a-b2b', title: 'B2B', questions: [
         { id: 'q-edi', type: 'chips', label: 'EDI requirements?', options: ['Yes', 'No', 'Not sure'] },
-        { id: 'q-maintains', type: 'text', label: 'Who maintains integrations today?', placeholder: 'Internal IT, a vendor, nobody…' }
+        { id: 'q-punchout', type: 'chips', label: 'PunchOut (Ariba, Coupa)?', options: ['Yes', 'No', 'Not sure'] }
+      ]},
+      { id: 'g-payments', hotspotId: 'a-payments', title: 'Payments', questions: [
+        { id: 'q-paygateway', type: 'text', label: 'Payment gateway / processor', placeholder: 'Stripe, Authorize.net, PayPal…' }
+      ]},
+      { id: 'g-crm', hotspotId: 'a-crm', title: 'CRM', questions: [
+        { id: 'q-crm', type: 'crm', label: 'CRM platform' },
+        { id: 'q-crm-quotes', type: 'textarea', label: 'How do you manage quotes?', placeholder: 'Where they\'re built, who approves, how they become orders…' }
       ]}
     ]
   },
@@ -183,8 +193,7 @@ window.DISCOVERY_STEPS = [
       { id: 'g-selfserve', hotspotId: 'u-selfserve', title: 'Self-serve', questions: [
         { id: 'q-calls', type: 'textarea', label: 'What do customers call for that they should self-serve?', placeholder: 'Invoices, order status, tracking, returns…' },
         { id: 'q-payinvoice', type: 'chips', label: 'Pay invoices online?', options: ['Yes', 'No'] },
-        { id: 'q-repeat', type: 'chips', label: 'Scheduled / repeat orders?', options: ['Yes', 'No'] },
-        { id: 'q-punchout', type: 'chips', label: 'Punchout (Ariba, Coupa)?', options: ['Yes', 'No', 'Not sure'] }
+        { id: 'q-repeat', type: 'chips', label: 'Scheduled / repeat orders?', options: ['Yes', 'No'] }
       ]}
     ]
   },
