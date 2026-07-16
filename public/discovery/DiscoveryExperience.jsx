@@ -459,9 +459,16 @@
     let sceneHtml = (window.DISCOVERY_SCENES || {})[activeStepIdx + 1] || '';
     if (activeStepIdx === 0) {
       sceneHtml = sceneHtml.replace(/__CLIENT_NAME__/g, escapeText(company || 'there'));
-      sceneHtml = sceneHtml.replace(/__CLIENT_ADDRESS__/g, escapeText((address || '').toUpperCase()));
+      // Street on line one, city/state/zip on line two; parts are escaped
+      // individually so the <br/> survives the substitution.
+      const addr = (address || '').toUpperCase().trim();
+      const comma = addr.indexOf(',');
+      const addrHtml = comma > 0
+        ? escapeText(addr.slice(0, comma).trim()) + '<br/>' + escapeText(addr.slice(comma + 1).trim())
+        : escapeText(addr);
+      sceneHtml = sceneHtml.replace(/__CLIENT_ADDRESS__/g, addrHtml);
       sceneHtml = sceneHtml.replace(/__CLIENT_LOGO__/g, logoUrl
-        ? '<img src="' + logoUrl + '" alt="" style="height:64px;max-width:280px;object-fit:contain;object-position:right;display:block"/>'
+        ? '<img src="' + logoUrl + '" alt="" style="height:44px;max-width:210px;object-fit:contain;object-position:right;display:block"/>'
         : '');
     }
     // Logo swaps run on the raw scene, before the text swaps consume the
@@ -518,7 +525,7 @@
                             <div key={h.id} onClick={(e) => { e.stopPropagation(); selectSiteHotspot(h.id); }}
                               style={{ position: 'absolute', left: h.x, top: h.y, width: h.w, height: h.h, borderRadius: 8, zIndex: active ? 60 : 10, cursor: 'pointer', pointerEvents: 'auto', boxShadow: active ? '0 0 0 4000px rgba(10,10,10,0.55)' : 'none' }}>
                               {!active && (
-                                <span style={{ position: 'absolute', top: badgeTop, left: badgeLeft, width: 30, height: 30, borderRadius: '50%', background: '#FFFFFF', border: '1.5px solid #0A0A0A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 600, color: '#0A0A0A', animation: 'uc-pulse 2.4s cubic-bezier(.2,.7,.2,1) infinite' }}>{h.num}</span>
+                                <span style={{ position: 'absolute', top: badgeTop, left: badgeLeft, width: 30, height: 30, borderRadius: '50%', background: '#E8FF4E', border: '1.5px solid #0A0A0A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 600, color: '#0A0A0A', animation: 'uc-pulse 2.4s cubic-bezier(.2,.7,.2,1) infinite' }}>{h.num}</span>
                               )}
                               {active && (
                                 <svg style={{ position: 'absolute', top: -2, left: -2, overflow: 'visible' }} width={h.w + 4} height={h.h + 4}>
@@ -540,7 +547,7 @@
                         <div key={h.id} onClick={(e) => { e.stopPropagation(); onHotspotClick(h.id); }}
                           style={{ position: 'absolute', left: h.x, top: h.y, width: h.w, height: h.h, cursor: 'pointer', zIndex: h.active ? 60 : 10, borderRadius: 8, boxShadow: h.active ? '0 0 0 4000px rgba(10,10,10,0.55)' : 'none' }}>
                           {!h.active && (
-                            <span style={{ position: 'absolute', top: -15, left: -15, width: 30, height: 30, borderRadius: '50%', background: '#FFFFFF', border: '1.5px solid #0A0A0A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 600, color: '#0A0A0A', animation: 'uc-pulse 2.4s cubic-bezier(.2,.7,.2,1) infinite' }}>{h.num}</span>
+                            <span style={{ position: 'absolute', top: -15, left: -15, width: 30, height: 30, borderRadius: '50%', background: '#E8FF4E', border: '1.5px solid #0A0A0A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 600, color: '#0A0A0A', animation: 'uc-pulse 2.4s cubic-bezier(.2,.7,.2,1) infinite' }}>{h.num}</span>
                           )}
                           {h.active && (
                             <svg style={{ position: 'absolute', top: -2, left: -2, overflow: 'visible', pointerEvents: 'none' }} width={h.w + 4} height={h.h + 4}>
