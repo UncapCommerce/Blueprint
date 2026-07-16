@@ -465,10 +465,11 @@
         : '');
     }
     // Logo swaps run on the raw scene, before the text swaps consume the
-    // wordmark tokens they anchor on.
+    // wordmark tokens they anchor on. The palette only ever touches the
+    // website wireframe scenes; every other slide keeps the Uncap lime.
     sceneHtml = applyClientLogo(sceneHtml, logoUrl);
     sceneHtml = applyProfileSwaps(sceneHtml, profile);
-    sceneHtml = applyPalette(sceneHtml, palette);
+    if (isRich) sceneHtml = applyPalette(sceneHtml, palette);
 
     return (
       <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#F2EFE7', color: '#0A0A0A' }}>
@@ -755,12 +756,13 @@
       .replace(/<div style="font-size:14px;font-weight:800;letter-spacing:-0\.01em;padding:0 10px">HARLOW SUPPLY<\/div>/g, '<div style="padding:0 10px">' + img(28) + '</div>');
   }
 
-  // Recolor the scenes with the discovery's palette. Prime replaces the
-  // stock storefront green. Accent replaces the stock amber AND the Uncap
-  // lime highlight on every screen, and turns the solid call-to-action
-  // buttons (Add to cart, Checkout, Find parts, Add all 3, Reorder) accent
-  // with black/white text picked by the accent's brightness. Header
-  // controls (logo box, cart) and selected-state pills stay black.
+  // Recolor a WEBSITE WIREFRAME scene (steps 3-6 only; the caller gates on
+  // isRichScene, so the Uncap artboards keep their lime). Prime replaces
+  // the stock storefront green; accent replaces the stock amber and the
+  // in-wireframe lime highlights, and turns the solid call-to-action
+  // buttons (Add to cart, Checkout, Find parts, Add all 3) accent with
+  // contrast-picked text: white on a dark accent, black on a light one.
+  // Header controls (logo box, cart) and selected-state pills stay black.
   function applyPalette(html, palette) {
     if (!palette) return html;
     const ok = (c) => typeof c === 'string' && /^#[0-9A-Fa-f]{6}$/.test(c);
@@ -768,19 +770,21 @@
     const accent = ok(palette.accent) ? palette.accent.toUpperCase() : '';
     if (prime) html = html.split('#2F7A47').join(prime);
     if (!accent) return html;
-    html = html.split('#B8741F').join(accent);
-    html = html.split('#E8FF4E').join(accent);
     const yiq = (parseInt(accent.slice(1, 3), 16) * 299 + parseInt(accent.slice(3, 5), 16) * 587 + parseInt(accent.slice(5, 7), 16) * 114) / 1000;
     const fg = yiq >= 145 ? '#0A0A0A' : '#FFFFFF';
+    html = html.split('#B8741F').join(accent);
+    // Lime badges/promos carry hardcoded dark text; recolor the pair so the
+    // text stays in contrast with the new accent background.
+    html = html.split('color:#0A0A0A;background:#E8FF4E').join('color:' + fg + ';background:' + accent);
+    html = html.split('background:#E8FF4E;color:#0A0A0A').join('background:' + accent + ';color:' + fg);
+    html = html.split('#E8FF4E').join(accent);
     // [text-color variant, style tail] pairs pin each swap to one exact
-    // button style; the 13px rule requires #FFFFFF so the pagination pill
-    // (13px with lowercase #fff) keeps its black selected state.
+    // button style, so nothing else that is black gets recolored.
     const CTA_TAILS = [
       ['#fff', 'border-radius:5px;padding:9px 0'],      // product-card Add to cart
       ['#fff', 'border-radius:5px;font-size:14px'],     // hero Find parts →
       ['#FFFFFF', 'border-radius:5px;font-size:15px'],  // PDP Add to cart + cart Checkout →
       ['#fff', 'border-radius:5px;font-size:13.5px'],   // Add all 3 to cart
-      ['#FFFFFF', 'border-radius:5px;font-size:13px'],  // portal Reorder the usual →
     ];
     for (const [c, tail] of CTA_TAILS) {
       html = html.split('background:#0A0A0A;color:' + c + ';' + tail)
