@@ -693,8 +693,10 @@
     const [company, setCompany] = useState(null);       // {attioId, name, domain, address}
     const [website, setWebsite] = useState('');          // seeded from Attio, editable for this record only
     const [address, setAddress] = useState('');
-    const [leadContact, setLeadContact] = useState(null); // {attioId, name, email}
-    const [associatedContacts, setAssociatedContacts] = useState([]);
+    // Everyone Attio has on the picked company, each tagged with a role.
+    // The admin only reassigns roles or removes rows; no person search.
+    const [contacts, setContacts] = useState([]);        // [{attioId, name, email, title, role: 'lead'|'associated'}]
+    const [contactsState, setContactsState] = useState('idle'); // idle | loading | done | error
     const [busy, setBusy]       = useState(false);
     const [error, setError]     = useState('');
 
@@ -702,13 +704,29 @@
       setCompany(c);
       setWebsite(c.domain || '');
       setAddress(c.address || '');
+      setContacts([]);
+      setContactsState('loading');
+      api('/api/admin/attio/company-people?companyId=' + encodeURIComponent(c.attioId))
+        .then((d) => {
+          setContacts((d.people || []).map((p, i) => ({ ...p, role: i === 0 ? 'lead' : 'associated' })));
+          setContactsState('done');
+        })
+        .catch((err) => { setContactsState('error'); setError(err.message); });
     };
-    const clearCompany = () => { setCompany(null); setWebsite(''); setAddress(''); };
+    const clearCompany = () => { setCompany(null); setWebsite(''); setAddress(''); setContacts([]); setContactsState('idle'); };
+
+    // Exactly one lead: promoting a contact demotes whoever held it.
+    const setRole = (email, role) => setContacts((list) => list.map((c) =>
+      c.email === email ? { ...c, role } : (role === 'lead' && c.role === 'lead' ? { ...c, role: 'associated' } : c)
+    ));
+    const removeContact = (email) => setContacts((list) => list.filter((c) => c.email !== email));
 
     const save = async (e) => {
       e.preventDefault();
       if (!company) { setError('Pick a company from Attio'); return; }
-      if (!leadContact) { setError('Pick a Client Lead from Attio'); return; }
+      const leadContact = contacts.find((c) => c.role === 'lead') || null;
+      if (!leadContact) { setError(contacts.length ? 'Mark one contact as the Lead contact' : 'This company has no contacts in Attio — add them there first'); return; }
+      const associatedContacts = contacts.filter((c) => c.role !== 'lead').map(({ attioId, name, email }) => ({ attioId, name, email }));
       setBusy(true); setError('');
       try {
         const d = await api('/api/admin/discoveries', {
@@ -716,7 +734,8 @@
           body: JSON.stringify({
             company: company.name, companyAttioId: company.attioId,
             website: website.trim(), address: address.trim(),
-            leadContact, associatedContacts,
+            leadContact: { attioId: leadContact.attioId, name: leadContact.name, email: leadContact.email },
+            associatedContacts,
           }),
         });
         onSaved(d.discovery || null);
@@ -724,17 +743,46 @@
     };
 
     return (
-      <Modal title="New discovery" sub="Company + contacts from Attio · technical questions come next phase" onClose={onClose}>
+      <Modal title="New discovery" sub="Pick the company · its Attio contacts load below" onClose={onClose}>
         <form onSubmit={save} style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
           <CompanyPicker company={company} onPick={pickCompany} onClear={clearCompany}/>
           {company && (
             <>
               <Field label="Website" value={website} onChange={setWebsite} placeholder="acme.com"/>
               <Field label="Address" value={address} onChange={setAddress} placeholder="100 Main St, Chicago, IL"/>
+              <div>
+                <label style={S.label}>Contacts</label>
+                {contactsState === 'loading' && (
+                  <div style={{ fontFamily: T.sans, fontSize: 13, color: T.fg3, padding: '8px 2px' }}>Loading contacts from Attio…</div>
+                )}
+                {contactsState === 'error' && (
+                  <div style={{ fontFamily: T.sans, fontSize: 13, color: '#B3261E', padding: '8px 2px' }}>Couldn’t load this company’s contacts from Attio.</div>
+                )}
+                {contactsState === 'done' && contacts.length === 0 && (
+                  <div style={{ fontFamily: T.sans, fontSize: 13, color: T.fg3, padding: '8px 2px' }}>No contacts on this company in Attio. Add them in Attio, then reselect the company.</div>
+                )}
+                {contacts.length > 0 && (
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {contacts.map((c) => (
+                      <div key={c.email} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: T.cream, border: `1px solid ${c.role === 'lead' ? T.black : T.line}`, borderRadius: 8 }}>
+                        <div style={{ flex: '1 1 auto', minWidth: 0 }}>
+                          <div style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 13.5, color: T.fg1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name || c.email}</div>
+                          <div style={{ fontFamily: T.mono, fontSize: 11, color: T.fg3, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.email}{c.title ? ' · ' + c.title : ''}</div>
+                        </div>
+                        <select value={c.role} onChange={(e) => setRole(c.email, e.target.value)} aria-label={'Role for ' + (c.name || c.email)}
+                          style={{ ...S.input, width: 'auto', flexShrink: 0, padding: '8px 10px', fontSize: 13, cursor: 'pointer' }}>
+                          <option value="lead">Lead contact</option>
+                          <option value="associated">Associated contact</option>
+                        </select>
+                        <button type="button" aria-label={'Remove ' + (c.name || c.email)} onClick={() => removeContact(c.email)}
+                          style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: 999, border: 'none', background: T.line, color: T.fg1, cursor: 'pointer', fontSize: 11, lineHeight: 1, padding: 0, flexShrink: 0 }}>✕</button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
             </>
           )}
-          <LeadContactPicker contact={leadContact} onPick={setLeadContact} onClear={() => setLeadContact(null)}/>
-          <AssociatedContactsPicker contacts={associatedContacts} onChange={setAssociatedContacts} excludeEmail={leadContact && leadContact.email}/>
           {error && <div style={{ color: '#B3261E', fontFamily: T.sans, fontSize: 13 }}>{error}</div>}
           <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', paddingTop: 4 }}>
             <button type="button" style={S.btnGhost} onClick={onClose} disabled={busy}>Cancel</button>

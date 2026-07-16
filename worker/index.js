@@ -335,6 +335,9 @@ export default {
     if (url.pathname === '/api/admin/attio/people' && request.method === 'GET') {
       return handleAdminAttioSearchPeople(request, env);
     }
+    if (url.pathname === '/api/admin/attio/company-people' && request.method === 'GET') {
+      return handleAdminAttioCompanyPeople(request, env);
+    }
     if (url.pathname === '/api/admin/blueprint-tos' && request.method === 'GET') {
       return handleAdminGetTos(request, env);
     }
@@ -1712,6 +1715,36 @@ async function handleAdminAttioSearchPeople(request, env) {
     attioId: r.id && r.id.record_id,
     name: attioFirstText(r.values && r.values.name),
     email: attioFirstText(r.values && r.values.email_addresses),
+  })).filter((p) => p.attioId && p.email);
+
+  return json(200, { ok: true, people });
+}
+
+// Everyone Attio associates with a company, for the new-discovery modal:
+// pick the company, get its people back with name/email/title so the admin
+// only assigns roles instead of searching each person by hand.
+async function handleAdminAttioCompanyPeople(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+
+  const companyId = (new URL(request.url).searchParams.get('companyId') || '').trim().slice(0, 100);
+  if (!companyId) return json(400, { ok: false, error: 'Missing companyId' });
+
+  // People's `company` attribute is a record reference; filter on its
+  // target_record_id sub-field, same pattern as the compound attributes
+  // in the people search above.
+  let records;
+  try {
+    records = await attioQuery(env, 'people', { company: { target_record_id: { '$eq': companyId } } }, 25);
+  } catch (err) {
+    return json(err.status || 502, { ok: false, error: err.message });
+  }
+
+  const people = records.map((r) => ({
+    attioId: r.id && r.id.record_id,
+    name: attioFirstText(r.values && r.values.name),
+    email: attioFirstText(r.values && r.values.email_addresses),
+    title: attioFirstText(r.values && r.values.job_title),
   })).filter((p) => p.attioId && p.email);
 
   return json(200, { ok: true, people });
