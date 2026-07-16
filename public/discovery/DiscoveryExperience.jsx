@@ -85,21 +85,70 @@
     { name: 'Fishbowl', editions: [] },
   ];
 
+  // Commerce platform vendor → editions catalog for the q-platform dropdown.
+  const PLATFORM_CATALOG = [
+    { name: 'No Ecommerce Platform', editions: [] },
+    { name: 'Adobe Commerce (Magento)', editions: ['Magento Open Source', 'Adobe Commerce', 'Adobe Commerce Cloud'] },
+    { name: 'Salesforce Commerce Cloud', editions: ['B2C Commerce (Demandware)', 'B2B Commerce (CloudCraze)'] },
+    { name: 'SAP Commerce Cloud (Hybris)', editions: [] },
+    { name: 'Oracle Commerce (ATG / Endeca)', editions: [] },
+    { name: 'Optimizely', editions: ['Configured Commerce (Insite)', 'Customized Commerce (Episerver)'] },
+    { name: 'HCL Commerce (WebSphere Commerce)', editions: [] },
+    { name: 'commercetools', editions: [] },
+    { name: 'Elastic Path', editions: [] },
+    { name: 'Intershop', editions: [] },
+    { name: 'VTEX', editions: [] },
+    { name: 'Sitecore', editions: ['OrderCloud', 'Sitecore Commerce'] },
+    { name: 'Kibo Commerce', editions: [] },
+    { name: 'OroCommerce', editions: [] },
+    { name: 'Sana Commerce Cloud', editions: [] },
+    { name: 'CIMcloud (Website Pipeline)', editions: [] },
+    { name: 'Unilog CIMM2', editions: [] },
+    { name: 'Kalio Commerce', editions: [] },
+    { name: 'k-eCommerce', editions: [] },
+    { name: 'Cloudfy', editions: [] },
+    { name: 'Corevist', editions: [] },
+    { name: 'Znode', editions: [] },
+    { name: 'Virto Commerce', editions: [] },
+    { name: 'NetSuite SuiteCommerce', editions: ['SuiteCommerce', 'SuiteCommerce Advanced'] },
+    { name: 'BigCommerce', editions: ['Standard', 'Enterprise', 'B2B Edition'] },
+    { name: 'WooCommerce', editions: [] },
+    { name: 'Volusion', editions: [] },
+    { name: 'Shift4Shop', editions: [] },
+    { name: 'Big Cartel', editions: [] },
+    { name: 'Shopware 6', editions: [] },
+    { name: 'PrestaShop', editions: [] },
+    { name: 'OpenCart', editions: [] },
+    { name: 'osCommerce', editions: [] },
+    { name: 'Zen Cart', editions: [] },
+    { name: 'nopCommerce', editions: [] },
+    { name: 'X-Cart', editions: [] },
+    { name: 'CS-Cart', editions: [] },
+    { name: 'Drupal Commerce', editions: [] },
+    { name: 'Spree / Solidus', editions: [] },
+    { name: 'Saleor', editions: [] },
+  ];
+
+  // Question type → catalog for the cascading vendor/edition dropdowns.
+  const CASCADE_CATALOGS = { erp: ERP_CATALOG, platform: PLATFORM_CATALOG };
+
   // Map a stored answer string back onto the dropdowns: "Vendor · Edition",
   // a bare vendor, a bare edition (e.g. a prefilled "NetSuite"), or anything
-  // else lands in Other with the raw text preserved.
-  const parseErp = (v) => {
-    const s = (typeof v === 'string' ? v : '').trim();
+  // else lands in Other with the raw text preserved. 'None' (the old chips
+  // value for q-platform) maps to the catalog's leading "No ..." entry.
+  const parseCascade = (catalog, v) => {
+    let s = (typeof v === 'string' ? v : '').trim();
+    if (s === 'None' && catalog[0] && catalog[0].name.indexOf('No ') === 0) s = catalog[0].name;
     if (!s) return { vendor: '', edition: '', text: '' };
     const sep = s.indexOf(' · ');
     if (sep > 0) {
       const vend = s.slice(0, sep);
       const ed = s.slice(sep + 3);
-      const c = ERP_CATALOG.find((e) => e.name === vend);
+      const c = catalog.find((e) => e.name === vend);
       if (c) return { vendor: vend, edition: c.editions.includes(ed) ? ed : '', text: '' };
     }
-    if (ERP_CATALOG.some((e) => e.name === s)) return { vendor: s, edition: '', text: '' };
-    const byEd = ERP_CATALOG.find((e) => e.editions.includes(s));
+    if (catalog.some((e) => e.name === s)) return { vendor: s, edition: '', text: '' };
+    const byEd = catalog.find((e) => e.editions.includes(s));
     if (byEd) return { vendor: byEd.name, edition: s, text: '' };
     return { vendor: 'Other', edition: '', text: s === 'Other' ? '' : s };
   };
@@ -205,9 +254,9 @@
     const [activeStepIdx, setActiveStepIdx] = useState(hashStep != null ? hashStep : Math.min(initial.activeStepIdx || 0, 9));
     const [unlockedIdx, setUnlockedIdx] = useState(Math.max(Math.min(initial.unlockedIdx || 0, 9), hashStep != null ? hashStep : 0));
     const [activeHotspotId, setActiveHotspotId] = useState(null);
-    // Keeps the ERP question in "Other" mode while typing, even when the
-    // typed text happens to equal a listed vendor or edition name.
-    const [erpOther, setErpOther] = useState(false);
+    // Keeps a cascade question (erp / platform) in "Other" mode while typing,
+    // even when the typed text happens to equal a listed vendor or edition.
+    const [cascadeOther, setCascadeOther] = useState({});
     const [scale, setScale] = useState(0.55);
     const [contentH, setContentH] = useState(900);
     const [infoCard, setInfoCard] = useState(null);
@@ -666,18 +715,19 @@
                             <textarea value={v || ''} onClick={(e) => e.stopPropagation()} onChange={(e) => setAnswer(q.id, e.target.value)} placeholder={q.placeholder || ''} rows={3}
                               style={{ width: '100%', padding: '10px 12px', border: '1px solid #C9C7C0', borderRadius: 5, fontSize: 14, background: '#FDFCF9', outline: 'none', resize: 'vertical', lineHeight: 1.5, color: '#0A0A0A' }}/>
                           )}
-                          {q.type === 'erp' && (() => {
-                            const p = erpOther
+                          {CASCADE_CATALOGS[q.type] && (() => {
+                            const catalog = CASCADE_CATALOGS[q.type];
+                            const p = cascadeOther[q.id]
                               ? { vendor: 'Other', edition: '', text: (typeof v === 'string' && v !== 'Other') ? v : '' }
-                              : parseErp(v);
-                            const vendorCat = ERP_CATALOG.find((e) => e.name === p.vendor);
+                              : parseCascade(catalog, v);
+                            const vendorCat = catalog.find((e) => e.name === p.vendor);
                             const selStyle = { width: '100%', padding: '10px 12px', border: '1px solid #C9C7C0', borderRadius: 5, fontSize: 14, background: '#FDFCF9', outline: 'none', color: p.vendor || p.edition ? '#0A0A0A' : '#9A9A9A', cursor: 'pointer' };
                             return (
                               <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                                 <select value={p.vendor} style={selStyle}
-                                  onChange={(e) => { const nv = e.target.value; setErpOther(nv === 'Other'); setAnswer(q.id, nv); }}>
-                                  <option value="">Select your ERP…</option>
-                                  {ERP_CATALOG.map((e) => <option key={e.name} value={e.name}>{e.name}</option>)}
+                                  onChange={(e) => { const nv = e.target.value; setCascadeOther((o) => ({ ...o, [q.id]: nv === 'Other' })); setAnswer(q.id, nv); }}>
+                                  <option value="">{q.type === 'erp' ? 'Select your ERP…' : 'Select your platform…'}</option>
+                                  {catalog.map((e) => <option key={e.name} value={e.name}>{e.name}</option>)}
                                   <option value="Other">Other</option>
                                 </select>
                                 {vendorCat && vendorCat.editions.length > 0 && (

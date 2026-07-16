@@ -2111,7 +2111,7 @@ const DEMO_ANSWERS = {
   'q-success': '30% of revenue online within 12 months, 500+ active buyer accounts self-serving, and a 20% drop in order-entry calls.',
   'q-channels': ['Sales reps', 'Phone / email', 'EDI'],
   // 2 · Architecture
-  'q-platform': 'Magento',
+  'q-platform': 'Adobe Commerce (Magento) · Magento Open Source',
   'q-breaking': 'Magento 2 is on an unsupported version, integrations are held together with nightly CSV jobs, and inventory is always a day stale.',
   'q-erp': 'Epicor · Prophet 21 / P21',
   'q-pim': 'Mostly in the ERP plus a large spreadsheet the product team maintains; images live on a shared drive.',

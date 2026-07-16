@@ -35,7 +35,7 @@ window.DISCOVERY_STEPS = [
     ],
     groups: [
       { id: 'g-core', hotspotId: 'a-core', title: 'Commerce core', questions: [
-        { id: 'q-platform', type: 'chips', label: 'Current commerce platform', options: ['None', 'Magento', 'Shopify', 'BigCommerce', 'Custom', 'Other'] },
+        { id: 'q-platform', type: 'platform', label: 'Current commerce platform' },
         { id: 'q-breaking', type: 'textarea', label: 'What\'s breaking today?', placeholder: 'The duct tape. Be honest…' }
       ]},
       { id: 'g-record', hotspotId: 'a-record', title: 'Systems of record', questions: [

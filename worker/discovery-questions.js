@@ -21,7 +21,8 @@ export const QUESTION_CATALOG = [
   { id: 'q-success', step: 'Company', label: 'What does success look like in 12 months?', type: 'textarea' },
   { id: 'q-channels', step: 'Company', label: 'How do you sell today?', type: 'chips-multi', options: ['Sales reps', 'Phone / email', 'Legacy site', 'Marketplaces', 'EDI'] },
   // 2 · Architecture
-  { id: 'q-platform', step: 'Architecture', label: 'Current commerce platform', type: 'chips', options: ['None', 'Magento', 'Shopify', 'BigCommerce', 'Custom', 'Other'] },
+  // Rendered as a cascading vendor/edition dropdown in the UI, like q-erp.
+  { id: 'q-platform', step: 'Architecture', label: 'Current commerce platform. Prefer the format "Vendor · Edition", e.g. "Adobe Commerce (Magento) · Magento Open Source" or "BigCommerce · Enterprise"; write "No Ecommerce Platform" when the document says they have none', type: 'text' },
   { id: 'q-breaking', step: 'Architecture', label: 'What is breaking today?', type: 'textarea' },
   // Rendered as a cascading vendor/edition dropdown in the UI; prefill stays
   // free text and the frontend maps it onto the dropdowns (or Other).
