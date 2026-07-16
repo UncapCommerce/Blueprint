@@ -54,7 +54,7 @@
     return String(v).trim().length > 0;
   };
 
-  const LABELS = ['Client', 'Architecture', 'Experience', 'Discovery', 'Conversion', 'Revenue', 'Unified', 'Project', 'Growth', 'Enclosing'];
+  const LABELS = ['Company', 'Architecture', 'Experience', 'Discovery', 'Conversion', 'Revenue', 'Unified', 'Project', 'Growth', 'Enclosing'];
 
   // ── Passcode gate (client) — identical to the blueprint proposal gate ──
   function Gate({ onToken }) {
@@ -755,14 +755,37 @@
       .replace(/<div style="font-size:14px;font-weight:800;letter-spacing:-0\.01em;padding:0 10px">HARLOW SUPPLY<\/div>/g, '<div style="padding:0 10px">' + img(28) + '</div>');
   }
 
-  // Recolor the website mocks with the discovery's palette: prime replaces
-  // the stock storefront green, accent the stock amber. Scenes without
-  // those colors (the Uncap artboards) pass through untouched.
+  // Recolor the scenes with the discovery's palette. Prime replaces the
+  // stock storefront green. Accent replaces the stock amber AND the Uncap
+  // lime highlight on every screen, and turns the solid call-to-action
+  // buttons (Add to cart, Checkout, Find parts, Add all 3, Reorder) accent
+  // with black/white text picked by the accent's brightness. Header
+  // controls (logo box, cart) and selected-state pills stay black.
   function applyPalette(html, palette) {
     if (!palette) return html;
     const ok = (c) => typeof c === 'string' && /^#[0-9A-Fa-f]{6}$/.test(c);
-    if (ok(palette.prime)) html = html.split('#2F7A47').join(palette.prime.toUpperCase());
-    if (ok(palette.accent)) html = html.split('#B8741F').join(palette.accent.toUpperCase());
+    const prime = ok(palette.prime) ? palette.prime.toUpperCase() : '';
+    const accent = ok(palette.accent) ? palette.accent.toUpperCase() : '';
+    if (prime) html = html.split('#2F7A47').join(prime);
+    if (!accent) return html;
+    html = html.split('#B8741F').join(accent);
+    html = html.split('#E8FF4E').join(accent);
+    const yiq = (parseInt(accent.slice(1, 3), 16) * 299 + parseInt(accent.slice(3, 5), 16) * 587 + parseInt(accent.slice(5, 7), 16) * 114) / 1000;
+    const fg = yiq >= 145 ? '#0A0A0A' : '#FFFFFF';
+    // [text-color variant, style tail] pairs pin each swap to one exact
+    // button style; the 13px rule requires #FFFFFF so the pagination pill
+    // (13px with lowercase #fff) keeps its black selected state.
+    const CTA_TAILS = [
+      ['#fff', 'border-radius:5px;padding:9px 0'],      // product-card Add to cart
+      ['#fff', 'border-radius:5px;font-size:14px'],     // hero Find parts →
+      ['#FFFFFF', 'border-radius:5px;font-size:15px'],  // PDP Add to cart + cart Checkout →
+      ['#fff', 'border-radius:5px;font-size:13.5px'],   // Add all 3 to cart
+      ['#FFFFFF', 'border-radius:5px;font-size:13px'],  // portal Reorder the usual →
+    ];
+    for (const [c, tail] of CTA_TAILS) {
+      html = html.split('background:#0A0A0A;color:' + c + ';' + tail)
+                 .join('background:' + accent + ';color:' + fg + ';' + tail);
+    }
     return html;
   }
 

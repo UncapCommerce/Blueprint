@@ -12,14 +12,14 @@
 
 export const QUESTION_CATALOG = [
   // 1 · Client
-  { id: 'q-name', step: 'Client', label: 'Company name', type: 'text' },
-  { id: 'q-what', step: 'Client', label: 'What do you make or distribute?', type: 'textarea' },
-  { id: 'q-rev', step: 'Client', label: 'Annual revenue', type: 'chips', options: ['<$10M', '$10–50M', '$50–250M', '$250M+'] },
-  { id: 'q-stake', step: 'Client', label: 'Who are the key stakeholders?', type: 'textarea' },
-  { id: 'q-owner', step: 'Client', label: 'Who owns the ecommerce P&L?', type: 'text' },
-  { id: 'q-why', step: 'Client', label: 'Why now, what triggered this project?', type: 'textarea' },
-  { id: 'q-success', step: 'Client', label: 'What does success look like in 12 months?', type: 'textarea' },
-  { id: 'q-channels', step: 'Client', label: 'How do you sell today?', type: 'chips-multi', options: ['Sales reps', 'Phone / email', 'Legacy site', 'Marketplaces', 'EDI'] },
+  { id: 'q-name', step: 'Company', label: 'Company name', type: 'text' },
+  { id: 'q-what', step: 'Company', label: 'What do you make or distribute?', type: 'textarea' },
+  { id: 'q-rev', step: 'Company', label: 'Annual revenue', type: 'chips', options: ['<$10M', '$10–50M', '$50–250M', '$250M+'] },
+  { id: 'q-stake', step: 'Company', label: 'Who are the key stakeholders?', type: 'textarea' },
+  { id: 'q-owner', step: 'Company', label: 'Who owns the ecommerce P&L?', type: 'text' },
+  { id: 'q-why', step: 'Company', label: 'Why now, what triggered this project?', type: 'textarea' },
+  { id: 'q-success', step: 'Company', label: 'What does success look like in 12 months?', type: 'textarea' },
+  { id: 'q-channels', step: 'Company', label: 'How do you sell today?', type: 'chips-multi', options: ['Sales reps', 'Phone / email', 'Legacy site', 'Marketplaces', 'EDI'] },
   // 2 · Architecture
   { id: 'q-platform', step: 'Architecture', label: 'Current commerce platform', type: 'chips', options: ['None', 'Magento', 'Shopify', 'BigCommerce', 'Custom', 'Other'] },
   { id: 'q-breaking', step: 'Architecture', label: 'What is breaking today?', type: 'textarea' },

@@ -3,7 +3,7 @@
 
 window.DISCOVERY_STEPS = [
   {
-    id: 'client', label: 'Client', tagline: 'Who we\'re building for',
+    id: 'client', label: 'Company', tagline: 'Who we\'re building for',
     hotspots: [
       { id: 'c-company', x: 80, y: 560, w: 400, h: 260, label: 'The company', info: 'Before platforms and integrations — who are you? What you make, who buys it, and how big the operation is shapes every decision after this one.' },
       { id: 'c-people', x: 520, y: 560, w: 400, h: 260, label: 'The people', info: 'Projects don\'t fail on tech. They fail on ownership. We map who decides, who builds, and who lives with the result.' },

@@ -26,7 +26,7 @@
 //     own signed copy without needing admin/self-test privileges.
 
 import { EmailMessage } from "cloudflare:email";
-import { buildDiscoveryProfile, buildDiscoveryProfileWithAI } from "./discovery-profile.js";
+import { buildDiscoveryProfile, buildDiscoveryProfileWithAI, STOCK_SEARCH_TOKEN } from "./discovery-profile.js";
 import { prefillAnswersFromDoc, b64ToBytes } from "./discovery-prefill.js";
 
 const CODE_TTL_SECONDS       = 10 * 60;             // 10 minutes
@@ -1857,6 +1857,18 @@ async function handleAdminActivity(request, env) {
   return json(200, { ok: true, events: events.slice(0, 300) });
 }
 
+// Insert a document-stated SKU count into a profile's search-placeholder
+// swap ("Search SKUs," → "Search 48,000 SKUs,"). No-op on swaps whose
+// value already carries a count.
+function patchSkuCount(swaps, skuCount) {
+  if (!skuCount) return swaps;
+  return swaps.map(([f, t]) => (
+    f === STOCK_SEARCH_TOKEN && typeof t === 'string' && t.startsWith('Search SKUs,')
+      ? [f, t.replace(/^Search SKUs,/, `Search ${skuCount} SKUs,`)]
+      : [f, t]
+  ));
+}
+
 // Client logo + palette validation for discovery creation. The logo is a
 // base64 image stored under its own KV key and served back by
 // handleDiscoveryLogo; the palette is a pair of hex colors the experience
@@ -1927,7 +1939,25 @@ async function handleAdminDiscoveryPrefill(request, env) {
     return json(err.status || 502, { ok: false, error: err.message });
   }
 
-  const clean = sanitizeAnswers(extracted);
+  // Wireframe search bars never show an invented SKU count: only a count
+  // the document explicitly stated gets patched into the profile's
+  // search-placeholder swap ("Search SKUs," → "Search 48,000 SKUs,").
+  if (extracted.skuCount) {
+    try {
+      const freshRaw = await env.BLUEPRINT_AUTH.get(`discovery:${id}`);
+      const fresh = freshRaw ? JSON.parse(freshRaw) : null;
+      if (fresh && fresh.profile && Array.isArray(fresh.profile.swaps)) {
+        fresh.profile.swaps = patchSkuCount(fresh.profile.swaps, extracted.skuCount);
+        // Remember the count so the background AI profile upgrade, if it
+        // lands after this, re-applies the patch instead of clobbering it.
+        fresh.skuCount = extracted.skuCount;
+        await env.BLUEPRINT_AUTH.put(`discovery:${id}`, JSON.stringify(fresh));
+        rec = fresh;
+      }
+    } catch (_) { /* count patch is best-effort */ }
+  }
+
+  const clean = sanitizeAnswers(extracted.answers);
   const cur = await getDiscoveryAnswers(env, id);
   const hasValue = (v) => (Array.isArray(v) ? v.length > 0 : (v || '').toString().trim() !== '');
   const merged = { ...clean };
@@ -2038,6 +2068,11 @@ async function handleAdminCreateDiscovery(request, env, ctx) {
         const raw = await env.BLUEPRINT_AUTH.get(`discovery:${id}`);
         if (!raw) return;
         const cur = JSON.parse(raw);
+        // A concurrent document pre-fill may have recorded an exact SKU
+        // count; carry it into the upgraded profile.
+        if (cur.skuCount && Array.isArray(aiProfile.swaps)) {
+          aiProfile.swaps = patchSkuCount(aiProfile.swaps, cur.skuCount);
+        }
         cur.profile = aiProfile;
         await env.BLUEPRINT_AUTH.put(`discovery:${id}`, JSON.stringify(cur));
       } catch (_) { /* deterministic profile stays */ }

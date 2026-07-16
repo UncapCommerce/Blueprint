@@ -78,7 +78,7 @@ function httpErr(status, message) {
 }
 
 function prefillSchema() {
-  const props = {};
+  const props = { skuCountExact: { type: 'string' } };
   for (const q of QUESTION_CATALOG) {
     if (q.type === 'chips') props[q.id] = { type: 'string', enum: [...q.options, ''] };
     else if (q.type === 'chips-multi') props[q.id] = { type: 'array', items: { type: 'string', enum: q.options } };
@@ -99,7 +99,8 @@ function prefillPrompt() {
   return 'Read the attached client document (an RFP, requirements brief, or partner notes) and pre-fill our ecommerce discovery questionnaire from it.\n\n'
     + 'Answer ONLY from the document. Leave a field empty ("" or []) when the document does not address it: never guess or pad. '
     + 'Write free-text answers concisely in the client\'s own terms, as answers the client would give. '
-    + 'For chip fields pick the single closest option only when the document clearly supports it.\n\nQuestions:\n' + lines;
+    + 'For chip fields pick the single closest option only when the document clearly supports it.\n\nQuestions:\n' + lines
+    + '\n- skuCountExact · Meta · The exact total SKU/product count, ONLY if the document states one explicitly → digits with separators as written (e.g. "48,000"), or "" when not stated';
 }
 
 // Returns { qid: value } for every question the document answered.
@@ -172,5 +173,7 @@ export async function prefillAnswersFromDoc(env, doc) {
       answers[q.id] = v.trim();
     }
   }
-  return answers;
+  const rawCount = typeof parsed.skuCountExact === 'string' ? parsed.skuCountExact.trim() : '';
+  const skuCount = /^[\d][\d,.]{0,11}\+?$/.test(rawCount) ? rawCount : '';
+  return { answers, skuCount };
 }
