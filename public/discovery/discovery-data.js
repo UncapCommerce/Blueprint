@@ -72,7 +72,7 @@ window.DISCOVERY_STEPS = [
       ]},
       { id: 'g-payments', hotspotId: 'a-payments', title: 'Payments', questions: [
         { id: 'q-paygateway', type: 'text', label: 'Payment gateway / processor', placeholder: 'Stripe, Authorize.net, PayPal…' },
-        { id: 'q-payoptions', type: 'chips-multi', label: 'Do you offer', options: ['Credit Cards', 'ACH', 'Net Terms', 'PO Orders', 'Subscriptions'] }
+        { id: 'q-payoptions', type: 'chips-multi', label: 'Do you offer', options: ['Credit Cards', 'ACH', 'Net Terms', 'PO Orders', 'Subscriptions', 'Account Credits'] }
       ]},
       { id: 'g-crm', hotspotId: 'a-crm', title: 'CRM', questions: [
         { id: 'q-crm', type: 'crm', label: 'CRM platform' },
