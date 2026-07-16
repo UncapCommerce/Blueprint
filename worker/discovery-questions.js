@@ -44,6 +44,7 @@ export const QUESTION_CATALOG = [
   { id: 'q-edi', step: 'Architecture', label: 'EDI requirements?', type: 'chips', options: ['Yes', 'No', 'Not sure'] },
   { id: 'q-punchout', step: 'Architecture', label: 'PunchOut (Ariba, Coupa)?', type: 'chips', options: ['Yes', 'No', 'Not sure'] },
   { id: 'q-paygateway', step: 'Architecture', label: 'Payment gateway / processor', type: 'text' },
+  { id: 'q-payoptions', step: 'Architecture', label: 'Do you offer (payment options)', type: 'chips-multi', options: ['Credit Cards', 'ACH', 'Net Terms', 'PO Orders', 'Subscriptions'] },
   // Rendered as a dropdown in the UI; prefer a product name, "No CRM" when none.
   { id: 'q-crm', step: 'Architecture', label: 'Their CRM platform, e.g. "Salesforce" or "HubSpot"; write "No CRM" when the document says they have none', type: 'text' },
   { id: 'q-crm-quotes', step: 'Architecture', label: 'How do you manage quotes?', type: 'textarea' },

@@ -2121,6 +2121,7 @@ const DEMO_ANSWERS = {
   'q-pim-filters': '36',
   'q-pim-attributes': '410',
   'q-paygateway': 'Authorize.net for cards, ACH through the bank',
+  'q-payoptions': ['Credit Cards', 'ACH', 'Net Terms', 'PO Orders'],
   'q-crm': 'HubSpot',
   'q-crm-quotes': 'Reps build quotes in the ERP and email PDFs; approvals happen over the phone and nothing links back to the site.',
   'q-wms': 'Körber (HighJump)',

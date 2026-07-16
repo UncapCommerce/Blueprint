@@ -67,7 +67,8 @@ window.DISCOVERY_STEPS = [
         { id: 'q-punchout', type: 'chips', label: 'PunchOut (Ariba, Coupa)?', options: ['Yes', 'No', 'Not sure'] }
       ]},
       { id: 'g-payments', hotspotId: 'a-payments', title: 'Payments', questions: [
-        { id: 'q-paygateway', type: 'text', label: 'Payment gateway / processor', placeholder: 'Stripe, Authorize.net, PayPal…' }
+        { id: 'q-paygateway', type: 'text', label: 'Payment gateway / processor', placeholder: 'Stripe, Authorize.net, PayPal…' },
+        { id: 'q-payoptions', type: 'chips-multi', label: 'Do you offer', options: ['Credit Cards', 'ACH', 'Net Terms', 'PO Orders', 'Subscriptions'] }
       ]},
       { id: 'g-crm', hotspotId: 'a-crm', title: 'CRM', questions: [
         { id: 'q-crm', type: 'crm', label: 'CRM platform' },
