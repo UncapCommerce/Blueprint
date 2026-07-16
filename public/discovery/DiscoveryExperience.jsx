@@ -148,7 +148,7 @@
   }
 
   // ── The experience ────────────────────────────────────────────────────
-  function Experience({ role, company, address, profile, initial, token }) {
+  function Experience({ role, company, address, profile, palette, hasLogo, initial, token }) {
     const steps = window.DISCOVERY_STEPS || [];
     const hashStep = stepFromHash();
     const [answers, setAnswers] = useState(initial.answers || {});
@@ -455,12 +455,20 @@
 
     // Scene HTML (1-9 static); scene 10 rendered in JSX.
     const isRich = isRichScene(activeStepIdx);
+    const logoUrl = hasLogo ? '/api/discovery/logo?handle=' + encodeURIComponent(HANDLE) : '';
     let sceneHtml = (window.DISCOVERY_SCENES || {})[activeStepIdx + 1] || '';
     if (activeStepIdx === 0) {
       sceneHtml = sceneHtml.replace(/__CLIENT_NAME__/g, escapeText(company || 'there'));
       sceneHtml = sceneHtml.replace(/__CLIENT_ADDRESS__/g, escapeText((address || '').toUpperCase()));
+      sceneHtml = sceneHtml.replace(/__CLIENT_LOGO__/g, logoUrl
+        ? '<img src="' + logoUrl + '" alt="" style="height:64px;max-width:280px;object-fit:contain;object-position:right;display:block"/>'
+        : '');
     }
+    // Logo swaps run on the raw scene, before the text swaps consume the
+    // wordmark tokens they anchor on.
+    sceneHtml = applyClientLogo(sceneHtml, logoUrl);
     sceneHtml = applyProfileSwaps(sceneHtml, profile);
+    sceneHtml = applyPalette(sceneHtml, palette);
 
     return (
       <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#F2EFE7', color: '#0A0A0A' }}>
@@ -734,12 +742,38 @@
     return html;
   }
 
+  // When the discovery has an uploaded client logo, swap every wordmark in
+  // the website mocks for the image: the storefront masthead (logo box +
+  // brand text), the storefront footer, and the B2B portal sidebar. Runs
+  // before applyProfileSwaps so the HARLOW SUPPLY anchors are still intact.
+  function applyClientLogo(html, logoUrl) {
+    if (!logoUrl) return html;
+    const img = (h, extra) => '<img src="' + logoUrl + '" alt="" style="height:' + h + 'px;max-width:200px;object-fit:contain;display:block' + (extra || '') + '"/>';
+    return html
+      .replace(/<span style="width:32px;height:32px;background:#0A0A0A;[^"]*font-size:16px">H<\/span>\s*<span style="font-size:17px;font-weight:800;letter-spacing:-0\.02em">HARLOW SUPPLY<\/span>/g, img(34))
+      .replace(/<div style="font-size:18px;font-weight:800;letter-spacing:-0\.02em">HARLOW SUPPLY<\/div>/g, img(28))
+      .replace(/<div style="font-size:14px;font-weight:800;letter-spacing:-0\.01em;padding:0 10px">HARLOW SUPPLY<\/div>/g, '<div style="padding:0 10px">' + img(28) + '</div>');
+  }
+
+  // Recolor the website mocks with the discovery's palette: prime replaces
+  // the stock storefront green, accent the stock amber. Scenes without
+  // those colors (the Uncap artboards) pass through untouched.
+  function applyPalette(html, palette) {
+    if (!palette) return html;
+    const ok = (c) => typeof c === 'string' && /^#[0-9A-Fa-f]{6}$/.test(c);
+    if (ok(palette.prime)) html = html.split('#2F7A47').join(palette.prime.toUpperCase());
+    if (ok(palette.accent)) html = html.split('#B8741F').join(palette.accent.toUpperCase());
+    return html;
+  }
+
   // ── Root: resolve auth then render gate or experience ─────────────────
   function Root() {
     const [phase, setPhase] = useState('loading'); // loading | gate | ready | error
     const [company, setCompany] = useState('');
     const [address, setAddress] = useState('');
     const [profile, setProfile] = useState(null);
+    const [palette, setPalette] = useState(null);
+    const [hasLogo, setHasLogo] = useState(false);
     const [role, setRole] = useState('');
     const [initial, setInitial] = useState(null);
     const [token, setToken] = useState('');
@@ -752,6 +786,8 @@
       setCompany(d.company || d.clientName || '');
       setAddress(d.address || '');
       setProfile(d.profile || null);
+      setPalette(d.palette || null);
+      setHasLogo(!!d.hasLogo);
       setInitial({ answers: d.answers || {}, activeStepIdx: d.activeStepIdx || 0, unlockedIdx: d.unlockedIdx || 0, status: d.status });
       setPhase('ready');
     }, []);
@@ -773,6 +809,8 @@
           setCompany(m.company || m.clientName || '');
           setAddress(m.address || '');
           setProfile(m.profile || null);
+          setPalette(m.palette || null);
+          setHasLogo(!!m.hasLogo);
         } catch (e) { setErr(e.message); setPhase('error'); return; }
         setPhase('gate');
       })();
@@ -791,7 +829,7 @@
     if (phase === 'gate') {
       return <Gate onToken={(tok) => { setToken(tok); loadAnswers(tok).catch((e) => setErr(e.message)); }}/>;
     }
-    return <Experience role={role} company={company} address={address} profile={profile} initial={initial} token={token}/>;
+    return <Experience role={role} company={company} address={address} profile={profile} palette={palette} hasLogo={hasLogo} initial={initial} token={token}/>;
   }
 
   ReactDOM.render(<Root/>, document.getElementById('disc-root'));

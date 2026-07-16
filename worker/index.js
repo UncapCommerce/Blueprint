@@ -27,6 +27,7 @@
 
 import { EmailMessage } from "cloudflare:email";
 import { buildDiscoveryProfile, buildDiscoveryProfileWithAI } from "./discovery-profile.js";
+import { prefillAnswersFromDoc, b64ToBytes } from "./discovery-prefill.js";
 
 const CODE_TTL_SECONDS       = 10 * 60;             // 10 minutes
 const SESSION_TTL_SECONDS    = 2 * 60 * 60;         // 2 hours (client blueprint sessions)
@@ -305,6 +306,12 @@ export default {
     }
     if (url.pathname === '/api/admin/discovery/delete' && request.method === 'POST') {
       return handleAdminDeleteDiscovery(request, env);
+    }
+    if (url.pathname === '/api/admin/discovery/prefill' && request.method === 'POST') {
+      return handleAdminDiscoveryPrefill(request, env);
+    }
+    if (url.pathname === '/api/discovery/logo' && request.method === 'GET') {
+      return handleDiscoveryLogo(request, env);
     }
 
     // ── Discovery experience (public /discovery/<handle>/) ───────────────
@@ -1850,6 +1857,96 @@ async function handleAdminActivity(request, env) {
   return json(200, { ok: true, events: events.slice(0, 300) });
 }
 
+// Client logo + palette validation for discovery creation. The logo is a
+// base64 image stored under its own KV key and served back by
+// handleDiscoveryLogo; the palette is a pair of hex colors the experience
+// swaps into the wireframe scenes.
+const LOGO_TYPES = ['image/png', 'image/jpeg', 'image/svg+xml'];
+function sanitizeLogo(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const ct = (raw.type || '').toString().toLowerCase();
+  const data = (raw.data || '').toString();
+  if (!LOGO_TYPES.includes(ct)) return null;
+  if (!data || data.length > 2_000_000 || !/^[A-Za-z0-9+/=]+$/.test(data)) return null;
+  return { ct, data };
+}
+function sanitizePalette(raw) {
+  if (!raw || typeof raw !== 'object') return null;
+  const hex = (s) => (/^#[0-9a-fA-F]{6}$/.test((s || '').toString()) ? (s || '').toString().toUpperCase() : '');
+  const prime = hex(raw.prime);
+  const accent = hex(raw.accent);
+  return prime && accent ? { prime, accent } : null;
+}
+
+// Public logo fetch, addressed by handle like /api/discovery/meta. SVGs are
+// locked down with a no-script CSP so a crafted file can't run anything
+// when opened directly.
+async function handleDiscoveryLogo(request, env) {
+  const url = new URL(request.url);
+  const disc = await getDiscoveryByHandle(env, url.searchParams.get('handle'));
+  if (!disc || disc.demo || !disc.hasLogo) return new Response('Not found', { status: 404 });
+  const raw = await env.BLUEPRINT_AUTH.get(`disclogo:${disc.id}`);
+  if (!raw) return new Response('Not found', { status: 404 });
+  let logo;
+  try { logo = JSON.parse(raw); } catch { return new Response('Not found', { status: 404 }); }
+  let bytes;
+  try { bytes = b64ToBytes(logo.data); } catch { return new Response('Not found', { status: 404 }); }
+  return new Response(bytes, {
+    headers: {
+      'content-type': logo.ct,
+      'cache-control': 'public, max-age=3600',
+      'x-content-type-options': 'nosniff',
+      'content-security-policy': "default-src 'none'; style-src 'unsafe-inline'",
+    },
+  });
+}
+
+// Analyze an uploaded RFP/requirements document with Claude and write the
+// extracted answers into the discovery, without overwriting anything a
+// human already typed. Runs synchronously; the modal shows an analyzing
+// state while it waits.
+async function handleAdminDiscoveryPrefill(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+
+  let body;
+  try { body = await request.json(); }
+  catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  const id = (body.id || '').toString().slice(0, 120);
+  if (!id) return json(400, { ok: false, error: 'Missing discovery id' });
+  const rawRec = await env.BLUEPRINT_AUTH.get(`discovery:${id}`);
+  if (!rawRec) return json(404, { ok: false, error: 'Discovery not found' });
+  let rec = {};
+  try { rec = JSON.parse(rawRec); } catch {}
+
+  let extracted;
+  try {
+    extracted = await prefillAnswersFromDoc(env, body.doc || {});
+  } catch (err) {
+    return json(err.status || 502, { ok: false, error: err.message });
+  }
+
+  const clean = sanitizeAnswers(extracted);
+  const cur = await getDiscoveryAnswers(env, id);
+  const hasValue = (v) => (Array.isArray(v) ? v.length > 0 : (v || '').toString().trim() !== '');
+  const merged = { ...clean };
+  for (const [k, v] of Object.entries(cur.answers || {})) {
+    if (hasValue(v)) merged[k] = v; // never overwrite a human answer
+  }
+  await env.BLUEPRINT_AUTH.put(`discans:${id}`, JSON.stringify({
+    answers: merged,
+    activeStepIdx: cur.activeStepIdx || 0,
+    unlockedIdx: 9,
+    status: cur.status || 'new',
+    updatedAt: new Date().toISOString(),
+    updatedBy: sess.email,
+  }));
+  const docName = ((body.doc && body.doc.name) || 'document').toString().slice(0, 80);
+  await logActivity(env, null, { type: 'disc-update', entity: 'discovery', id, name: rec.company || id, actor: sess.email, detail: `Pre-filled ${Object.keys(clean).length} answers from ${docName}` });
+  return json(200, { ok: true, filled: Object.keys(clean).length });
+}
+
 // Permanently removes a discovery: the record, its public handle, the
 // saved answers, and any submission snapshots. The /discovery/uncap/
 // training demo never lives in KV, so it can't be deleted here.
@@ -1872,6 +1969,7 @@ async function handleAdminDeleteDiscovery(request, env) {
   const deletes = [
     env.BLUEPRINT_AUTH.delete(`discovery:${id}`),
     env.BLUEPRINT_AUTH.delete(`discans:${id}`),
+    env.BLUEPRINT_AUTH.delete(`disclogo:${id}`),
   ];
   if (rec.handle) deletes.push(env.BLUEPRINT_AUTH.delete(`dischandle:${rec.handle}`));
   const subs = await env.BLUEPRINT_AUTH.list({ prefix: `discsub:${id}:`, limit: 100 }).catch(() => null);
@@ -1900,6 +1998,8 @@ async function handleAdminCreateDiscovery(request, env, ctx) {
     (c) => !leadContact || c.email !== leadContact.email
   );
   const client = leadContact ? (leadContact.name || leadContact.email) : '';
+  const palette = sanitizePalette(body.palette);
+  const logo = sanitizeLogo(body.logo);
   if (!company || !companyAttioId) return json(400, { ok: false, error: 'Pick a company from Attio' });
   if (!leadContact) return json(400, { ok: false, error: 'Pick a Client Lead from Attio' });
 
@@ -1917,12 +2017,14 @@ async function handleAdminCreateDiscovery(request, env, ctx) {
   const rec = {
     company, client, address, website, handle,
     companyAttioId, leadContact, associatedContacts, profile,
+    palette, hasLogo: !!logo,
     status: 'new',
     createdAt: new Date(ts).toISOString(),
     createdBy: sess.email,
   };
   await env.BLUEPRINT_AUTH.put(`discovery:${id}`, JSON.stringify(rec));
   await env.BLUEPRINT_AUTH.put(`dischandle:${handle}`, id);
+  if (logo) await env.BLUEPRINT_AUTH.put(`disclogo:${id}`, JSON.stringify(logo)).catch(() => {});
   await logActivity(env, null, { type: 'created', entity: 'discovery', id, name: company, actor: sess.email, detail: 'Discovery created' });
 
   // Upgrade the wireframe profile with Claude-written content in the
@@ -2188,6 +2290,8 @@ async function handleDiscoveryMeta(request, env) {
     clientName: disc.company || disc.client || '',
     address: disc.address || '',
     profile: disc.profile || null,
+    palette: disc.palette || null,
+    hasLogo: !!disc.hasLogo,
     status: disc.status || 'new',
     isAdmin: !!admin,
   });
@@ -2296,6 +2400,8 @@ async function handleDiscoveryGetAnswers(request, env) {
     clientName: disc.company || disc.client || '',
     address: disc.address || '',
     profile: disc.profile || null,
+    palette: disc.palette || null,
+    hasLogo: !!disc.hasLogo,
     handle: disc.handle,
     answers: data.answers,
     activeStepIdx: data.activeStepIdx,

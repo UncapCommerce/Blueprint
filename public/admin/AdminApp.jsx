@@ -697,8 +697,36 @@
     // The admin only reassigns roles or removes rows; no person search.
     const [contacts, setContacts] = useState([]);        // [{attioId, name, email, title, role: 'lead'|'associated'}]
     const [contactsState, setContactsState] = useState('idle'); // idle | loading | done | error
+    const [logo, setLogo]       = useState(null);        // {type, data(base64), name, preview}
+    const [prime, setPrime]     = useState('#2F7A47');   // stock storefront green
+    const [accent, setAccent]   = useState('#B8741F');   // stock storefront amber
+    const [doc, setDoc]         = useState(null);        // {type, data(base64), name}
     const [busy, setBusy]       = useState(false);
+    const [busyLabel, setBusyLabel] = useState('');
     const [error, setError]     = useState('');
+
+    const readFile = (file, cb) => {
+      const r = new FileReader();
+      r.onload = () => {
+        const dataUrl = r.result || '';
+        const b64 = dataUrl.toString().split(',')[1] || '';
+        cb(b64, dataUrl);
+      };
+      r.readAsDataURL(file);
+    };
+    const LOGO_TYPES = { 'image/png': 1, 'image/jpeg': 1, 'image/svg+xml': 1 };
+    const onLogoFile = (file) => {
+      if (!file) return;
+      const type = file.type === 'image/jpg' ? 'image/jpeg' : file.type;
+      if (!LOGO_TYPES[type]) { setError('Logo must be an SVG, PNG, or JPG'); return; }
+      if (file.size > 1_400_000) { setError('Logo must be under 1.4 MB'); return; }
+      readFile(file, (b64, dataUrl) => { setLogo({ type, data: b64, name: file.name, preview: dataUrl }); setError(''); });
+    };
+    const onDocFile = (file) => {
+      if (!file) return;
+      if (file.size > 10_000_000) { setError('Document must be under 10 MB'); return; }
+      readFile(file, (b64) => { setDoc({ type: file.type, data: b64, name: file.name }); setError(''); });
+    };
 
     const pickCompany = (c) => {
       setCompany(c);
@@ -727,7 +755,7 @@
       const leadContact = contacts.find((c) => c.role === 'lead') || null;
       if (!leadContact) { setError(contacts.length ? 'Mark one contact as the Lead contact' : 'This company has no contacts in Attio — add them there first'); return; }
       const associatedContacts = contacts.filter((c) => c.role !== 'lead').map(({ attioId, name, email }) => ({ attioId, name, email }));
-      setBusy(true); setError('');
+      setBusy(true); setBusyLabel('Saving…'); setError('');
       try {
         const d = await api('/api/admin/discoveries', {
           method: 'POST',
@@ -736,10 +764,25 @@
             website: website.trim(), address: address.trim(),
             leadContact: { attioId: leadContact.attioId, name: leadContact.name, email: leadContact.email },
             associatedContacts,
+            logo: logo ? { type: logo.type, data: logo.data } : null,
+            palette: { prime, accent },
           }),
         });
+        // Optional document analysis: runs after the discovery exists so a
+        // failed analysis never blocks creation.
+        if (doc && d.discovery) {
+          setBusyLabel('Analyzing document…');
+          try {
+            await api('/api/admin/discovery/prefill', {
+              method: 'POST',
+              body: JSON.stringify({ id: d.discovery.id, doc }),
+            });
+          } catch (err) {
+            window.alert('The discovery was created, but document analysis failed:\n\n' + err.message);
+          }
+        }
         onSaved(d.discovery || null);
-      } catch (err) { setError(err.message); setBusy(false); }
+      } catch (err) { setError(err.message); setBusy(false); setBusyLabel(''); }
     };
 
     return (
@@ -781,12 +824,54 @@
                   </div>
                 )}
               </div>
+              <div>
+                <label style={S.label}>Client logo · shown on the welcome slide and every website mock</label>
+                {logo ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: T.cream, border: `1px solid ${T.line}`, borderRadius: 8 }}>
+                    <img src={logo.preview} alt="" style={{ height: 34, maxWidth: 140, objectFit: 'contain', display: 'block' }}/>
+                    <span style={{ flex: 1, fontFamily: T.mono, fontSize: 11, color: T.fg3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{logo.name}</span>
+                    <button type="button" aria-label="Remove logo" onClick={() => setLogo(null)}
+                      style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: 999, border: 'none', background: T.line, color: T.fg1, cursor: 'pointer', fontSize: 11, lineHeight: 1, padding: 0, flexShrink: 0 }}>✕</button>
+                  </div>
+                ) : (
+                  <input type="file" accept=".svg,.png,.jpg,.jpeg,image/svg+xml,image/png,image/jpeg"
+                    onChange={(e) => onLogoFile(e.target.files && e.target.files[0])}
+                    style={{ ...S.input, padding: '10px 12px', fontSize: 13, cursor: 'pointer' }}/>
+                )}
+              </div>
+              <div>
+                <label style={S.label}>Palette · recolors the website mocks on every step</label>
+                <div style={{ display: 'flex', gap: 16 }}>
+                  {[['Prime', prime, setPrime], ['Accent', accent, setAccent]].map(([l, v, set]) => (
+                    <label key={l} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: T.cream, border: `1px solid ${T.line}`, borderRadius: 8, cursor: 'pointer' }}>
+                      <input type="color" value={v} onChange={(e) => set(e.target.value)}
+                        style={{ width: 34, height: 34, padding: 0, border: 'none', background: 'transparent', cursor: 'pointer' }}/>
+                      <span style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 13, color: T.fg1 }}>{l}</span>
+                      <span style={{ marginLeft: 'auto', fontFamily: T.mono, fontSize: 11, color: T.fg3 }}>{v.toUpperCase()}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <label style={S.label}>RFP / requirements document · Claude pre-fills the questions from it</label>
+                {doc ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: T.cream, border: `1px solid ${T.line}`, borderRadius: 8 }}>
+                    <span style={{ flex: 1, fontFamily: T.mono, fontSize: 11, color: T.fg1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{doc.name}</span>
+                    <button type="button" aria-label="Remove document" onClick={() => setDoc(null)}
+                      style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: 999, border: 'none', background: T.line, color: T.fg1, cursor: 'pointer', fontSize: 11, lineHeight: 1, padding: 0, flexShrink: 0 }}>✕</button>
+                  </div>
+                ) : (
+                  <input type="file" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                    onChange={(e) => onDocFile(e.target.files && e.target.files[0])}
+                    style={{ ...S.input, padding: '10px 12px', fontSize: 13, cursor: 'pointer' }}/>
+                )}
+              </div>
             </>
           )}
           {error && <div style={{ color: '#B3261E', fontFamily: T.sans, fontSize: 13 }}>{error}</div>}
           <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', paddingTop: 4 }}>
             <button type="button" style={S.btnGhost} onClick={onClose} disabled={busy}>Cancel</button>
-            <button type="submit" style={{ ...S.btnLime, opacity: busy ? 0.7 : 1 }} disabled={busy}>{busy ? 'Saving…' : 'Save discovery'}</button>
+            <button type="submit" style={{ ...S.btnLime, opacity: busy ? 0.7 : 1 }} disabled={busy}>{busy ? (busyLabel || 'Saving…') : 'Save discovery'}</button>
           </div>
         </form>
       </Modal>
