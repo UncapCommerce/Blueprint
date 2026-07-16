@@ -38,7 +38,7 @@ export const QUESTION_CATALOG = [
   { id: 'q-wms', step: 'Architecture', label: 'Warehouse management system (WMS)', type: 'text' },
   { id: 'q-ims', step: 'Architecture', label: 'Inventory management system (IMS)', type: 'text' },
   { id: 'q-oms', step: 'Architecture', label: 'Order management system (OMS)', type: 'text' },
-  { id: 'q-fulfilsys', step: 'Architecture', label: 'Fulfillment system (shipping software, 3PL)', type: 'text' },
+  { id: 'q-fulfilsys', step: 'Architecture', label: 'Fulfillment Management System (shipping software, 3PL)', type: 'text' },
   { id: 'q-locations', step: 'Architecture', label: 'Number of fulfillment locations', type: 'text' },
   { id: 'q-integrations', step: 'Architecture', label: 'Existing integrations or middleware?', type: 'textarea' },
   { id: 'q-edi', step: 'Architecture', label: 'EDI requirements?', type: 'chips', options: ['Yes', 'No', 'Not sure'] },

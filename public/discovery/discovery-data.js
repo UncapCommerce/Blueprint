@@ -55,7 +55,7 @@ window.DISCOVERY_STEPS = [
         { id: 'q-wms', type: 'text', label: 'Warehouse management (WMS)', placeholder: 'System name, or none…' },
         { id: 'q-ims', type: 'text', label: 'Inventory management system (IMS)', placeholder: 'System name, or the ERP…' },
         { id: 'q-oms', type: 'text', label: 'Order management system (OMS)', placeholder: 'System name, or the ERP…' },
-        { id: 'q-fulfilsys', type: 'text', label: 'Fulfillment system', placeholder: 'ShipStation, 3PL portal, custom…' },
+        { id: 'q-fulfilsys', type: 'text', label: 'Fulfillment Management System', placeholder: 'ShipStation, 3PL portal, custom…' },
         { id: 'q-locations', type: 'text', label: 'Number of fulfillment locations', placeholder: 'e.g. 3' }
       ]},
       { id: 'g-connect', hotspotId: 'a-connect', title: 'The connections', questions: [
