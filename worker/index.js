@@ -2113,7 +2113,7 @@ const DEMO_ANSWERS = {
   // 2 · Architecture
   'q-platform': 'Magento',
   'q-breaking': 'Magento 2 is on an unsupported version, integrations are held together with nightly CSV jobs, and inventory is always a day stale.',
-  'q-erp': 'Epicor Prophet 21',
+  'q-erp': 'Epicor · Prophet 21 / P21',
   'q-pim': 'Mostly in the ERP plus a large spreadsheet the product team maintains; images live on a shared drive.',
   'q-locations': '6–20',
   'q-integrations': 'A middleware vendor syncs P21 to Magento nightly; EDI runs through SPS Commerce; payments via a legacy gateway.',

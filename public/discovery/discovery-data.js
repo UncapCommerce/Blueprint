@@ -39,7 +39,7 @@ window.DISCOVERY_STEPS = [
         { id: 'q-breaking', type: 'textarea', label: 'What\'s breaking today?', placeholder: 'The duct tape. Be honest…' }
       ]},
       { id: 'g-record', hotspotId: 'a-record', title: 'Systems of record', questions: [
-        { id: 'q-erp', type: 'text', label: 'Which ERP do you run?', placeholder: 'e.g. Epicor, NetSuite, SAP B1, homegrown' },
+        { id: 'q-erp', type: 'erp', label: 'Which ERP do you run?' },
         { id: 'q-pim', type: 'textarea', label: 'Where does product data live today?', placeholder: 'PIM, spreadsheets, the ERP, someone\'s head…' },
         { id: 'q-locations', type: 'chips', label: 'Inventory locations', options: ['1', '2–5', '6–20', '20+'] }
       ]},

@@ -23,7 +23,9 @@ export const QUESTION_CATALOG = [
   // 2 · Architecture
   { id: 'q-platform', step: 'Architecture', label: 'Current commerce platform', type: 'chips', options: ['None', 'Magento', 'Shopify', 'BigCommerce', 'Custom', 'Other'] },
   { id: 'q-breaking', step: 'Architecture', label: 'What is breaking today?', type: 'textarea' },
-  { id: 'q-erp', step: 'Architecture', label: 'Which ERP do you run?', type: 'text' },
+  // Rendered as a cascading vendor/edition dropdown in the UI; prefill stays
+  // free text and the frontend maps it onto the dropdowns (or Other).
+  { id: 'q-erp', step: 'Architecture', label: 'Which ERP do you run? Prefer the format "Vendor · Edition", e.g. "Sage · X3" or "Oracle · NetSuite"', type: 'text' },
   { id: 'q-pim', step: 'Architecture', label: 'Where does product data live today?', type: 'textarea' },
   { id: 'q-locations', step: 'Architecture', label: 'Inventory locations', type: 'chips', options: ['1', '2–5', '6–20', '20+'] },
   { id: 'q-integrations', step: 'Architecture', label: 'Existing integrations or middleware?', type: 'textarea' },

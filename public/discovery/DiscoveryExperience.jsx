@@ -54,6 +54,55 @@
     return String(v).trim().length > 0;
   };
 
+  // ERP vendor → editions catalog for the q-erp cascading dropdown. Vendors
+  // without editions skip the second select; "Other" opens a free-text field.
+  const ERP_CATALOG = [
+    { name: 'SAP', editions: ['S/4HANA On-Premise', 'S/4HANA Private Cloud', 'S/4HANA Cloud Public Edition', 'ECC / Business Suite 7', 'Business One', 'Business ByDesign'] },
+    { name: 'Oracle', editions: ['Fusion Cloud ERP', 'NetSuite', 'E-Business Suite (EBS)', 'JD Edwards EnterpriseOne', 'PeopleSoft'] },
+    { name: 'Microsoft Dynamics 365', editions: ['Finance', 'Supply Chain Management', 'Business Central', 'GP', 'SL', 'NAV'] },
+    { name: 'Infor', editions: ['CloudSuite LN', 'CloudSuite M3', 'CloudSuite Industrial (SyteLine)', 'Distribution SX.e', 'LX / System21'] },
+    { name: 'Epicor', editions: ['Kinetic', 'Prophet 21 / P21', 'Eclipse', 'BisTrack', 'CMS', 'LumberTrack', 'iScala'] },
+    { name: 'Sage', editions: ['Intacct', 'X3', 'Sage 50', 'Sage 100', 'Sage 200', 'Sage 300'] },
+    { name: 'Acumatica', editions: ['General Business', 'Distribution', 'Manufacturing', 'Construction', 'Retail-Commerce'] },
+    { name: 'Odoo', editions: ['Community', 'Enterprise'] },
+    { name: 'IFS Cloud', editions: [] },
+    { name: 'SYSPRO', editions: [] },
+    { name: 'QAD Adaptive ERP', editions: [] },
+    { name: 'Deltek', editions: [] },
+    { name: 'DDI System Inform', editions: [] },
+    { name: 'Distribution One ERP-ONE', editions: [] },
+    { name: 'Kerridge K8', editions: [] },
+    { name: 'Aptean (Apprise)', editions: [] },
+    { name: 'ECI', editions: [] },
+    { name: 'ERPNext / Frappe', editions: [] },
+    { name: 'Workday', editions: [] },
+    { name: 'Zoho', editions: [] },
+    { name: 'Katana', editions: [] },
+    { name: 'MRPeasy', editions: [] },
+    { name: 'Cin7', editions: [] },
+    { name: 'Brightpearl', editions: [] },
+    { name: 'Fishbowl', editions: [] },
+  ];
+
+  // Map a stored answer string back onto the dropdowns: "Vendor · Edition",
+  // a bare vendor, a bare edition (e.g. a prefilled "NetSuite"), or anything
+  // else lands in Other with the raw text preserved.
+  const parseErp = (v) => {
+    const s = (typeof v === 'string' ? v : '').trim();
+    if (!s) return { vendor: '', edition: '', text: '' };
+    const sep = s.indexOf(' · ');
+    if (sep > 0) {
+      const vend = s.slice(0, sep);
+      const ed = s.slice(sep + 3);
+      const c = ERP_CATALOG.find((e) => e.name === vend);
+      if (c) return { vendor: vend, edition: c.editions.includes(ed) ? ed : '', text: '' };
+    }
+    if (ERP_CATALOG.some((e) => e.name === s)) return { vendor: s, edition: '', text: '' };
+    const byEd = ERP_CATALOG.find((e) => e.editions.includes(s));
+    if (byEd) return { vendor: byEd.name, edition: s, text: '' };
+    return { vendor: 'Other', edition: '', text: s === 'Other' ? '' : s };
+  };
+
   const LABELS = ['Company', 'Architecture', 'Experience', 'Discovery', 'Conversion', 'Revenue', 'Unified', 'Project', 'Growth', 'Enclosing'];
 
   // ── Passcode gate (client) — identical to the blueprint proposal gate ──
@@ -155,6 +204,9 @@
     const [activeStepIdx, setActiveStepIdx] = useState(hashStep != null ? hashStep : Math.min(initial.activeStepIdx || 0, 9));
     const [unlockedIdx, setUnlockedIdx] = useState(Math.max(Math.min(initial.unlockedIdx || 0, 9), hashStep != null ? hashStep : 0));
     const [activeHotspotId, setActiveHotspotId] = useState(null);
+    // Keeps the ERP question in "Other" mode while typing, even when the
+    // typed text happens to equal a listed vendor or edition name.
+    const [erpOther, setErpOther] = useState(false);
     const [scale, setScale] = useState(0.55);
     const [contentH, setContentH] = useState(900);
     const [infoCard, setInfoCard] = useState(null);
@@ -613,6 +665,34 @@
                             <textarea value={v || ''} onClick={(e) => e.stopPropagation()} onChange={(e) => setAnswer(q.id, e.target.value)} placeholder={q.placeholder || ''} rows={3}
                               style={{ width: '100%', padding: '10px 12px', border: '1px solid #C9C7C0', borderRadius: 5, fontSize: 14, background: '#FDFCF9', outline: 'none', resize: 'vertical', lineHeight: 1.5, color: '#0A0A0A' }}/>
                           )}
+                          {q.type === 'erp' && (() => {
+                            const p = erpOther
+                              ? { vendor: 'Other', edition: '', text: (typeof v === 'string' && v !== 'Other') ? v : '' }
+                              : parseErp(v);
+                            const vendorCat = ERP_CATALOG.find((e) => e.name === p.vendor);
+                            const selStyle = { width: '100%', padding: '10px 12px', border: '1px solid #C9C7C0', borderRadius: 5, fontSize: 14, background: '#FDFCF9', outline: 'none', color: p.vendor || p.edition ? '#0A0A0A' : '#9A9A9A', cursor: 'pointer' };
+                            return (
+                              <div onClick={(e) => e.stopPropagation()} style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                                <select value={p.vendor} style={selStyle}
+                                  onChange={(e) => { const nv = e.target.value; setErpOther(nv === 'Other'); setAnswer(q.id, nv); }}>
+                                  <option value="">Select your ERP…</option>
+                                  {ERP_CATALOG.map((e) => <option key={e.name} value={e.name}>{e.name}</option>)}
+                                  <option value="Other">Other</option>
+                                </select>
+                                {vendorCat && vendorCat.editions.length > 0 && (
+                                  <select value={p.edition} style={{ ...selStyle, color: p.edition ? '#0A0A0A' : '#9A9A9A' }}
+                                    onChange={(e) => setAnswer(q.id, e.target.value ? p.vendor + ' · ' + e.target.value : p.vendor)}>
+                                    <option value="">Select the edition…</option>
+                                    {vendorCat.editions.map((ed) => <option key={ed} value={ed}>{ed}</option>)}
+                                  </select>
+                                )}
+                                {p.vendor === 'Other' && (
+                                  <input value={p.text} onChange={(e) => setAnswer(q.id, e.target.value || 'Other')} placeholder="Tell us what you run…"
+                                    style={{ width: '100%', padding: '10px 12px', border: '1px solid #C9C7C0', borderRadius: 5, fontSize: 14, background: '#FDFCF9', outline: 'none', color: '#0A0A0A' }}/>
+                                )}
+                              </div>
+                            );
+                          })()}
                           {isChips && (
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                               {q.options.map((opt) => {
