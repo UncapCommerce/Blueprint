@@ -57,6 +57,7 @@
   // ERP vendor → editions catalog for the q-erp cascading dropdown. Vendors
   // without editions skip the second select; "Other" opens a free-text field.
   const ERP_CATALOG = [
+    { name: 'No ERP', editions: [] },
     { name: 'SAP', editions: ['S/4HANA On-Premise', 'S/4HANA Private Cloud', 'S/4HANA Cloud Public Edition', 'ECC / Business Suite 7', 'Business One', 'Business ByDesign'] },
     { name: 'Oracle', editions: ['Fusion Cloud ERP', 'NetSuite', 'E-Business Suite (EBS)', 'JD Edwards EnterpriseOne', 'PeopleSoft'] },
     { name: 'Microsoft Dynamics 365', editions: ['Finance', 'Supply Chain Management', 'Business Central', 'GP', 'SL', 'NAV'] },
