@@ -743,7 +743,7 @@
     };
 
     return (
-      <Modal title="New discovery" sub="Pick the company · its Attio contacts load below" onClose={onClose}>
+      <Modal title="New discovery" sub="Pick the company. Contacts and details will load from Attio." onClose={onClose}>
         <form onSubmit={save} style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
           <CompanyPicker company={company} onPick={pickCompany} onClear={clearCompany}/>
           {company && (
