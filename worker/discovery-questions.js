@@ -27,8 +27,19 @@ export const QUESTION_CATALOG = [
   // Rendered as a cascading vendor/edition dropdown in the UI; prefill stays
   // free text and the frontend maps it onto the dropdowns (or Other).
   { id: 'q-erp', step: 'Architecture', label: 'Which ERP do you run? Prefer the format "Vendor · Edition", e.g. "Sage · X3" or "Oracle · NetSuite"; write "No ERP" when the document says they run none', type: 'text' },
-  { id: 'q-pim', step: 'Architecture', label: 'Where does product data live today?', type: 'textarea' },
-  { id: 'q-locations', step: 'Architecture', label: 'Inventory locations', type: 'chips', options: ['1', '2–5', '6–20', '20+'] },
+  // Rendered as a dropdown in the UI; prefer a product name (e.g. "Akeneo",
+  // "Salsify") or "No PIM" when product data lives in spreadsheets or the ERP.
+  { id: 'q-pim', step: 'Architecture', label: 'Their PIM platform, e.g. "Akeneo" or "Salsify"; write "No PIM" when product data lives in spreadsheets or the ERP', type: 'text' },
+  { id: 'q-pim-skus', step: 'Architecture', label: 'Number of SKUs (digits as written, e.g. "48,000")', type: 'text' },
+  { id: 'q-pim-products', step: 'Architecture', label: 'Number of products', type: 'text' },
+  { id: 'q-pim-categories', step: 'Architecture', label: 'Number of product categories', type: 'text' },
+  { id: 'q-pim-filters', step: 'Architecture', label: 'Number of filter groups / facets', type: 'text' },
+  { id: 'q-pim-attributes', step: 'Architecture', label: 'Number of product attributes', type: 'text' },
+  { id: 'q-wms', step: 'Architecture', label: 'Warehouse management system (WMS)', type: 'text' },
+  { id: 'q-ims', step: 'Architecture', label: 'Inventory management system (IMS)', type: 'text' },
+  { id: 'q-oms', step: 'Architecture', label: 'Order management system (OMS)', type: 'text' },
+  { id: 'q-fulfilsys', step: 'Architecture', label: 'Fulfillment system (shipping software, 3PL)', type: 'text' },
+  { id: 'q-locations', step: 'Architecture', label: 'Number of fulfillment locations', type: 'text' },
   { id: 'q-integrations', step: 'Architecture', label: 'Existing integrations or middleware?', type: 'textarea' },
   { id: 'q-edi', step: 'Architecture', label: 'EDI requirements?', type: 'chips', options: ['Yes', 'No', 'Not sure'] },
   { id: 'q-maintains', step: 'Architecture', label: 'Who maintains integrations today?', type: 'text' },

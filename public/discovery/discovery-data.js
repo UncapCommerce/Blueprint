@@ -30,7 +30,9 @@ window.DISCOVERY_STEPS = [
     id: 'architecture', label: 'Architecture', tagline: 'The systems behind the sale',
     hotspots: [
       { id: 'a-core', x: 540, y: 330, w: 360, h: 240, label: 'Commerce core', info: 'The platform in the middle. Whatever\'s here today — or isn\'t — this is what everything else has to talk to.' },
-      { id: 'a-record', x: 80, y: 170, w: 380, h: 500, label: 'Systems of record', info: 'ERP, product data, inventory. These systems already run your business. We don\'t replace them — we connect them.' },
+      { id: 'a-erp', x: 88, y: 208, w: 364, h: 136, label: 'ERP', info: 'Orders, customers, credit, invoicing. The system of financial record already runs your business — we connect to it, we don\'t replace it.' },
+      { id: 'a-pim', x: 88, y: 348, w: 364, h: 136, label: 'PIM & product data', info: 'Where specs, attributes, images, and documents live — and how much of it there is. Catalog counts size the data work ahead.' },
+      { id: 'a-fulfill', x: 88, y: 488, w: 364, h: 136, label: 'Fulfillment', info: 'Warehouse, inventory, order, and fulfillment systems — every hop an order makes after checkout, and how many locations ship.' },
       { id: 'a-connect', x: 980, y: 170, w: 380, h: 500, label: 'The connections', info: 'EDI, payments, customer comms. The duct tape usually lives here. We want to know every hop an order makes.' }
     ],
     groups: [
@@ -38,10 +40,23 @@ window.DISCOVERY_STEPS = [
         { id: 'q-platform', type: 'platform', label: 'Current commerce platform' },
         { id: 'q-breaking', type: 'textarea', label: 'What\'s breaking today?', placeholder: 'The duct tape. Be honest…' }
       ]},
-      { id: 'g-record', hotspotId: 'a-record', title: 'Systems of record', questions: [
-        { id: 'q-erp', type: 'erp', label: 'Which ERP do you run?' },
-        { id: 'q-pim', type: 'textarea', label: 'Where does product data live today?', placeholder: 'PIM, spreadsheets, the ERP, someone\'s head…' },
-        { id: 'q-locations', type: 'chips', label: 'Inventory locations', options: ['1', '2–5', '6–20', '20+'] }
+      { id: 'g-erp', hotspotId: 'a-erp', title: 'ERP', questions: [
+        { id: 'q-erp', type: 'erp', label: 'Which ERP do you run?' }
+      ]},
+      { id: 'g-pim', hotspotId: 'a-pim', title: 'PIM', questions: [
+        { id: 'q-pim', type: 'pim', label: 'Your PIM platform' },
+        { id: 'q-pim-skus', type: 'text', label: 'Number of SKUs', placeholder: 'e.g. 48,000' },
+        { id: 'q-pim-products', type: 'text', label: 'Number of products', placeholder: 'e.g. 12,500' },
+        { id: 'q-pim-categories', type: 'text', label: 'Number of categories', placeholder: 'e.g. 240' },
+        { id: 'q-pim-filters', type: 'text', label: 'Number of filter groups', placeholder: 'e.g. 36' },
+        { id: 'q-pim-attributes', type: 'text', label: 'Number of product attributes', placeholder: 'e.g. 410' }
+      ]},
+      { id: 'g-fulfill', hotspotId: 'a-fulfill', title: 'Fulfillment', questions: [
+        { id: 'q-wms', type: 'text', label: 'Warehouse management (WMS)', placeholder: 'System name, or none…' },
+        { id: 'q-ims', type: 'text', label: 'Inventory management system (IMS)', placeholder: 'System name, or the ERP…' },
+        { id: 'q-oms', type: 'text', label: 'Order management system (OMS)', placeholder: 'System name, or the ERP…' },
+        { id: 'q-fulfilsys', type: 'text', label: 'Fulfillment system', placeholder: 'ShipStation, 3PL portal, custom…' },
+        { id: 'q-locations', type: 'text', label: 'Number of fulfillment locations', placeholder: 'e.g. 3' }
       ]},
       { id: 'g-connect', hotspotId: 'a-connect', title: 'The connections', questions: [
         { id: 'q-integrations', type: 'textarea', label: 'Existing integrations or middleware?', placeholder: 'What connects to what, and how…' },
