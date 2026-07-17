@@ -136,7 +136,7 @@ function Portal({ me, onSignOut }) {
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
       <div style={{ flex: '0 0 auto', background: '#0A0A0A', zIndex: 50 }}>
         <div style={{ width: '100%', boxSizing: 'border-box', height: 34, display: 'flex', alignItems: 'center', gap: 16, padding: '0 16px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: '0 0 auto' }}>
+          <div onClick={() => setTab('Company')} style={{ display: 'flex', alignItems: 'center', gap: 10, flex: '0 0 auto', cursor: 'pointer' }}>
             <img src="/assets/uncap-logo-white.svg" alt="Uncap" style={{ height: 13, display: 'block' }}/>
             <span style={{ width: 1, height: 14, background: '#4D4D4D' }}></span>
             <span style={{ fontFamily: MONO, fontSize: 8.5, letterSpacing: '0.12em', color: '#9A9A9A' }}>CLIENT PORTAL</span>
