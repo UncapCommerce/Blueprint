@@ -59,25 +59,13 @@
   const STORAGE_KEY  = 'bp_token_sperscientific';
 
   function Gate({ children }) {
-    const [token, setToken]     = React.useState(
-      () => (typeof window !== 'undefined' && window.sessionStorage.getItem(STORAGE_KEY)) || ''
-    );
-    const [step, setStep]       = React.useState('email');
-    const [email, setEmail]     = React.useState('');
-    const [code, setCode]       = React.useState('');
-    const [loading, setLoading] = React.useState(false);
-    const [error, setError]     = React.useState('');
-    const inputRef              = React.useRef(null);
+    // No blueprint passcode: the portal login is the only gate. A signed-in
+    // portal customer (or Uncap admin) gets a viewing token minted from
+    // their session cookie; anyone else is sent to the portal to sign in.
+    const [token, setToken]   = React.useState('');
+    const [denied, setDenied] = React.useState(false);
 
     React.useEffect(() => {
-      if (!token && inputRef.current) inputRef.current.focus();
-    }, [token, step]);
-
-    // Uncap admins signed into the Blueprint app skip the email gate:
-    // the bp_admin cookie mints a preview session automatically. Clients
-    // without the cookie get a fast 401 and see the normal email form.
-    React.useEffect(() => {
-      if (token) return;
       let dead = false;
       fetch('/api/admin/bp-token', {
         method: 'POST',
@@ -85,13 +73,17 @@
         credentials: 'same-origin',
         body: JSON.stringify({ blueprintId: BLUEPRINT_ID }),
       })
-        .then((r) => (r.ok ? r.json() : null))
+        .then((r) => r.json().catch(() => null))
         .then((d) => {
-          if (dead || !d || !d.ok || !d.token) return;
-          try { window.sessionStorage.setItem(STORAGE_KEY, d.token); } catch (_) {}
-          setToken(d.token);
+          if (dead) return;
+          if (d && d.ok && d.token) {
+            try { window.sessionStorage.setItem(STORAGE_KEY, d.token); } catch (_) {}
+            setToken(d.token);
+          } else {
+            setDenied(true);
+          }
         })
-        .catch(() => {});
+        .catch(() => { if (!dead) setDenied(true); });
       return () => { dead = true; };
     }, []);
 
@@ -99,216 +91,18 @@
       if (typeof window !== 'undefined') window.__bpToken = token;
       return children;
     }
-
-    const requestCode = async (e) => {
-      e.preventDefault();
-      const raw = email.trim();
-      if (!raw) { setError('Enter your email'); return; }
-      setLoading(true); setError('');
-      try {
-        const resp = await fetch('/api/auth/request-code', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ email: raw, blueprintId: BLUEPRINT_ID }),
-        });
-        const data = await resp.json().catch(() => ({}));
-        if (!resp.ok || !data.ok) {
-          setError(data.error || 'Could not send code');
-          return;
-        }
-        if (data.admin && data.token) {
-          try { window.sessionStorage.setItem(STORAGE_KEY, data.token); } catch (_) {}
-          setToken(data.token);
-          return;
-        }
-        setStep('code');
-      } catch (_) {
-        setError('Network error — try again.');
-      } finally {
-        setLoading(false);
+    if (denied) {
+      if (typeof window !== 'undefined') {
+        try { (window.top || window).location.replace('/'); } catch (_) { window.location.replace('/'); }
       }
-    };
-
-    const verifyCode = async (e) => {
-      e.preventDefault();
-      if (code.length !== 6) { setError('Enter the 6-digit code'); return; }
-      setLoading(true); setError('');
-      try {
-        const resp = await fetch('/api/auth/verify', {
-          method: 'POST',
-          headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({
-            email: email.trim().toLowerCase(),
-            code:  code.trim(),
-            blueprintId: BLUEPRINT_ID,
-          }),
-        });
-        const data = await resp.json().catch(() => ({}));
-        if (!resp.ok || !data.ok || !data.token) {
-          setError(data.error || 'Wrong code');
-          setCode('');
-          return;
-        }
-        try { window.sessionStorage.setItem(STORAGE_KEY, data.token); } catch (_) {}
-        setToken(data.token);
-      } catch (_) {
-        setError('Network error — try again.');
-      } finally {
-        setLoading(false);
-      }
-    };
-
+      return null;
+    }
     return (
       <div style={{
         minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: 'var(--uc-cream)', color: 'var(--fg-1)',
-        fontFamily: 'var(--font-sans)', padding: 24
-      }}>
-        <div style={{ width: '100%', maxWidth: 420 }}>
-          <img
-            src="assets/uncap-logo-black.svg"
-            alt="Uncap"
-            style={{ height: 28, width: 'auto', display: 'block', margin: '0 auto 28px' }}
-          />
-          <form onSubmit={step === 'email' ? requestCode : verifyCode} style={{
-            background: 'var(--uc-paper)',
-            border: '1px solid var(--uc-black)',
-            borderRadius: 8, padding: 36,
-            boxShadow: '0 18px 40px -22px rgba(10,10,10,0.25)'
-          }}>
-            <div style={{
-              display: 'inline-flex', alignItems: 'center', gap: 10, marginBottom: 24,
-              fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700,
-              letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--fg-3)'
-            }}>
-              <span style={{ width: 14, height: 2, background: 'var(--uc-signal)' }}/>
-              Private proposal
-            </div>
-
-            {step === 'email' ? (
-              <React.Fragment>
-                <h1 style={{
-                  margin: '0 0 10px',
-                  fontFamily: 'var(--font-hero)', fontWeight: 800,
-                  fontSize: 'clamp(28px, 4vw, 36px)', lineHeight: 1.04,
-                  letterSpacing: '-0.03em'
-                }}>Enter your email.</h1>
-                <p style={{
-                  margin: '0 0 24px',
-                  fontFamily: 'var(--font-serif)', fontStyle: 'italic',
-                  fontSize: 15, lineHeight: 1.5, color: 'var(--fg-2)'
-                }}>
-                  We&rsquo;ll send a one-time 6-digit passcode to unlock the proposal.
-                </p>
-                <input
-                  ref={inputRef}
-                  type="text"
-                  value={email}
-                  onChange={(e) => { setEmail(e.target.value); if (error) setError(''); }}
-                  placeholder="you@company.com"
-                  autoComplete="email"
-                  spellCheck="false"
-                  disabled={loading}
-                  aria-label="Email"
-                  aria-invalid={!!error}
-                  style={{
-                    width: '100%', boxSizing: 'border-box',
-                    padding: '14px 16px',
-                    fontFamily: 'var(--font-sans)', fontSize: 17, fontWeight: 500,
-                    color: 'var(--fg-1)', background: 'var(--uc-cream)',
-                    border: '1px solid ' + (error ? 'var(--uc-error)' : 'var(--line-1)'),
-                    borderRadius: 5, outline: 'none',
-                    transition: 'border-color .15s var(--ease-out)'
-                  }}
-                  onFocus={(e) => { if (!error) e.currentTarget.style.borderColor = 'var(--uc-black)'; }}
-                  onBlur={(e)  => { if (!error) e.currentTarget.style.borderColor = 'var(--line-1)'; }}
-                />
-                {error && (
-                  <div style={{
-                    marginTop: 10, fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700,
-                    letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--uc-error)'
-                  }}>{error}</div>
-                )}
-                <button type="submit" disabled={loading || !email.trim()} className="uc-btn b-primary"
-                  style={{
-                    width: '100%', justifyContent: 'center', marginTop: 18,
-                    opacity: loading ? 0.7 : 1, cursor: loading ? 'default' : 'pointer'
-                  }}>
-                  {loading ? 'Sending…' : 'Send passcode'} <span>→</span>
-                </button>
-              </React.Fragment>
-            ) : (
-              <React.Fragment>
-                <h1 style={{
-                  margin: '0 0 10px',
-                  fontFamily: 'var(--font-hero)', fontWeight: 800,
-                  fontSize: 'clamp(28px, 4vw, 36px)', lineHeight: 1.04,
-                  letterSpacing: '-0.03em'
-                }}>Check your inbox.</h1>
-                <p style={{
-                  margin: '0 0 24px',
-                  fontFamily: 'var(--font-serif)', fontStyle: 'italic',
-                  fontSize: 15, lineHeight: 1.5, color: 'var(--fg-2)'
-                }}>
-                  We sent a 6-digit passcode to <strong style={{ color: 'var(--fg-1)' }}>{email}</strong>. Valid for 10 minutes.
-                </p>
-                <input
-                  ref={inputRef}
-                  type="text"
-                  inputMode="numeric"
-                  value={code}
-                  onChange={(e) => { setCode(e.target.value.replace(/\D/g, '').slice(0, 6)); if (error) setError(''); }}
-                  placeholder="000000"
-                  autoComplete="one-time-code"
-                  disabled={loading}
-                  aria-label="6-digit code"
-                  aria-invalid={!!error}
-                  style={{
-                    width: '100%', boxSizing: 'border-box',
-                    padding: '14px 16px',
-                    fontFamily: 'var(--font-mono)', fontSize: 22, fontWeight: 700,
-                    letterSpacing: '0.25em', textAlign: 'center',
-                    color: 'var(--fg-1)', background: 'var(--uc-cream)',
-                    border: '1px solid ' + (error ? 'var(--uc-error)' : 'var(--line-1)'),
-                    borderRadius: 5, outline: 'none',
-                    transition: 'border-color .15s var(--ease-out)'
-                  }}
-                  onFocus={(e) => { if (!error) e.currentTarget.style.borderColor = 'var(--uc-black)'; }}
-                  onBlur={(e)  => { if (!error) e.currentTarget.style.borderColor = 'var(--line-1)'; }}
-                />
-                {error && (
-                  <div style={{
-                    marginTop: 10, fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700,
-                    letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--uc-error)'
-                  }}>{error}</div>
-                )}
-                <button type="submit" disabled={loading || code.length !== 6} className="uc-btn b-primary"
-                  style={{
-                    width: '100%', justifyContent: 'center', marginTop: 18,
-                    opacity: (loading || code.length !== 6) ? 0.7 : 1,
-                    cursor: (loading || code.length !== 6) ? 'default' : 'pointer'
-                  }}>
-                  {loading ? 'Unlocking…' : 'Unlock'} <span>→</span>
-                </button>
-                <button type="button" onClick={() => { setStep('email'); setCode(''); setError(''); }}
-                  style={{
-                    background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-                    marginTop: 14, fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700,
-                    letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--fg-3)'
-                  }}>
-                  ← Use a different email
-                </button>
-              </React.Fragment>
-            )}
-
-            <div style={{
-              marginTop: 22, paddingTop: 18, borderTop: '1px solid var(--line-1)',
-              fontFamily: 'var(--font-mono)', fontSize: 10,
-              letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--fg-3)'
-            }}>Trouble? Email hey@uncap.com</div>
-          </form>
-        </div>
-      </div>
+        background: 'var(--uc-cream)', color: 'var(--fg-3)',
+        fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.12em'
+      }}>LOADING…</div>
     );
   }
 
