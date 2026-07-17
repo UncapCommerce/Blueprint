@@ -25,6 +25,15 @@
     'v-tiers':  { label: 'Tier & contract pricing', info: 'Quantity breaks and contract prices, right on the product page — how your pricing rewards bigger orders and signed-in accounts.', gid: 'g-buybox' },
     'v-addons': { label: 'Add-ons & attach', info: 'The accessories and consumables that belong with this product, surfaced with a checkbox to lift average order value.', gid: 'g-buybox' },
     'v-fbt':    { label: 'Frequently bought together', info: 'Cross-sell bundles built from what buyers actually purchase together, with a one-click add-all.', gid: 'g-buybox' },
+    'e-proof':  { label: 'Service promises', info: 'The reasons to buy here instead of anywhere else: shipping speed, terms, easy returns, and a human on the account.', gid: 'g-merch' },
+    'e-brands': { label: 'Brands carried', info: 'The lines you stock, front and center. Familiar names build instant credibility with a first-time buyer.', gid: 'g-merch' },
+    'e-featured': { label: 'Featured products', info: 'A merchandised row you control: seasonal pushes, overstock, new lines. What deserves the spotlight?', gid: 'g-merch' },
+    'e-about':  { label: 'Your story', info: 'The five-second credibility check: who you are, how long you have done this, and why accounts stay.', gid: 'g-hero' },
+    'e-reviews': { label: 'Social proof', info: 'Real words from real accounts. B2B buyers trust peers over promises.', gid: 'g-merch' },
+    'e-signup': { label: 'Email capture', info: 'Restock alerts and offers keep you in the inbox between orders.', gid: 'g-merch' },
+    'd-signup': { label: 'Email capture', info: 'Restock alerts and offers keep you in the inbox between orders.', gid: 'g-grid' },
+    'v-signup': { label: 'Email capture', info: 'Restock alerts and offers keep you in the inbox between orders.', gid: 'g-buybox' },
+    'r-signup': { label: 'Email capture', info: 'Restock alerts and offers keep you in the inbox between orders.', gid: 'g-cart' },
   };
 
   const HANDLE = (function () {
@@ -902,9 +911,9 @@
   function applyClientLogo(html, logoUrl) {
     if (!logoUrl) return html;
     const img = (h, extra) => '<img src="' + logoUrl + '" alt="" style="height:' + h + 'px;max-width:200px;object-fit:contain;display:block' + (extra || '') + '"/>';
+    // No footer swap: the wireframe footers carry no wordmark by design.
     return html
       .replace(/<span style="width:32px;height:32px;background:#0A0A0A;[^"]*font-size:16px">H<\/span>\s*<span style="font-size:17px;font-weight:800;letter-spacing:-0\.02em">HARLOW SUPPLY<\/span>/g, img(34))
-      .replace(/<div style="font-size:18px;font-weight:800;letter-spacing:-0\.02em">HARLOW SUPPLY<\/div>/g, img(28))
       .replace(/<div style="font-size:14px;font-weight:800;letter-spacing:-0\.01em;padding:0 10px">HARLOW SUPPLY<\/div>/g, '<div style="padding:0 10px">' + img(28) + '</div>');
   }
 
