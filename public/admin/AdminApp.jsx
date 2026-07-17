@@ -138,6 +138,15 @@
       navigate(path);
     };
   }
+  // Open a blueprint/discovery framed inside the admin shell (toolbar stays
+  // on top). Modified clicks fall through to the real href / new tab.
+  function previewClick(url, title) {
+    return (e) => {
+      if (e.defaultPrevented || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+      e.preventDefault();
+      window.dispatchEvent(new CustomEvent('bp:preview', { detail: { url, title } }));
+    };
+  }
 
   // ── responsive helper ────────────────────────────────────────────────
   function useIsMobile() {
@@ -562,7 +571,7 @@
 
     const discActions = (r) => (
       <span style={{ display: 'inline-flex', gap: 8, flexWrap: 'wrap', justifyContent: isMobile ? 'flex-start' : 'flex-end' }}>
-        <a href={'/discovery/' + r.handle + '/'} target="_blank" rel="noreferrer" title="Open discovery" aria-label="Open discovery"
+        <a href={'/discovery/' + r.handle + '/'} onClick={previewClick('/discovery/' + r.handle + '/', r.company || r.handle)} target="_blank" rel="noreferrer" title="Preview discovery" aria-label="Preview discovery"
           style={{ ...S.btnIcon, textDecoration: 'none' }}><IconEye/></a>
         <button type="button" title={copied === r.id ? 'Copied ✓' : 'Copy link'} aria-label="Copy link" style={S.btnIcon} onClick={() => copyUrl(r)}>
           {copied === r.id ? <IconCheck/> : <IconShare/>}
@@ -1421,7 +1430,7 @@
     // One actions row, shared by the desktop table and the mobile cards.
     const rowActions = (bp) => (
       <span style={{ display: 'inline-flex', gap: 8, flexWrap: 'wrap', justifyContent: isMobile ? 'flex-start' : 'flex-end' }}>
-        <a href={'/blueprint/' + bp.id + '/'} target="_blank" rel="noreferrer" title="Preview" aria-label="Preview"
+        <a href={'/blueprint/' + bp.id + '/'} onClick={previewClick('/blueprint/' + bp.id + '/', bp.name || bp.id)} target="_blank" rel="noreferrer" title="Preview" aria-label="Preview"
           style={{ ...S.btnIcon, textDecoration: 'none' }}><IconEye/></a>
         <button type="button" title={copied === bp.id ? 'Copied ✓' : 'Share'} aria-label="Share" style={S.btnIcon} onClick={() => copyShare(bp)}>
           {copied === bp.id ? <IconCheck/> : <IconShare/>}
@@ -2059,6 +2068,7 @@
 
   function AdminApp() {
     const [me, setMe] = useState(undefined); // undefined = checking, null = signed out
+    const [viewer, setViewer] = useState(null); // { url, title } — framed preview
     const route = useRoute();
 
     const check = useCallback(async () => {
@@ -2066,6 +2076,16 @@
       catch (_) { setMe(null); }
     }, []);
     useEffect(() => { check(); }, [check]);
+
+    // Preview buttons dispatch bp:preview; the frame opens below the toolbar
+    // so the admin never leaves the shell. Esc closes it.
+    useEffect(() => {
+      const onPreview = (e) => setViewer(e.detail || null);
+      const onKey = (e) => { if (e.key === 'Escape') setViewer(null); };
+      window.addEventListener('bp:preview', onPreview);
+      window.addEventListener('keydown', onKey);
+      return () => { window.removeEventListener('bp:preview', onPreview); window.removeEventListener('keydown', onKey); };
+    }, []);
 
     const logout = async () => {
       try { await api('/api/admin/logout', { method: 'POST' }); } catch (_) {}
@@ -2080,6 +2100,20 @@
       );
     }
     if (me === null) return <Login onAuthed={check}/>;
+
+    if (viewer) {
+      return (
+        <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: T.cream }}>
+          <TopBar me={me} route={route} onLogout={logout}/>
+          <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 12, padding: '8px 16px', background: T.paper, borderBottom: `1px solid ${T.line}` }}>
+            <button type="button" onClick={() => setViewer(null)} style={{ ...S.btnGhost }}>← Back</button>
+            <span style={{ fontFamily: T.sans, fontSize: 13.5, fontWeight: 700, color: T.fg1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{viewer.title}</span>
+            <a href={viewer.url} target="_blank" rel="noreferrer" style={{ marginLeft: 'auto', ...S.btnGhost, textDecoration: 'none' }}>Open in new tab ↗</a>
+          </div>
+          <iframe title={viewer.title} src={viewer.url} style={{ flex: '1 1 auto', width: '100%', border: 'none', display: 'block', background: T.cream }}/>
+        </div>
+      );
+    }
 
     return (
       <div style={{ minHeight: '100vh', background: T.cream }}>

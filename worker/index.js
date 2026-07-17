@@ -478,8 +478,12 @@ export default {
     if (discMatch && (request.method === 'GET' || request.method === 'HEAD')) {
       // Old-style discovery URL: send it to the company folder when one
       // owns this discovery, so every client lands on the new experience.
+      // Admins previewing from the dashboard get the raw page (no redirect)
+      // so it can render framed inside the admin shell.
       const owner = await findCompanyByDiscoveryHandle(env, discMatch[1]);
-      if (owner) return Response.redirect(`${url.origin}/${owner.id}/discovery`, 301);
+      if (owner && !(await getAdminSession(request, env))) {
+        return Response.redirect(`${url.origin}/${owner.id}/discovery`, 301);
+      }
       const assetUrl = new URL(url.toString());
       assetUrl.pathname = '/discovery/index.html';
       return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
@@ -502,9 +506,13 @@ export default {
         const rest = bpMatch[2] || '/';
         if (request.method === 'GET' && (rest === '/' || rest === '/index.html')) {
           // Old-style blueprint URL: redirect the document to its company
-          // folder; sub-assets keep serving from here untouched.
+          // folder; sub-assets keep serving from here untouched. Admins
+          // previewing from the dashboard get the raw page (no redirect) so
+          // it can render framed inside the admin shell.
           const owner = await findCompanyByBlueprintId(env, entry.id);
-          if (owner) return Response.redirect(`${url.origin}/${owner.id}/blueprint/`, 301);
+          if (owner && !(await getAdminSession(request, env))) {
+            return Response.redirect(`${url.origin}/${owner.id}/blueprint/`, 301);
+          }
           const meta = await getBpMeta(env, entry.id);
           if (meta.disabled) {
             const adminSess = await getAdminSession(request, env);
