@@ -28,6 +28,7 @@ const sha = resolveSha().slice(0, 8);
 const files = [
   'public/index.html',
   'public/admin/index.html',
+  'public/blueprint-template/index.html',
   'public/Mitutoyo/index.html',
   'public/wichelt/index.html',
   'public/ElevateOralCare/index.html',

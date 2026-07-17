@@ -422,10 +422,17 @@ export default {
             return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
           }
           if (coApp[2] === 'blueprint' && co.blueprintId) {
+            // Bespoke shipped page wins; else the dynamic templated page when
+            // the draft's content is ready.
             const entry = BLUEPRINT_REGISTRY.find((b) => b.id === co.blueprintId);
             if (entry) {
               const assetUrl = new URL(url.toString());
               assetUrl.pathname = `/${entry.dir}/index.html`;
+              return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
+            }
+            if (await blueprintIsViewable(env, co.blueprintId)) {
+              const assetUrl = new URL(url.toString());
+              assetUrl.pathname = '/blueprint-template/index.html';
               return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
             }
           }
@@ -509,6 +516,19 @@ export default {
         const assetUrl = new URL(url.toString());
         assetUrl.pathname = `/${entry.dir}${assetPath}`;
         return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
+      }
+      // Not in the registry: an admin previewing a templated draft gets the
+      // dynamic page here (even before it's marked ready), so the editor's
+      // Preview shows work-in-progress. Non-admins never reach a draft this
+      // way — its real URL is the company folder, gated by the portal.
+      const rest = bpMatch[2] || '/';
+      if (request.method === 'GET' && (rest === '/' || rest === '/index.html')) {
+        const draft = await blueprintDraft(env, bpMatch[1]);
+        if (draft && draft.content && await getAdminSession(request, env)) {
+          const assetUrl = new URL(url.toString());
+          assetUrl.pathname = '/blueprint-template/index.html';
+          return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
+        }
       }
       // Unknown slug under /blueprint/ — fall through to the normal
       // static-asset/SPA-fallback handling below (same as any other 404).
@@ -1624,9 +1644,11 @@ async function handleBlueprintContent(request, env) {
   if (!id) return json(404, { ok: false, error: 'Not found' });
   if (!company) company = await findCompanyByBlueprintId(env, id);
 
-  // Authorize: approved admin, or the owning company's portal session.
+  // Authorize: approved admin (may preview any status), or the owning
+  // company's portal session (ready content only).
   const admin = await getAdminSession(request, env);
-  let ok = !!(admin && await adminIsApproved(env, admin.email));
+  const isAdmin = !!(admin && await adminIsApproved(env, admin.email));
+  let ok = isAdmin;
   if (!ok) {
     const portal = await getPortalSession(request, env);
     ok = !!(portal && company && portal.companyId === company.id);
@@ -1636,7 +1658,7 @@ async function handleBlueprintContent(request, env) {
   const draft = await blueprintDraft(env, id);
   if (!draft || !draft.content) return json(404, { ok: false, error: 'No content yet' });
   // Customers only ever see ready content; admins see drafts for preview.
-  if (draft.content.status !== 'ready' && !ok) return json(404, { ok: false, error: 'Not ready' });
+  if (draft.content.status !== 'ready' && !isAdmin) return json(404, { ok: false, error: 'Not ready' });
 
   return json(200, {
     ok: true,
