@@ -230,6 +230,25 @@ export default {
     if (url.pathname === '/api/admin/logout' && request.method === 'POST') {
       return handleAdminLogout(request, env);
     }
+
+    // Admin approval gate: every other /api/admin/* endpoint requires an
+    // APPROVED @uncap.com user. Unapproved users can only check their status
+    // (me), sign out, and read config. bp-token is exempt — it has its own
+    // dual admin/portal auth and is called by signed-in portal customers.
+    if (url.pathname.startsWith('/api/admin/') && url.pathname !== '/api/admin/bp-token') {
+      const gate = await getAdminSession(request, env);
+      if (!gate) return json(401, { ok: false, error: 'Not signed in' });
+      if (!(await adminIsApproved(env, gate.email))) {
+        return json(403, { ok: false, error: 'Your account is pending approval from denis@uncap.com.' });
+      }
+    }
+
+    if (url.pathname === '/api/admin/users' && request.method === 'GET') {
+      return handleAdminListUsers(request, env);
+    }
+    if (url.pathname === '/api/admin/users/approve' && request.method === 'POST') {
+      return handleAdminApproveUser(request, env);
+    }
     if (url.pathname === '/api/admin/blueprints' && request.method === 'GET') {
       return handleAdminBlueprints(request, env);
     }
@@ -361,7 +380,7 @@ export default {
     // The admin dashboard lives at /admin (client-side routes /admin/
     // discoveries|blueprints|companies and the company profile page
     // /admin/company/<id> included); the root is the portal.
-    if (/^\/admin(\/(discoveries|blueprints|companies|company\/[a-z0-9-]+))?\/?$/.test(url.pathname) && (request.method === 'GET' || request.method === 'HEAD')) {
+    if (/^\/admin(\/(discoveries|blueprints|companies|users|company\/[a-z0-9-]+))?\/?$/.test(url.pathname) && (request.method === 'GET' || request.method === 'HEAD')) {
       const assetUrl = new URL(url.toString());
       assetUrl.pathname = '/admin/index.html';
       return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
@@ -899,6 +918,50 @@ const ADMIN_SESSION_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
 // the team just re-signs in with Google.)
 const ADMIN_COOKIE = '__Host-bp_admin';
 
+// ── Admin hierarchy ───────────────────────────────────────────────────────
+// Any @uncap.com Google account can sign in, but a new user stays "pending"
+// until the super admin approves them. The super admin (denis) is the only
+// one who can approve/revoke users and delete companies/discoveries.
+// KV: adminuser:<email> → { email, name, picture, approved, approvedBy,
+// approvedAt, createdAt, lastLoginAt }.
+const SUPER_ADMIN_EMAIL = 'denis@uncap.com';
+const SEED_APPROVED_ADMINS = ['ryan@uncap.com', 'mj@uncap.com'];
+const isSuperAdmin = (email) => (email || '').toString().toLowerCase() === SUPER_ADMIN_EMAIL;
+
+async function getAdminUser(env, email) {
+  const e = (email || '').toString().toLowerCase();
+  const raw = await env.BLUEPRINT_AUTH.get(`adminuser:${e}`);
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch { return null; }
+}
+
+async function upsertAdminUser(env, email, patch) {
+  const e = (email || '').toString().toLowerCase();
+  const cur = (await getAdminUser(env, e)) || { email: e, approved: false, createdAt: new Date().toISOString() };
+  const next = { ...cur, ...patch, email: e };
+  await env.BLUEPRINT_AUTH.put(`adminuser:${e}`, JSON.stringify(next));
+  return next;
+}
+
+// Approved = super admin, a seeded teammate, or an explicitly-approved record.
+async function adminIsApproved(env, email) {
+  const e = (email || '').toString().toLowerCase();
+  if (isSuperAdmin(e) || SEED_APPROVED_ADMINS.includes(e)) return true;
+  const u = await getAdminUser(env, e);
+  return !!(u && u.approved);
+}
+
+// Make sure the super admin and seeded teammates always exist as approved
+// records so they show in the Users list before their first sign-in.
+async function seedAdminUsers(env) {
+  for (const e of [SUPER_ADMIN_EMAIL, ...SEED_APPROVED_ADMINS]) {
+    const u = await getAdminUser(env, e);
+    if (!u || !u.approved) {
+      await upsertAdminUser(env, e, { approved: true, approvedBy: 'system', approvedAt: new Date().toISOString() });
+    }
+  }
+}
+
 // Google OAuth "Web application" Client ID. This is a public identifier
 // (it ships in the login page HTML anyway), so hardcoding is safe — and
 // necessary, because deploys run `wrangler deploy --keep-vars`, meaning
@@ -1239,6 +1302,16 @@ async function handleGoogleLogin(request, env) {
     return json(403, { ok: false, error: 'Reserved for the Uncap team (@uncap.com).' });
   }
 
+  // Record every teammate who signs in so the super admin can approve them.
+  // Super admin + seeded teammates are approved on sight.
+  const autoApprove = isSuperAdmin(email) || SEED_APPROVED_ADMINS.includes(email);
+  await upsertAdminUser(env, email, {
+    name: payload.name || '', picture: payload.picture || '',
+    lastLoginAt: new Date().toISOString(),
+    ...(autoApprove ? { approved: true, approvedBy: 'system', approvedAt: new Date().toISOString() } : {}),
+  });
+  const approved = await adminIsApproved(env, email);
+
   const token = genToken();
   await env.BLUEPRINT_AUTH.put(
     `admin_session:${token}`,
@@ -1246,7 +1319,7 @@ async function handleGoogleLogin(request, env) {
     { expirationTtl: ADMIN_SESSION_TTL_SECONDS }
   );
 
-  return withSecurityHeaders(new Response(JSON.stringify({ ok: true, email, name: payload.name || '', picture: payload.picture || '' }), {
+  return withSecurityHeaders(new Response(JSON.stringify({ ok: true, email, name: payload.name || '', picture: payload.picture || '', approved, isSuper: isSuperAdmin(email) }), {
     status: 200,
     headers: {
       'content-type': 'application/json; charset=utf-8',
@@ -1259,7 +1332,51 @@ async function handleGoogleLogin(request, env) {
 async function handleAdminMe(request, env) {
   const sess = await getAdminSession(request, env);
   if (!sess) return json(401, { ok: false, error: 'Not signed in' });
-  return json(200, { ok: true, email: sess.email, name: sess.name || '', picture: sess.picture || '' });
+  return json(200, {
+    ok: true, email: sess.email, name: sess.name || '', picture: sess.picture || '',
+    approved: await adminIsApproved(env, sess.email),
+    isSuper: isSuperAdmin(sess.email),
+  });
+}
+
+// ── User management (super admin only) ────────────────────────────────────
+async function handleAdminListUsers(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  if (!isSuperAdmin(sess.email)) return json(403, { ok: false, error: 'Super admin only' });
+  await seedAdminUsers(env);
+  const list = await env.BLUEPRINT_AUTH.list({ prefix: 'adminuser:', limit: 500 });
+  const users = (await Promise.all(list.keys.map((k) => env.BLUEPRINT_AUTH.get(k.name).then((v) => {
+    try { return JSON.parse(v); } catch { return null; }
+  })))).filter(Boolean);
+  for (const u of users) {
+    u.isSuper = isSuperAdmin(u.email);
+    if (u.isSuper || SEED_APPROVED_ADMINS.includes(u.email)) u.approved = true;
+  }
+  users.sort((a, b) => (b.isSuper - a.isSuper) || (b.approved - a.approved) || a.email.localeCompare(b.email));
+  return json(200, { ok: true, users });
+}
+
+async function handleAdminApproveUser(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  if (!isSuperAdmin(sess.email)) return json(403, { ok: false, error: 'Super admin only' });
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+  let body;
+  try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  const email = (body.email || '').toString().trim().toLowerCase();
+  if (!email.endsWith('@uncap.com')) return json(400, { ok: false, error: 'Only @uncap.com accounts' });
+  if (isSuperAdmin(email)) return json(400, { ok: false, error: 'The super admin cannot be changed' });
+  if (SEED_APPROVED_ADMINS.includes(email) && body.approved === false) {
+    return json(400, { ok: false, error: 'This teammate is permanently approved' });
+  }
+  const user = await upsertAdminUser(env, email, {
+    approved: !!body.approved,
+    approvedBy: sess.email,
+    approvedAt: new Date().toISOString(),
+  });
+  await logActivity(env, null, { type: body.approved ? 'created' : 'deleted', entity: 'user', id: email, name: email, actor: sess.email, detail: body.approved ? 'User approved' : 'User access revoked' });
+  return json(200, { ok: true, user });
 }
 
 async function handleAdminLogout(request, env) {
@@ -1863,6 +1980,7 @@ async function handleAdminDiscoveryPrefill(request, env) {
 async function handleAdminDeleteDiscovery(request, env) {
   const sess = await getAdminSession(request, env);
   if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  if (!isSuperAdmin(sess.email)) return json(403, { ok: false, error: 'Only denis@uncap.com can delete discoveries.' });
   if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
 
   let body;
@@ -2766,6 +2884,7 @@ async function handleAdminUpdateCompany(request, env) {
 async function handleAdminDeleteCompany(request, env) {
   const sess = await getAdminSession(request, env);
   if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  if (!isSuperAdmin(sess.email)) return json(403, { ok: false, error: 'Only denis@uncap.com can delete companies.' });
   if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
   let body;
   try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }

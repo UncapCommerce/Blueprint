@@ -32,7 +32,17 @@ React, ReactDOM, and `@babel/standalone` (vendored under `/vendor/`) from
   discoveries|blueprints`). Google sign-in (Google Identity Services),
   reserved for `@uncap.com` accounts. Sessions live in KV
   (`admin_session:<token>`) behind an HttpOnly `__Host-bp_admin` cookie.
-  Sections: Companies / Discoveries / Blueprints
+  Sections: Companies / Discoveries / Blueprints (+ Users for the super
+  admin)
+- **Admin hierarchy**: any `@uncap.com` Google account can sign in but is
+  "pending" until approved. `SUPER_ADMIN_EMAIL` (`denis@uncap.com`) is the
+  only super admin: only they can approve/revoke users (the Users section)
+  and delete companies/discoveries. `SEED_APPROVED_ADMINS`
+  (`ryan@uncap.com`, `mj@uncap.com`) are auto-approved and can't be
+  revoked. Users records live in KV (`adminuser:<email>`); the worker
+  gates every `/api/admin/*` route (except config/login/me/logout and the
+  dual-auth bp-token) on approval, and the destructive/user endpoints on
+  super-admin, so the UI hiding is defense-in-depth only
 - **Companies are the source of truth** for creation flows: new
   discoveries and blueprint drafts pick a portal company (never Attio
   directly; Attio is only the one-time import in Add company) and pull

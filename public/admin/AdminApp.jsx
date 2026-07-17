@@ -102,6 +102,7 @@
     if (base[0] === 'discoveries') return 'discoveries';
     if (base[0] === 'blueprints') return 'blueprints';
     if (base[0] === 'companies') return 'companies';
+    if (base[0] === 'users') return 'users';
     return 'home';
   }
   function routeCompanyId() {
@@ -261,6 +262,7 @@
       { id: 'companies',   l: 'Companies' },
       { id: 'discoveries', l: 'Discoveries' },
       { id: 'blueprints',  l: 'Blueprints' },
+      ...(me.isSuper ? [{ id: 'users', l: 'Users' }] : []),
     ];
     // The company profile page counts as part of the Companies section.
     const active = route === 'company-profile' ? 'companies' : route;
@@ -495,7 +497,7 @@
 
   // ── Discoveries ──────────────────────────────────────────────────────
   const DISC_PAGE_SIZE = 10;
-  function Discoveries() {
+  function Discoveries({ me }) {
     const isMobile = useIsMobile();
     const [rows, setRows] = useState(null);
     const [showNew, setShowNew] = useState(() => new URLSearchParams(window.location.search).get('new') === '1');
@@ -531,8 +533,10 @@
           {copied === r.id ? <IconCheck/> : <IconShare/>}
         </button>
         <button type="button" style={S.btnGhost} onClick={() => setTranscriptFor(r)}>Transcript</button>
-        <button type="button" title="Delete discovery" aria-label="Delete discovery"
-          style={{ ...S.btnIcon, color: '#B3261E', borderColor: '#F0A9A9' }} onClick={() => deleteDisc(r)}><IconTrash/></button>
+        {me.isSuper && (
+          <button type="button" title="Delete discovery" aria-label="Delete discovery"
+            style={{ ...S.btnIcon, color: '#B3261E', borderColor: '#F0A9A9' }} onClick={() => deleteDisc(r)}><IconTrash/></button>
+        )}
       </span>
     );
 
@@ -758,8 +762,10 @@
     ['brief', 'Technical Brief'],
     ['doc', 'Documents'],
   ];
+  // Teammates the server permanently keeps approved (no Revoke button).
+  const SEED_LOCKED = ['ryan@uncap.com', 'mj@uncap.com'];
 
-  function Companies() {
+  function Companies({ me }) {
     const [rows, setRows] = useState(null);
     const [error, setError] = useState('');
     const [adding, setAdding] = useState(false);
@@ -805,8 +811,10 @@
                 {co.discoveryHandle ? <span style={{ fontFamily: T.mono, fontSize: 9, letterSpacing: '0.06em', background: '#EEF0FE', color: '#3A44C4', borderRadius: 999, padding: '3px 8px', flexShrink: 0 }}>DISCOVERY</span> : null}
                 {co.blueprintId ? <span style={{ fontFamily: T.mono, fontSize: 9, letterSpacing: '0.06em', background: '#DFFCE6', color: '#064E2E', borderRadius: 999, padding: '3px 8px', flexShrink: 0 }}>BLUEPRINT</span> : null}
                 <a href={'/admin/company/' + co.id} onClick={navClick('/admin/company/' + co.id)} style={{ ...S.btnGhost, flexShrink: 0, textDecoration: 'none' }}>View</a>
-                <button type="button" aria-label={'Delete ' + co.name} onClick={() => remove(co)}
-                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 6, border: `1px solid ${T.line}`, background: 'transparent', color: '#B3261E', cursor: 'pointer', flexShrink: 0 }}><IconTrash/></button>
+                {me.isSuper && (
+                  <button type="button" aria-label={'Delete ' + co.name} onClick={() => remove(co)}
+                    style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 6, border: `1px solid ${T.line}`, background: 'transparent', color: '#B3261E', cursor: 'pointer', flexShrink: 0 }}><IconTrash/></button>
+                )}
               </div>
             ))}
           </div>
@@ -2060,6 +2068,7 @@
       );
     }
     if (me === null) return <Login onAuthed={check}/>;
+    if (!me.approved) return <PendingApproval me={me} onLogout={logout}/>;
 
     if (viewer) {
       return (
@@ -2078,8 +2087,101 @@
     return (
       <div style={{ minHeight: '100vh', background: T.cream }}>
         <TopBar me={me} route={route} onLogout={logout}/>
-        {route === 'company-profile' ? <CompanyProfile id={routeCompanyId()}/> : route === 'companies' ? <Companies/> : route === 'discoveries' ? <Discoveries/> : route === 'blueprints' ? <Blueprints me={me}/> : <Home/>}
+        {route === 'users' ? (me.isSuper ? <Users/> : <Home/>)
+          : route === 'company-profile' ? <CompanyProfile id={routeCompanyId()}/>
+          : route === 'companies' ? <Companies me={me}/>
+          : route === 'discoveries' ? <Discoveries me={me}/>
+          : route === 'blueprints' ? <Blueprints me={me}/>
+          : <Home/>}
       </div>
+    );
+  }
+
+  // Signed in but not yet approved by the super admin.
+  function PendingApproval({ me, onLogout }) {
+    return (
+      <div style={{ minHeight: '100vh', background: T.cream, display: 'flex', flexDirection: 'column' }}>
+        <div style={{ background: '#0A0A0A' }}>
+          <div style={{ height: 40, display: 'flex', alignItems: 'center', gap: 12, padding: '0 16px' }}>
+            <img src="/assets/uncap-logo-white.svg" alt="Uncap" style={{ height: 14, display: 'block' }}/>
+            <span style={{ fontFamily: T.mono, fontSize: 8.5, letterSpacing: '0.12em', color: '#9A9A9A' }}>ADMIN</span>
+            <button type="button" onClick={onLogout} style={{ marginLeft: 'auto', border: '1px solid #4D4D4D', background: 'transparent', color: '#FFFFFF', borderRadius: 4, padding: '3px 9px', fontSize: 10.5, fontWeight: 600, cursor: 'pointer' }}>Sign out</button>
+          </div>
+        </div>
+        <div style={{ flex: '1 1 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+          <div style={{ ...S.card, padding: 40, maxWidth: 460, textAlign: 'center' }}>
+            <div style={{ ...S.eyebrow, color: T.fg3, justifyContent: 'center', display: 'inline-flex', marginBottom: 14 }}>Pending approval</div>
+            <div style={{ fontFamily: T.hero, fontWeight: 800, fontSize: 26, letterSpacing: '-0.02em', color: T.fg1 }}>You&#39;re almost in.</div>
+            <div style={{ fontFamily: T.sans, fontSize: 14.5, lineHeight: 1.6, color: T.fg2, marginTop: 12 }}>
+              Your Uncap account <b>{me.email}</b> is signed in but needs approval from denis@uncap.com before you can use the dashboard. You&#39;ll have access the moment it&#39;s granted.
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Users (super admin only) ─────────────────────────────────────────
+  function Users() {
+    const [rows, setRows] = useState(null);
+    const [error, setError] = useState('');
+    const [busy, setBusy] = useState('');
+
+    const load = async () => {
+      try { setRows((await api('/api/admin/users')).users); }
+      catch (err) { setError(err.message); setRows([]); }
+    };
+    useEffect(() => { load(); }, []);
+
+    const setApproved = async (u, approved) => {
+      setBusy(u.email); setError('');
+      try {
+        await api('/api/admin/users/approve', { method: 'POST', body: JSON.stringify({ email: u.email, approved }) });
+        await load();
+      } catch (err) { setError(err.message); }
+      setBusy('');
+    };
+
+    return (
+      <Page>
+        <PageHead eyebrow="Admin" title="Users"/>
+        <div style={{ fontFamily: T.sans, fontSize: 13.5, color: T.fg2, marginTop: -12, marginBottom: 20 }}>
+          Anyone with an @uncap.com Google account can sign in, but stays pending until you approve them here.
+        </div>
+        {rows === null ? (
+          <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>Loading…</div>
+        ) : rows.length === 0 ? (
+          <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>{error || 'No users yet.'}</div>
+        ) : (
+          <div style={{ ...S.card, overflow: 'hidden' }}>
+            {rows.map((u, i) => (
+              <div key={u.email} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', borderBottom: i < rows.length - 1 ? `1px solid ${T.line}` : 'none' }}>
+                {u.picture
+                  ? <img src={u.picture} alt="" referrerPolicy="no-referrer" style={{ width: 34, height: 34, borderRadius: 999, border: `1px solid ${T.line}`, flexShrink: 0 }}/>
+                  : <span style={{ width: 34, height: 34, borderRadius: 999, background: T.cream, border: `1px solid ${T.line}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: T.mono, fontSize: 13, fontWeight: 700, color: T.fg3, flexShrink: 0 }}>{(u.email || '?')[0].toUpperCase()}</span>}
+                <div style={{ flex: '1 1 auto', minWidth: 0 }}>
+                  <div style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 14, color: T.fg1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.name || u.email}</div>
+                  <div style={{ fontFamily: T.mono, fontSize: 11, color: T.fg3, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.email}{u.lastLoginAt ? ' · last in ' + fmtWhen(u.lastLoginAt) : ' · never signed in'}</div>
+                </div>
+                {u.isSuper
+                  ? <span style={{ fontFamily: T.mono, fontSize: 9, letterSpacing: '0.06em', background: '#0A0A0A', color: '#E8FF52', borderRadius: 999, padding: '4px 10px', flexShrink: 0 }}>SUPER ADMIN</span>
+                  : u.approved
+                    ? <>
+                        <span style={{ fontFamily: T.mono, fontSize: 9, letterSpacing: '0.06em', background: '#DFFCE6', color: '#064E2E', borderRadius: 999, padding: '4px 10px', flexShrink: 0 }}>APPROVED</span>
+                        {SEED_LOCKED.includes(u.email)
+                          ? null
+                          : <button type="button" style={{ ...S.btnGhost, flexShrink: 0 }} disabled={busy === u.email} onClick={() => setApproved(u, false)}>{busy === u.email ? '…' : 'Revoke'}</button>}
+                      </>
+                    : <>
+                        <span style={{ fontFamily: T.mono, fontSize: 9, letterSpacing: '0.06em', background: '#FDECC8', color: '#6A4E00', borderRadius: 999, padding: '4px 10px', flexShrink: 0 }}>PENDING</span>
+                        <button type="button" style={{ ...S.btn, flexShrink: 0, padding: '8px 14px', fontSize: 13 }} disabled={busy === u.email} onClick={() => setApproved(u, true)}>{busy === u.email ? '…' : 'Approve'}</button>
+                      </>}
+              </div>
+            ))}
+          </div>
+        )}
+        {error && rows && rows.length > 0 && <div style={{ marginTop: 12, color: '#B3261E', fontFamily: T.sans, fontSize: 13 }}>{error}</div>}
+      </Page>
     );
   }
 
