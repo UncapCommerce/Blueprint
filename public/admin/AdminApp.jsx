@@ -99,6 +99,7 @@
     const segs = window.location.pathname.split('/').filter(Boolean);
     const base = segs[0] === 'admin' ? segs.slice(1) : segs;
     if (base[0] === 'company' && base[1]) return 'company-profile';
+    if (base[0] === 'blueprint' && base[1]) return 'blueprint-editor';
     if (base[0] === 'discoveries') return 'discoveries';
     if (base[0] === 'blueprints') return 'blueprints';
     if (base[0] === 'companies') return 'companies';
@@ -109,6 +110,11 @@
     const segs = window.location.pathname.split('/').filter(Boolean);
     const base = segs[0] === 'admin' ? segs.slice(1) : segs;
     return base[0] === 'company' ? (base[1] || '') : '';
+  }
+  function routeBlueprintId() {
+    const segs = window.location.pathname.split('/').filter(Boolean);
+    const base = segs[0] === 'admin' ? segs.slice(1) : segs;
+    return base[0] === 'blueprint' ? (base[1] || '') : '';
   }
   // Client-side transition: pushState updates the URL without a reload,
   // then a custom event nudges every useRoute() subscriber to re-parse
@@ -1219,6 +1225,155 @@
     );
   }
 
+  // ── Blueprint content editor (templated proposals) ───────────────────
+  // Full-page editor for a draft blueprint's structured content. Loads via
+  // /api/blueprint/content (admins see any status), generates from the linked
+  // discovery, edits every section, previews framed, and marks ready.
+  const EMPTY_CONTENT = {
+    status: 'draft', headline: '', subhead: '', summary: '',
+    objectives: [], scope: [],
+    investment: { total: '', note: '', installments: [] },
+    timeline: { weeks: '', note: '', phases: [] },
+    team: [],
+  };
+
+  function BlueprintEditor({ id }) {
+    const [name, setName] = useState('');
+    const [content, setContent] = useState(null); // null = loading
+    const [error, setError] = useState('');
+    const [busy, setBusy] = useState('');
+    const [saved, setSaved] = useState(false);
+
+    const load = async () => {
+      try {
+        const d = await api('/api/blueprint/content?id=' + encodeURIComponent(id));
+        setName(d.name || id);
+        setContent(d.content ? { ...EMPTY_CONTENT, ...d.content } : { ...EMPTY_CONTENT });
+      } catch (err) {
+        if (err.status === 404) { setName(id); setContent({ ...EMPTY_CONTENT }); }
+        else { setError(err.message); setContent({ ...EMPTY_CONTENT }); }
+      }
+    };
+    useEffect(() => { load(); }, [id]);
+
+    const set = (patch) => setContent((c) => ({ ...c, ...patch }));
+    const setIn = (key, patch) => setContent((c) => ({ ...c, [key]: { ...c[key], ...patch } }));
+
+    const save = async (nextStatus) => {
+      const body = nextStatus ? { ...content, status: nextStatus } : content;
+      setBusy('save'); setError(''); setSaved(false);
+      try {
+        const d = await api('/api/admin/blueprint/content', { method: 'POST', body: JSON.stringify({ id, content: body }) });
+        setContent({ ...EMPTY_CONTENT, ...d.content });
+        setSaved(true); setTimeout(() => setSaved(false), 2400);
+      } catch (err) { setError(err.message); }
+      setBusy('');
+    };
+    const generate = async () => {
+      if (content && (content.headline || content.summary) && !window.confirm('Regenerate from the discovery? This replaces the current content.')) return;
+      setBusy('gen'); setError('');
+      try {
+        const d = await api('/api/admin/blueprint/generate', { method: 'POST', body: JSON.stringify({ id }) });
+        setContent({ ...EMPTY_CONTENT, ...d.content });
+      } catch (err) { setError(err.message); }
+      setBusy('');
+    };
+    const preview = () => window.dispatchEvent(new CustomEvent('bp:preview', { detail: { url: '/blueprint/' + id + '/', title: name + ' (preview)' } }));
+
+    if (content === null) return <Page><div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>Loading…</div></Page>;
+    const isReady = content.status === 'ready';
+
+    return (
+      <Page>
+        <PageHead eyebrow="Blueprint · content" title={name} action={
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            <button type="button" style={S.btnGhost} disabled={!!busy} onClick={generate}>{busy === 'gen' ? 'Generating…' : '✨ Generate from discovery'}</button>
+            <button type="button" style={S.btnGhost} onClick={preview}>Preview</button>
+            <a href="/admin/blueprints" onClick={navClick('/admin/blueprints')} style={{ ...S.btnGhost, textDecoration: 'none' }}>← Blueprints</a>
+          </div>
+        }/>
+
+        <div style={{ ...S.card, padding: 24, display: 'flex', flexDirection: 'column', gap: 18 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', background: isReady ? '#DFFCE6' : '#FDECC8', borderRadius: 8 }}>
+            <span style={{ fontFamily: T.mono, fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', color: isReady ? '#064E2E' : '#6A4E00' }}>{isReady ? 'READY · VISIBLE TO THE CLIENT' : 'DRAFT · HIDDEN FROM THE CLIENT'}</span>
+            <button type="button" style={{ ...(isReady ? S.btnGhost : S.btn), marginLeft: 'auto', padding: '9px 16px', fontSize: 13 }} disabled={!!busy} onClick={() => save(isReady ? 'draft' : 'ready')}>
+              {isReady ? 'Unpublish' : 'Save & mark ready'}
+            </button>
+          </div>
+
+          <Field label="Headline" value={content.headline} onChange={(v) => set({ headline: v })}/>
+          <Field label="Subhead" value={content.subhead} onChange={(v) => set({ subhead: v })}/>
+          <div><label style={S.label}>Summary</label>
+            <textarea value={content.summary} onChange={(e) => set({ summary: e.target.value })} rows={3} style={{ ...S.input, resize: 'vertical', lineHeight: 1.5 }}/></div>
+
+          <ListEditor label="Objectives" items={content.objectives} onChange={(v) => set({ objectives: v })}
+            fields={[['title', 'Title'], ['body', 'One sentence']]} blank={{ title: '', body: '' }}/>
+          <ListEditor label="Scope" items={content.scope} onChange={(v) => set({ scope: v })}
+            fields={[['title', 'Workstream'], ['body', 'One sentence']]} blank={{ title: '', body: '' }}/>
+
+          <div>
+            <label style={S.label}>Investment</label>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <div style={{ flex: 1 }}><Field label="Total" value={content.investment.total} onChange={(v) => setIn('investment', { total: v })} placeholder="$50,000"/></div>
+              <div style={{ flex: 2 }}><Field label="Note" value={content.investment.note} onChange={(v) => setIn('investment', { note: v })}/></div>
+            </div>
+            <div style={{ marginTop: 8 }}>
+              <ListEditor label="Installments" items={content.investment.installments} onChange={(v) => setIn('investment', { installments: v })}
+                fields={[['label', 'Label'], ['amount', 'Amount']]} blank={{ label: '', amount: '' }} compact/>
+            </div>
+          </div>
+
+          <div>
+            <label style={S.label}>Timeline</label>
+            <div style={{ display: 'flex', gap: 12 }}>
+              <div style={{ flex: 1 }}><Field label="Total" value={content.timeline.weeks} onChange={(v) => setIn('timeline', { weeks: v })} placeholder="16 weeks"/></div>
+              <div style={{ flex: 2 }}><Field label="Note" value={content.timeline.note} onChange={(v) => setIn('timeline', { note: v })}/></div>
+            </div>
+            <div style={{ marginTop: 8 }}>
+              <ListEditor label="Phases" items={content.timeline.phases} onChange={(v) => setIn('timeline', { phases: v })}
+                fields={[['name', 'Phase'], ['weeks', 'Weeks'], ['detail', 'Detail']]} blank={{ name: '', weeks: '', detail: '' }}/>
+            </div>
+          </div>
+
+          <ListEditor label="Team" items={content.team} onChange={(v) => set({ team: v })}
+            fields={[['name', 'Name'], ['role', 'Role']]} blank={{ name: '', role: '' }}/>
+
+          {error && <div style={{ color: '#B3261E', fontFamily: T.sans, fontSize: 13 }}>{error}</div>}
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'flex-end', borderTop: `1px solid ${T.line}`, paddingTop: 16 }}>
+            {saved && <span style={{ marginRight: 'auto', fontFamily: T.sans, fontSize: 13, fontWeight: 600, color: '#2F7A47' }}>Saved ✓</span>}
+            <button type="button" style={{ ...S.btn, opacity: busy ? 0.7 : 1 }} disabled={!!busy} onClick={() => save()}>{busy === 'save' ? 'Saving…' : 'Save'}</button>
+          </div>
+        </div>
+      </Page>
+    );
+  }
+
+  // Add/edit/remove rows of a small fixed-field object array.
+  function ListEditor({ label, items, onChange, fields, blank, compact }) {
+    const rows = Array.isArray(items) ? items : [];
+    const upd = (i, k, v) => onChange(rows.map((r, j) => (j === i ? { ...r, [k]: v } : r)));
+    const inp = { ...S.input, padding: '9px 11px', fontSize: 13.5 };
+    return (
+      <div>
+        <label style={S.label}>{label}</label>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {rows.map((r, i) => (
+            <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+              {fields.map(([k, ph]) => (
+                k === 'body' || k === 'detail'
+                  ? <textarea key={k} value={r[k] || ''} onChange={(e) => upd(i, k, e.target.value)} placeholder={ph} rows={2} style={{ ...inp, flex: 2, resize: 'vertical', lineHeight: 1.45 }}/>
+                  : <input key={k} value={r[k] || ''} onChange={(e) => upd(i, k, e.target.value)} placeholder={ph} style={{ ...inp, flex: k === 'title' || k === 'name' ? 1.3 : 1 }}/>
+              ))}
+              <button type="button" aria-label="Remove" onClick={() => onChange(rows.filter((_, j) => j !== i))}
+                style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 34, height: 34, borderRadius: 6, border: `1px solid ${T.line}`, background: 'transparent', color: T.fg3, cursor: 'pointer', flexShrink: 0, fontSize: 13 }}>✕</button>
+            </div>
+          ))}
+          <button type="button" style={{ ...S.btnGhost, alignSelf: 'flex-start' }} onClick={() => onChange([...rows, { ...blank }])}>+ Add {compact ? '' : label.toLowerCase().replace(/s$/, '')}</button>
+        </div>
+      </div>
+    );
+  }
+
   // ── Blueprints ───────────────────────────────────────────────────────
   const BP_PAGE_SIZE = 10;
   const BP_CHANNELS = ['Partner', 'Inbound', 'Outbound', 'Referral', 'Events'];
@@ -1443,6 +1598,9 @@
             document.body
           )}
         </span>
+        {bp.kind === 'draft' && (
+          <a href={'/admin/blueprint/' + bp.id} onClick={navClick('/admin/blueprint/' + bp.id)} style={{ ...S.btnGhost, textDecoration: 'none' }}>Edit</a>
+        )}
         {me.isSuper && bp.kind === 'draft' && (
           <button type="button" title="Delete draft" aria-label="Delete draft"
             style={{ ...S.btnIcon, color: '#B3261E', borderColor: '#F0A9A9' }} onClick={() => deleteBp(bp)}><IconTrash/></button>
@@ -2101,6 +2259,7 @@
         <TopBar me={me} route={route} onLogout={logout}/>
         {route === 'users' ? (me.isSuper ? <Users/> : <Home/>)
           : route === 'company-profile' ? <CompanyProfile id={routeCompanyId()}/>
+          : route === 'blueprint-editor' ? <BlueprintEditor id={routeBlueprintId()}/>
           : route === 'companies' ? <Companies me={me}/>
           : route === 'discoveries' ? <Discoveries me={me}/>
           : route === 'blueprints' ? <Blueprints me={me}/>

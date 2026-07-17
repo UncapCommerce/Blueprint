@@ -393,7 +393,7 @@ export default {
     // The admin dashboard lives at /admin (client-side routes /admin/
     // discoveries|blueprints|companies and the company profile page
     // /admin/company/<id> included); the root is the portal.
-    if (/^\/admin(\/(discoveries|blueprints|companies|users|company\/[a-z0-9-]+))?\/?$/.test(url.pathname) && (request.method === 'GET' || request.method === 'HEAD')) {
+    if (/^\/admin(\/(discoveries|blueprints|companies|users|company\/[a-z0-9-]+|blueprint\/[a-z0-9-]+))?\/?$/.test(url.pathname) && (request.method === 'GET' || request.method === 'HEAD')) {
       const assetUrl = new URL(url.toString());
       assetUrl.pathname = '/admin/index.html';
       return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
@@ -1656,15 +1656,17 @@ async function handleBlueprintContent(request, env) {
   if (!ok) return json(401, { ok: false, error: 'Not authorised' });
 
   const draft = await blueprintDraft(env, id);
-  if (!draft || !draft.content) return json(404, { ok: false, error: 'No content yet' });
-  // Customers only ever see ready content; admins see drafts for preview.
-  if (draft.content.status !== 'ready' && !isAdmin) return json(404, { ok: false, error: 'Not ready' });
+  if (!draft) return json(404, { ok: false, error: 'Not found' });
+  // Admins may open a not-yet-generated draft (content: null) so the editor
+  // can render a Generate button. Customers get 404 until it's ready.
+  if (!draft.content && !isAdmin) return json(404, { ok: false, error: 'No content yet' });
+  if (draft.content && draft.content.status !== 'ready' && !isAdmin) return json(404, { ok: false, error: 'Not ready' });
 
   return json(200, {
     ok: true,
     id,
     name: (company && company.name) || draft.name || id,
-    content: draft.content,
+    content: draft.content || null,
     branding: company ? {
       hasLogo: !!company.hasLogo,
       logoUrl: company.hasLogo ? `/api/company/logo?id=${encodeURIComponent(company.id)}` : '',
