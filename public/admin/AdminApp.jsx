@@ -2083,6 +2083,9 @@
     }, []);
     useEffect(() => { check(); }, [check]);
 
+    // Any top-nav navigation closes an open preview so the nav always works.
+    useEffect(() => { setViewer(null); }, [route]);
+
     // Preview buttons dispatch bp:preview; the frame opens below the toolbar
     // so the admin never leaves the shell. Esc closes it.
     useEffect(() => {
@@ -2111,10 +2114,10 @@
       return (
         <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: T.cream }}>
           <TopBar me={me} route={route} onLogout={logout}/>
-          <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 12, padding: '8px 16px', background: T.paper, borderBottom: `1px solid ${T.line}` }}>
-            <button type="button" onClick={() => setViewer(null)} style={{ ...S.btnGhost }}>← Back</button>
-            <span style={{ fontFamily: T.sans, fontSize: 13.5, fontWeight: 700, color: T.fg1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{viewer.title}</span>
-            <a href={viewer.url} target="_blank" rel="noreferrer" style={{ marginLeft: 'auto', ...S.btnGhost, textDecoration: 'none' }}>Open in new tab ↗</a>
+          <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 12, padding: '4px 14px', background: T.paper, borderBottom: `1px solid ${T.line}` }}>
+            <button type="button" onClick={() => setViewer(null)} style={{ border: `1px solid ${T.line}`, background: 'transparent', color: T.fg2, borderRadius: 5, padding: '4px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>← Back</button>
+            <span style={{ fontFamily: T.sans, fontSize: 12.5, fontWeight: 700, color: T.fg1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{viewer.title}</span>
+            <a href={viewer.url} target="_blank" rel="noreferrer" style={{ marginLeft: 'auto', fontFamily: T.sans, fontSize: 11.5, fontWeight: 600, color: T.fg3, textDecoration: 'none', whiteSpace: 'nowrap' }}>Open in new tab ↗</a>
           </div>
           <iframe title={viewer.title} src={viewer.url} style={{ flex: '1 1 auto', width: '100%', border: 'none', display: 'block', background: T.cream }}/>
         </div>
