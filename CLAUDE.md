@@ -59,6 +59,22 @@ React, ReactDOM, and `@babel/standalone` (vendored under `/vendor/`) from
   this same Worker purely to 301-redirect old bare `/<Brand>/` links
   (some already signed by clients) to their new `/blueprint/<id>/` home
   on `go.uncap.com`
+- **Blueprints are hybrid (templated default + bespoke upgrade).** Every
+  blueprint draft created from the admin gets structured proposal
+  `content` on its `bp:<id>` record, drafted in the background by Claude
+  (`worker/blueprint-content.js`, via the shared `worker/anthropic.js`)
+  from the linked company + discovery answers. The dynamic renderer
+  `public/blueprint-template/` serves it at `/<company>/blueprint` once an
+  admin reviews it in the `/admin/blueprint/<id>` editor and flips
+  `content.status` to `ready` (drafts stay hidden). Serving precedence is
+  **bespoke wins**: `blueprintIsViewable()` and the page routes serve a
+  `BLUEPRINT_REGISTRY` static page if one exists, else the templated page.
+  To upgrade a client to a hand-designed page, run
+  `node scripts/new-blueprint.js` (clones a brand folder) then add the
+  registry row + `stamp-deploy.js` line — the same URL, portal link, and
+  signature history carry over. The sign/approve flow (`/api/auth/sign`,
+  `window.UncapMSA`) is shared by both tiers. Content APIs:
+  `GET /api/blueprint/content`, `POST /api/admin/blueprint/{content,generate}`
 - Google OAuth Client ID: `GOOGLE_CLIENT_ID_FALLBACK` constant in
   `worker/index.js` (a public value; hardcoded because `--keep-vars`
   means wrangler.toml var edits never reach the worker). A
