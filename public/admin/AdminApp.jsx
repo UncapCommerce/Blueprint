@@ -1064,7 +1064,7 @@
     };
 
     return (
-      <Modal title="Add company" sub="Pick the company. Contacts and details will load from Attio; you can override everything after." onClose={onClose}>
+      <Modal title="Add company" sub="Pull the info from Attio CRM" onClose={onClose}>
         <form onSubmit={save} style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
           <CompanyPicker company={company} onPick={pickCompany} onClear={() => { setCompany(null); setContacts([]); setContactsState('idle'); }}/>
           {company && (
