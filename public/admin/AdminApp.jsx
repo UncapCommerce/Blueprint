@@ -1393,6 +1393,14 @@
     );
 
     // One actions row, shared by the desktop table and the mobile cards.
+    const deleteBp = async (bp) => {
+      if (!window.confirm(`Delete the "${bp.name}" blueprint draft?\n\nThis permanently removes the draft, its terms, signatures, and access log, and unlinks it from its company. There is no undo.`)) return;
+      try {
+        await api('/api/admin/blueprint/delete', { method: 'POST', body: JSON.stringify({ id: bp.id }) });
+        load();
+      } catch (err) { setError(err.message); }
+    };
+
     const rowActions = (bp) => (
       <span style={{ display: 'inline-flex', gap: 8, flexWrap: 'wrap', justifyContent: isMobile ? 'flex-start' : 'flex-end' }}>
         <a href={appUrl(bp)} onClick={previewClick(appUrl(bp), bp.name || bp.id)} target="_blank" rel="noreferrer" title="Preview" aria-label="Preview"
@@ -1435,6 +1443,10 @@
             document.body
           )}
         </span>
+        {me.isSuper && bp.kind === 'draft' && (
+          <button type="button" title="Delete draft" aria-label="Delete draft"
+            style={{ ...S.btnIcon, color: '#B3261E', borderColor: '#F0A9A9' }} onClick={() => deleteBp(bp)}><IconTrash/></button>
+        )}
       </span>
     );
 

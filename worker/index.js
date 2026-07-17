@@ -255,6 +255,9 @@ export default {
     if (url.pathname === '/api/admin/blueprints' && request.method === 'POST') {
       return handleAdminCreateBlueprint(request, env);
     }
+    if (url.pathname === '/api/admin/blueprint/delete' && request.method === 'POST') {
+      return handleAdminDeleteBlueprint(request, env);
+    }
     if (url.pathname === '/api/admin/blueprint-meta' && request.method === 'POST') {
       return handleAdminBlueprintMeta(request, env);
     }
@@ -1539,6 +1542,44 @@ async function handleAdminCreateBlueprint(request, env) {
 
   await logActivity(env, null, { type: 'created', entity: 'blueprint', id: slug, name, actor: sess.email, detail: 'Blueprint draft created' });
   return json(200, { ok: true, blueprint: rec });
+}
+
+// Delete a blueprint DRAFT (super admin only). Shipped blueprints in
+// BLUEPRINT_REGISTRY are static pages in the repo and can't be removed at
+// runtime — only KV drafts are deletable here. Purges the draft record and
+// all its KV side-data, and unlinks it from its portal company.
+async function handleAdminDeleteBlueprint(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  if (!isSuperAdmin(sess.email)) return json(403, { ok: false, error: 'Only denis@uncap.com can delete blueprints.' });
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+  let body;
+  try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  const id = normalizeBlueprintId(body.id);
+
+  if (BLUEPRINT_REGISTRY.some((b) => b.id === id)) {
+    return json(400, { ok: false, error: 'Shipped blueprints are static pages and must be removed from the repo, not here.' });
+  }
+  const raw = await env.BLUEPRINT_AUTH.get(`bp:${id}`);
+  if (!raw) return json(404, { ok: false, error: 'Blueprint draft not found' });
+  let rec = {};
+  try { rec = JSON.parse(raw); } catch {}
+
+  // Core record + all per-blueprint side-data.
+  await env.BLUEPRINT_AUTH.delete(`bp:${id}`).catch(() => {});
+  for (const k of [`bpmeta:${id}`, `bpallow:${id}`, `bptos:${id}`, `bpsigned:${id}`]) {
+    await env.BLUEPRINT_AUTH.delete(k).catch(() => {});
+  }
+  for (const prefix of [`signature:${id}:`, `access:${id}:`]) {
+    const list = await env.BLUEPRINT_AUTH.list({ prefix, limit: 1000 });
+    await Promise.all(list.keys.map((k) => env.BLUEPRINT_AUTH.delete(k.name).catch(() => {})));
+  }
+  // Unlink from any portal company that pointed at it.
+  const owner = await findCompanyByBlueprintId(env, id);
+  if (owner) { owner.blueprintId = ''; await putCompany(env, owner).catch(() => {}); }
+
+  await logActivity(env, null, { type: 'deleted', entity: 'blueprint', id, name: rec.name || id, actor: sess.email, detail: 'Blueprint draft deleted' });
+  return json(200, { ok: true });
 }
 
 // Cookie-authenticated variant of the access log for the admin app.
