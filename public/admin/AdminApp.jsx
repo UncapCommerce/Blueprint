@@ -57,10 +57,10 @@
 
   const S = {
     eyebrow: { fontFamily: T.mono, fontSize: 10, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: T.fg3 },
-    card: { background: T.paper, border: `1px solid ${T.black}`, borderRadius: 10, boxShadow: '0 18px 40px -22px rgba(10,10,10,0.25)' },
-    btn: { display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 16px', fontFamily: T.sans, fontSize: 13.5, fontWeight: 600, lineHeight: 1, background: T.black, color: '#fff', border: '1px solid ' + T.black, borderRadius: 999, cursor: 'pointer' },
-    btnLime: { display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 16px', fontFamily: T.sans, fontSize: 13.5, fontWeight: 700, lineHeight: 1, background: T.signal, color: T.black, border: '1px solid ' + T.black, borderRadius: 999, cursor: 'pointer' },
-    btnGhost: { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 12px', fontFamily: T.mono, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', lineHeight: 1, background: T.paper, color: T.fg1, border: `1px solid ${T.line}`, borderRadius: 999, cursor: 'pointer' },
+    card: { background: T.paper, border: `1px solid ${T.line}`, borderRadius: 8, boxShadow: 'none' },
+    btn: { display: 'inline-flex', alignItems: 'center', gap: 8, padding: '11px 18px', fontFamily: T.sans, fontSize: 14, fontWeight: 650, lineHeight: 1, background: T.black, color: '#fff', border: '1px solid ' + T.black, borderRadius: 6, cursor: 'pointer' },
+    btnLime: { display: 'inline-flex', alignItems: 'center', gap: 8, padding: '11px 18px', fontFamily: T.sans, fontSize: 14, fontWeight: 650, lineHeight: 1, background: T.black, color: '#fff', border: '1px solid ' + T.black, borderRadius: 6, cursor: 'pointer' },
+    btnGhost: { display: 'inline-flex', alignItems: 'center', gap: 6, padding: '10px 14px', fontFamily: T.sans, fontSize: 13, fontWeight: 600, lineHeight: 1, background: 'transparent', color: T.fg2, border: `1px solid ${T.line}`, borderRadius: 6, cursor: 'pointer' },
     // 16px keeps iOS Safari from auto-zooming the page when an input is focused.
     input: { width: '100%', boxSizing: 'border-box', padding: '12px 14px', fontFamily: T.sans, fontSize: 16, color: T.fg1, background: T.cream, border: `1px solid ${T.line}`, borderRadius: 6, outline: 'none' },
     label: { fontFamily: T.mono, fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: T.fg3, display: 'block', marginBottom: 6 },
@@ -68,7 +68,7 @@
     td: { textAlign: 'left', padding: '12px 14px', borderBottom: `1px solid ${T.line}`, fontFamily: T.sans, fontSize: 13.5, color: T.fg1, verticalAlign: 'top' },
     // Square icon-only variant of btnGhost — Preview/Share/Activity don't
     // need a text label, just a tooltip (title attr) for a11y/clarity.
-    btnIcon: { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 34, height: 34, padding: 0, flexShrink: 0, background: T.paper, color: T.fg1, border: `1px solid ${T.line}`, borderRadius: 999, cursor: 'pointer' },
+    btnIcon: { display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 34, height: 34, padding: 0, flexShrink: 0, background: T.paper, color: T.fg1, border: `1px solid ${T.line}`, borderRadius: 6, cursor: 'pointer' },
   };
 
   const iconProps = { width: 16, height: 16, viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', strokeWidth: 2, strokeLinecap: 'round', strokeLinejoin: 'round' };
@@ -97,11 +97,17 @@
   // pathname straight back to the right route.
   function parseRoute() {
     const segs = window.location.pathname.split('/').filter(Boolean);
-    const seg = segs[0] === 'admin' ? segs[1] : segs[0];
-    if (seg === 'discoveries') return 'discoveries';
-    if (seg === 'blueprints') return 'blueprints';
-    if (seg === 'companies') return 'companies';
+    const base = segs[0] === 'admin' ? segs.slice(1) : segs;
+    if (base[0] === 'company' && base[1]) return 'company-profile';
+    if (base[0] === 'discoveries') return 'discoveries';
+    if (base[0] === 'blueprints') return 'blueprints';
+    if (base[0] === 'companies') return 'companies';
     return 'home';
+  }
+  function routeCompanyId() {
+    const segs = window.location.pathname.split('/').filter(Boolean);
+    const base = segs[0] === 'admin' ? segs.slice(1) : segs;
+    return base[0] === 'company' ? (base[1] || '') : '';
   }
   // Client-side transition: pushState updates the URL without a reload,
   // then a custom event nudges every useRoute() subscriber to re-parse
@@ -242,56 +248,45 @@
 
   // ── top navigation ───────────────────────────────────────────────────
   function TopBar({ me, route, onLogout }) {
-    const isMobile = useIsMobile();
     const items = [
       { id: 'companies',   l: 'Companies' },
       { id: 'discoveries', l: 'Discoveries' },
       { id: 'blueprints',  l: 'Blueprints' },
     ];
+    // The company profile page counts as part of the Companies section.
+    const active = route === 'company-profile' ? 'companies' : route;
     const pill = (it) => {
       const path = it.id === 'home' ? '/admin' : '/admin/' + it.id;
+      const on = active === it.id;
       return (
         <a key={it.id} href={path} onClick={navClick(path)} style={{
-          padding: '7px 14px', borderRadius: 999, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
-          fontFamily: T.sans, fontSize: 13.5, fontWeight: 600, lineHeight: 1,
-          color: route === it.id ? T.black : T.fg2,
-          background: route === it.id ? T.signal : 'transparent',
-          border: route === it.id ? `1px solid ${T.black}` : '1px solid transparent',
+          padding: '4px 11px', borderRadius: 4, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
+          fontFamily: T.sans, fontSize: 12, fontWeight: on ? 700 : 500, lineHeight: 1,
+          color: on ? '#0A0A0A' : '#D4D2CC',
+          background: on ? '#FFFFFF' : 'transparent',
+          transition: 'background 180ms, color 180ms',
         }}>{it.l}</a>
       );
     };
+    const MONO = 'var(--font-mono, "JetBrains Mono", ui-monospace, monospace)';
     return (
-      <header style={{ position: 'sticky', top: 0, zIndex: 50, background: T.paper, borderBottom: `1px solid ${T.black}` }}>
-        <div style={{
-          maxWidth: 1160, margin: '0 auto',
-          padding: isMobile ? '10px 14px 8px' : '0 20px',
-          minHeight: isMobile ? 0 : 60,
-          display: 'flex', alignItems: 'center',
-          gap: isMobile ? 10 : 26,
-          flexWrap: isMobile ? 'wrap' : 'nowrap',
-        }}>
-          <a href="/admin" onClick={navClick('/admin')} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
-            <img src="/assets/uncap-logo-black.svg" alt="Uncap" style={{ height: 20, width: 'auto', display: 'block' }}/>
-            <span style={{ ...S.eyebrow, color: T.fg1 }}>GO</span>
+      <header style={{ position: 'sticky', top: 0, zIndex: 50, background: '#0A0A0A' }}>
+        <div style={{ width: '100%', boxSizing: 'border-box', height: 40, display: 'flex', alignItems: 'center', gap: 16, padding: '0 16px' }}>
+          <a href="/admin" onClick={navClick('/admin')} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', flex: '0 0 auto' }}>
+            <img src="/assets/uncap-logo-white.svg" alt="Uncap" style={{ height: 14, width: 'auto', display: 'block' }}/>
+            <span style={{ width: 1, height: 14, background: '#4D4D4D' }}></span>
+            <span style={{ fontFamily: MONO, fontSize: 8.5, letterSpacing: '0.12em', color: '#9A9A9A' }}>ADMIN</span>
           </a>
 
-          {!isMobile && (
-            <nav style={{ display: 'flex', gap: 4, marginLeft: 8 }}>{items.map(pill)}</nav>
-          )}
+          <nav style={{ flex: '1 1 auto', display: 'flex', alignItems: 'center', gap: 2, overflowX: 'auto' }}>{items.map(pill)}</nav>
 
-          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: isMobile ? 8 : 12 }}>
+          <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 10 }}>
             {me.picture
-              ? <img src={me.picture} alt="" referrerPolicy="no-referrer" style={{ width: 28, height: 28, borderRadius: 999, border: `1px solid ${T.line}` }}/>
-              : <span style={{ width: 28, height: 28, borderRadius: 999, background: T.signal, border: `1px solid ${T.black}`, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontFamily: T.mono, fontSize: 11, fontWeight: 700 }}>{(me.email || '?')[0].toUpperCase()}</span>}
-            {!isMobile && <span style={{ fontFamily: T.mono, fontSize: 10.5, color: T.fg3, letterSpacing: '0.04em' }}>{me.email}</span>}
-            <button type="button" onClick={onLogout} style={S.btnGhost}>Sign out</button>
+              ? <img src={me.picture} alt="" referrerPolicy="no-referrer" style={{ width: 22, height: 22, borderRadius: 999, border: '1px solid #4D4D4D' }}/>
+              : <span style={{ width: 22, height: 22, borderRadius: 999, background: T.signal, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontFamily: MONO, fontSize: 10, fontWeight: 700, color: '#0A0A0A' }}>{(me.email || '?')[0].toUpperCase()}</span>}
+            <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.04em', color: '#9A9A9A', whiteSpace: 'nowrap' }}>{me.email}</span>
+            <button type="button" onClick={onLogout} style={{ border: '1px solid #4D4D4D', background: 'transparent', color: '#FFFFFF', borderRadius: 4, padding: '3px 9px', fontSize: 10.5, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>Sign out</button>
           </div>
-
-          {isMobile && (
-            <nav style={{ width: '100%', display: 'flex', gap: 6, overflowX: 'auto', WebkitOverflowScrolling: 'touch', paddingTop: 4 }}>
-              {items.map(pill)}
-            </nav>
-          )}
         </div>
       </header>
     );
@@ -805,7 +800,6 @@
     const [rows, setRows] = useState(null);
     const [error, setError] = useState('');
     const [adding, setAdding] = useState(false);
-    const [editing, setEditing] = useState(null); // company record
 
     const load = async () => {
       try { setRows((await api('/api/admin/companies')).companies); }
@@ -847,15 +841,14 @@
                 </div>
                 {co.discoveryHandle ? <span style={{ fontFamily: T.mono, fontSize: 9, letterSpacing: '0.06em', background: '#EEF0FE', color: '#3A44C4', borderRadius: 999, padding: '3px 8px', flexShrink: 0 }}>DISCOVERY</span> : null}
                 {co.blueprintId ? <span style={{ fontFamily: T.mono, fontSize: 9, letterSpacing: '0.06em', background: '#DFFCE6', color: '#064E2E', borderRadius: 999, padding: '3px 8px', flexShrink: 0 }}>BLUEPRINT</span> : null}
-                <button type="button" style={{ ...S.btnGhost, flexShrink: 0 }} onClick={() => setEditing(co)}>Edit</button>
+                <a href={'/admin/company/' + co.id} onClick={navClick('/admin/company/' + co.id)} style={{ ...S.btnGhost, flexShrink: 0, textDecoration: 'none' }}>View</a>
                 <button type="button" aria-label={'Delete ' + co.name} onClick={() => remove(co)}
-                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 8, border: `1px solid ${T.line}`, background: 'transparent', color: '#B3261E', cursor: 'pointer', flexShrink: 0 }}><IconTrash/></button>
+                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 6, border: `1px solid ${T.line}`, background: 'transparent', color: '#B3261E', cursor: 'pointer', flexShrink: 0 }}><IconTrash/></button>
               </div>
             ))}
           </div>
         )}
-        {adding && <AddCompanyModal onClose={() => setAdding(false)} onSaved={(co) => { setAdding(false); load(); if (co) setEditing(co); }}/>}
-        {editing && <EditCompanyModal co={editing} onClose={() => { setEditing(null); load(); }}/>}
+        {adding && <AddCompanyModal onClose={() => setAdding(false)} onSaved={(co) => { setAdding(false); if (co) navigate('/admin/company/' + co.id); else load(); }}/>}
       </Page>
     );
   }
@@ -1032,8 +1025,31 @@
 
   // Full profile editor: every field is overridable, and this is where the
   // company's files live.
-  function EditCompanyModal({ co: initial, onClose }) {
+  // Full-page company profile (opened from the Companies list "View"
+  // button). Loads the record, then renders the editable profile.
+  function CompanyProfile({ id }) {
+    const [initial, setInitial] = useState(null);
+    const [error, setError] = useState('');
+    useEffect(() => {
+      let dead = false;
+      api('/api/admin/companies')
+        .then((d) => { if (dead) return; const co = (d.companies || []).find((c) => c.id === id); if (co) setInitial(co); else setError('Company not found.'); })
+        .catch((e) => { if (!dead) setError(e.message); });
+      return () => { dead = true; };
+    }, [id]);
+    if (error) return (
+      <Page>
+        <PageHead eyebrow="Portal" title="Company" action={<a href="/admin/companies" onClick={navClick('/admin/companies')} style={{ ...S.btnGhost, textDecoration: 'none' }}>← Companies</a>}/>
+        <div style={{ ...S.card, padding: 40, textAlign: 'center', color: '#B3261E', fontFamily: T.sans, fontSize: 14 }}>{error}</div>
+      </Page>
+    );
+    if (!initial) return <Page><div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>Loading…</div></Page>;
+    return <CompanyEditor key={initial.id} initial={initial}/>;
+  }
+
+  function CompanyEditor({ initial }) {
     const [co, setCo] = useState(initial);
+    const [saved, setSaved] = useState(false);
     const [form, setForm] = useState({
       name: initial.name || '', storeUrl: initial.storeUrl || '', address: initial.address || '',
       description: initial.description || '', platform: initial.platform || '', erp: initial.erp || '',
@@ -1097,9 +1113,9 @@
     const save = async (e) => {
       e.preventDefault();
       const lead = contacts.find((c) => c.role === 'lead') || null;
-      setBusy(true); setError('');
+      setBusy(true); setError(''); setSaved(false);
       try {
-        await api('/api/admin/company/update', {
+        const d = await api('/api/admin/company/update', {
           method: 'POST',
           body: JSON.stringify({
             id: co.id,
@@ -1114,7 +1130,11 @@
             discoveryHandle: form.discoveryHandle.trim(), blueprintId: form.blueprintId.trim(),
           }),
         });
-        onClose();
+        if (d.company) setCo(d.company);
+        setLogoAction(null);
+        setSaved(true);
+        setBusy(false);
+        setTimeout(() => setSaved(false), 2600);
       } catch (err) { setError(err.message); setBusy(false); }
     };
 
@@ -1128,9 +1148,18 @@
       </div>
     );
 
+    const portalUrl = '/' + co.id + '/company';
     return (
-      <Modal title={'Edit ' + (initial.name || 'company')} sub="Everything here feeds the customer portal and new discoveries." onClose={onClose} width={640}>
+      <Page>
+        <PageHead eyebrow="Portal · company profile" title={co.name || 'Company'} action={
+          <div style={{ display: 'flex', gap: 8 }}>
+            <a href={portalUrl} target="_blank" rel="noreferrer" style={{ ...S.btnGhost, textDecoration: 'none' }}>Open portal ↗</a>
+            <a href="/admin/companies" onClick={navClick('/admin/companies')} style={{ ...S.btnGhost, textDecoration: 'none' }}>← Companies</a>
+          </div>
+        }/>
+        <div style={{ ...S.card, padding: 4 }}>
         <form onSubmit={save} style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <div style={{ fontFamily: T.sans, fontSize: 13, color: T.fg3, marginBottom: 2 }}>Everything here feeds the customer portal and new discoveries.</div>
           <Field label="Company name" value={form.name} onChange={set('name')}/>
           <div style={{ display: 'flex', gap: 12 }}>
             <div style={{ flex: 1 }}><Field label="Store URL" value={form.storeUrl} onChange={set('storeUrl')} placeholder="acme.com"/></div>
@@ -1208,12 +1237,14 @@
             <div style={{ flex: 1 }}><Field label="Blueprint ID · powers the portal Blueprint tab" value={form.blueprintId} onChange={set('blueprintId')} placeholder="e.g. cartoncraftsupply"/></div>
           </div>
           {error && <div style={{ color: '#B3261E', fontFamily: T.sans, fontSize: 13 }}>{error}</div>}
-          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', paddingTop: 4 }}>
-            <button type="button" style={S.btnGhost} onClick={onClose} disabled={busy}>Close</button>
-            <button type="submit" style={{ ...S.btnLime, opacity: busy ? 0.7 : 1 }} disabled={busy}>{busy ? 'Saving…' : 'Save company'}</button>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'flex-end', paddingTop: 4 }}>
+            {saved && <span style={{ marginRight: 'auto', fontFamily: T.sans, fontSize: 13, fontWeight: 600, color: '#2F7A47' }}>Saved ✓</span>}
+            <a href="/admin/companies" onClick={navClick('/admin/companies')} style={{ ...S.btnGhost, textDecoration: 'none' }}>Back</a>
+            <button type="submit" style={{ ...S.btn, opacity: busy ? 0.7 : 1 }} disabled={busy}>{busy ? 'Saving…' : 'Save company'}</button>
           </div>
         </form>
-      </Modal>
+        </div>
+      </Page>
     );
   }
 
@@ -2053,7 +2084,7 @@
     return (
       <div style={{ minHeight: '100vh', background: T.cream }}>
         <TopBar me={me} route={route} onLogout={logout}/>
-        {route === 'companies' ? <Companies/> : route === 'discoveries' ? <Discoveries/> : route === 'blueprints' ? <Blueprints me={me}/> : <Home/>}
+        {route === 'company-profile' ? <CompanyProfile id={routeCompanyId()}/> : route === 'companies' ? <Companies/> : route === 'discoveries' ? <Discoveries/> : route === 'blueprints' ? <Blueprints me={me}/> : <Home/>}
       </div>
     );
   }

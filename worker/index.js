@@ -409,8 +409,9 @@ export default {
     // real assets under /discovery/ (index.html, *.jsx, *.js — all with a
     // dot) never match here and are served normally by Static Assets.
     // The admin dashboard lives at /admin (client-side routes /admin/
-    // discoveries|blueprints|companies included); the root is the portal.
-    if (/^\/admin(\/(discoveries|blueprints|companies))?\/?$/.test(url.pathname) && (request.method === 'GET' || request.method === 'HEAD')) {
+    // discoveries|blueprints|companies and the company profile page
+    // /admin/company/<id> included); the root is the portal.
+    if (/^\/admin(\/(discoveries|blueprints|companies|company\/[a-z0-9-]+))?\/?$/.test(url.pathname) && (request.method === 'GET' || request.method === 'HEAD')) {
       const assetUrl = new URL(url.toString());
       assetUrl.pathname = '/admin/index.html';
       return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
