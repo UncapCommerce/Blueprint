@@ -771,6 +771,18 @@
   // Teammates the server permanently keeps approved (no Revoke button).
   const SEED_LOCKED = ['ryan@uncap.com', 'mj@uncap.com'];
 
+  // Send portal invites and summarize the per-recipient result for an alert.
+  async function inviteToPortal(id, emails) {
+    return api('/api/admin/company/invite', { method: 'POST', body: JSON.stringify(emails ? { id, emails } : { id }) });
+  }
+  function inviteSummary(results) {
+    const ok = (results || []).filter((r) => r.ok).length;
+    const fail = (results || []).filter((r) => !r.ok);
+    let msg = ok + ' invite' + (ok === 1 ? '' : 's') + ' sent.';
+    if (fail.length) msg += '\n\nFailed (' + fail.length + '): ' + fail.map((f) => f.email).join(', ') + '\nThese addresses must be verified Cloudflare destination addresses to receive email.';
+    return msg;
+  }
+
   function Companies({ me }) {
     const [rows, setRows] = useState(null);
     const [error, setError] = useState('');
@@ -785,6 +797,13 @@
     const remove = async (co) => {
       if (!window.confirm('Remove ' + co.name + ' from the portal?\n\nTheir contacts lose portal access and uploaded files are deleted. Discoveries and blueprints are not touched.')) return;
       try { await api('/api/admin/company/delete', { method: 'POST', body: JSON.stringify({ id: co.id }) }); load(); }
+      catch (err) { window.alert(err.message); }
+    };
+
+    const invite = async (co) => {
+      const n = 1 + (co.contacts || []).length;
+      if (!window.confirm('Send a portal invite to ' + co.name + "'s " + n + ' contact' + (n === 1 ? '' : 's') + '?')) return;
+      try { const d = await inviteToPortal(co.id); window.alert(inviteSummary(d.results)); load(); }
       catch (err) { window.alert(err.message); }
     };
 
@@ -816,6 +835,9 @@
                 </div>
                 {co.discoveryHandle ? <span style={{ fontFamily: T.mono, fontSize: 9, letterSpacing: '0.06em', background: '#EEF0FE', color: '#3A44C4', borderRadius: 999, padding: '3px 8px', flexShrink: 0 }}>DISCOVERY</span> : null}
                 {co.blueprintId ? <span style={{ fontFamily: T.mono, fontSize: 9, letterSpacing: '0.06em', background: '#DFFCE6', color: '#064E2E', borderRadius: 999, padding: '3px 8px', flexShrink: 0 }}>BLUEPRINT</span> : null}
+                {(co.leadContact || (co.contacts || []).length) ? (
+                  <button type="button" style={{ ...S.btnGhost, flexShrink: 0 }} onClick={() => invite(co)}>Invite</button>
+                ) : null}
                 <a href={'/admin/company/' + co.id} onClick={navClick('/admin/company/' + co.id)} style={{ ...S.btnGhost, flexShrink: 0, textDecoration: 'none' }}>View</a>
                 {me.isSuper && (
                   <button type="button" aria-label={'Delete ' + co.name} onClick={() => remove(co)}
@@ -1039,6 +1061,8 @@
       return list;
     });
     const [logoAction, setLogoAction] = useState(null); // null | {type,data,preview} | 'remove'
+    const [inviteMsg, setInviteMsg] = useState('');
+    const [inviting, setInviting] = useState('');
     const [prime, setPrime] = useState((initial.palette && initial.palette.prime) || '#2F7A47');
     const [accent, setAccent] = useState((initial.palette && initial.palette.accent) || '#B8741F');
     const [busy, setBusy] = useState(false);
@@ -1126,10 +1150,22 @@
     );
 
     const portalUrl = '/' + co.id + '/company';
+    const invites = co.invites || {};
+    const inviteList = [contacts.find((c) => c.role === 'lead'), ...contacts.filter((c) => c.role !== 'lead')].filter(Boolean);
+    const doInvite = async (emails) => {
+      setInviting(emails ? emails[0] : 'all'); setInviteMsg('');
+      try {
+        const d = await inviteToPortal(co.id, emails);
+        setCo((c) => ({ ...c, invites: d.invites || c.invites }));
+        setInviteMsg(inviteSummary(d.results));
+      } catch (err) { setInviteMsg(err.message); }
+      setInviting('');
+    };
     return (
       <Page>
         <PageHead eyebrow="Portal · company profile" title={co.name || 'Company'} action={
           <div style={{ display: 'flex', gap: 8 }}>
+            {inviteList.length ? <button type="button" style={S.btnGhost} disabled={!!inviting} onClick={() => doInvite()}>{inviting === 'all' ? 'Sending…' : 'Invite all'}</button> : null}
             <a href={portalUrl} target="_blank" rel="noreferrer" style={{ ...S.btnGhost, textDecoration: 'none' }}>Open portal ↗</a>
             <a href="/admin/companies" onClick={navClick('/admin/companies')} style={{ ...S.btnGhost, textDecoration: 'none' }}>← Companies</a>
           </div>
@@ -1154,6 +1190,26 @@
           <ContactsEditor contacts={contacts} state="done" onRole={setRole}
             onRemove={(email) => setContacts((l) => l.filter((c) => c.email !== email))}
             onAdd={(c) => setContacts((l) => l.some((x) => x.email === c.email) ? l : [...l, c])}/>
+          {inviteList.length ? (
+            <div>
+              <label style={S.label}>Invite to portal · sends the portal link; the address must be a verified Cloudflare destination</label>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {inviteList.map((c) => {
+                  const inv = invites[c.email.toLowerCase()];
+                  return (
+                    <div key={c.email} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', background: T.cream, border: `1px solid ${T.line}`, borderRadius: 8 }}>
+                      <div style={{ flex: '1 1 auto', minWidth: 0 }}>
+                        <div style={{ fontFamily: T.sans, fontWeight: 650, fontSize: 13.5, color: T.fg1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name || c.email}</div>
+                        <div style={{ fontFamily: T.mono, fontSize: 11, color: T.fg3, marginTop: 2 }}>{c.email}{inv ? ' · invited ' + fmtWhen(inv.at) : ''}</div>
+                      </div>
+                      <button type="button" style={{ ...S.btnGhost, flexShrink: 0 }} disabled={!!inviting} onClick={() => doInvite([c.email])}>{inviting === c.email ? 'Sending…' : inv ? 'Resend' : 'Invite'}</button>
+                    </div>
+                  );
+                })}
+              </div>
+              {inviteMsg ? <div style={{ fontFamily: T.sans, fontSize: 12.5, color: T.fg2, marginTop: 8, whiteSpace: 'pre-wrap' }}>{inviteMsg}</div> : null}
+            </div>
+          ) : null}
           <div>
             <label style={S.label}>Company logo</label>
             {logoAction && logoAction !== 'remove' ? (

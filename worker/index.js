@@ -351,6 +351,9 @@ export default {
     if (url.pathname === '/api/admin/company/delete' && request.method === 'POST') {
       return handleAdminDeleteCompany(request, env);
     }
+    if (url.pathname === '/api/admin/company/invite' && request.method === 'POST') {
+      return handleAdminCompanyInvite(request, env);
+    }
     if (url.pathname === '/api/admin/company/file' && request.method === 'POST') {
       return handleAdminCompanyFileUpload(request, env);
     }
@@ -2845,6 +2848,69 @@ async function sendCodeEmail(env, { to, code, blueprintId, label }) {
       <p style="font-size:13px;color:#707070;margin:0;">Valid for 10 minutes. If you didn't request this, you can ignore the email.</p>
     </div>`;
   await sendViaCloudflareEmail(env, { to, subject, text, html });
+}
+
+// Branded portal-invite email. Same transport + HTML style as the passcode
+// email; tells the contact their private portal is ready and links to it.
+async function sendCompanyInvite(env, company, contact) {
+  const link = `https://${GO_HOST}/${company.id}/company`;
+  const co = company.name || 'your company';
+  const hi = contact.name ? contact.name.split(' ')[0] : 'there';
+  const subject = `Your Uncap portal for ${co} is ready`;
+  const text =
+    `Hi ${hi},\n\n` +
+    `Your Uncap client portal for ${co} is ready. It's where you'll find your company details, your discovery, and your blueprint proposal.\n\n` +
+    `Open it here:\n${link}\n\n` +
+    `Sign in with this email address (${contact.email}) and we'll send you a 6-digit code. No password needed.\n\n` +
+    `See you inside,\nThe Uncap team`;
+  const html = `
+    <div style="font-family:-apple-system,Inter,Arial,sans-serif;color:#0A0A0A;line-height:1.55;max-width:480px;margin:0 auto;padding:32px 24px;background:#F2EFE7;">
+      <div style="font-family:monospace;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#707070;margin-bottom:22px;">Uncap · Client Portal</div>
+      <p style="font-size:20px;font-weight:700;letter-spacing:-0.01em;margin:0 0 12px;">Your portal is ready, ${escapeHtml(hi)}.</p>
+      <p style="font-size:15px;margin:0 0 20px;color:#1A1A1A;">Your Uncap client portal for <b>${escapeHtml(co)}</b> is where you'll find your company details, your discovery, and your blueprint proposal.</p>
+      <p style="margin:0 0 22px;"><a href="${escapeHtml(link)}" style="display:inline-block;background:#0A0A0A;color:#FFFFFF;text-decoration:none;font-size:15px;font-weight:650;border-radius:6px;padding:14px 26px;">Open your portal</a></p>
+      <p style="font-size:13px;color:#707070;margin:0;">Sign in with this email (${escapeHtml(contact.email)}) and we'll send you a 6-digit code. No password needed.</p>
+    </div>`;
+  await sendViaCloudflareEmail(env, { to: contact.email, subject, text, html });
+}
+
+// Send portal invites to a company's contacts (approved admin). Returns a
+// per-recipient result so the UI can report which addresses the Cloudflare
+// transport accepted (unverified destinations fail).
+async function handleAdminCompanyInvite(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+  let body;
+  try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  const rec = await getCompany(env, body.id);
+  if (!rec) return json(404, { ok: false, error: 'Company not found' });
+
+  // Target = the requested subset, else every contact on the company.
+  const all = [rec.leadContact, ...(rec.contacts || [])].filter((c) => c && c.email);
+  const wanted = Array.isArray(body.emails) && body.emails.length
+    ? new Set(body.emails.map((e) => e.toString().toLowerCase()))
+    : null;
+  const targets = all.filter((c) => !wanted || wanted.has(c.email.toLowerCase()));
+  if (!targets.length) return json(400, { ok: false, error: 'No contacts to invite' });
+
+  rec.invites = rec.invites && typeof rec.invites === 'object' ? rec.invites : {};
+  const results = [];
+  for (const c of targets) {
+    try {
+      await sendCompanyInvite(env, rec, c);
+      rec.invites[c.email.toLowerCase()] = { at: new Date().toISOString(), by: sess.email };
+      results.push({ email: c.email, ok: true });
+    } catch (err) {
+      results.push({ email: c.email, ok: false, error: (err && err.message) || 'send failed' });
+    }
+  }
+  const sent = results.filter((r) => r.ok).length;
+  if (sent) {
+    await putCompany(env, rec);
+    await logActivity(env, null, { type: 'view', entity: 'company', id: rec.id, name: rec.name, actor: sess.email, detail: `Portal invite sent to ${sent} contact${sent === 1 ? '' : 's'}` });
+  }
+  return json(200, { ok: true, results, invites: rec.invites });
 }
 
 // Internal recipients for every Blueprint notification (view + sign).
