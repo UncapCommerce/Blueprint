@@ -3167,9 +3167,8 @@ async function handlePortalMe(request, env) {
     if (disc) discovery = { handle: disc.handle, status: disc.status || 'new', url: `/${rec.id}/discovery` };
   }
   let blueprint = null;
-  if (rec.blueprintId) {
-    const known = BLUEPRINT_REGISTRY.some((b) => b.id === rec.blueprintId) || !!(await env.BLUEPRINT_AUTH.get(`bp:${rec.blueprintId}`));
-    if (known) blueprint = { id: rec.blueprintId, url: `/${rec.id}/blueprint` };
+  if (rec.blueprintId && await blueprintIsViewable(env, rec.blueprintId)) {
+    blueprint = { id: rec.blueprintId, url: `/${rec.id}/blueprint` };
   }
   return json(200, {
     ok: true,
@@ -3226,6 +3225,22 @@ const PORTAL_RESERVED = new Set([
 async function findCompanyByBlueprintId(env, bpId) {
   const companies = await listCompanies(env);
   return companies.find((c) => c.blueprintId === bpId) || null;
+}
+
+// A blueprint is actually viewable when it's a shipped bespoke page (in the
+// registry) OR a draft whose templated content has been generated and marked
+// ready by an admin. An un-generated draft is NOT viewable — the portal must
+// keep showing "Under Review" instead of linking to a blank fallback.
+async function blueprintDraft(env, id) {
+  const raw = await env.BLUEPRINT_AUTH.get(`bp:${normalizeBlueprintId(id)}`);
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch { return null; }
+}
+async function blueprintIsViewable(env, id) {
+  const clean = normalizeBlueprintId(id);
+  if (BLUEPRINT_REGISTRY.some((b) => b.id === clean)) return true;
+  const draft = await blueprintDraft(env, clean);
+  return !!(draft && draft.content && draft.content.status === 'ready');
 }
 
 async function findCompanyByDiscoveryHandle(env, handle) {
