@@ -31,6 +31,8 @@
     'e-about':  { label: 'Your story', info: 'The five-second credibility check: who you are, how long you have done this, and why accounts stay.', gid: 'g-hero' },
     'e-reviews': { label: 'Social proof', info: 'Real words from real accounts. B2B buyers trust peers over promises.', gid: 'g-merch' },
     'e-signup': { label: 'Email capture', info: 'Restock alerts and offers keep you in the inbox between orders.', gid: 'g-merch' },
+    'e-fitment': { label: 'Product fitment', info: 'A guided finder that narrows the catalog by what the buyer runs. The fastest route from landing to the right product.', gid: 'g-nav' },
+    'e-sliders': { label: 'Product sliders', info: 'Merchandised product rows: best sellers, reorders, seasonal pushes. What earns a slot on your homepage?', gid: 'g-merch' },
     'd-signup': { label: 'Email capture', info: 'Restock alerts and offers keep you in the inbox between orders.', gid: 'g-grid' },
     'v-signup': { label: 'Email capture', info: 'Restock alerts and offers keep you in the inbox between orders.', gid: 'g-buybox' },
     'r-signup': { label: 'Email capture', info: 'Restock alerts and offers keep you in the inbox between orders.', gid: 'g-cart' },
@@ -459,19 +461,32 @@
       const el = root && root.querySelector('[data-hotspot="' + hid + '"]');
       if (el) showCard(hid, el);
     };
-    const onSiteClick = (e) => {
-      // Categories mega menu: the trigger toggles its panel, clicks inside
-      // the open panel are inert, and any other scene click closes it.
+    // Categories mega menu. The hotspot overlay rects sit above the scene
+    // HTML and swallow clicks, so DOM-closest never sees the button; hit-test
+    // the trigger/panel by screen coordinates instead. Returns true when the
+    // click belonged to the menu layer (toggled, or landed inside the open
+    // panel); closes an open panel on any other click and lets it fall
+    // through to the normal hotspot handling.
+    const handleMegaClick = (e) => {
       const root = contentInnerRef.current;
-      const trigger = e.target.closest ? e.target.closest('[data-mega]') : null;
-      if (trigger) {
-        const menu = trigger.parentElement && trigger.parentElement.querySelector('[data-megamenu]');
+      if (!root) return false;
+      const within = (el) => {
+        if (!el) return false;
+        const r = el.getBoundingClientRect();
+        return r.width > 0 && e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+      };
+      const trigger = root.querySelector('[data-mega]');
+      const menu = root.querySelector('[data-megamenu]');
+      if (within(trigger)) {
         if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
-        return;
+        return true;
       }
-      if (e.target.closest && e.target.closest('[data-megamenu]')) return;
-      const openMenu = root && root.querySelector('[data-megamenu]');
-      if (openMenu && openMenu.style.display !== 'none') openMenu.style.display = 'none';
+      if (within(menu)) return true;
+      if (menu && menu.style.display !== 'none') menu.style.display = 'none';
+      return false;
+    };
+    const onSiteClick = (e) => {
+      if (handleMegaClick(e)) return;
       const el = e.target.closest ? e.target.closest('[data-hotspot]') : null;
       if (!el) { setActiveHotspotId(null); setInfoCard(null); return; }
       const hid = el.getAttribute('data-hotspot');
@@ -659,7 +674,7 @@
                           const badgeTop = h.y < 20 ? 6 : -15;
                           const badgeLeft = h.x < 20 ? 6 : -15;
                           return (
-                            <div key={h.id} onClick={(e) => { e.stopPropagation(); selectSiteHotspot(h.id); }}
+                            <div key={h.id} onClick={(e) => { e.stopPropagation(); if (handleMegaClick(e)) return; selectSiteHotspot(h.id); }}
                               style={{ position: 'absolute', left: h.x, top: h.y, width: h.w, height: h.h, borderRadius: 8, zIndex: active ? 60 : 10, cursor: 'pointer', pointerEvents: 'auto', boxShadow: active ? '0 0 0 4000px rgba(10,10,10,0.55)' : 'none' }}>
                               {!active && (
                                 <span style={{ position: 'absolute', top: badgeTop, left: badgeLeft, width: 30, height: 30, borderRadius: '50%', background: '#E8FF4E', border: '1.5px solid #0A0A0A', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'JetBrains Mono',monospace", fontSize: 12, fontWeight: 600, color: '#0A0A0A', animation: 'uc-pulse 2.4s cubic-bezier(.2,.7,.2,1) infinite' }}>{h.num}</span>
