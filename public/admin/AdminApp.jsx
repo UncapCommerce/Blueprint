@@ -488,6 +488,29 @@
   // Required single-select company field: search-and-pick only, no
   // free-text fallback. Once picked, shows a read-only summary of
   // whatever website/address Attio has on file for that company.
+  // Company dropdown backed by the portal's own company records — the only
+  // source new discoveries and blueprints are created from.
+  function PortalCompanyPicker({ company, onPick, onClear }) {
+    const [list, setList] = useState(null);
+    useEffect(() => { api('/api/admin/companies').then((d) => setList(d.companies || [])).catch(() => setList([])); }, []);
+    if (company) return <SelectedCard title={company.name} sub={[company.storeUrl, company.address].filter(Boolean).join(' · ') || 'Portal company'} onClear={onClear}/>;
+    return (
+      <div>
+        <label style={S.label}>Company · from your portal companies</label>
+        {list === null ? (
+          <div style={{ fontFamily: T.sans, fontSize: 13, color: T.fg3, padding: '8px 2px' }}>Loading companies…</div>
+        ) : list.length === 0 ? (
+          <div style={{ fontFamily: T.sans, fontSize: 13, color: T.fg3, padding: '8px 2px' }}>No companies yet. Add the company under Companies first.</div>
+        ) : (
+          <select value="" onChange={(e) => { const co = list.find((c) => c.id === e.target.value); if (co) onPick(co); }} style={{ ...S.input, cursor: 'pointer' }}>
+            <option value="">Pick a company…</option>
+            {list.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+          </select>
+        )}
+      </div>
+    );
+  }
+
   function CompanyPicker({ company, onPick, onClear }) {
     return (
       <div>
@@ -703,7 +726,8 @@
     const [logo, setLogo]       = useState(null);        // {type, data(base64), name, preview}
     const [prime, setPrime]     = useState('#2F7A47');   // stock storefront green
     const [accent, setAccent]   = useState('#B8741F');   // stock storefront amber
-    const [doc, setDoc]         = useState(null);        // {type, data(base64), name}
+    const [doc, setDoc]         = useState(null);        // {type, data(base64), name} — manual upload
+    const [docRef, setDocRef]   = useState('');          // fid of a company file to analyze instead
     const [busy, setBusy]       = useState(false);
     const [busyLabel, setBusyLabel] = useState('');
     const [error, setError]     = useState('');
@@ -731,20 +755,23 @@
       readFile(file, (b64) => { setDoc({ type: file.type, data: b64, name: file.name }); setError(''); });
     };
 
+    // Everything seeds from the portal company record: contacts with the
+    // lead pre-marked, the saved palette, and the company logo (applied
+    // server-side unless overridden here).
     const pickCompany = (c) => {
       setCompany(c);
-      setWebsite(c.domain || '');
+      setWebsite(c.storeUrl || '');
       setAddress(c.address || '');
-      setContacts([]);
-      setContactsState('loading');
-      api('/api/admin/attio/company-people?companyId=' + encodeURIComponent(c.attioId))
-        .then((d) => {
-          setContacts((d.people || []).map((p, i) => ({ ...p, role: i === 0 ? 'lead' : 'associated' })));
-          setContactsState('done');
-        })
-        .catch((err) => { setContactsState('error'); setError(err.message); });
+      const list = [];
+      if (c.leadContact) list.push({ ...c.leadContact, role: 'lead' });
+      for (const p of c.contacts || []) list.push({ ...p, role: 'associated' });
+      setContacts(list);
+      setContactsState('done');
+      if (c.palette && c.palette.prime) setPrime(c.palette.prime);
+      if (c.palette && c.palette.accent) setAccent(c.palette.accent);
+      setDocRef('');
     };
-    const clearCompany = () => { setCompany(null); setWebsite(''); setAddress(''); setContacts([]); setContactsState('idle'); };
+    const clearCompany = () => { setCompany(null); setWebsite(''); setAddress(''); setContacts([]); setContactsState('idle'); setDocRef(''); };
 
     // Exactly one lead: promoting a contact demotes whoever held it.
     const setRole = (email, role) => setContacts((list) => list.map((c) =>
@@ -754,16 +781,16 @@
 
     const save = async (e) => {
       e.preventDefault();
-      if (!company) { setError('Pick a company from Attio'); return; }
+      if (!company) { setError('Pick a company'); return; }
       const leadContact = contacts.find((c) => c.role === 'lead') || null;
-      if (!leadContact) { setError(contacts.length ? 'Mark one contact as the Lead contact' : 'This company has no contacts in Attio — add them there first'); return; }
+      if (!leadContact) { setError(contacts.length ? 'Mark one contact as the Lead contact' : 'This company has no contacts — add them on the company profile first'); return; }
       const associatedContacts = contacts.filter((c) => c.role !== 'lead').map(({ attioId, name, email }) => ({ attioId, name, email }));
       setBusy(true); setBusyLabel('Saving…'); setError('');
       try {
         const d = await api('/api/admin/discoveries', {
           method: 'POST',
           body: JSON.stringify({
-            company: company.name, companyAttioId: company.attioId,
+            companyId: company.id,
             website: website.trim(), address: address.trim(),
             leadContact: { attioId: leadContact.attioId, name: leadContact.name, email: leadContact.email },
             associatedContacts,
@@ -772,13 +799,16 @@
           }),
         });
         // Optional document analysis: runs after the discovery exists so a
-        // failed analysis never blocks creation.
-        if (doc && d.discovery) {
+        // failed analysis never blocks creation. Source is either a file
+        // already on the company profile or a one-off upload.
+        if ((docRef || doc) && d.discovery) {
           setBusyLabel('Analyzing document…');
           try {
             await api('/api/admin/discovery/prefill', {
               method: 'POST',
-              body: JSON.stringify({ id: d.discovery.id, doc }),
+              body: JSON.stringify(docRef
+                ? { id: d.discovery.id, companyId: company.id, fid: docRef }
+                : { id: d.discovery.id, doc }),
             });
           } catch (err) {
             window.alert('The discovery was created, but document analysis failed:\n\n' + err.message);
@@ -789,9 +819,9 @@
     };
 
     return (
-      <Modal title="New discovery" sub="Pick the company. Contacts and details will load from Attio." onClose={onClose}>
+      <Modal title="New discovery" sub="Pick the company. Contacts and details load from its portal profile." onClose={onClose}>
         <form onSubmit={save} style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <CompanyPicker company={company} onPick={pickCompany} onClear={clearCompany}/>
+          <PortalCompanyPicker company={company} onPick={pickCompany} onClear={clearCompany}/>
           {company && (
             <>
               <Field label="Website" value={website} onChange={setWebsite} placeholder="acme.com"/>
@@ -805,7 +835,7 @@
                   <div style={{ fontFamily: T.sans, fontSize: 13, color: '#B3261E', padding: '8px 2px' }}>Couldn’t load this company’s contacts from Attio.</div>
                 )}
                 {contactsState === 'done' && contacts.length === 0 && (
-                  <div style={{ fontFamily: T.sans, fontSize: 13, color: T.fg3, padding: '8px 2px' }}>No contacts on this company in Attio. Add them in Attio, then reselect the company.</div>
+                  <div style={{ fontFamily: T.sans, fontSize: 13, color: T.fg3, padding: '8px 2px' }}>No contacts on this company. Add them on the company profile, then reselect.</div>
                 )}
                 {contacts.length > 0 && (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -829,6 +859,12 @@
               </div>
               <div>
                 <label style={S.label}>Client logo · shown on the welcome slide and every website mock</label>
+                {!logo && company.hasLogo && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: T.cream, border: `1px solid ${T.line}`, borderRadius: 8, marginBottom: 8 }}>
+                    <img src={'/api/company/logo?id=' + encodeURIComponent(company.id)} alt="" style={{ height: 30, maxWidth: 120, objectFit: 'contain', display: 'block' }}/>
+                    <span style={{ flex: 1, fontFamily: T.sans, fontSize: 12.5, color: T.fg3 }}>Company logo will be used. Upload below to override for this discovery.</span>
+                  </div>
+                )}
                 {logo ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: T.cream, border: `1px solid ${T.line}`, borderRadius: 8 }}>
                     <img src={logo.preview} alt="" style={{ height: 34, maxWidth: 140, objectFit: 'contain', display: 'block' }}/>
@@ -857,6 +893,14 @@
               </div>
               <div>
                 <label style={S.label}>RFP / requirements document · Claude pre-fills the questions from it</label>
+                {(company.files || []).length > 0 && !doc && (
+                  <select value={docRef} onChange={(e) => setDocRef(e.target.value)} style={{ ...S.input, cursor: 'pointer', marginBottom: 8 }}>
+                    <option value="">Analyze a company file… (optional)</option>
+                    {company.files.map((f) => (
+                      <option key={f.fid} value={f.fid}>{(f.kind === 'rfp' ? 'RFP · ' : f.kind === 'brief' ? 'Brief · ' : '') + f.name}</option>
+                    ))}
+                  </select>
+                )}
                 {doc ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: T.cream, border: `1px solid ${T.line}`, borderRadius: 8 }}>
                     <span style={{ flex: 1, fontFamily: T.mono, fontSize: 11, color: T.fg1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{doc.name}</span>
@@ -1938,11 +1982,10 @@
   }
 
   function NewBlueprintModal({ onClose, onSaved }) {
-    const [company, setCompany] = useState(null);       // {attioId, name, domain, address}
-    const [website, setWebsite] = useState('');          // seeded from Attio, editable for this blueprint only
+    const [company, setCompany] = useState(null);       // portal company record
+    const [website, setWebsite] = useState('');          // seeded from the company, editable for this blueprint only
     const [address, setAddress] = useState('');
-    const [leadContact, setLeadContact] = useState(null); // {attioId, name, email}
-    const [associatedContacts, setAssociatedContacts] = useState([]);
+    const [contacts, setContacts] = useState([]);        // [{name,email,title,role}]
     const [expiresAt, setExpiresAt]     = useState('');
     const [channel, setChannelSel]      = useState('');
     const [busy, setBusy]               = useState(false);
@@ -1950,23 +1993,33 @@
 
     const pickCompany = (c) => {
       setCompany(c);
-      setWebsite(c.domain || '');
+      setWebsite(c.storeUrl || '');
       setAddress(c.address || '');
+      const list = [];
+      if (c.leadContact) list.push({ ...c.leadContact, role: 'lead' });
+      for (const p of c.contacts || []) list.push({ ...p, role: 'associated' });
+      setContacts(list);
     };
-    const clearCompany = () => { setCompany(null); setWebsite(''); setAddress(''); };
+    const clearCompany = () => { setCompany(null); setWebsite(''); setAddress(''); setContacts([]); };
+    const setRole = (email, role) => setContacts((list) => list.map((c) =>
+      c.email === email ? { ...c, role } : (role === 'lead' && c.role === 'lead' ? { ...c, role: 'associated' } : c)
+    ));
 
     const save = async (e) => {
       e.preventDefault();
-      if (!company) { setError('Pick a company from Attio'); return; }
-      if (!leadContact) { setError('Pick a Client Lead from Attio'); return; }
+      if (!company) { setError('Pick a company'); return; }
+      const leadContact = contacts.find((c) => c.role === 'lead') || null;
+      if (!leadContact) { setError(contacts.length ? 'Mark one contact as the Lead contact' : 'This company has no contacts — add them on the company profile first'); return; }
       setBusy(true); setError('');
       try {
         await api('/api/admin/blueprints', {
           method: 'POST',
           body: JSON.stringify({
-            companyName: company.name, companyAttioId: company.attioId,
+            companyId: company.id,
             website: website.trim(), address: address.trim(),
-            leadContact, associatedContacts, expiresAt, channel,
+            leadContact,
+            associatedContacts: contacts.filter((c) => c.role !== 'lead'),
+            expiresAt, channel,
           }),
         });
         onSaved();
@@ -1974,20 +2027,21 @@
     };
 
     return (
-      <Modal title="New blueprint" sub="Saved as a draft · template generation is the next phase" onClose={onClose} width={560}>
+      <Modal title="New blueprint" sub="Saved as a draft · details load from the company's portal profile" onClose={onClose} width={560}>
         <form onSubmit={save} style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <CompanyPicker company={company} onPick={pickCompany} onClear={clearCompany}/>
+          <PortalCompanyPicker company={company} onPick={pickCompany} onClear={clearCompany}/>
           {company && (
             <>
               <Field label="Client website" value={website} onChange={setWebsite} placeholder="acme.com"/>
               <Field label="Company address" value={address} onChange={setAddress} placeholder="100 Main St, Chicago, IL"/>
+              <ContactsEditor contacts={contacts} state="done" onRole={setRole}
+                onRemove={(email) => setContacts((l) => l.filter((c) => c.email !== email))}
+                onAdd={(c) => setContacts((l) => l.some((x) => x.email === c.email) ? l : [...l, c])}/>
             </>
           )}
-          <LeadContactPicker contact={leadContact} onPick={setLeadContact} onClear={() => setLeadContact(null)}/>
-          <AssociatedContactsPicker contacts={associatedContacts} onChange={setAssociatedContacts} excludeEmail={leadContact && leadContact.email}/>
-          {(leadContact || associatedContacts.length > 0) && (
+          {contacts.length > 0 && (
             <div style={{ padding: '10px 12px', background: '#EEF0FE', border: '1px solid #C3C9F5', borderRadius: 8, fontFamily: T.sans, fontSize: 12.5, color: '#3A44C4' }}>
-              This blueprint will be restricted to {[leadContact, ...associatedContacts].filter(Boolean).length} email{[leadContact, ...associatedContacts].filter(Boolean).length === 1 ? '' : 's'} — only they (and the Uncap team) will be able to view it.
+              This blueprint will be restricted to {contacts.length} email{contacts.length === 1 ? '' : 's'} — only they (and the Uncap team) will be able to view it.
             </div>
           )}
           <div>

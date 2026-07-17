@@ -1564,19 +1564,24 @@ async function handleAdminCreateBlueprint(request, env) {
   try { body = await request.json(); }
   catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
 
-  const name       = (body.companyName || '').toString().trim().slice(0, 200);
-  const website    = (body.website     || '').toString().trim().slice(0, 300);
-  const address    = (body.address     || '').toString().trim().slice(0, 300);
+  // Blueprints are created for portal companies only; the record supplies
+  // name, website, address, and contacts, with role picks in the body.
+  const portalCo = await getCompany(env, body.companyId);
+  if (!portalCo) return json(400, { ok: false, error: 'Pick a company from the portal' });
+
+  const name       = portalCo.name;
+  const website    = ((body.website || portalCo.storeUrl || '')).toString().trim().slice(0, 300);
+  const address    = ((body.address || portalCo.address || '')).toString().trim().slice(0, 300);
   const expiresAt  = (body.expiresAt   || '').toString().trim();
   const channel    = (body.channel     || '').toString().trim();
-  const companyAttioId    = (body.companyAttioId || '').toString().trim().slice(0, 100);
-  const leadContact       = sanitizeContact(body.leadContact);
-  const associatedContacts = sanitizeContacts(body.associatedContacts).filter(
-    (c) => !leadContact || c.email !== leadContact.email
-  );
+  const companyAttioId    = portalCo.attioCompanyId || '';
+  const leadContact       = sanitizeContact(body.leadContact) || (portalCo.leadContact ? sanitizeContact(portalCo.leadContact) : null);
+  const associatedContacts = (body.associatedContacts !== undefined
+    ? sanitizeContacts(body.associatedContacts)
+    : sanitizeContacts(portalCo.contacts)
+  ).filter((c) => !leadContact || c.email !== leadContact.email);
   const leadClient = leadContact ? (leadContact.name || leadContact.email) : '';
-  if (!name || !companyAttioId) return json(400, { ok: false, error: 'Pick a company from Attio' });
-  if (!leadContact) return json(400, { ok: false, error: 'Pick a Client Lead from Attio' });
+  if (!leadContact) return json(400, { ok: false, error: 'The company needs a lead contact first' });
   if (expiresAt && !/^\d{4}-\d{2}-\d{2}$/.test(expiresAt)) {
     return json(400, { ok: false, error: 'Expiration must be a YYYY-MM-DD date' });
   }
@@ -1592,12 +1597,14 @@ async function handleAdminCreateBlueprint(request, env) {
 
   const rec = {
     id: slug, name, website, leadClient, address,
-    companyAttioId, leadContact, associatedContacts,
+    companyAttioId, companyId: portalCo.id, leadContact, associatedContacts,
     status: 'draft',
     createdAt: new Date().toISOString(),
     createdBy: sess.email,
   };
   await env.BLUEPRINT_AUTH.put(`bp:${slug}`, JSON.stringify(rec));
+  // Link it back so the customer's portal Blueprint tab flips to ready.
+  try { portalCo.blueprintId = slug; await putCompany(env, portalCo); } catch (_) {}
   if (expiresAt || channel) {
     await env.BLUEPRINT_AUTH.put(`bpmeta:${slug}`, JSON.stringify({
       expiresAt, disabled: false, channel,
@@ -1979,9 +1986,23 @@ async function handleAdminDiscoveryPrefill(request, env) {
   let rec = {};
   try { rec = JSON.parse(rawRec); } catch {}
 
+  // The document can arrive inline ({doc}) or reference a file already
+  // uploaded on the portal company ({companyId, fid}) — e.g. its RFP.
+  let doc = body.doc || null;
+  if (!doc && body.companyId && body.fid) {
+    const co = await getCompany(env, body.companyId);
+    const meta = co && (co.files || []).find((f) => f.fid === body.fid);
+    const stored = meta ? await env.BLUEPRINT_AUTH.get(`cofile:${co.id}:${meta.fid}`) : null;
+    if (!stored) return json(404, { ok: false, error: 'Company file not found' });
+    try {
+      const parsed = JSON.parse(stored);
+      doc = { type: parsed.ct, name: parsed.name, data: parsed.data };
+    } catch { return json(500, { ok: false, error: 'Company file is unreadable' }); }
+  }
+
   let extracted;
   try {
-    extracted = await prefillAnswersFromDoc(env, body.doc || {});
+    extracted = await prefillAnswersFromDoc(env, doc || {});
   } catch (err) {
     return json(err.status || 502, { ok: false, error: err.message });
   }
@@ -2066,19 +2087,32 @@ async function handleAdminCreateDiscovery(request, env, ctx) {
   try { body = await request.json(); }
   catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
 
-  const company = (body.company || '').toString().trim().slice(0, 200);
-  const address = (body.address || '').toString().trim().slice(0, 300);
-  const website = (body.website || '').toString().trim().slice(0, 300);
-  const companyAttioId = (body.companyAttioId || '').toString().trim().slice(0, 100);
-  const leadContact       = sanitizeContact(body.leadContact);
-  const associatedContacts = sanitizeContacts(body.associatedContacts).filter(
-    (c) => !leadContact || c.email !== leadContact.email
-  );
+  // Discoveries are created for portal companies only: the company record
+  // (imported from Attio, then owned in the admin) supplies name, store
+  // url, address, palette, and logo. The body still carries the contact
+  // roles picked in the modal and may override website/address/palette.
+  const portalCo = await getCompany(env, body.companyId);
+  if (!portalCo) return json(400, { ok: false, error: 'Pick a company from the portal' });
+
+  const company = portalCo.name;
+  const address = ((body.address || portalCo.address || '')).toString().trim().slice(0, 300);
+  const website = ((body.website || portalCo.storeUrl || '')).toString().trim().slice(0, 300);
+  const companyAttioId = portalCo.attioCompanyId || '';
+  const leadContact       = sanitizeContact(body.leadContact) || (portalCo.leadContact ? sanitizeContact(portalCo.leadContact) : null);
+  const associatedContacts = (body.associatedContacts !== undefined
+    ? sanitizeContacts(body.associatedContacts)
+    : sanitizeContacts(portalCo.contacts)
+  ).filter((c) => !leadContact || c.email !== leadContact.email);
   const client = leadContact ? (leadContact.name || leadContact.email) : '';
-  const palette = sanitizePalette(body.palette);
-  const logo = sanitizeLogo(body.logo);
-  if (!company || !companyAttioId) return json(400, { ok: false, error: 'Pick a company from Attio' });
-  if (!leadContact) return json(400, { ok: false, error: 'Pick a Client Lead from Attio' });
+  const palette = sanitizePalette(body.palette) || sanitizePalette(portalCo.palette);
+  let logo = sanitizeLogo(body.logo);
+  if (!logo && portalCo.hasLogo) {
+    try {
+      const raw = await env.BLUEPRINT_AUTH.get(`cologo:${portalCo.id}`);
+      if (raw) { const parsed = JSON.parse(raw); logo = { ct: parsed.ct, data: parsed.data }; }
+    } catch (_) { /* logo stays absent */ }
+  }
+  if (!leadContact) return json(400, { ok: false, error: 'The company needs a lead contact first' });
 
   // Personalize the wireframe scenes: scrape the client's site once and
   // build the swap profile now, so the experience is branded from the
@@ -2093,7 +2127,7 @@ async function handleAdminCreateDiscovery(request, env, ctx) {
   const handle = await uniqueDiscoveryHandle(env, discoveryHandleFromWebsite(website, company));
   const rec = {
     company, client, address, website, handle,
-    companyAttioId, leadContact, associatedContacts, profile,
+    companyAttioId, companyId: portalCo.id, leadContact, associatedContacts, profile,
     palette, hasLogo: !!logo,
     status: 'new',
     createdAt: new Date(ts).toISOString(),
@@ -2102,6 +2136,8 @@ async function handleAdminCreateDiscovery(request, env, ctx) {
   await env.BLUEPRINT_AUTH.put(`discovery:${id}`, JSON.stringify(rec));
   await env.BLUEPRINT_AUTH.put(`dischandle:${handle}`, id);
   if (logo) await env.BLUEPRINT_AUTH.put(`disclogo:${id}`, JSON.stringify(logo)).catch(() => {});
+  // Link it back so the customer's portal Discovery tab lights up.
+  try { portalCo.discoveryHandle = handle; await putCompany(env, portalCo); } catch (_) {}
   await logActivity(env, null, { type: 'created', entity: 'discovery', id, name: company, actor: sess.email, detail: 'Discovery created' });
 
   // Upgrade the wireframe profile with Claude-written content in the

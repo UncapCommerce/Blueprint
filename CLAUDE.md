@@ -10,12 +10,25 @@ Assets in `public/`. There is **no build step** — `index.html` loads
 React, ReactDOM, and `@babel/standalone` (vendored under `/vendor/`) from
 `<script>` tags, and Babel transpiles `.jsx` files in the browser.
 
-- Root page (`/` on `go.uncap.com`): the **Blueprint admin app**
-  (`public/index.html` + `public/admin/AdminApp.jsx`). Google sign-in
-  (Google Identity Services), reserved for `@uncap.com` accounts.
-  Sessions live in KV (`admin_session:<token>`) behind an HttpOnly
-  `__Host-bp_admin` cookie. Sections: Discoveries / Blueprints (Preview,
-  Share, Activity, TOS, Print per blueprint, plus draft creation)
+- Root page (`/` on `go.uncap.com`): the **customer portal**
+  (`public/index.html` + `public/portal/PortalApp.jsx`). Passwordless
+  sign-in (email → 6-digit code) for contacts on portal Companies;
+  7-day `__Host-bp_portal` cookie sessions (`portal_session:<token>` in
+  KV). Static five-tab nav: Company / Discovery / Blueprint / Delivery /
+  Growth. View + signature only
+- Admin app lives at `/admin` (`public/admin/index.html` +
+  `public/admin/AdminApp.jsx`, client routes `/admin/companies|
+  discoveries|blueprints`). Google sign-in (Google Identity Services),
+  reserved for `@uncap.com` accounts. Sessions live in KV
+  (`admin_session:<token>`) behind an HttpOnly `__Host-bp_admin` cookie.
+  Sections: Companies / Discoveries / Blueprints
+- **Companies are the source of truth** for creation flows: new
+  discoveries and blueprint drafts pick a portal company (never Attio
+  directly; Attio is only the one-time import in Add company) and pull
+  its contacts, store URL, address, palette, logo, and files. Records in
+  KV: `company:<id>`, `cologo:<id>`, `cofile:<id>:<fid>`. Creating a
+  discovery/blueprint back-links `discoveryHandle`/`blueprintId` onto the
+  company so the portal tabs light up
 - Every blueprint's public URL is `/blueprint/<id>/` (e.g.
   `/blueprint/mitutoyo/`), not its physical folder name. `worker/index.js`
   transparently rewrites `/blueprint/<id>/<rest>` to `/<dir>/<rest>`
