@@ -360,6 +360,45 @@ export default {
     // Manual override backing the admin dashboard's status dropdown, for
     // marking a blueprint signed when the client signed a physical/paper
     // copy instead of using the digital flow (or clearing that record).
+    if (url.pathname === '/api/admin/companies' && request.method === 'GET') {
+      return handleAdminListCompanies(request, env);
+    }
+    if (url.pathname === '/api/admin/companies' && request.method === 'POST') {
+      return handleAdminCreateCompany(request, env);
+    }
+    if (url.pathname === '/api/admin/company/update' && request.method === 'POST') {
+      return handleAdminUpdateCompany(request, env);
+    }
+    if (url.pathname === '/api/admin/company/delete' && request.method === 'POST') {
+      return handleAdminDeleteCompany(request, env);
+    }
+    if (url.pathname === '/api/admin/company/file' && request.method === 'POST') {
+      return handleAdminCompanyFileUpload(request, env);
+    }
+    if (url.pathname === '/api/admin/company/file-delete' && request.method === 'POST') {
+      return handleAdminCompanyFileDelete(request, env);
+    }
+    if (url.pathname === '/api/admin/company/file' && request.method === 'GET') {
+      return handleAdminCompanyFileGet(request, env);
+    }
+    if (url.pathname === '/api/company/logo' && request.method === 'GET') {
+      return handleCompanyLogo(request, env);
+    }
+    if (url.pathname === '/api/portal/request-code' && request.method === 'POST') {
+      return handlePortalRequestCode(request, env);
+    }
+    if (url.pathname === '/api/portal/verify' && request.method === 'POST') {
+      return handlePortalVerify(request, env);
+    }
+    if (url.pathname === '/api/portal/me' && request.method === 'GET') {
+      return handlePortalMe(request, env);
+    }
+    if (url.pathname === '/api/portal/file' && request.method === 'GET') {
+      return handlePortalFile(request, env);
+    }
+    if (url.pathname === '/api/portal/logout' && request.method === 'POST') {
+      return handlePortalLogout(request, env);
+    }
     if (url.pathname === '/api/admin/mark-signed' && request.method === 'POST') {
       return handleAdminMarkSigned(request, env);
     }
@@ -369,6 +408,13 @@ export default {
     // loads its data over /api/discovery/*. Handles are dot-free slugs, so
     // real assets under /discovery/ (index.html, *.jsx, *.js — all with a
     // dot) never match here and are served normally by Static Assets.
+    // The admin dashboard lives at /admin; the root is the customer portal.
+    if ((url.pathname === '/admin' || url.pathname === '/admin/') && (request.method === 'GET' || request.method === 'HEAD')) {
+      const assetUrl = new URL(url.toString());
+      assetUrl.pathname = '/admin/index.html';
+      return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
+    }
+
     const discMatch = url.pathname.match(/^\/discovery\/([a-z0-9-]+)\/?$/);
     if (discMatch && (request.method === 'GET' || request.method === 'HEAD')) {
       const assetUrl = new URL(url.toString());
@@ -2686,4 +2732,453 @@ function b64utf8(str) {
   let bin = '';
   for (let i = 0; i < bytes.byteLength; i++) bin += String.fromCharCode(bytes[i]);
   return btoa(bin).replace(/(.{76})/g, '$1\r\n');
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// Companies — the portal's source of truth for every client we invite.
+// Imported from Attio once by an admin, then owned and edited here; the
+// discovery and blueprint creation flows read from these records, never
+// from Attio directly. Files (RFP, technical brief, other documents) live
+// alongside so proposals and pre-fills pull from the same place customers
+// see in their portal.
+//
+// KV layout:
+//   company:<id>          → record (no file bodies)
+//   cologo:<id>           → { ct, data } logo, same shape as disclogo
+//   cofile:<id>:<fid>     → { ct, name, data } uploaded document
+//   portal_session:<tok>  → { email, name, companyId, ts }
+//   pocode:<email> / potries:<email> → passcode state for portal login
+// ═══════════════════════════════════════════════════════════════════════════
+
+const PORTAL_COOKIE = '__Host-bp_portal';
+const PORTAL_SESSION_TTL_SECONDS = 7 * 24 * 60 * 60; // 7 days
+const COMPANY_FILE_KINDS = ['rfp', 'brief', 'doc'];
+const COMPANY_MAX_FILES = 14;
+
+function companySlug(name) {
+  const s = (name || '').toString().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40);
+  return s || 'company';
+}
+
+async function uniqueCompanyId(env, base) {
+  for (let i = 0; i < 20; i++) {
+    const candidate = i === 0 ? base : `${base}-${i + 1}`;
+    if (!(await env.BLUEPRINT_AUTH.get(`company:${candidate}`))) return candidate;
+  }
+  return `${base}-${genToken().slice(0, 6)}`;
+}
+
+// A company contact: like sanitizeContact but keeps the person's title.
+function sanitizeCoContact(raw) {
+  const c = sanitizeContact(raw);
+  if (!c) return null;
+  c.title = ((raw && raw.title) || '').toString().trim().slice(0, 120);
+  return c;
+}
+
+function sanitizeCoContacts(raw, max) {
+  if (!Array.isArray(raw)) return [];
+  const out = [];
+  for (const item of raw) {
+    const c = sanitizeCoContact(item);
+    if (c && !out.some((x) => x.email === c.email)) out.push(c);
+    if (out.length >= (max || 20)) break;
+  }
+  return out;
+}
+
+// The editable field set shared by create and update.
+function companyFieldsFrom(body) {
+  return {
+    name: (body.name || '').toString().trim().slice(0, 200),
+    storeUrl: (body.storeUrl || '').toString().trim().slice(0, 300),
+    address: (body.address || '').toString().trim().slice(0, 300),
+    description: (body.description || '').toString().trim().slice(0, 2000),
+    platform: (body.platform || '').toString().trim().slice(0, 120),
+    erp: (body.erp || '').toString().trim().slice(0, 120),
+    attioCompanyId: (body.attioCompanyId || '').toString().trim().slice(0, 100),
+    leadContact: sanitizeCoContact(body.leadContact),
+    contacts: sanitizeCoContacts(body.contacts),
+    palette: sanitizePalette(body.palette),
+  };
+}
+
+async function getCompany(env, id) {
+  const clean = (id || '').toString().trim().toLowerCase();
+  if (!/^[a-z0-9-]{1,60}$/.test(clean)) return null;
+  const raw = await env.BLUEPRINT_AUTH.get(`company:${clean}`);
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch { return null; }
+}
+
+async function putCompany(env, rec) {
+  rec.updatedAt = new Date().toISOString();
+  await env.BLUEPRINT_AUTH.put(`company:${rec.id}`, JSON.stringify(rec));
+  return rec;
+}
+
+async function listCompanies(env) {
+  const list = await env.BLUEPRINT_AUTH.list({ prefix: 'company:', limit: 500 });
+  const rows = await Promise.all(list.keys.map((k) => env.BLUEPRINT_AUTH.get(k.name).then((v) => {
+    try { return JSON.parse(v); } catch { return null; }
+  }).catch(() => null)));
+  return rows.filter(Boolean).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+}
+
+async function handleAdminListCompanies(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  return json(200, { ok: true, companies: await listCompanies(env) });
+}
+
+async function handleAdminCreateCompany(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+  let body;
+  try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+
+  const fields = companyFieldsFrom(body);
+  if (!fields.name) return json(400, { ok: false, error: 'Company name is required' });
+
+  const id = await uniqueCompanyId(env, companySlug(fields.name));
+  const rec = {
+    id, ...fields,
+    hasLogo: false, files: [],
+    discoveryHandle: '', blueprintId: '',
+    createdAt: new Date().toISOString(), createdBy: sess.email,
+  };
+  const logo = sanitizeLogo(body.logo);
+  if (logo) {
+    await env.BLUEPRINT_AUTH.put(`cologo:${id}`, JSON.stringify(logo));
+    rec.hasLogo = true;
+  }
+  await putCompany(env, rec);
+  await logActivity(env, null, { type: 'created', entity: 'company', id, name: rec.name, actor: sess.email, detail: 'Company added to portal' });
+  return json(200, { ok: true, company: rec });
+}
+
+async function handleAdminUpdateCompany(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+  let body;
+  try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  const rec = await getCompany(env, body.id);
+  if (!rec) return json(404, { ok: false, error: 'Company not found' });
+
+  const fields = companyFieldsFrom(body);
+  if (!fields.name) return json(400, { ok: false, error: 'Company name is required' });
+  Object.assign(rec, fields);
+
+  // Logo: pass logo:{type,data} to replace, logo:null leaves as-is,
+  // removeLogo:true clears it.
+  const logo = sanitizeLogo(body.logo);
+  if (logo) {
+    await env.BLUEPRINT_AUTH.put(`cologo:${rec.id}`, JSON.stringify(logo));
+    rec.hasLogo = true;
+  } else if (body.removeLogo === true) {
+    await env.BLUEPRINT_AUTH.delete(`cologo:${rec.id}`).catch(() => {});
+    rec.hasLogo = false;
+  }
+  // Optional links to the company's discovery/blueprint, admin-managed.
+  if (typeof body.discoveryHandle === 'string') rec.discoveryHandle = body.discoveryHandle.trim().toLowerCase().slice(0, 60);
+  if (typeof body.blueprintId === 'string') rec.blueprintId = normalizeBlueprintId(body.blueprintId) === 'unknown' && body.blueprintId.trim() === '' ? '' : body.blueprintId.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 60);
+
+  await putCompany(env, rec);
+  await logActivity(env, null, { type: 'disc-update', entity: 'company', id: rec.id, name: rec.name, actor: sess.email, detail: 'Company profile updated' });
+  return json(200, { ok: true, company: rec });
+}
+
+async function handleAdminDeleteCompany(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+  let body;
+  try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  const rec = await getCompany(env, body.id);
+  if (!rec) return json(404, { ok: false, error: 'Company not found' });
+  await env.BLUEPRINT_AUTH.delete(`company:${rec.id}`).catch(() => {});
+  await env.BLUEPRINT_AUTH.delete(`cologo:${rec.id}`).catch(() => {});
+  for (const f of rec.files || []) {
+    await env.BLUEPRINT_AUTH.delete(`cofile:${rec.id}:${f.fid}`).catch(() => {});
+  }
+  await logActivity(env, null, { type: 'deleted', entity: 'company', id: rec.id, name: rec.name, actor: sess.email, detail: 'Company removed from portal' });
+  return json(200, { ok: true });
+}
+
+// Upload one file onto a company. kind: rfp | brief | doc — rfp and brief
+// are single-slot (a new upload replaces the old one), docs accumulate.
+async function handleAdminCompanyFileUpload(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+  let body;
+  try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  const rec = await getCompany(env, body.id);
+  if (!rec) return json(404, { ok: false, error: 'Company not found' });
+
+  const kind = COMPANY_FILE_KINDS.includes(body.kind) ? body.kind : 'doc';
+  const name = (body.name || 'document').toString().trim().slice(0, 160) || 'document';
+  const ct = (body.type || 'application/octet-stream').toString().slice(0, 120);
+  const data = (body.data || '').toString();
+  if (!data || data.length > 14_000_000 || !/^[A-Za-z0-9+/=]+$/.test(data)) {
+    return json(400, { ok: false, error: 'File must be under 10 MB.' });
+  }
+  rec.files = Array.isArray(rec.files) ? rec.files : [];
+  if (rec.files.length >= COMPANY_MAX_FILES && kind === 'doc') {
+    return json(400, { ok: false, error: 'File limit reached for this company.' });
+  }
+
+  // Single-slot kinds replace their predecessor.
+  if (kind !== 'doc') {
+    for (const f of rec.files.filter((f) => f.kind === kind)) {
+      await env.BLUEPRINT_AUTH.delete(`cofile:${rec.id}:${f.fid}`).catch(() => {});
+    }
+    rec.files = rec.files.filter((f) => f.kind !== kind);
+  }
+
+  const fid = genToken().slice(0, 16);
+  await env.BLUEPRINT_AUTH.put(`cofile:${rec.id}:${fid}`, JSON.stringify({ ct, name, data }));
+  rec.files.push({ fid, kind, name, ct, size: Math.round(data.length * 3 / 4), at: new Date().toISOString() });
+  await putCompany(env, rec);
+  return json(200, { ok: true, company: rec });
+}
+
+async function handleAdminCompanyFileDelete(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+  let body;
+  try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  const rec = await getCompany(env, body.id);
+  if (!rec) return json(404, { ok: false, error: 'Company not found' });
+  const fid = (body.fid || '').toString();
+  await env.BLUEPRINT_AUTH.delete(`cofile:${rec.id}:${fid}`).catch(() => {});
+  rec.files = (rec.files || []).filter((f) => f.fid !== fid);
+  await putCompany(env, rec);
+  return json(200, { ok: true, company: rec });
+}
+
+function companyFileResponse(stored) {
+  let payload;
+  try { payload = JSON.parse(stored); } catch { return new Response('Not found', { status: 404 }); }
+  let bytes;
+  try { bytes = b64ToBytes(payload.data); } catch { return new Response('Not found', { status: 404 }); }
+  const safeName = (payload.name || 'document').replace(/[^\w.\- ]+/g, '_');
+  return new Response(bytes, {
+    headers: {
+      'content-type': payload.ct || 'application/octet-stream',
+      'content-disposition': `attachment; filename="${safeName}"`,
+      'cache-control': 'private, no-store',
+      'x-content-type-options': 'nosniff',
+      'content-security-policy': "default-src 'none'",
+    },
+  });
+}
+
+async function handleAdminCompanyFileGet(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return new Response('Not signed in', { status: 401 });
+  const url = new URL(request.url);
+  const rec = await getCompany(env, url.searchParams.get('id'));
+  const fid = (url.searchParams.get('fid') || '').toString();
+  if (!rec || !(rec.files || []).some((f) => f.fid === fid)) return new Response('Not found', { status: 404 });
+  const stored = await env.BLUEPRINT_AUTH.get(`cofile:${rec.id}:${fid}`);
+  if (!stored) return new Response('Not found', { status: 404 });
+  return companyFileResponse(stored);
+}
+
+// Public logo by company id, CSP-locked like the discovery logo.
+async function handleCompanyLogo(request, env) {
+  const url = new URL(request.url);
+  const rec = await getCompany(env, url.searchParams.get('id'));
+  if (!rec || !rec.hasLogo) return new Response('Not found', { status: 404 });
+  const raw = await env.BLUEPRINT_AUTH.get(`cologo:${rec.id}`);
+  if (!raw) return new Response('Not found', { status: 404 });
+  let logo;
+  try { logo = JSON.parse(raw); } catch { return new Response('Not found', { status: 404 }); }
+  let bytes;
+  try { bytes = b64ToBytes(logo.data); } catch { return new Response('Not found', { status: 404 }); }
+  return new Response(bytes, {
+    headers: {
+      'content-type': logo.ct,
+      'cache-control': 'public, max-age=3600',
+      'x-content-type-options': 'nosniff',
+      'content-security-policy': "default-src 'none'; style-src 'unsafe-inline'",
+    },
+  });
+}
+
+// ── Customer portal auth: passwordless, portal-wide ──────────────────────
+// Any contact on any portal company signs in at go.uncap.com with just
+// their email: we find their company, send a 6-digit code, and mint a
+// cookie session bound to that company. View + signature only.
+
+function companyEmails(rec) {
+  const out = [];
+  if (rec.leadContact && rec.leadContact.email) out.push(rec.leadContact.email);
+  for (const c of rec.contacts || []) if (c.email) out.push(c.email);
+  return out;
+}
+
+async function findCompanyByEmail(env, email) {
+  const companies = await listCompanies(env);
+  return companies.find((c) => companyEmails(c).includes(email)) || null;
+}
+
+function portalContactName(rec, email) {
+  if (rec.leadContact && rec.leadContact.email === email) return rec.leadContact.name || '';
+  const c = (rec.contacts || []).find((x) => x.email === email);
+  return (c && c.name) || '';
+}
+
+async function handlePortalRequestCode(request, env) {
+  let body;
+  try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  const emailRaw = (body.email || '').toString().trim();
+  if (!emailRaw || !EMAIL_RE.test(emailRaw)) return json(400, { ok: false, error: 'Enter a valid email' });
+  const email = emailRaw.toLowerCase();
+
+  {
+    const ip = clientIp(request);
+    const okEmail = await rateLimit(env, `pocode:rl:${encodeURIComponent(email)}`, 3, 15 * 60);
+    const okIp = ip ? await rateLimit(env, `pocode:ip:${ip}`, 10, 15 * 60) : true;
+    if (!okEmail || !okIp) return json(429, { ok: false, error: 'Too many code requests. Wait a few minutes and try again.' });
+  }
+
+  const company = await findCompanyByEmail(env, email);
+  if (!company) {
+    // Same response as success: never confirm which emails have access.
+    return json(200, { ok: true });
+  }
+  const code = genCode();
+  await env.BLUEPRINT_AUTH.put(`pocode:${encodeURIComponent(email)}`, code, { expirationTtl: CODE_TTL_SECONDS });
+  await env.BLUEPRINT_AUTH.delete(`potries:${encodeURIComponent(email)}`).catch(() => {});
+  try {
+    await sendCodeEmail(env, { to: email, code, label: 'Client Portal' });
+  } catch (err) {
+    console.error('portal sendCodeEmail failed:', err && err.message);
+    return json(502, { ok: false, error: 'Could not send the code right now. Try again shortly.' });
+  }
+  return json(200, { ok: true });
+}
+
+async function handlePortalVerify(request, env) {
+  let body;
+  try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  const email = (body.email || '').toString().trim().toLowerCase();
+  const code = (body.code || '').toString().trim();
+  if (!email || !code) return json(400, { ok: false, error: 'Enter your code' });
+
+  const ip = clientIp(request);
+  if (ip && !(await rateLimit(env, `poverify:${ip}`, 20, 10 * 60))) {
+    return json(429, { ok: false, error: 'Too many attempts. Wait a few minutes and try again.' });
+  }
+  const key = `pocode:${encodeURIComponent(email)}`;
+  const triesKey = `potries:${encodeURIComponent(email)}`;
+  const stored = await env.BLUEPRINT_AUTH.get(key);
+  if (!stored || stored !== code) {
+    const tries = (parseInt(await env.BLUEPRINT_AUTH.get(triesKey), 10) || 0) + 1;
+    if (stored && tries >= MAX_CODE_ATTEMPTS) {
+      await env.BLUEPRINT_AUTH.delete(key).catch(() => {});
+      await env.BLUEPRINT_AUTH.delete(triesKey).catch(() => {});
+    } else {
+      await env.BLUEPRINT_AUTH.put(triesKey, String(tries), { expirationTtl: CODE_TTL_SECONDS }).catch(() => {});
+    }
+    return json(401, { ok: false, error: 'Invalid or expired code. Request a new one if needed.' });
+  }
+  const company = await findCompanyByEmail(env, email);
+  if (!company) return json(403, { ok: false, error: 'No portal access for this email.' });
+  await env.BLUEPRINT_AUTH.delete(key);
+  await env.BLUEPRINT_AUTH.delete(triesKey).catch(() => {});
+
+  const token = genToken();
+  const name = portalContactName(company, email);
+  await env.BLUEPRINT_AUTH.put(
+    `portal_session:${token}`,
+    JSON.stringify({ email, name, companyId: company.id, ts: Date.now() }),
+    { expirationTtl: PORTAL_SESSION_TTL_SECONDS }
+  );
+  await logActivity(env, null, { type: 'view', entity: 'company', id: company.id, name: company.name, actor: email, detail: 'Portal sign-in' });
+  return withSecurityHeaders(new Response(JSON.stringify({ ok: true, name }), {
+    status: 200,
+    headers: {
+      'content-type': 'application/json; charset=utf-8',
+      'cache-control': 'no-store',
+      'set-cookie': `${PORTAL_COOKIE}=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${PORTAL_SESSION_TTL_SECONDS}`,
+    },
+  }));
+}
+
+async function getPortalSession(request, env) {
+  const token = getCookie(request, PORTAL_COOKIE);
+  if (!/^[a-f0-9]{48}$/.test(token)) return null;
+  const raw = await env.BLUEPRINT_AUTH.get(`portal_session:${token}`);
+  if (!raw) return null;
+  try { return { token, ...JSON.parse(raw) }; } catch { return null; }
+}
+
+// Everything the signed-in customer's portal needs in one call: their
+// company profile, contacts, files (meta only), and where discovery and
+// blueprint stand. View-only by design.
+async function handlePortalMe(request, env) {
+  const sess = await getPortalSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  const rec = await getCompany(env, sess.companyId);
+  if (!rec) return json(401, { ok: false, error: 'No portal access' });
+
+  let discovery = null;
+  if (rec.discoveryHandle) {
+    const disc = await getDiscoveryByHandle(env, rec.discoveryHandle);
+    if (disc) discovery = { handle: disc.handle, status: disc.status || 'new', url: `/discovery/${disc.handle}/` };
+  }
+  let blueprint = null;
+  if (rec.blueprintId) {
+    const known = BLUEPRINT_REGISTRY.some((b) => b.id === rec.blueprintId) || !!(await env.BLUEPRINT_AUTH.get(`bp:${rec.blueprintId}`));
+    if (known) blueprint = { id: rec.blueprintId, url: `/blueprint/${rec.blueprintId}/` };
+  }
+  return json(200, {
+    ok: true,
+    email: sess.email,
+    name: sess.name || '',
+    company: {
+      id: rec.id, name: rec.name, storeUrl: rec.storeUrl, address: rec.address,
+      description: rec.description, platform: rec.platform, erp: rec.erp,
+      palette: rec.palette || null, hasLogo: !!rec.hasLogo,
+      leadContact: rec.leadContact || null, contacts: rec.contacts || [],
+      files: (rec.files || []).map((f) => ({ fid: f.fid, kind: f.kind, name: f.name, size: f.size, at: f.at })),
+    },
+    discovery,
+    blueprint,
+  });
+}
+
+async function handlePortalFile(request, env) {
+  const sess = await getPortalSession(request, env);
+  if (!sess) return new Response('Not signed in', { status: 401 });
+  const rec = await getCompany(env, sess.companyId);
+  if (!rec) return new Response('Not found', { status: 404 });
+  const url = new URL(request.url);
+  const fid = (url.searchParams.get('fid') || '').toString();
+  if (!(rec.files || []).some((f) => f.fid === fid)) return new Response('Not found', { status: 404 });
+  const stored = await env.BLUEPRINT_AUTH.get(`cofile:${rec.id}:${fid}`);
+  if (!stored) return new Response('Not found', { status: 404 });
+  return companyFileResponse(stored);
+}
+
+async function handlePortalLogout(request, env) {
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+  const token = getCookie(request, PORTAL_COOKIE);
+  if (/^[a-f0-9]{48}$/.test(token)) {
+    await env.BLUEPRINT_AUTH.delete(`portal_session:${token}`).catch(() => {});
+  }
+  return withSecurityHeaders(new Response(JSON.stringify({ ok: true }), {
+    status: 200,
+    headers: {
+      'content-type': 'application/json; charset=utf-8',
+      'cache-control': 'no-store',
+      'set-cookie': `${PORTAL_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
+    },
+  }));
 }
