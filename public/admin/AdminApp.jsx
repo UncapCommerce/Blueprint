@@ -438,41 +438,6 @@
     );
   }
 
-  // Multi-select of Attio people, rendered as removable chips. Excludes
-  // whatever email is currently the Client Lead so the same person can't
-  // be picked twice.
-  function AssociatedContactsPicker({ contacts, onChange, excludeEmail }) {
-    const add = (person) => {
-      if (!person.email) return;
-      if (excludeEmail && person.email === excludeEmail) return;
-      if (contacts.some((c) => c.email === person.email)) return;
-      onChange([...contacts, { attioId: person.attioId, name: person.name, email: person.email }]);
-    };
-    const remove = (email) => onChange(contacts.filter((c) => c.email !== email));
-
-    return (
-      <div>
-        <label style={S.label}>Associated contacts</label>
-        <AttioTypeahead kind="people" placeholder="Search Attio contacts to add…" onPick={add}/>
-        {contacts.length > 0 && (
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 10 }}>
-            {contacts.map((c) => (
-              <span key={c.email} style={{
-                display: 'inline-flex', alignItems: 'center', gap: 6, padding: '5px 6px 5px 10px',
-                background: T.cream, border: `1px solid ${T.line}`, borderRadius: 999,
-                fontFamily: T.sans, fontSize: 12.5, color: T.fg1,
-              }}>
-                {c.name || c.email}
-                <button type="button" aria-label={'Remove ' + (c.name || c.email)} onClick={() => remove(c.email)}
-                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 18, height: 18, borderRadius: 999, border: 'none', background: T.line, color: T.fg1, cursor: 'pointer', fontSize: 11, lineHeight: 1, padding: 0 }}>✕</button>
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  }
-
   // Once a company/contact is picked, show a compact summary card with a
   // clear (✕) button instead of the search box — makes the required,
   // Attio-only nature of the field unambiguous (no free-text fallback).
@@ -523,20 +488,6 @@
           <SelectedCard title={company.name || '(unnamed)'} sub={company.attioId ? 'From Attio' : ''} onClear={onClear}/>
         ) : (
           <AttioTypeahead kind="companies" placeholder="Search Attio companies…" autoFocus onPick={onPick}/>
-        )}
-      </div>
-    );
-  }
-
-  // Required single-select Client Lead field — same pattern as CompanyPicker.
-  function LeadContactPicker({ contact, onPick, onClear }) {
-    return (
-      <div>
-        <label style={S.label}>Lead contact</label>
-        {contact ? (
-          <SelectedCard title={contact.name || contact.email} sub={contact.email} onClear={onClear}/>
-        ) : (
-          <AttioTypeahead kind="people" placeholder="Search Attio contacts…" onPick={onPick}/>
         )}
       </div>
     );

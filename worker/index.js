@@ -1,16 +1,8 @@
-// Cloudflare Worker entry point.
-// Three blueprint-auth endpoints + a static-asset fallback.
-//
-//   POST /api/auth/request-code  →  { email, blueprintId }
-//     Generates a 6-digit code, stashes it in KV with a 10-minute TTL,
-//     emails it via Cloudflare's send_email binding.
-//
-//   POST /api/auth/verify  →  { email, code, blueprintId }
-//     Checks the stored code, deletes it, mints a 24-hour session token,
-//     and fires a "viewed" notification to denis@uncap.com.
-//
-//   POST /api/auth/notify  →  { token, event: 'view' | 'approve' }
-//     Sends a notification to denis@uncap.com. Admin sessions skip.
+// Cloudflare Worker entry point. Routes the portal, admin, discovery, and
+// blueprint APIs, then falls through to Workers Static Assets. Blueprint
+// viewing sessions are minted from the admin or portal cookie via
+// /api/admin/bp-token (see the Gate in each blueprint's index.html) — the
+// old per-blueprint email passcode was retired when the portal shipped.
 //
 //   POST /api/auth/sign  →  { token, name, title }
 //     Records an Approve & kickoff signature. Persists a record to KV
@@ -172,39 +164,6 @@ const DEFAULT_MSA_SECTIONS = [
   ] },
 ];
 
-// Per-blueprint email allowlists. If a blueprintId appears here, only the
-// listed addresses can request a passcode. Anyone else gets a 403. The
-// @uncap.com team override applies above this check, so internal team
-// members can still see every blueprint.
-const BLUEPRINT_ALLOWLISTS = {
-  benami: [
-    'matthewlevy00@gmail.com',
-    'benami67@gmail.com',
-  ],
-  anatomywarehouse: [
-    'liz@anatomicalworldwide.com',
-    'stuart@anatomywarehouse.com',
-  ],
-  // Locked to the Uncap team only. An empty allowlist is still truthy, so
-  // every external address gets a 403 while the @uncap.com override
-  // continues to bypass the check above.
-  sperscientific: [],
-  gpscity: [
-    'brian@gpscity.com',
-    'jordan@gpscity.com',
-  ],
-  elycattleman: [
-    'cstein@elyandwalker.com',
-    'mdavis@elyandwalker.com',
-  ],
-  vivo: [
-    'codyh@vivo-us.com',
-    'jon.orns@vivo-us.com',
-    'nick.stoner@vivo-us.com',
-    'kristina.velpel@cknappsales.com',
-  ],
-};
-
 // The one true domain going forward. blueprint.uncap.com stays attached
 // to this same Worker (see wrangler.toml) purely so old links — some
 // already signed by real clients — 301 to their new home here instead of
@@ -245,15 +204,6 @@ export default {
       }
     }
 
-    if (url.pathname === '/api/auth/request-code' && request.method === 'POST') {
-      return handleRequestCode(request, env);
-    }
-    if (url.pathname === '/api/auth/verify' && request.method === 'POST') {
-      return handleVerify(request, env, ctx);
-    }
-    if (url.pathname === '/api/auth/notify' && request.method === 'POST') {
-      return handleNotify(request, env);
-    }
     if (url.pathname === '/api/auth/sign' && request.method === 'POST') {
       return handleSign(request, env, ctx);
     }
@@ -618,11 +568,6 @@ const stripHeaderValue = (s) => String(s == null ? '' : s).replace(/[\r\n]+/g, '
 const clientIp = (request) => request.headers.get('CF-Connecting-IP') || '';
 const clientUa = (request) => request.headers.get('User-Agent') || '';
 
-// KV key builders — email is percent-encoded so a ':' (or other structural
-// char) in an address can never reshape the key. put/get stay symmetric.
-const codeKey      = (bp, email) => `code:${bp}:${encodeURIComponent(email)}`;
-const codeTriesKey = (bp, email) => `codetries:${bp}:${encodeURIComponent(email)}`;
-
 // Coarse, eventually-consistent fixed-window rate limiter backed by KV.
 // Not a precise quota — it exists to blunt brute-force and email-bombing.
 // Returns true if the caller is under the limit (and counts this hit),
@@ -700,196 +645,6 @@ function sanitizeContacts(raw, max) {
 // ----------------------------------------------------------------------------
 // Handlers
 // ----------------------------------------------------------------------------
-async function handleRequestCode(request, env) {
-  let body;
-  try { body = await request.json(); }
-  catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
-
-  const emailRaw    = (body.email || '').toString().trim();
-  const blueprintId = normalizeBlueprintId(body.blueprintId);
-  if (!emailRaw) return json(400, { ok: false, error: 'Enter an email' });
-
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailRaw)) {
-    return json(400, { ok: false, error: 'Enter a valid email' });
-  }
-  const email = emailRaw.toLowerCase();
-
-  // Uncap team override: anyone with an @uncap.com email can view every
-  // Blueprint, regardless of per-blueprint allowlists below. Same flow
-  // as any other client (6-digit code, etc.) — they just aren't gated.
-  const isUncapTeam = email.endsWith('@uncap.com');
-
-  // Disabled blueprints reject client logins outright (set from the
-  // admin app). The team can still get in to review.
-  const bpMeta = await getBpMeta(env, blueprintId);
-  if (bpMeta.disabled && !isUncapTeam) {
-    return json(403, { ok: false, error: 'This proposal is no longer available.' });
-  }
-  if (isBpExpired(bpMeta) && !isUncapTeam) {
-    return json(403, { ok: false, error: 'This proposal has expired.' });
-  }
-
-  // Per-blueprint allowlist enforcement. If this blueprint is private to a
-  // named list of clients, reject any other email up front so we never even
-  // generate a code for an unauthorised address. Uncap team always passes.
-  // Two sources, either of which can gate a blueprint: the static
-  // BLUEPRINT_ALLOWLISTS below (legacy, hand-maintained) and a dynamic
-  // per-blueprint list in KV (bpallow:<id>) populated automatically from
-  // the Client Lead + Associated Contacts chosen when the blueprint was
-  // created from Attio.
-  const staticAllowlist  = BLUEPRINT_ALLOWLISTS[blueprintId];
-  const dynamicAllowlist = await getBpAllowlist(env, blueprintId);
-  const hasAllowlist = !!staticAllowlist || dynamicAllowlist.length > 0;
-  if (hasAllowlist && !isUncapTeam) {
-    const allowed = (staticAllowlist || []).includes(email) || dynamicAllowlist.includes(email);
-    if (!allowed) {
-      return json(403, { ok: false, error: 'This proposal is restricted. Use the email it was sent to.' });
-    }
-  }
-
-  // Rate limit to blunt email-bombing and code-griefing: cap codes per
-  // email and per source IP. The Uncap team is exempt (they self-test a
-  // lot and are trusted). New code window also resets the wrong-guess
-  // counter so a fresh code always gets its full attempt budget.
-  if (!isUncapTeam) {
-    const ip = clientIp(request);
-    const okEmail = await rateLimit(env, `reqcode:email:${blueprintId}:${encodeURIComponent(email)}`, 3, 15 * 60);
-    const okIp    = ip ? await rateLimit(env, `reqcode:ip:${ip}`, 10, 15 * 60) : true;
-    if (!okEmail || !okIp) {
-      return json(429, { ok: false, error: 'Too many code requests. Wait a few minutes and try again.' });
-    }
-  }
-
-  const code  = genCode();
-  await env.BLUEPRINT_AUTH.put(
-    codeKey(blueprintId, email),
-    code,
-    { expirationTtl: CODE_TTL_SECONDS }
-  );
-  await env.BLUEPRINT_AUTH.delete(codeTriesKey(blueprintId, email)).catch(() => {});
-
-  try {
-    await sendCodeEmail(env, { to: email, code, blueprintId });
-    return json(200, { ok: true });
-  } catch (err) {
-    console.error('sendCodeEmail failed:', err && err.message);
-    return json(502, { ok: false, error: 'Could not send the code right now. Try again shortly.' });
-  }
-}
-
-async function handleVerify(request, env, ctx) {
-  let body;
-  try { body = await request.json(); }
-  catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
-
-  const email       = (body.email || '').toString().trim().toLowerCase();
-  const code        = (body.code  || '').toString().trim();
-  const blueprintId = normalizeBlueprintId(body.blueprintId);
-  if (!email || !code) return json(400, { ok: false, error: 'Enter your code' });
-
-  // Per-IP throttle across the whole verify surface — a second layer over
-  // the per-code attempt counter below, so one attacker can't parallelise
-  // across many codes/emails from a single host.
-  const ip = clientIp(request);
-  if (ip && !(await rateLimit(env, `verifyip:${ip}`, 20, 10 * 60))) {
-    return json(429, { ok: false, error: 'Too many attempts. Wait a few minutes and try again.' });
-  }
-
-  // Mirror the request-code disabled/expired checks: a code issued moments
-  // before the blueprint was disabled or expired must not still mint a session.
-  const isTeam = email.endsWith('@uncap.com');
-  const bpMeta = await getBpMeta(env, blueprintId);
-  if (bpMeta.disabled && !isTeam) {
-    return json(403, { ok: false, error: 'This proposal is no longer available.' });
-  }
-  if (isBpExpired(bpMeta) && !isTeam) {
-    return json(403, { ok: false, error: 'This proposal has expired.' });
-  }
-
-  const key      = codeKey(blueprintId, email);
-  const triesKey = codeTriesKey(blueprintId, email);
-  const stored   = await env.BLUEPRINT_AUTH.get(key);
-  if (!stored || stored !== code) {
-    // Burn the code after too many wrong guesses so the 10^6 space can't be
-    // brute-forced within the code's 10-minute life. Generic message either
-    // way so it isn't an oracle for "does this code exist".
-    const tries = (parseInt(await env.BLUEPRINT_AUTH.get(triesKey), 10) || 0) + 1;
-    if (stored && tries >= MAX_CODE_ATTEMPTS) {
-      await env.BLUEPRINT_AUTH.delete(key).catch(() => {});
-      await env.BLUEPRINT_AUTH.delete(triesKey).catch(() => {});
-    } else {
-      await env.BLUEPRINT_AUTH.put(triesKey, String(tries), { expirationTtl: CODE_TTL_SECONDS }).catch(() => {});
-    }
-    return json(401, { ok: false, error: 'Invalid or expired code. Request a new one if needed.' });
-  }
-  await env.BLUEPRINT_AUTH.delete(key);
-  await env.BLUEPRINT_AUTH.delete(triesKey).catch(() => {});
-
-  // "Self-test" sessions: any @uncap.com address (the internal team) gets
-  // the full code-delivery experience but no notifications about itself
-  // viewing or approving. Mirrors the previous NOTIFY_EMAIL-only check
-  // and extends it to the rest of the team. Marks the session so
-  // handleNotify and handleSign can short-circuit emails too.
-  const notifyEmail = (env.NOTIFY_EMAIL || '').trim().toLowerCase();
-  const selfTest    = email.endsWith('@uncap.com') || (notifyEmail && email === notifyEmail);
-
-  const userAgent = clientUa(request);
-  const token = genToken();
-  await env.BLUEPRINT_AUTH.put(
-    `session:${token}`,
-    JSON.stringify({ email, admin: false, selfTest, blueprintId, ip, userAgent, ts: Date.now() }),
-    { expirationTtl: SESSION_TTL_SECONDS }
-  );
-
-  // Persist an access-log record so the admin app can show every client
-  // login, with timestamp + IP + Cloudflare-derived location + UA.
-  // 1-year TTL is plenty for audit purposes. Key shape lets us list
-  // by blueprintId prefix and sort by timestamp descending. Uncap team
-  // logins (selfTest) are not tracked — the activity log is for client
-  // views only.
-  if (!selfTest) {
-    const ts        = Date.now();
-    const accessKey = `access:${blueprintId}:${(9_999_999_999_999 - ts).toString(36).padStart(10, '0')}:${genRandSlug()}`;
-    const cf        = request.cf || {};
-    const accessRec = {
-      email,
-      blueprintId,
-      verifiedAt: new Date(ts).toISOString(),
-      ip,
-      country:   cf.country || '',
-      city:      cf.city    || '',
-      region:    cf.region  || '',
-      userAgent,
-      selfTest, admin: false,
-    };
-    const accessWrite = env.BLUEPRINT_AUTH.put(
-      accessKey,
-      JSON.stringify(accessRec),
-      { expirationTtl: ACCESS_LOG_TTL_SECONDS }
-    ).catch(() => {});
-    if (ctx && ctx.waitUntil) ctx.waitUntil(accessWrite);
-
-    // Also surface the view in the cross-entity home feed. Registry names
-    // resolve in-memory (no KV read on this hot path); the location string
-    // is best-effort context.
-    const viewLoc = [cf.city, cf.region, cf.country].filter(Boolean).join(', ');
-    await logActivity(env, ctx, { type: 'view', entity: 'blueprint', id: blueprintId, name: await bpDisplayName(env, blueprintId), actor: email, detail: viewLoc });
-  }
-
-  // Fire-and-forget admin notification — don't block the response on the
-  // email send so the client unlocks even if the SMTP path is slow. Skip
-  // entirely for self-test sessions so we don't notify ourselves.
-  if (!selfTest) {
-    const notify = notifyAdmin(env, {
-      subject: `[Blueprint] ${blueprintId} viewed by ${email}`,
-      text:    `${email} just unlocked the Blueprint at /${blueprintId}/.`,
-    }).catch(() => {});
-    if (ctx && ctx.waitUntil) ctx.waitUntil(notify);
-  }
-
-  return json(200, { ok: true, token });
-}
-
 function genRandSlug() {
   const bytes = new Uint8Array(4);
   crypto.getRandomValues(bytes);
@@ -1034,40 +789,6 @@ async function bpDisplayName(env, id) {
   const raw = await env.BLUEPRINT_AUTH.get(`bp:${id}`);
   if (raw) { try { return JSON.parse(raw).name || id; } catch {} }
   return id;
-}
-
-async function handleNotify(request, env) {
-  let body;
-  try { body = await request.json(); }
-  catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
-
-  const token = (body.token || '').toString().trim();
-  const event = (body.event || '').toString().trim();
-  if (!token || !event) return json(400, { ok: false, error: 'Missing token or event' });
-
-  const sess = await getBlueprintSession(env, token);
-  if (!sess) return json(401, { ok: false, error: 'Session expired' });
-  if (!sessionBindingOk(sess, request)) return json(401, { ok: false, error: 'Session expired' });
-
-  // Admins are us — don't spam denis@uncap.com with notifications on our
-  // own preview clicks. Same for self-test sessions where the logged-in
-  // email is denis@uncap.com itself (mirrors the skip in handleVerify).
-  if (sess.admin)    return json(200, { ok: true, skipped: 'admin' });
-  if (sess.selfTest) return json(200, { ok: true, skipped: 'self-test' });
-
-  const subject = event === 'approve'
-    ? `[Blueprint] ${sess.blueprintId} APPROVED by ${sess.email}`
-    : `[Blueprint] ${sess.blueprintId} viewed by ${sess.email}`;
-  const text = event === 'approve'
-    ? `${sess.email} just clicked Approve & kickoff on /${sess.blueprintId}/.`
-    : `${sess.email} just viewed /${sess.blueprintId}/.`;
-
-  try {
-    await notifyAdmin(env, { subject, text });
-    return json(200, { ok: true });
-  } catch (err) {
-    return json(502, { ok: false, error: err.message || 'send failed' });
-  }
 }
 
 // Records an Approve & kickoff signature. Writes a permanent KV record
@@ -1254,20 +975,6 @@ async function getBpMeta(env, id) {
   const raw = await env.BLUEPRINT_AUTH.get(`bpmeta:${id}`);
   if (!raw) return {};
   try { return JSON.parse(raw); } catch { return {}; }
-}
-
-// Per-blueprint dynamic allowlist (bpallow:<id>): lowercased emails of the
-// Client Lead + Associated Contacts chosen from Attio when the blueprint
-// was created. Empty array (the default for anything never populated)
-// means "no dynamic restriction" — same as the static allowlist being
-// absent.
-async function getBpAllowlist(env, id) {
-  const raw = await env.BLUEPRINT_AUTH.get(`bpallow:${id}`);
-  if (!raw) return [];
-  try {
-    const list = JSON.parse(raw);
-    return Array.isArray(list) ? list : [];
-  } catch { return []; }
 }
 
 // expiresAt is a YYYY-MM-DD date; the blueprint stays valid through the
