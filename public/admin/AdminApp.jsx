@@ -96,9 +96,11 @@
   // this same index.html, which re-mounts AdminApp and this parses the
   // pathname straight back to the right route.
   function parseRoute() {
-    const seg = window.location.pathname.split('/').filter(Boolean)[0];
+    const segs = window.location.pathname.split('/').filter(Boolean);
+    const seg = segs[0] === 'admin' ? segs[1] : segs[0];
     if (seg === 'discoveries') return 'discoveries';
     if (seg === 'blueprints') return 'blueprints';
+    if (seg === 'companies') return 'companies';
     return 'home';
   }
   // Client-side transition: pushState updates the URL without a reload,
@@ -242,11 +244,12 @@
   function TopBar({ me, route, onLogout }) {
     const isMobile = useIsMobile();
     const items = [
+      { id: 'companies',   l: 'Companies' },
       { id: 'discoveries', l: 'Discoveries' },
       { id: 'blueprints',  l: 'Blueprints' },
     ];
     const pill = (it) => {
-      const path = it.id === 'home' ? '/' : '/' + it.id;
+      const path = it.id === 'home' ? '/admin' : '/admin/' + it.id;
       return (
         <a key={it.id} href={path} onClick={navClick(path)} style={{
           padding: '7px 14px', borderRadius: 999, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
@@ -267,7 +270,7 @@
           gap: isMobile ? 10 : 26,
           flexWrap: isMobile ? 'wrap' : 'nowrap',
         }}>
-          <a href="/" onClick={navClick('/')} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
+          <a href="/admin" onClick={navClick('/admin')} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
             <img src="/assets/uncap-logo-black.svg" alt="Uncap" style={{ height: 20, width: 'auto', display: 'block' }}/>
             <span style={{ ...S.eyebrow, color: T.fg1 }}>GO</span>
           </a>
@@ -872,6 +875,433 @@
           <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', paddingTop: 4 }}>
             <button type="button" style={S.btnGhost} onClick={onClose} disabled={busy}>Cancel</button>
             <button type="submit" style={{ ...S.btnLime, opacity: busy ? 0.7 : 1 }} disabled={busy}>{busy ? (busyLabel || 'Saving…') : 'Save discovery'}</button>
+          </div>
+        </form>
+      </Modal>
+    );
+  }
+
+  // ── Companies ────────────────────────────────────────────────────────
+  // The portal's source of truth. Imported from Attio once, then owned
+  // here: admins override anything, upload the logo, palette, and the
+  // client documents (RFP / technical brief / other files) that both the
+  // customer portal and the discovery pre-fill read from.
+  const CO_FILE_KINDS = [
+    ['rfp', 'RFP'],
+    ['brief', 'Technical Brief'],
+    ['doc', 'Documents'],
+  ];
+
+  function Companies() {
+    const [rows, setRows] = useState(null);
+    const [error, setError] = useState('');
+    const [adding, setAdding] = useState(false);
+    const [editing, setEditing] = useState(null); // company record
+
+    const load = async () => {
+      try { setRows((await api('/api/admin/companies')).companies); }
+      catch (err) { setError(err.message); setRows([]); }
+    };
+    useEffect(() => { load(); }, []);
+
+    const remove = async (co) => {
+      if (!window.confirm('Remove ' + co.name + ' from the portal?\n\nTheir contacts lose portal access and uploaded files are deleted. Discoveries and blueprints are not touched.')) return;
+      try { await api('/api/admin/company/delete', { method: 'POST', body: JSON.stringify({ id: co.id }) }); load(); }
+      catch (err) { window.alert(err.message); }
+    };
+
+    return (
+      <Page>
+        <PageHead eyebrow="Portal" title="Companies" action={
+          <button type="button" style={S.btnLime} onClick={() => setAdding(true)}>+ Add company</button>
+        }/>
+        {rows === null ? (
+          <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>Loading…</div>
+        ) : rows.length === 0 ? (
+          <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>
+            {error || 'No companies yet. Add the first one to open the portal to its contacts.'}
+          </div>
+        ) : (
+          <div style={{ ...S.card, overflow: 'hidden' }}>
+            {rows.map((co, i) => (
+              <div key={co.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', borderBottom: i < rows.length - 1 ? `1px solid ${T.line}` : 'none' }}>
+                <span style={{ width: 40, height: 40, borderRadius: 8, background: T.cream, border: `1px solid ${T.line}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+                  {co.hasLogo
+                    ? <img src={'/api/company/logo?id=' + encodeURIComponent(co.id) + '&t=' + encodeURIComponent(co.updatedAt || '')} alt="" style={{ maxWidth: 34, maxHeight: 30, objectFit: 'contain' }}/>
+                    : <span style={{ fontFamily: T.mono, fontSize: 14, fontWeight: 700, color: T.fg3 }}>{(co.name || '?')[0].toUpperCase()}</span>}
+                </span>
+                <div style={{ flex: '1 1 auto', minWidth: 0 }}>
+                  <div style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 14.5, color: T.fg1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{co.name}</div>
+                  <div style={{ fontFamily: T.mono, fontSize: 11, color: T.fg3, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                    {[co.storeUrl, co.leadContact && (co.leadContact.name || co.leadContact.email), (co.files || []).length ? (co.files.length + ' file' + (co.files.length > 1 ? 's' : '')) : ''].filter(Boolean).join(' · ')}
+                  </div>
+                </div>
+                {co.discoveryHandle ? <span style={{ fontFamily: T.mono, fontSize: 9, letterSpacing: '0.06em', background: '#EEF0FE', color: '#3A44C4', borderRadius: 999, padding: '3px 8px', flexShrink: 0 }}>DISCOVERY</span> : null}
+                {co.blueprintId ? <span style={{ fontFamily: T.mono, fontSize: 9, letterSpacing: '0.06em', background: '#DFFCE6', color: '#064E2E', borderRadius: 999, padding: '3px 8px', flexShrink: 0 }}>BLUEPRINT</span> : null}
+                <button type="button" style={{ ...S.btnGhost, flexShrink: 0 }} onClick={() => setEditing(co)}>Edit</button>
+                <button type="button" aria-label={'Delete ' + co.name} onClick={() => remove(co)}
+                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 8, border: `1px solid ${T.line}`, background: 'transparent', color: '#B3261E', cursor: 'pointer', flexShrink: 0 }}><IconTrash/></button>
+              </div>
+            ))}
+          </div>
+        )}
+        {adding && <AddCompanyModal onClose={() => setAdding(false)} onSaved={(co) => { setAdding(false); load(); if (co) setEditing(co); }}/>}
+        {editing && <EditCompanyModal co={editing} onClose={() => { setEditing(null); load(); }}/>}
+      </Page>
+    );
+  }
+
+  // Import step: pick the company in Attio, contacts load automatically,
+  // fill in what Attio doesn't know. Files are added on the edit screen
+  // that opens right after saving.
+  function AddCompanyModal({ onClose, onSaved }) {
+    const [company, setCompany] = useState(null);
+    const [form, setForm] = useState({ storeUrl: '', address: '', description: '', platform: '', erp: '' });
+    const [contacts, setContacts] = useState([]);
+    const [contactsState, setContactsState] = useState('idle');
+    const [logo, setLogo] = useState(null);
+    const [prime, setPrime] = useState('#2F7A47');
+    const [accent, setAccent] = useState('#B8741F');
+    const [busy, setBusy] = useState(false);
+    const [error, setError] = useState('');
+
+    const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
+    const readFile = (file, cb) => {
+      const r = new FileReader();
+      r.onload = () => { const b64 = (r.result || '').toString().split(',')[1] || ''; cb(b64, r.result); };
+      r.readAsDataURL(file);
+    };
+    const LOGO_TYPES = { 'image/png': 1, 'image/jpeg': 1, 'image/svg+xml': 1 };
+    const onLogoFile = (file) => {
+      if (!file) return;
+      const type = file.type === 'image/jpg' ? 'image/jpeg' : file.type;
+      if (!LOGO_TYPES[type]) { setError('Logo must be an SVG, PNG, or JPG'); return; }
+      if (file.size > 1_400_000) { setError('Logo must be under 1.4 MB'); return; }
+      readFile(file, (b64, dataUrl) => { setLogo({ type, data: b64, name: file.name, preview: dataUrl }); setError(''); });
+    };
+
+    const pickCompany = (c) => {
+      setCompany(c);
+      setForm((f) => ({ ...f, storeUrl: c.domain || '', address: c.address || '' }));
+      setContacts([]);
+      setContactsState('loading');
+      api('/api/admin/attio/company-people?companyId=' + encodeURIComponent(c.attioId))
+        .then((d) => {
+          setContacts((d.people || []).map((p, i) => ({ ...p, role: i === 0 ? 'lead' : 'associated' })));
+          setContactsState('done');
+        })
+        .catch((err) => { setContactsState('error'); setError(err.message); });
+    };
+    const setRole = (email, role) => setContacts((list) => list.map((c) =>
+      c.email === email ? { ...c, role } : (role === 'lead' && c.role === 'lead' ? { ...c, role: 'associated' } : c)
+    ));
+    const removeContact = (email) => setContacts((list) => list.filter((c) => c.email !== email));
+
+    const save = async (e) => {
+      e.preventDefault();
+      if (!company) { setError('Pick a company from Attio'); return; }
+      const lead = contacts.find((c) => c.role === 'lead') || null;
+      setBusy(true); setError('');
+      try {
+        const d = await api('/api/admin/companies', {
+          method: 'POST',
+          body: JSON.stringify({
+            name: company.name, attioCompanyId: company.attioId,
+            storeUrl: form.storeUrl.trim(), address: form.address.trim(),
+            description: form.description.trim(), platform: form.platform.trim(), erp: form.erp.trim(),
+            leadContact: lead,
+            contacts: contacts.filter((c) => c.role !== 'lead'),
+            palette: { prime, accent },
+            logo: logo ? { type: logo.type, data: logo.data } : null,
+          }),
+        });
+        onSaved(d.company || null);
+      } catch (err) { setError(err.message); setBusy(false); }
+    };
+
+    return (
+      <Modal title="Add company" sub="Pick the company. Contacts and details will load from Attio; you can override everything after." onClose={onClose}>
+        <form onSubmit={save} style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <CompanyPicker company={company} onPick={pickCompany} onClear={() => { setCompany(null); setContacts([]); setContactsState('idle'); }}/>
+          {company && (
+            <>
+              <Field label="Store URL" value={form.storeUrl} onChange={set('storeUrl')} placeholder="acme.com"/>
+              <Field label="Address" value={form.address} onChange={set('address')} placeholder="100 Main St, Chicago, IL"/>
+              <div>
+                <label style={S.label}>Description</label>
+                <textarea value={form.description} onChange={(e) => set('description')(e.target.value)} rows={3} placeholder="What they make or distribute, who buys it…"
+                  style={{ ...S.input, resize: 'vertical', lineHeight: 1.5 }}/>
+              </div>
+              <div style={{ display: 'flex', gap: 12 }}>
+                <div style={{ flex: 1 }}><Field label="Current platform" value={form.platform} onChange={set('platform')} placeholder="e.g. Magento Open Source"/></div>
+                <div style={{ flex: 1 }}><Field label="Current ERP" value={form.erp} onChange={set('erp')} placeholder="e.g. Sage X3"/></div>
+              </div>
+              <ContactsEditor contacts={contacts} state={contactsState} onRole={setRole} onRemove={removeContact} onAdd={(c) => setContacts((l) => l.some((x) => x.email === c.email) ? l : [...l, c])}/>
+              <div>
+                <label style={S.label}>Company logo</label>
+                {logo ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: T.cream, border: `1px solid ${T.line}`, borderRadius: 8 }}>
+                    <img src={logo.preview} alt="" style={{ height: 34, maxWidth: 140, objectFit: 'contain', display: 'block' }}/>
+                    <span style={{ flex: 1, fontFamily: T.mono, fontSize: 11, color: T.fg3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{logo.name}</span>
+                    <button type="button" aria-label="Remove logo" onClick={() => setLogo(null)}
+                      style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: 999, border: 'none', background: T.line, color: T.fg1, cursor: 'pointer', fontSize: 11, lineHeight: 1, padding: 0, flexShrink: 0 }}>✕</button>
+                  </div>
+                ) : (
+                  <input type="file" accept=".svg,.png,.jpg,.jpeg,image/svg+xml,image/png,image/jpeg"
+                    onChange={(e) => onLogoFile(e.target.files && e.target.files[0])}
+                    style={{ ...S.input, padding: '10px 12px', fontSize: 13, cursor: 'pointer' }}/>
+                )}
+              </div>
+              <div>
+                <label style={S.label}>Color palette</label>
+                <div style={{ display: 'flex', gap: 16 }}>
+                  {[['Prime', prime, setPrime], ['Accent', accent, setAccent]].map(([l, v, setC]) => (
+                    <label key={l} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: T.cream, border: `1px solid ${T.line}`, borderRadius: 8, cursor: 'pointer' }}>
+                      <input type="color" value={v} onChange={(e) => setC(e.target.value)}
+                        style={{ width: 34, height: 34, padding: 0, border: 'none', background: 'transparent', cursor: 'pointer' }}/>
+                      <span style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 13, color: T.fg1 }}>{l}</span>
+                      <span style={{ marginLeft: 'auto', fontFamily: T.mono, fontSize: 11, color: T.fg3 }}>{v.toUpperCase()}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+          {error && <div style={{ color: '#B3261E', fontFamily: T.sans, fontSize: 13 }}>{error}</div>}
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', paddingTop: 4 }}>
+            <button type="button" style={S.btnGhost} onClick={onClose} disabled={busy}>Cancel</button>
+            <button type="submit" style={{ ...S.btnLime, opacity: busy ? 0.7 : 1 }} disabled={busy}>{busy ? 'Saving…' : 'Add company'}</button>
+          </div>
+        </form>
+      </Modal>
+    );
+  }
+
+  // Shared contact rows: role select + remove, plus a manual add row for
+  // people who are not in Attio.
+  function ContactsEditor({ contacts, state, onRole, onRemove, onAdd }) {
+    const [draft, setDraft] = useState({ name: '', email: '', title: '' });
+    const add = () => {
+      const email = draft.email.trim().toLowerCase();
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
+      onAdd({ name: draft.name.trim(), email, title: draft.title.trim(), role: contacts.some((c) => c.role === 'lead') ? 'associated' : 'lead' });
+      setDraft({ name: '', email: '', title: '' });
+    };
+    return (
+      <div>
+        <label style={S.label}>Contacts · they sign in to the portal with these emails</label>
+        {state === 'loading' && <div style={{ fontFamily: T.sans, fontSize: 13, color: T.fg3, padding: '8px 2px' }}>Loading contacts from Attio…</div>}
+        {state === 'error' && <div style={{ fontFamily: T.sans, fontSize: 13, color: '#B3261E', padding: '8px 2px' }}>Couldn&#39;t load contacts from Attio. Add them below.</div>}
+        {contacts.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 8 }}>
+            {contacts.map((c) => (
+              <div key={c.email} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: T.cream, border: `1px solid ${c.role === 'lead' ? T.black : T.line}`, borderRadius: 8 }}>
+                <div style={{ flex: '1 1 auto', minWidth: 0 }}>
+                  <div style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 13.5, color: T.fg1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name || c.email}</div>
+                  <div style={{ fontFamily: T.mono, fontSize: 11, color: T.fg3, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.email}{c.title ? ' · ' + c.title : ''}</div>
+                </div>
+                <select value={c.role} onChange={(e) => onRole(c.email, e.target.value)} aria-label={'Role for ' + (c.name || c.email)}
+                  style={{ ...S.input, width: 'auto', flexShrink: 0, padding: '8px 10px', fontSize: 13, cursor: 'pointer' }}>
+                  <option value="lead">Lead contact</option>
+                  <option value="associated">Associated contact</option>
+                </select>
+                <button type="button" aria-label={'Remove ' + (c.name || c.email)} onClick={() => onRemove(c.email)}
+                  style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: 999, border: 'none', background: T.line, color: T.fg1, cursor: 'pointer', fontSize: 11, lineHeight: 1, padding: 0, flexShrink: 0 }}>✕</button>
+              </div>
+            ))}
+          </div>
+        )}
+        <div style={{ display: 'flex', gap: 8 }}>
+          <input value={draft.name} onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))} placeholder="Name" style={{ ...S.input, flex: 1.1, padding: '9px 10px', fontSize: 13 }}/>
+          <input value={draft.email} onChange={(e) => setDraft((d) => ({ ...d, email: e.target.value }))} placeholder="email@company.com" style={{ ...S.input, flex: 1.4, padding: '9px 10px', fontSize: 13 }}/>
+          <input value={draft.title} onChange={(e) => setDraft((d) => ({ ...d, title: e.target.value }))} placeholder="Title" style={{ ...S.input, flex: 1, padding: '9px 10px', fontSize: 13 }}/>
+          <button type="button" style={{ ...S.btnGhost, flexShrink: 0 }} onClick={add}>Add</button>
+        </div>
+      </div>
+    );
+  }
+
+  // Full profile editor: every field is overridable, and this is where the
+  // company's files live.
+  function EditCompanyModal({ co: initial, onClose }) {
+    const [co, setCo] = useState(initial);
+    const [form, setForm] = useState({
+      name: initial.name || '', storeUrl: initial.storeUrl || '', address: initial.address || '',
+      description: initial.description || '', platform: initial.platform || '', erp: initial.erp || '',
+      discoveryHandle: initial.discoveryHandle || '', blueprintId: initial.blueprintId || '',
+    });
+    const [contacts, setContacts] = useState(() => {
+      const list = [];
+      if (initial.leadContact) list.push({ ...initial.leadContact, role: 'lead' });
+      for (const c of initial.contacts || []) list.push({ ...c, role: 'associated' });
+      return list;
+    });
+    const [logoAction, setLogoAction] = useState(null); // null | {type,data,preview} | 'remove'
+    const [prime, setPrime] = useState((initial.palette && initial.palette.prime) || '#2F7A47');
+    const [accent, setAccent] = useState((initial.palette && initial.palette.accent) || '#B8741F');
+    const [busy, setBusy] = useState(false);
+    const [fileBusy, setFileBusy] = useState('');
+    const [error, setError] = useState('');
+
+    const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
+    const readFile = (file, cb) => {
+      const r = new FileReader();
+      r.onload = () => { const b64 = (r.result || '').toString().split(',')[1] || ''; cb(b64, r.result); };
+      r.readAsDataURL(file);
+    };
+    const LOGO_TYPES = { 'image/png': 1, 'image/jpeg': 1, 'image/svg+xml': 1 };
+    const onLogoFile = (file) => {
+      if (!file) return;
+      const type = file.type === 'image/jpg' ? 'image/jpeg' : file.type;
+      if (!LOGO_TYPES[type]) { setError('Logo must be an SVG, PNG, or JPG'); return; }
+      if (file.size > 1_400_000) { setError('Logo must be under 1.4 MB'); return; }
+      readFile(file, (b64, dataUrl) => { setLogoAction({ type, data: b64, preview: dataUrl }); setError(''); });
+    };
+    const setRole = (email, role) => setContacts((list) => list.map((c) =>
+      c.email === email ? { ...c, role } : (role === 'lead' && c.role === 'lead' ? { ...c, role: 'associated' } : c)
+    ));
+
+    const uploadFile = (kind) => (e) => {
+      const file = e.target.files && e.target.files[0];
+      e.target.value = '';
+      if (!file) return;
+      if (file.size > 10_000_000) { setError('Files must be under 10 MB'); return; }
+      setFileBusy(kind); setError('');
+      readFile(file, async (b64) => {
+        try {
+          const d = await api('/api/admin/company/file', {
+            method: 'POST',
+            body: JSON.stringify({ id: co.id, kind, name: file.name, type: file.type, data: b64 }),
+          });
+          setCo(d.company);
+        } catch (err) { setError(err.message); }
+        setFileBusy('');
+      });
+    };
+    const deleteFile = async (fid) => {
+      try {
+        const d = await api('/api/admin/company/file-delete', { method: 'POST', body: JSON.stringify({ id: co.id, fid }) });
+        setCo(d.company);
+      } catch (err) { setError(err.message); }
+    };
+
+    const save = async (e) => {
+      e.preventDefault();
+      const lead = contacts.find((c) => c.role === 'lead') || null;
+      setBusy(true); setError('');
+      try {
+        await api('/api/admin/company/update', {
+          method: 'POST',
+          body: JSON.stringify({
+            id: co.id,
+            name: form.name.trim(), storeUrl: form.storeUrl.trim(), address: form.address.trim(),
+            description: form.description.trim(), platform: form.platform.trim(), erp: form.erp.trim(),
+            attioCompanyId: co.attioCompanyId || '',
+            leadContact: lead,
+            contacts: contacts.filter((c) => c.role !== 'lead'),
+            palette: { prime, accent },
+            logo: logoAction && logoAction !== 'remove' ? { type: logoAction.type, data: logoAction.data } : null,
+            removeLogo: logoAction === 'remove',
+            discoveryHandle: form.discoveryHandle.trim(), blueprintId: form.blueprintId.trim(),
+          }),
+        });
+        onClose();
+      } catch (err) { setError(err.message); setBusy(false); }
+    };
+
+    const fileRow = (f) => (
+      <div key={f.fid} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: T.cream, border: `1px solid ${T.line}`, borderRadius: 8 }}>
+        <a href={'/api/admin/company/file?id=' + encodeURIComponent(co.id) + '&fid=' + encodeURIComponent(f.fid)}
+          style={{ flex: '1 1 auto', minWidth: 0, fontFamily: T.mono, fontSize: 11.5, color: T.fg1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', textDecoration: 'none' }}>{f.name} ↓</a>
+        <span style={{ fontFamily: T.mono, fontSize: 10, color: T.fg3, flexShrink: 0 }}>{f.size ? Math.max(1, Math.round(f.size / 1024)) + ' KB' : ''}</span>
+        <button type="button" aria-label={'Delete ' + f.name} onClick={() => deleteFile(f.fid)}
+          style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: 999, border: 'none', background: T.line, color: T.fg1, cursor: 'pointer', fontSize: 11, lineHeight: 1, padding: 0, flexShrink: 0 }}>✕</button>
+      </div>
+    );
+
+    return (
+      <Modal title={'Edit ' + (initial.name || 'company')} sub="Everything here feeds the customer portal and new discoveries." onClose={onClose} width={640}>
+        <form onSubmit={save} style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <Field label="Company name" value={form.name} onChange={set('name')}/>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <div style={{ flex: 1 }}><Field label="Store URL" value={form.storeUrl} onChange={set('storeUrl')} placeholder="acme.com"/></div>
+            <div style={{ flex: 1 }}><Field label="Address" value={form.address} onChange={set('address')} placeholder="100 Main St, Chicago, IL"/></div>
+          </div>
+          <div>
+            <label style={S.label}>Description</label>
+            <textarea value={form.description} onChange={(e) => set('description')(e.target.value)} rows={3}
+              style={{ ...S.input, resize: 'vertical', lineHeight: 1.5 }}/>
+          </div>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <div style={{ flex: 1 }}><Field label="Current platform" value={form.platform} onChange={set('platform')} placeholder="e.g. Magento Open Source"/></div>
+            <div style={{ flex: 1 }}><Field label="Current ERP" value={form.erp} onChange={set('erp')} placeholder="e.g. Sage X3"/></div>
+          </div>
+          <ContactsEditor contacts={contacts} state="done" onRole={setRole}
+            onRemove={(email) => setContacts((l) => l.filter((c) => c.email !== email))}
+            onAdd={(c) => setContacts((l) => l.some((x) => x.email === c.email) ? l : [...l, c])}/>
+          <div>
+            <label style={S.label}>Company logo</label>
+            {logoAction && logoAction !== 'remove' ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: T.cream, border: `1px solid ${T.line}`, borderRadius: 8 }}>
+                <img src={logoAction.preview} alt="" style={{ height: 34, maxWidth: 140, objectFit: 'contain', display: 'block' }}/>
+                <span style={{ flex: 1, fontFamily: T.mono, fontSize: 11, color: T.fg3 }}>New logo (saved on Save)</span>
+                <button type="button" onClick={() => setLogoAction(null)} style={{ ...S.btnGhost, padding: '6px 10px' }}>Undo</button>
+              </div>
+            ) : co.hasLogo && logoAction !== 'remove' ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: T.cream, border: `1px solid ${T.line}`, borderRadius: 8 }}>
+                <img src={'/api/company/logo?id=' + encodeURIComponent(co.id) + '&t=' + encodeURIComponent(co.updatedAt || '')} alt="" style={{ height: 34, maxWidth: 140, objectFit: 'contain', display: 'block' }}/>
+                <span style={{ flex: 1 }}></span>
+                <label style={{ ...S.btnGhost, padding: '6px 10px', cursor: 'pointer' }}>Replace<input type="file" accept=".svg,.png,.jpg,.jpeg" style={{ display: 'none' }} onChange={(e) => onLogoFile(e.target.files && e.target.files[0])}/></label>
+                <button type="button" onClick={() => setLogoAction('remove')} style={{ ...S.btnGhost, padding: '6px 10px', color: '#B3261E' }}>Remove</button>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                {logoAction === 'remove' ? <span style={{ fontFamily: T.sans, fontSize: 13, color: T.fg3 }}>Logo will be removed.</span> : null}
+                <input type="file" accept=".svg,.png,.jpg,.jpeg,image/svg+xml,image/png,image/jpeg"
+                  onChange={(e) => onLogoFile(e.target.files && e.target.files[0])}
+                  style={{ ...S.input, padding: '10px 12px', fontSize: 13, cursor: 'pointer' }}/>
+              </div>
+            )}
+          </div>
+          <div>
+            <label style={S.label}>Color palette</label>
+            <div style={{ display: 'flex', gap: 16 }}>
+              {[['Prime', prime, setPrime], ['Accent', accent, setAccent]].map(([l, v, setC]) => (
+                <label key={l} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: T.cream, border: `1px solid ${T.line}`, borderRadius: 8, cursor: 'pointer' }}>
+                  <input type="color" value={v} onChange={(e) => setC(e.target.value)}
+                    style={{ width: 34, height: 34, padding: 0, border: 'none', background: 'transparent', cursor: 'pointer' }}/>
+                  <span style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 13, color: T.fg1 }}>{l}</span>
+                  <span style={{ marginLeft: 'auto', fontFamily: T.mono, fontSize: 11, color: T.fg3 }}>{v.toUpperCase()}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+          {CO_FILE_KINDS.map(([kind, label]) => {
+            const files = (co.files || []).filter((f) => f.kind === kind);
+            const single = kind !== 'doc';
+            return (
+              <div key={kind}>
+                <label style={S.label}>{label}{single ? ' · one file, a new upload replaces it' : ''}</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {files.map(fileRow)}
+                  {(!single || files.length === 0 || true) && (
+                    <label style={{ ...S.input, padding: '10px 12px', fontSize: 13, cursor: 'pointer', color: T.fg3 }}>
+                      {fileBusy === kind ? 'Uploading…' : (single && files.length ? 'Replace ' + label.toLowerCase() + '…' : 'Upload ' + (single ? label.toLowerCase() : 'a document') + '…')}
+                      <input type="file" style={{ display: 'none' }} disabled={!!fileBusy} onChange={uploadFile(kind)}/>
+                    </label>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+          <div style={{ display: 'flex', gap: 12 }}>
+            <div style={{ flex: 1 }}><Field label="Discovery handle · powers the portal Discovery tab" value={form.discoveryHandle} onChange={set('discoveryHandle')} placeholder="e.g. cartoncraft"/></div>
+            <div style={{ flex: 1 }}><Field label="Blueprint ID · powers the portal Blueprint tab" value={form.blueprintId} onChange={set('blueprintId')} placeholder="e.g. cartoncraftsupply"/></div>
+          </div>
+          {error && <div style={{ color: '#B3261E', fontFamily: T.sans, fontSize: 13 }}>{error}</div>}
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', paddingTop: 4 }}>
+            <button type="button" style={S.btnGhost} onClick={onClose} disabled={busy}>Close</button>
+            <button type="submit" style={{ ...S.btnLime, opacity: busy ? 0.7 : 1 }} disabled={busy}>{busy ? 'Saving…' : 'Save company'}</button>
           </div>
         </form>
       </Modal>
@@ -1632,7 +2062,7 @@
                 {pageRows.map((ev, i) => {
                   const a = actStyle(ev.type);
                   const hasChanges = ev.type === 'disc-update' && ev.ref;
-                  const path = ev.entity === 'discovery' ? '/discoveries' : '/blueprints';
+                  const path = ev.entity === 'discovery' ? '/admin/discoveries' : ev.entity === 'company' ? '/admin/companies' : '/admin/blueprints';
                   const onRowClick = hasChanges
                     ? (e) => { e.preventDefault(); setChangesRef(ev.ref); }
                     : navClick(path);
@@ -1746,7 +2176,7 @@
     return (
       <div style={{ minHeight: '100vh', background: T.cream }}>
         <TopBar me={me} route={route} onLogout={logout}/>
-        {route === 'discoveries' ? <Discoveries/> : route === 'blueprints' ? <Blueprints me={me}/> : <Home/>}
+        {route === 'companies' ? <Companies/> : route === 'discoveries' ? <Discoveries/> : route === 'blueprints' ? <Blueprints me={me}/> : <Home/>}
       </div>
     );
   }
