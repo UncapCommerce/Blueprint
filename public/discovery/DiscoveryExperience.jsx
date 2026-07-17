@@ -460,6 +460,18 @@
       if (el) showCard(hid, el);
     };
     const onSiteClick = (e) => {
+      // Categories mega menu: the trigger toggles its panel, clicks inside
+      // the open panel are inert, and any other scene click closes it.
+      const root = contentInnerRef.current;
+      const trigger = e.target.closest ? e.target.closest('[data-mega]') : null;
+      if (trigger) {
+        const menu = trigger.parentElement && trigger.parentElement.querySelector('[data-megamenu]');
+        if (menu) menu.style.display = menu.style.display === 'none' ? 'block' : 'none';
+        return;
+      }
+      if (e.target.closest && e.target.closest('[data-megamenu]')) return;
+      const openMenu = root && root.querySelector('[data-megamenu]');
+      if (openMenu && openMenu.style.display !== 'none') openMenu.style.display = 'none';
       const el = e.target.closest ? e.target.closest('[data-hotspot]') : null;
       if (!el) { setActiveHotspotId(null); setInfoCard(null); return; }
       const hid = el.getAttribute('data-hotspot');
