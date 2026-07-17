@@ -20,6 +20,7 @@
 import { EmailMessage } from "cloudflare:email";
 import { buildDiscoveryProfile, buildDiscoveryProfileWithAI, STOCK_SEARCH_TOKEN } from "./discovery-profile.js";
 import { prefillAnswersFromDoc, b64ToBytes } from "./discovery-prefill.js";
+import { buildBlueprintContent } from "./blueprint-content.js";
 
 const CODE_TTL_SECONDS       = 10 * 60;             // 10 minutes
 const SESSION_TTL_SECONDS    = 2 * 60 * 60;         // 2 hours (client blueprint sessions)
@@ -253,10 +254,16 @@ export default {
       return handleAdminBlueprints(request, env);
     }
     if (url.pathname === '/api/admin/blueprints' && request.method === 'POST') {
-      return handleAdminCreateBlueprint(request, env);
+      return handleAdminCreateBlueprint(request, env, ctx);
     }
     if (url.pathname === '/api/admin/blueprint/delete' && request.method === 'POST') {
       return handleAdminDeleteBlueprint(request, env);
+    }
+    if (url.pathname === '/api/admin/blueprint/content' && request.method === 'POST') {
+      return handleAdminSaveBlueprintContent(request, env);
+    }
+    if (url.pathname === '/api/admin/blueprint/generate' && request.method === 'POST') {
+      return handleAdminGenerateBlueprint(request, env);
     }
     if (url.pathname === '/api/admin/blueprint-meta' && request.method === 'POST') {
       return handleAdminBlueprintMeta(request, env);
@@ -355,6 +362,9 @@ export default {
     }
     if (url.pathname === '/api/company/logo' && request.method === 'GET') {
       return handleCompanyLogo(request, env);
+    }
+    if (url.pathname === '/api/blueprint/content' && request.method === 'GET') {
+      return handleBlueprintContent(request, env);
     }
     if (url.pathname === '/api/portal/request-code' && request.method === 'POST') {
       return handlePortalRequestCode(request, env);
@@ -1465,7 +1475,7 @@ async function handleAdminBlueprints(request, env) {
 // Save a new-blueprint request. Phase 1 records it as a draft in KV; the
 // template generator that clones AnatomyWarehouse into a live page is the
 // next phase and will consume these records.
-async function handleAdminCreateBlueprint(request, env) {
+async function handleAdminCreateBlueprint(request, env, ctx) {
   const sess = await getAdminSession(request, env);
   if (!sess) return json(401, { ok: false, error: 'Not signed in' });
   if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
@@ -1541,7 +1551,143 @@ async function handleAdminCreateBlueprint(request, env) {
   if (templateTos) await env.BLUEPRINT_AUTH.put(`bptos:${slug}`, templateTos);
 
   await logActivity(env, null, { type: 'created', entity: 'blueprint', id: slug, name, actor: sess.email, detail: 'Blueprint draft created' });
+
+  // Draft the templated proposal content in the background from the company's
+  // discovery answers, so the admin opens the editor to a filled-in draft
+  // instead of a blank form. It lands as status:'draft' — never shown to the
+  // customer until an admin reviews and marks it ready.
+  if (ctx && ctx.waitUntil) {
+    ctx.waitUntil((async () => {
+      try {
+        let answers = {};
+        if (portalCo.discoveryHandle) {
+          const disc = await getDiscoveryByHandle(env, portalCo.discoveryHandle);
+          if (disc) answers = (await getDiscoveryAnswers(env, disc.id)).answers || {};
+        }
+        const content = await buildBlueprintContent(env, { company: portalCo, answers });
+        const raw = await env.BLUEPRINT_AUTH.get(`bp:${slug}`);
+        if (!raw) return;
+        const cur = JSON.parse(raw);
+        if (cur.content && cur.content.status) return; // an admin already edited it
+        cur.content = { ...content, status: 'draft', generatedAt: new Date().toISOString(), generatedBy: 'ai' };
+        await env.BLUEPRINT_AUTH.put(`bp:${slug}`, JSON.stringify(cur));
+      } catch (_) { /* editor can still generate on demand */ }
+    })());
+  }
+
   return json(200, { ok: true, blueprint: rec });
+}
+
+// Sanitize the structured blueprint content an admin saves from the editor.
+// Mirrors the generator's shape; clamps lengths and strips banned dashes.
+function sanitizeBlueprintContent(raw) {
+  const s = (v, max) => (v == null ? '' : v.toString()).replace(/\s+[—–]\s+/g, ', ').replace(/[—–]/g, '-').replace(/\s+/g, ' ').trim().slice(0, max || 400);
+  const list = (arr, fn, max) => (Array.isArray(arr) ? arr.slice(0, max).map(fn) : []);
+  const c = raw && typeof raw === 'object' ? raw : {};
+  const inv = c.investment && typeof c.investment === 'object' ? c.investment : {};
+  const tl = c.timeline && typeof c.timeline === 'object' ? c.timeline : {};
+  return {
+    status: c.status === 'ready' ? 'ready' : 'draft',
+    headline: s(c.headline, 120),
+    subhead: s(c.subhead, 200),
+    summary: s(c.summary, 900),
+    objectives: list(c.objectives, (o) => ({ title: s(o && o.title, 80), body: s(o && o.body, 300) }), 8).filter((o) => o.title || o.body),
+    scope: list(c.scope, (o) => ({ title: s(o && o.title, 80), body: s(o && o.body, 300) }), 12).filter((o) => o.title || o.body),
+    investment: {
+      total: s(inv.total, 40),
+      note: s(inv.note, 200),
+      installments: list(inv.installments, (o) => ({ label: s(o && o.label, 60), amount: s(o && o.amount, 40) }), 8).filter((o) => o.label || o.amount),
+    },
+    timeline: {
+      weeks: s(tl.weeks, 40),
+      note: s(tl.note, 200),
+      phases: list(tl.phases, (o) => ({ name: s(o && o.name, 60), weeks: s(o && o.weeks, 40), detail: s(o && o.detail, 300) }), 10).filter((o) => o.name || o.detail),
+    },
+    team: list(c.team, (o) => ({ name: s(o && o.name, 80), role: s(o && o.role, 120) }), 10).filter((o) => o.name || o.role),
+    generatedAt: c.generatedAt || '',
+    generatedBy: c.generatedBy || '',
+  };
+}
+
+// Public-ish content read for the template renderer. Cookie-gated: an approved
+// admin, or a portal session of the company that owns this blueprint. Accepts
+// ?id=<blueprintId> (admin preview) or ?company=<companyId> (portal frame).
+async function handleBlueprintContent(request, env) {
+  const url = new URL(request.url);
+  let id = normalizeBlueprintId(url.searchParams.get('id') || '');
+  let company = null;
+  const companyId = (url.searchParams.get('company') || '').toString();
+  if (companyId) {
+    company = await getCompany(env, companyId);
+    if (company) id = normalizeBlueprintId(company.blueprintId || '');
+  }
+  if (!id) return json(404, { ok: false, error: 'Not found' });
+  if (!company) company = await findCompanyByBlueprintId(env, id);
+
+  // Authorize: approved admin, or the owning company's portal session.
+  const admin = await getAdminSession(request, env);
+  let ok = !!(admin && await adminIsApproved(env, admin.email));
+  if (!ok) {
+    const portal = await getPortalSession(request, env);
+    ok = !!(portal && company && portal.companyId === company.id);
+  }
+  if (!ok) return json(401, { ok: false, error: 'Not authorised' });
+
+  const draft = await blueprintDraft(env, id);
+  if (!draft || !draft.content) return json(404, { ok: false, error: 'No content yet' });
+  // Customers only ever see ready content; admins see drafts for preview.
+  if (draft.content.status !== 'ready' && !ok) return json(404, { ok: false, error: 'Not ready' });
+
+  return json(200, {
+    ok: true,
+    id,
+    name: (company && company.name) || draft.name || id,
+    content: draft.content,
+    branding: company ? {
+      hasLogo: !!company.hasLogo,
+      logoUrl: company.hasLogo ? `/api/company/logo?id=${encodeURIComponent(company.id)}` : '',
+      palette: company.palette || null,
+      address: company.address || '',
+      storeUrl: company.storeUrl || '',
+    } : null,
+  });
+}
+
+async function handleAdminSaveBlueprintContent(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+  let body;
+  try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  const id = normalizeBlueprintId(body.id || '');
+  const draft = await blueprintDraft(env, id);
+  if (!draft) return json(404, { ok: false, error: 'Blueprint draft not found' });
+  draft.content = sanitizeBlueprintContent(body.content);
+  await env.BLUEPRINT_AUTH.put(`bp:${id}`, JSON.stringify(draft));
+  return json(200, { ok: true, content: draft.content });
+}
+
+async function handleAdminGenerateBlueprint(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+  let body;
+  try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  const id = normalizeBlueprintId(body.id || '');
+  const draft = await blueprintDraft(env, id);
+  if (!draft) return json(404, { ok: false, error: 'Blueprint draft not found' });
+
+  const company = await findCompanyByBlueprintId(env, id);
+  let answers = {};
+  if (company && company.discoveryHandle) {
+    const disc = await getDiscoveryByHandle(env, company.discoveryHandle);
+    if (disc) answers = (await getDiscoveryAnswers(env, disc.id)).answers || {};
+  }
+  const content = await buildBlueprintContent(env, { company, answers });
+  // Regenerating keeps the draft unpublished; the admin re-reviews and marks ready.
+  draft.content = sanitizeBlueprintContent({ ...content, status: 'draft', generatedAt: new Date().toISOString(), generatedBy: sess.email });
+  await env.BLUEPRINT_AUTH.put(`bp:${id}`, JSON.stringify(draft));
+  return json(200, { ok: true, content: draft.content });
 }
 
 // Delete a blueprint DRAFT (super admin only). Shipped blueprints in

@@ -22,6 +22,8 @@
 // Discoveries created before this shipped (and the /discovery/uncap/ demo)
 // have no profile and keep the stock Harlow scenes.
 
+import { anthropicJson } from './anthropic.js';
+
 // ── Industry presets ──────────────────────────────────────────────────────
 // Every preset supplies the full slot set; DEFAULTS fills what a preset
 // omits. Slot names line up with TOKEN_SLOTS below.
@@ -645,8 +647,6 @@ function assembleProfile({ company, address }, site, parts) {
 // failure (no key, timeout, refusal, invalid JSON) leaves the deterministic
 // profile in place, so this is purely an upgrade path.
 
-const AI_MODEL = 'claude-opus-4-8';
-
 const AI_FIELDS = [
   // [key, max chars, description for the model]
   ['vertical', 24, 'Market label for the masthead spec line, ALL CAPS, e.g. "PACKAGING SUPPLY"'],
@@ -727,36 +727,16 @@ function aiPrompt({ website, company, address }, site, parts) {
 const AI_SYSTEM = 'You write placeholder content for a B2B ecommerce wireframe mockup (storefront home, category page, product page, cart, and a buyer portal) shown to a prospective client during a discovery call. The mockup must read as THEIR future store. The wireframe layout, navigation structure, and section design are fixed and never change: you only supply the words that fill the existing slots. Ground everything in the provided website content: their real products, product categories, vocabulary, and tone. Never reproduce their current website navigation, menu structure, or sitemap; categories describe what they sell, not the pages their site has. Where the site gives too little, invent plausible content for their exact industry. Product names must read like real catalog lines with a size, spec, or pack quantity. Hard rules: never use em dashes or en dashes; respect every character limit; return only JSON matching the schema.';
 
 async function generateAiSlots(env, info, site, parts) {
-  const ctrl = new AbortController();
-  const timer = setTimeout(() => ctrl.abort(), 25_000);
-  try {
-    // No thinking pass: this is constrained copywriting with all source
-    // material supplied, and the call must fit the ~30s ctx.waitUntil
-    // window that remains after the creation response is sent.
-    const resp = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      signal: ctrl.signal,
-      headers: {
-        'x-api-key': env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01',
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: AI_MODEL,
-        max_tokens: 16000,
-        system: AI_SYSTEM,
-        output_config: { format: { type: 'json_schema', schema: aiSchema() } },
-        messages: [{ role: 'user', content: aiPrompt(info, site, parts) }],
-      }),
-    });
-    if (!resp.ok) throw new Error(`claude api ${resp.status}`);
-    const data = await resp.json();
-    if (data.stop_reason === 'refusal') throw new Error('claude api refusal');
-    const text = (data.content || []).filter((b) => b.type === 'text').map((b) => b.text).join('');
-    return JSON.parse(text);
-  } finally {
-    clearTimeout(timer);
-  }
+  // No thinking pass: this is constrained copywriting with all source material
+  // supplied, and the call must fit the ~30s ctx.waitUntil window that remains
+  // after the creation response is sent.
+  return anthropicJson(env, {
+    system: AI_SYSTEM,
+    messages: [{ role: 'user', content: aiPrompt(info, site, parts) }],
+    schema: aiSchema(),
+    maxTokens: 16000,
+    timeoutMs: 25000,
+  });
 }
 
 // Sanitize one generated string: kill banned dashes, collapse whitespace,
