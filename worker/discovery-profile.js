@@ -40,6 +40,10 @@ const DEFAULTS = {
   pdpVar: 'standard spec',
   opts: ['Standard · Stock', 'Plus · Upgraded', 'Pro · Heavy duty'],
   buyer: 'Crestview Partners',
+  // Mega-menu subcategory heads under the flagship category (head 1 is the
+  // flagship subcategory itself, P.plpSub). Generic fallbacks; presets and
+  // the AI pass replace them with vertical-true names.
+  m1: 'Popular lines', m2: 'New arrivals', m3: 'Bulk programs', m4: 'Specialty items', m5: 'Accessories',
 };
 
 const PRESETS = {
@@ -60,6 +64,7 @@ const PRESETS = {
     plpDesc: 'Type-27 and type-1 wheels for angle grinders and bench grinders, in aluminum oxide, zirconia, and ceramic, in every common diameter and arbor. Filter by spec on the left, or paste a part number.',
     pdpVar: 'A24R, Type 27',
     opts: ['A24R · Coarse', 'A36S · Medium', 'A60T · Fine'],
+    m1: 'Flap discs', m2: 'Sanding belts', m3: 'Wire brushes', m4: 'Surface conditioning', m5: 'Deburring & finishing',
     products: {
       p1: 'Norseman 4½" grinding wheel', p2: 'Walter flap disc, 60 grit zirconia', p3: 'Grade 8 hex bolt, ⅜"-16 × 2"',
       p4: 'Cut-resistant gloves, ANSI A4', p5: 'M18 cordless angle grinder', p6: 'Cobalt jobber drill set, 29 pc',
@@ -571,6 +576,9 @@ function assembleProfile({ company, address }, site, parts) {
     // Category page
     ['HOME / ABRASIVES / GRINDING WHEELS', `HOME / ${cats[0].toUpperCase()} / ${P.plpSub.toUpperCase()}`],
     ['Grinding wheels', P.plpSub],
+    // Mega-menu subcategory heads
+    ['Flap discs', P.m1], ['Sanding belts', P.m2], ['Wire brushes', P.m3],
+    ['Surface conditioning', P.m4], ['Deburring & finishing', P.m5],
     ['Type-27 and type-1 wheels for angle grinders and bench grinders — aluminum oxide, zirconia, and ceramic, in every common diameter and arbor. Filter by spec on the left, or paste a part number.', P.plpDesc],
     // Product page
     ['Norseman 4½" grinding wheel — A24R, Type 27', pdpTitle],
@@ -659,6 +667,11 @@ const AI_FIELDS = [
   ['plpDesc', 200, 'Two-sentence intro for that category page ending "Filter by spec on the left, or paste a part number."'],
   ['pdpVar', 22, 'Variant descriptor of the flagship product, e.g. "32 ECT kraft"'],
   ['buyer', 24, 'Plausible fictional B2B customer company name for their vertical'],
+  ['m1', 20, 'Mega-menu subcategory 1 under the flagship category (sibling of plpSub, a product line they sell)'],
+  ['m2', 20, 'Mega-menu subcategory 2, another product line'],
+  ['m3', 20, 'Mega-menu subcategory 3, another product line'],
+  ['m4', 20, 'Mega-menu subcategory 4, another product line'],
+  ['m5', 20, 'Mega-menu subcategory 5, another product line'],
 ];
 
 const AI_PRODUCT_SLOTS = [
