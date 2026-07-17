@@ -39,10 +39,10 @@
   };
 
   const HANDLE = (function () {
-    // Classic /discovery/<handle> or the company folder /<companyId>/
-    // discovery; the worker resolves a company id to its discovery handle.
+    // Classic /discovery/<handle> or the portal embed /<companyId>/
+    // discovery/app; the worker resolves a company id to its handle.
     const m = window.location.pathname.match(/^\/discovery\/([a-z0-9-]+)\/?$/)
-      || window.location.pathname.match(/^\/([a-z0-9-]+)\/discovery\/?$/);
+      || window.location.pathname.match(/^\/([a-z0-9-]+)\/discovery\/app\/?$/);
     return m ? m[1] : '';
   })();
   const TOKEN_KEY = 'disc_token_' + HANDLE;

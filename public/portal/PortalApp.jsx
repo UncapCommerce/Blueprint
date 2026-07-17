@@ -122,45 +122,53 @@ function Portal({ me, onSignOut }) {
   const co = me.company || {};
   const initialTab = TABS.find((t) => t.toLowerCase() === URL_TAB) || 'Company';
   const [tab, setTabState] = useState(initialTab);
-  // Discovery and blueprint navigate to their real pages when they exist;
-  // everything else switches tabs in place and keeps the URL in step.
+  // Every tab switches in place under the fixed toolbar; the discovery
+  // and blueprint experiences load framed below it, so the customer never
+  // leaves the shell (or their session).
   const setTab = (t) => {
-    if (t === 'Discovery' && me.discovery) { window.location.href = '/' + co.id + '/discovery'; return; }
-    if (t === 'Blueprint' && me.blueprint) { window.location.href = '/' + co.id + '/blueprint/'; return; }
     setTabState(t);
     try { window.history.replaceState(null, '', '/' + co.id + '/' + t.toLowerCase()); } catch (_) {}
   };
+  const framed = (tab === 'Discovery' && me.discovery) || (tab === 'Blueprint' && me.blueprint);
 
+  const MONO = 'var(--font-mono, "JetBrains Mono", ui-monospace, monospace)';
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ flex: '0 0 auto', background: 'rgba(242,239,231,0.94)', borderBottom: '1px solid #C9C7C0', position: 'sticky', top: 0, zIndex: 50 }}>
-        <div style={{ width: '100%', boxSizing: 'border-box', height: 62, display: 'flex', alignItems: 'center', gap: 22, padding: '0 28px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12, flex: '0 0 auto' }}>
-            <img src="/assets/uncap-logo-black.svg" alt="Uncap" style={{ height: 19, display: 'block' }}/>
-            <span style={{ width: 1, height: 20, background: '#C9C7C0' }}></span>
-            <span style={{ fontFamily: 'var(--font-mono, "JetBrains Mono", ui-monospace, monospace)', fontSize: 10, letterSpacing: '0.12em', color: '#707070' }}>CLIENT PORTAL</span>
+    <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ flex: '0 0 auto', background: '#0A0A0A', zIndex: 50 }}>
+        <div style={{ width: '100%', boxSizing: 'border-box', height: 34, display: 'flex', alignItems: 'center', gap: 16, padding: '0 16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, flex: '0 0 auto' }}>
+            <img src="/assets/uncap-logo-white.svg" alt="Uncap" style={{ height: 13, display: 'block' }}/>
+            <span style={{ width: 1, height: 14, background: '#4D4D4D' }}></span>
+            <span style={{ fontFamily: MONO, fontSize: 8.5, letterSpacing: '0.12em', color: '#9A9A9A' }}>CLIENT PORTAL</span>
           </div>
-          <div style={{ flex: '1 1 auto', display: 'flex', alignItems: 'center', gap: 4, overflowX: 'auto' }}>
+          <div style={{ flex: '1 1 auto', display: 'flex', alignItems: 'center', gap: 2, overflowX: 'auto' }}>
             {TABS.map((t) => (
               <button key={t} onClick={() => setTab(t)}
-                style={{ border: 'none', background: tab === t ? '#0A0A0A' : 'transparent', color: tab === t ? '#FFFFFF' : '#1A1A1A', borderRadius: 5, padding: '8px 14px', fontSize: 13.5, fontWeight: tab === t ? 650 : 500, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'background 180ms' }}>{t}</button>
+                style={{ border: 'none', background: tab === t ? '#FFFFFF' : 'transparent', color: tab === t ? '#0A0A0A' : '#D4D2CC', borderRadius: 4, padding: '4px 11px', fontSize: 12, fontWeight: tab === t ? 700 : 500, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'background 180ms, color 180ms' }}>{t}</button>
             ))}
           </div>
-          <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ fontSize: 13, fontWeight: 650, whiteSpace: 'nowrap' }}>{co.name || ''}</span>
-            <span style={{ fontFamily: 'var(--font-mono, "JetBrains Mono", ui-monospace, monospace)', fontSize: 10.5, letterSpacing: '0.04em', color: '#707070', whiteSpace: 'nowrap' }}>{me.email}</span>
-            <button onClick={onSignOut} style={{ border: '1px solid #C9C7C0', background: 'transparent', color: '#4D4D4D', borderRadius: 5, padding: '7px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>Sign out</button>
+          <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ fontSize: 11.5, fontWeight: 650, color: '#FFFFFF', whiteSpace: 'nowrap' }}>{co.name || ''}</span>
+            <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.04em', color: '#9A9A9A', whiteSpace: 'nowrap' }}>{me.email}</span>
+            <button onClick={onSignOut} style={{ border: '1px solid #4D4D4D', background: 'transparent', color: '#FFFFFF', borderRadius: 4, padding: '3px 9px', fontSize: 10.5, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>Sign out</button>
           </div>
         </div>
       </div>
 
-      <div style={{ flex: '1 1 auto', maxWidth: 1180, width: '100%', margin: '0 auto', padding: '30px 24px 60px', boxSizing: 'border-box' }}>
-        {tab === 'Company' && <CompanyTab me={me}/>}
-        {tab === 'Discovery' && <DiscoveryTab me={me}/>}
-        {tab === 'Blueprint' && <BlueprintTab me={me}/>}
-        {tab === 'Delivery' && <StatusPage eyebrow="DELIVERY" title="Under Review" note="Your delivery plan is being prepared. It will appear here as soon as it is ready."/>}
-        {tab === 'Growth' && <StatusPage eyebrow="GROWTH" title="Under Review" note="Your growth program is being prepared. It will appear here as soon as it is ready."/>}
-      </div>
+      {framed ? (
+        <iframe title={tab} src={'/' + co.id + '/' + tab.toLowerCase() + '/app'}
+          style={{ flex: '1 1 auto', width: '100%', border: 'none', display: 'block', background: '#F2EFE7' }}/>
+      ) : (
+        <div style={{ flex: '1 1 auto', overflowY: 'auto' }}>
+          <div style={{ maxWidth: 1180, width: '100%', margin: '0 auto', padding: '30px 24px 60px', boxSizing: 'border-box' }}>
+            {tab === 'Company' && <CompanyTab me={me}/>}
+            {tab === 'Discovery' && <DiscoveryTab me={me}/>}
+            {tab === 'Blueprint' && <BlueprintTab me={me}/>}
+            {tab === 'Delivery' && <StatusPage eyebrow="DELIVERY" title="Under Review" note="Your delivery plan is being prepared. It will appear here as soon as it is ready."/>}
+            {tab === 'Growth' && <StatusPage eyebrow="GROWTH" title="Under Review" note="Your growth program is being prepared. It will appear here as soon as it is ready."/>}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

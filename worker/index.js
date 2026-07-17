@@ -424,31 +424,37 @@ export default {
     //   /<id>/delivery, /<id>/growth → portal shell placeholders
     // Future portal functions keep extending this folder structure.
     if (request.method === 'GET' || request.method === 'HEAD') {
-      const coMatch = url.pathname.match(/^\/([a-z0-9-]{2,60})(?:\/(company|discovery|blueprint|delivery|growth))?\/?$/);
-      if (coMatch && !PORTAL_RESERVED.has(coMatch[1])) {
-        const co = await getCompany(env, coMatch[1]);
+      // Embedded experience documents: the portal shell keeps its toolbar
+      // and loads the real discovery / blueprint page in a frame from
+      // /<id>/<tab>/app. Relative blueprint assets resolve against
+      // /<id>/blueprint/ and are mapped below.
+      const coApp = url.pathname.match(/^\/([a-z0-9-]{2,60})\/(discovery|blueprint)\/app(\/?)$/);
+      if (coApp && !PORTAL_RESERVED.has(coApp[1])) {
+        if (coApp[3]) return Response.redirect(`${url.origin}/${coApp[1]}/${coApp[2]}/app`, 301);
+        const co = await getCompany(env, coApp[1]);
         if (co) {
-          const tab = coMatch[2] || '';
-          if (!tab) return Response.redirect(`${url.origin}/${co.id}/company`, 302);
-          if (tab === 'discovery' && co.discoveryHandle) {
+          if (coApp[2] === 'discovery' && co.discoveryHandle) {
             const assetUrl = new URL(url.toString());
             assetUrl.pathname = '/discovery/index.html';
             return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
           }
-          if (tab === 'blueprint' && co.blueprintId) {
+          if (coApp[2] === 'blueprint' && co.blueprintId) {
             const entry = BLUEPRINT_REGISTRY.find((b) => b.id === co.blueprintId);
             if (entry) {
-              // Relative sub-assets need the trailing slash to resolve.
-              if (!url.pathname.endsWith('/')) {
-                return Response.redirect(`${url.origin}/${co.id}/blueprint/`, 301);
-              }
               const assetUrl = new URL(url.toString());
               assetUrl.pathname = `/${entry.dir}/index.html`;
               return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
             }
           }
-          // Portal shell renders the tab (including the discovery
-          // completed-manually and blueprint under-review fallbacks).
+        }
+      }
+      // Tab pages always render the portal shell — the toolbar never
+      // disappears; the shell embeds the experience below it.
+      const coMatch = url.pathname.match(/^\/([a-z0-9-]{2,60})(?:\/(company|discovery|blueprint|delivery|growth))?\/?$/);
+      if (coMatch && !PORTAL_RESERVED.has(coMatch[1])) {
+        const co = await getCompany(env, coMatch[1]);
+        if (co) {
+          if (!coMatch[2]) return Response.redirect(`${url.origin}/${co.id}/company`, 302);
           const assetUrl = new URL(url.toString());
           assetUrl.pathname = '/index.html';
           return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
@@ -456,7 +462,7 @@ export default {
       }
       // Blueprint sub-assets under the company folder: /<id>/blueprint/<rest>
       const coBpSub = url.pathname.match(/^\/([a-z0-9-]{2,60})\/blueprint\/(.+)$/);
-      if (coBpSub && !PORTAL_RESERVED.has(coBpSub[1])) {
+      if (coBpSub && !PORTAL_RESERVED.has(coBpSub[1]) && coBpSub[2] !== 'app') {
         const co = await getCompany(env, coBpSub[1]);
         const entry = co && co.blueprintId ? BLUEPRINT_REGISTRY.find((b) => b.id === co.blueprintId) : null;
         if (entry) {
@@ -1708,22 +1714,38 @@ async function handleAdminAccessLog(request, env) {
 // writes no signature records and fires no notifications — previews stay
 // out of the audit trail, matching the old passcode behaviour.
 async function handleAdminBpToken(request, env) {
-  const sess = await getAdminSession(request, env);
-  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
   if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
-
   let body;
   try { body = await request.json(); }
   catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
   const blueprintId = normalizeBlueprintId(body.blueprintId);
 
-  const token = genToken();
-  await env.BLUEPRINT_AUTH.put(
-    `session:${token}`,
-    JSON.stringify({ email: sess.email, admin: true, selfTest: true, blueprintId, ip: clientIp(request), userAgent: clientUa(request), ts: Date.now() }),
-    { expirationTtl: SESSION_TTL_SECONDS }
-  );
-  return json(200, { ok: true, token });
+  const sess = await getAdminSession(request, env);
+  if (sess) {
+    const token = genToken();
+    await env.BLUEPRINT_AUTH.put(
+      `session:${token}`,
+      JSON.stringify({ email: sess.email, admin: true, selfTest: true, blueprintId, ip: clientIp(request), userAgent: clientUa(request), ts: Date.now() }),
+      { expirationTtl: SESSION_TTL_SECONDS }
+    );
+    return json(200, { ok: true, token });
+  }
+  // Signed-in portal customers pass their own company's blueprint gate
+  // silently — the gate already calls this endpoint on load.
+  const portal = await getPortalSession(request, env);
+  if (portal) {
+    const co = await getCompany(env, portal.companyId);
+    if (co && co.blueprintId === blueprintId) {
+      const token = genToken();
+      await env.BLUEPRINT_AUTH.put(
+        `session:${token}`,
+        JSON.stringify({ email: portal.email, name: portal.name || '', portal: true, blueprintId, ip: clientIp(request), userAgent: clientUa(request), ts: Date.now() }),
+        { expirationTtl: SESSION_TTL_SECONDS }
+      );
+      return json(200, { ok: true, token });
+    }
+  }
+  return json(401, { ok: false, error: 'Not signed in' });
 }
 
 // ----------------------------------------------------------------------------
@@ -2472,6 +2494,15 @@ async function getDiscoverySession(env, token) {
 async function resolveDiscoveryActor(request, env, body, disc) {
   const admin = await getAdminSession(request, env);
   if (admin) return { role: 'admin', email: admin.email, name: admin.name || admin.email };
+  // A signed-in portal customer opens their own company's discovery with
+  // no extra gate — the portal cookie is the session.
+  const portal = await getPortalSession(request, env);
+  if (portal) {
+    const co = await getCompany(env, portal.companyId);
+    if (co && (co.discoveryHandle === disc.handle || (disc.companyId && disc.companyId === co.id))) {
+      return { role: 'client', email: portal.email || '', name: portal.name || portal.email || 'Client' };
+    }
+  }
   const token = (body.token || '').toString().trim();
   const sess = await getDiscoverySession(env, token);
   if (sess && sess.discoveryId === disc.id && sessionBindingOk(sess, request)) {
