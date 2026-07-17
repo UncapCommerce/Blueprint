@@ -716,99 +716,32 @@
   }
 
   function NewDiscoveryModal({ onClose, onSaved }) {
-    const [company, setCompany] = useState(null);       // {attioId, name, domain, address}
-    const [website, setWebsite] = useState('');          // seeded from Attio, editable for this record only
-    const [address, setAddress] = useState('');
-    // Everyone Attio has on the picked company, each tagged with a role.
-    // The admin only reassigns roles or removes rows; no person search.
-    const [contacts, setContacts] = useState([]);        // [{attioId, name, email, title, role: 'lead'|'associated'}]
-    const [contactsState, setContactsState] = useState('idle'); // idle | loading | done | error
-    const [logo, setLogo]       = useState(null);        // {type, data(base64), name, preview}
-    const [prime, setPrime]     = useState('#2F7A47');   // stock storefront green
-    const [accent, setAccent]   = useState('#B8741F');   // stock storefront amber
-    const [doc, setDoc]         = useState(null);        // {type, data(base64), name} — manual upload
-    const [docRef, setDocRef]   = useState('');          // fid of a company file to analyze instead
-    const [busy, setBusy]       = useState(false);
+    const [company, setCompany] = useState(null);   // portal company record
+    const [busy, setBusy] = useState(false);
     const [busyLabel, setBusyLabel] = useState('');
-    const [error, setError]     = useState('');
+    const [error, setError] = useState('');
 
-    const readFile = (file, cb) => {
-      const r = new FileReader();
-      r.onload = () => {
-        const dataUrl = r.result || '';
-        const b64 = dataUrl.toString().split(',')[1] || '';
-        cb(b64, dataUrl);
-      };
-      r.readAsDataURL(file);
-    };
-    const LOGO_TYPES = { 'image/png': 1, 'image/jpeg': 1, 'image/svg+xml': 1 };
-    const onLogoFile = (file) => {
-      if (!file) return;
-      const type = file.type === 'image/jpg' ? 'image/jpeg' : file.type;
-      if (!LOGO_TYPES[type]) { setError('Logo must be an SVG, PNG, or JPG'); return; }
-      if (file.size > 1_400_000) { setError('Logo must be under 1.4 MB'); return; }
-      readFile(file, (b64, dataUrl) => { setLogo({ type, data: b64, name: file.name, preview: dataUrl }); setError(''); });
-    };
-    const onDocFile = (file) => {
-      if (!file) return;
-      if (file.size > 10_000_000) { setError('Document must be under 10 MB'); return; }
-      readFile(file, (b64) => { setDoc({ type: file.type, data: b64, name: file.name }); setError(''); });
-    };
-
-    // Everything seeds from the portal company record: contacts with the
-    // lead pre-marked, the saved palette, and the company logo (applied
-    // server-side unless overridden here).
-    const pickCompany = (c) => {
-      setCompany(c);
-      setWebsite(c.storeUrl || '');
-      setAddress(c.address || '');
-      const list = [];
-      if (c.leadContact) list.push({ ...c.leadContact, role: 'lead' });
-      for (const p of c.contacts || []) list.push({ ...p, role: 'associated' });
-      setContacts(list);
-      setContactsState('done');
-      if (c.palette && c.palette.prime) setPrime(c.palette.prime);
-      if (c.palette && c.palette.accent) setAccent(c.palette.accent);
-      setDocRef('');
-    };
-    const clearCompany = () => { setCompany(null); setWebsite(''); setAddress(''); setContacts([]); setContactsState('idle'); setDocRef(''); };
-
-    // Exactly one lead: promoting a contact demotes whoever held it.
-    const setRole = (email, role) => setContacts((list) => list.map((c) =>
-      c.email === email ? { ...c, role } : (role === 'lead' && c.role === 'lead' ? { ...c, role: 'associated' } : c)
-    ));
-    const removeContact = (email) => setContacts((list) => list.filter((c) => c.email !== email));
+    // Everything comes from the company profile server-side: contacts,
+    // store url, address, palette, logo. If the company carries an RFP
+    // (or a technical brief), Claude analyzes it right after creation.
+    const prefillDoc = company && ((company.files || []).find((f) => f.kind === 'rfp') || (company.files || []).find((f) => f.kind === 'brief'));
 
     const save = async (e) => {
       e.preventDefault();
       if (!company) { setError('Pick a company'); return; }
-      const leadContact = contacts.find((c) => c.role === 'lead') || null;
-      if (!leadContact) { setError(contacts.length ? 'Mark one contact as the Lead contact' : 'This company has no contacts — add them on the company profile first'); return; }
-      const associatedContacts = contacts.filter((c) => c.role !== 'lead').map(({ attioId, name, email }) => ({ attioId, name, email }));
+      if (!company.leadContact && !(company.contacts || []).length) { setError('This company has no contacts. Add them on the company profile first.'); return; }
       setBusy(true); setBusyLabel('Saving…'); setError('');
       try {
         const d = await api('/api/admin/discoveries', {
           method: 'POST',
-          body: JSON.stringify({
-            companyId: company.id,
-            website: website.trim(), address: address.trim(),
-            leadContact: { attioId: leadContact.attioId, name: leadContact.name, email: leadContact.email },
-            associatedContacts,
-            logo: logo ? { type: logo.type, data: logo.data } : null,
-            palette: { prime, accent },
-          }),
+          body: JSON.stringify({ companyId: company.id }),
         });
-        // Optional document analysis: runs after the discovery exists so a
-        // failed analysis never blocks creation. Source is either a file
-        // already on the company profile or a one-off upload.
-        if ((docRef || doc) && d.discovery) {
-          setBusyLabel('Analyzing document…');
+        if (prefillDoc && d.discovery) {
+          setBusyLabel('Analyzing ' + (prefillDoc.kind === 'rfp' ? 'RFP' : 'brief') + '…');
           try {
             await api('/api/admin/discovery/prefill', {
               method: 'POST',
-              body: JSON.stringify(docRef
-                ? { id: d.discovery.id, companyId: company.id, fid: docRef }
-                : { id: d.discovery.id, doc }),
+              body: JSON.stringify({ id: d.discovery.id, companyId: company.id, fid: prefillDoc.fid }),
             });
           } catch (err) {
             window.alert('The discovery was created, but document analysis failed:\n\n' + err.message);
@@ -819,109 +752,41 @@
     };
 
     return (
-      <Modal title="New discovery" sub="Pick the company. Contacts and details load from its portal profile." onClose={onClose}>
+      <Modal title="New discovery" sub="Pick the company. Everything else pulls from its portal profile." onClose={onClose}>
         <form onSubmit={save} style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <PortalCompanyPicker company={company} onPick={pickCompany} onClear={clearCompany}/>
-          {company && (
-            <>
-              <Field label="Website" value={website} onChange={setWebsite} placeholder="acme.com"/>
-              <Field label="Address" value={address} onChange={setAddress} placeholder="100 Main St, Chicago, IL"/>
-              <div>
-                <label style={S.label}>Contacts</label>
-                {contactsState === 'loading' && (
-                  <div style={{ fontFamily: T.sans, fontSize: 13, color: T.fg3, padding: '8px 2px' }}>Loading contacts from Attio…</div>
-                )}
-                {contactsState === 'error' && (
-                  <div style={{ fontFamily: T.sans, fontSize: 13, color: '#B3261E', padding: '8px 2px' }}>Couldn’t load this company’s contacts from Attio.</div>
-                )}
-                {contactsState === 'done' && contacts.length === 0 && (
-                  <div style={{ fontFamily: T.sans, fontSize: 13, color: T.fg3, padding: '8px 2px' }}>No contacts on this company. Add them on the company profile, then reselect.</div>
-                )}
-                {contacts.length > 0 && (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                    {contacts.map((c) => (
-                      <div key={c.email} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: T.cream, border: `1px solid ${c.role === 'lead' ? T.black : T.line}`, borderRadius: 8 }}>
-                        <div style={{ flex: '1 1 auto', minWidth: 0 }}>
-                          <div style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 13.5, color: T.fg1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name || c.email}</div>
-                          <div style={{ fontFamily: T.mono, fontSize: 11, color: T.fg3, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.email}{c.title ? ' · ' + c.title : ''}</div>
-                        </div>
-                        <select value={c.role} onChange={(e) => setRole(c.email, e.target.value)} aria-label={'Role for ' + (c.name || c.email)}
-                          style={{ ...S.input, width: 'auto', flexShrink: 0, padding: '8px 10px', fontSize: 13, cursor: 'pointer' }}>
-                          <option value="lead">Lead contact</option>
-                          <option value="associated">Associated contact</option>
-                        </select>
-                        <button type="button" aria-label={'Remove ' + (c.name || c.email)} onClick={() => removeContact(c.email)}
-                          style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: 999, border: 'none', background: T.line, color: T.fg1, cursor: 'pointer', fontSize: 11, lineHeight: 1, padding: 0, flexShrink: 0 }}>✕</button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <div>
-                <label style={S.label}>Client logo · shown on the welcome slide and every website mock</label>
-                {!logo && company.hasLogo && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: T.cream, border: `1px solid ${T.line}`, borderRadius: 8, marginBottom: 8 }}>
-                    <img src={'/api/company/logo?id=' + encodeURIComponent(company.id)} alt="" style={{ height: 30, maxWidth: 120, objectFit: 'contain', display: 'block' }}/>
-                    <span style={{ flex: 1, fontFamily: T.sans, fontSize: 12.5, color: T.fg3 }}>Company logo will be used. Upload below to override for this discovery.</span>
-                  </div>
-                )}
-                {logo ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: T.cream, border: `1px solid ${T.line}`, borderRadius: 8 }}>
-                    <img src={logo.preview} alt="" style={{ height: 34, maxWidth: 140, objectFit: 'contain', display: 'block' }}/>
-                    <span style={{ flex: 1, fontFamily: T.mono, fontSize: 11, color: T.fg3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{logo.name}</span>
-                    <button type="button" aria-label="Remove logo" onClick={() => setLogo(null)}
-                      style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: 999, border: 'none', background: T.line, color: T.fg1, cursor: 'pointer', fontSize: 11, lineHeight: 1, padding: 0, flexShrink: 0 }}>✕</button>
-                  </div>
-                ) : (
-                  <input type="file" accept=".svg,.png,.jpg,.jpeg,image/svg+xml,image/png,image/jpeg"
-                    onChange={(e) => onLogoFile(e.target.files && e.target.files[0])}
-                    style={{ ...S.input, padding: '10px 12px', fontSize: 13, cursor: 'pointer' }}/>
-                )}
-              </div>
-              <div>
-                <label style={S.label}>Palette · recolors the website mocks on every step</label>
-                <div style={{ display: 'flex', gap: 16 }}>
-                  {[['Prime', prime, setPrime], ['Accent', accent, setAccent]].map(([l, v, set]) => (
-                    <label key={l} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: T.cream, border: `1px solid ${T.line}`, borderRadius: 8, cursor: 'pointer' }}>
-                      <input type="color" value={v} onChange={(e) => set(e.target.value)}
-                        style={{ width: 34, height: 34, padding: 0, border: 'none', background: 'transparent', cursor: 'pointer' }}/>
-                      <span style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 13, color: T.fg1 }}>{l}</span>
-                      <span style={{ marginLeft: 'auto', fontFamily: T.mono, fontSize: 11, color: T.fg3 }}>{v.toUpperCase()}</span>
-                    </label>
-                  ))}
-                </div>
-              </div>
-              <div>
-                <label style={S.label}>RFP / requirements document · Claude pre-fills the questions from it</label>
-                {(company.files || []).length > 0 && !doc && (
-                  <select value={docRef} onChange={(e) => setDocRef(e.target.value)} style={{ ...S.input, cursor: 'pointer', marginBottom: 8 }}>
-                    <option value="">Analyze a company file… (optional)</option>
-                    {company.files.map((f) => (
-                      <option key={f.fid} value={f.fid}>{(f.kind === 'rfp' ? 'RFP · ' : f.kind === 'brief' ? 'Brief · ' : '') + f.name}</option>
-                    ))}
-                  </select>
-                )}
-                {doc ? (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: T.cream, border: `1px solid ${T.line}`, borderRadius: 8 }}>
-                    <span style={{ flex: 1, fontFamily: T.mono, fontSize: 11, color: T.fg1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{doc.name}</span>
-                    <button type="button" aria-label="Remove document" onClick={() => setDoc(null)}
-                      style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 22, height: 22, borderRadius: 999, border: 'none', background: T.line, color: T.fg1, cursor: 'pointer', fontSize: 11, lineHeight: 1, padding: 0, flexShrink: 0 }}>✕</button>
-                  </div>
-                ) : (
-                  <input type="file" accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
-                    onChange={(e) => onDocFile(e.target.files && e.target.files[0])}
-                    style={{ ...S.input, padding: '10px 12px', fontSize: 13, cursor: 'pointer' }}/>
-                )}
-              </div>
-            </>
-          )}
+          <PortalCompanyPicker company={company} onPick={setCompany} onClear={() => setCompany(null)}/>
+          {company && <CompanySummary company={company} extra={prefillDoc ? ('Claude will pre-fill the questions from ' + prefillDoc.name) : ''}/>}
           {error && <div style={{ color: '#B3261E', fontFamily: T.sans, fontSize: 13 }}>{error}</div>}
           <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', paddingTop: 4 }}>
             <button type="button" style={S.btnGhost} onClick={onClose} disabled={busy}>Cancel</button>
-            <button type="submit" style={{ ...S.btnLime, opacity: busy ? 0.7 : 1 }} disabled={busy}>{busy ? (busyLabel || 'Saving…') : 'Save discovery'}</button>
+            <button type="submit" style={{ ...S.btnLime, opacity: busy ? 0.7 : 1 }} disabled={busy}>{busy ? (busyLabel || 'Saving…') : 'Create discovery'}</button>
           </div>
         </form>
       </Modal>
+    );
+  }
+
+  // What the picked company brings with it, so the one-click create is
+  // never a mystery box.
+  function CompanySummary({ company, extra }) {
+    const emails = (company.leadContact ? 1 : 0) + (company.contacts || []).length;
+    const line = { display: 'flex', alignItems: 'center', gap: 8 };
+    return (
+      <div style={{ padding: '12px 14px', background: T.cream, border: `1px solid ${T.line}`, borderRadius: 8, fontFamily: T.sans, fontSize: 13, color: T.fg2, display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <div style={line}><b style={{ color: T.fg1 }}>Lead:</b> {company.leadContact ? (company.leadContact.name || company.leadContact.email) : 'none yet'}{emails > 1 ? ` · +${emails - 1} more contact${emails > 2 ? 's' : ''}` : ''}</div>
+        <div style={line}>
+          <b style={{ color: T.fg1 }}>Branding:</b>
+          {company.hasLogo ? <img src={'/api/company/logo?id=' + encodeURIComponent(company.id)} alt="" style={{ height: 18, maxWidth: 90, objectFit: 'contain' }}/> : 'no logo'}
+          {company.palette ? (
+            <span style={{ display: 'inline-flex', gap: 4 }}>
+              <span style={{ width: 14, height: 14, borderRadius: 999, background: company.palette.prime, border: `1px solid ${T.line}` }}></span>
+              <span style={{ width: 14, height: 14, borderRadius: 999, background: company.palette.accent, border: `1px solid ${T.line}` }}></span>
+            </span>
+          ) : null}
+        </div>
+        {company.storeUrl ? <div style={line}><b style={{ color: T.fg1 }}>Site:</b> {company.storeUrl}</div> : null}
+        {extra ? <div style={line}><b style={{ color: T.fg1 }}>Pre-fill:</b> {extra}</div> : null}
+      </div>
     );
   }
 
@@ -1982,80 +1847,38 @@
   }
 
   function NewBlueprintModal({ onClose, onSaved }) {
-    const [company, setCompany] = useState(null);       // portal company record
-    const [website, setWebsite] = useState('');          // seeded from the company, editable for this blueprint only
-    const [address, setAddress] = useState('');
-    const [contacts, setContacts] = useState([]);        // [{name,email,title,role}]
-    const [expiresAt, setExpiresAt]     = useState('');
-    const [channel, setChannelSel]      = useState('');
-    const [busy, setBusy]               = useState(false);
-    const [error, setError]             = useState('');
-
-    const pickCompany = (c) => {
-      setCompany(c);
-      setWebsite(c.storeUrl || '');
-      setAddress(c.address || '');
-      const list = [];
-      if (c.leadContact) list.push({ ...c.leadContact, role: 'lead' });
-      for (const p of c.contacts || []) list.push({ ...p, role: 'associated' });
-      setContacts(list);
-    };
-    const clearCompany = () => { setCompany(null); setWebsite(''); setAddress(''); setContacts([]); };
-    const setRole = (email, role) => setContacts((list) => list.map((c) =>
-      c.email === email ? { ...c, role } : (role === 'lead' && c.role === 'lead' ? { ...c, role: 'associated' } : c)
-    ));
+    const [company, setCompany] = useState(null);   // portal company record
+    const [busy, setBusy] = useState(false);
+    const [error, setError] = useState('');
 
     const save = async (e) => {
       e.preventDefault();
       if (!company) { setError('Pick a company'); return; }
-      const leadContact = contacts.find((c) => c.role === 'lead') || null;
-      if (!leadContact) { setError(contacts.length ? 'Mark one contact as the Lead contact' : 'This company has no contacts — add them on the company profile first'); return; }
+      if (!company.leadContact && !(company.contacts || []).length) { setError('This company has no contacts. Add them on the company profile first.'); return; }
       setBusy(true); setError('');
       try {
         await api('/api/admin/blueprints', {
           method: 'POST',
-          body: JSON.stringify({
-            companyId: company.id,
-            website: website.trim(), address: address.trim(),
-            leadContact,
-            associatedContacts: contacts.filter((c) => c.role !== 'lead'),
-            expiresAt, channel,
-          }),
+          body: JSON.stringify({ companyId: company.id }),
         });
         onSaved();
       } catch (err) { setError(err.message); setBusy(false); }
     };
 
     return (
-      <Modal title="New blueprint" sub="Saved as a draft · details load from the company's portal profile" onClose={onClose} width={560}>
+      <Modal title="New blueprint" sub="Pick the company. Everything else pulls from its portal profile." onClose={onClose} width={560}>
         <form onSubmit={save} style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <PortalCompanyPicker company={company} onPick={pickCompany} onClear={clearCompany}/>
+          <PortalCompanyPicker company={company} onPick={setCompany} onClear={() => setCompany(null)}/>
+          {company && <CompanySummary company={company} extra=""/>}
           {company && (
-            <>
-              <Field label="Client website" value={website} onChange={setWebsite} placeholder="acme.com"/>
-              <Field label="Company address" value={address} onChange={setAddress} placeholder="100 Main St, Chicago, IL"/>
-              <ContactsEditor contacts={contacts} state="done" onRole={setRole}
-                onRemove={(email) => setContacts((l) => l.filter((c) => c.email !== email))}
-                onAdd={(c) => setContacts((l) => l.some((x) => x.email === c.email) ? l : [...l, c])}/>
-            </>
-          )}
-          {contacts.length > 0 && (
             <div style={{ padding: '10px 12px', background: '#EEF0FE', border: '1px solid #C3C9F5', borderRadius: 8, fontFamily: T.sans, fontSize: 12.5, color: '#3A44C4' }}>
-              This blueprint will be restricted to {contacts.length} email{contacts.length === 1 ? '' : 's'} — only they (and the Uncap team) will be able to view it.
+              The blueprint will be restricted to this company&#39;s contacts — only they (and the Uncap team) will be able to view it.
             </div>
           )}
-          <div>
-            <div style={S.label}>Channel</div>
-            <select value={channel} onChange={(e) => setChannelSel(e.target.value)} style={{ ...S.input, cursor: 'pointer' }}>
-              <option value="">Select a channel…</option>
-              {BP_CHANNELS.map((c) => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
-          <Field label="Expiration date (valid through)" type="date" value={expiresAt} onChange={setExpiresAt}/>
           {error && <div style={{ color: '#B3261E', fontFamily: T.sans, fontSize: 13 }}>{error}</div>}
           <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', paddingTop: 4 }}>
             <button type="button" style={S.btnGhost} onClick={onClose} disabled={busy}>Cancel</button>
-            <button type="submit" style={{ ...S.btnLime, opacity: busy ? 0.7 : 1 }} disabled={busy}>{busy ? 'Saving…' : 'Save'}</button>
+            <button type="submit" style={{ ...S.btnLime, opacity: busy ? 0.7 : 1 }} disabled={busy}>{busy ? 'Saving…' : 'Create blueprint'}</button>
           </div>
         </form>
       </Modal>
