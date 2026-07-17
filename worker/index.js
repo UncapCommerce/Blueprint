@@ -552,7 +552,9 @@ h1{font-size:24px;letter-spacing:-.02em;margin:0 0 10px}p{font-size:14.5px;line-
 // 'unsafe-eval' and the inline `text/babel` scripts need 'unsafe-inline' —
 // but it still locks the exfiltration-relevant directives: connect-src is
 // same-origin only (a stolen bearer token can't be POSTed to an attacker
-// host), frame-ancestors 'none' blocks clickjacking, and script/style/font
+// host), frame-ancestors 'self' allows only our own portal shell to frame
+// pages (the discovery/blueprint embeds) while still blocking clickjacking
+// from other origins, and script/style/font
 // origins are pinned to the three known externals (Google Sign-In, Google
 // Fonts, and unpkg for the two SRI-pinned print/demo pages).
 const CSP = [
@@ -563,8 +565,8 @@ const CSP = [
   "img-src 'self' data: blob: https:",
   "media-src 'self' data: https:",
   "connect-src 'self' https://accounts.google.com",
-  "frame-src https://accounts.google.com",
-  "frame-ancestors 'none'",
+  "frame-src 'self' https://accounts.google.com",
+  "frame-ancestors 'self'",
   "base-uri 'self'",
   "form-action 'self'",
   "object-src 'none'",
@@ -572,7 +574,7 @@ const CSP = [
 
 const SECURITY_HEADERS = {
   'Content-Security-Policy': CSP,
-  'X-Frame-Options': 'DENY',
+  'X-Frame-Options': 'SAMEORIGIN',
   'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
