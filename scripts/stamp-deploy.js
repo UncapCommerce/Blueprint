@@ -41,6 +41,7 @@ const files = [
   'public/VIVO/index.html',
   'public/Weedoo/index.html',
   'public/CartonCraftSupply/index.html',
+  'public/Uncap/index.html',
   'public/demo/blueprint/index.html',
   'public/discovery/index.html',
 ];
