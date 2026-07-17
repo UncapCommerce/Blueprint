@@ -4,6 +4,14 @@
 // Delivery / Growth.
 const { useState, useEffect } = React;
 
+// Company-folder URLs: every client lives at /<companyId>/<tab>. The
+// worker serves the discovery experience and blueprint proposal directly
+// at their folder paths when they exist; this shell renders everything
+// else (and the not-ready fallbacks for those two).
+const PATH_MATCH = window.location.pathname.match(/^\/([a-z0-9-]+)\/(company|discovery|blueprint|delivery|growth)\/?$/);
+const URL_SLUG = PATH_MATCH ? PATH_MATCH[1] : '';
+const URL_TAB = PATH_MATCH ? PATH_MATCH[2] : 'company';
+
 function PortalApp() {
   const [state, setState] = useState('loading'); // loading | login | portal
   const [me, setMe] = useState(null);
@@ -12,7 +20,15 @@ function PortalApp() {
     try {
       const resp = await fetch('/api/portal/me', { credentials: 'same-origin' });
       const data = await resp.json();
-      if (resp.ok && data.ok) { setMe(data); setState('portal'); return; }
+      if (resp.ok && data.ok) {
+        // Everyone lands inside their own company folder.
+        if (!PATH_MATCH || data.company.id !== URL_SLUG) {
+          window.location.replace('/' + encodeURIComponent(data.company.id) + '/company');
+          return;
+        }
+        setMe(data); setState('portal');
+        return;
+      }
     } catch (_) {}
     setState('login');
   };
@@ -24,7 +40,7 @@ function PortalApp() {
   if (state === 'login') return <PortalLogin onSignedIn={load}/>;
   return <Portal me={me} onSignOut={async () => {
     try { await fetch('/api/portal/logout', { method: 'POST', credentials: 'same-origin' }); } catch (_) {}
-    setMe(null); setState('login');
+    window.location.replace('/');
   }}/>;
 }
 
@@ -103,8 +119,17 @@ function PortalLogin({ onSignedIn }) {
 const TABS = ['Company', 'Discovery', 'Blueprint', 'Delivery', 'Growth'];
 
 function Portal({ me, onSignOut }) {
-  const [tab, setTab] = useState('Company');
   const co = me.company || {};
+  const initialTab = TABS.find((t) => t.toLowerCase() === URL_TAB) || 'Company';
+  const [tab, setTabState] = useState(initialTab);
+  // Discovery and blueprint navigate to their real pages when they exist;
+  // everything else switches tabs in place and keeps the URL in step.
+  const setTab = (t) => {
+    if (t === 'Discovery' && me.discovery) { window.location.href = '/' + co.id + '/discovery'; return; }
+    if (t === 'Blueprint' && me.blueprint) { window.location.href = '/' + co.id + '/blueprint/'; return; }
+    setTabState(t);
+    try { window.history.replaceState(null, '', '/' + co.id + '/' + t.toLowerCase()); } catch (_) {}
+  };
 
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>

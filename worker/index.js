@@ -416,8 +416,63 @@ export default {
       return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
     }
 
+    // ── Per-company portal folders ───────────────────────────────────────
+    // Every company lives at /<companyId>/ (id = its store domain label):
+    //   /<id>/company   → portal shell (profile, team, documents)
+    //   /<id>/discovery → the discovery experience (or portal fallback)
+    //   /<id>/blueprint → the blueprint proposal (or portal fallback)
+    //   /<id>/delivery, /<id>/growth → portal shell placeholders
+    // Future portal functions keep extending this folder structure.
+    if (request.method === 'GET' || request.method === 'HEAD') {
+      const coMatch = url.pathname.match(/^\/([a-z0-9-]{2,60})(?:\/(company|discovery|blueprint|delivery|growth))?\/?$/);
+      if (coMatch && !PORTAL_RESERVED.has(coMatch[1])) {
+        const co = await getCompany(env, coMatch[1]);
+        if (co) {
+          const tab = coMatch[2] || '';
+          if (!tab) return Response.redirect(`${url.origin}/${co.id}/company`, 302);
+          if (tab === 'discovery' && co.discoveryHandle) {
+            const assetUrl = new URL(url.toString());
+            assetUrl.pathname = '/discovery/index.html';
+            return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
+          }
+          if (tab === 'blueprint' && co.blueprintId) {
+            const entry = BLUEPRINT_REGISTRY.find((b) => b.id === co.blueprintId);
+            if (entry) {
+              // Relative sub-assets need the trailing slash to resolve.
+              if (!url.pathname.endsWith('/')) {
+                return Response.redirect(`${url.origin}/${co.id}/blueprint/`, 301);
+              }
+              const assetUrl = new URL(url.toString());
+              assetUrl.pathname = `/${entry.dir}/index.html`;
+              return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
+            }
+          }
+          // Portal shell renders the tab (including the discovery
+          // completed-manually and blueprint under-review fallbacks).
+          const assetUrl = new URL(url.toString());
+          assetUrl.pathname = '/index.html';
+          return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
+        }
+      }
+      // Blueprint sub-assets under the company folder: /<id>/blueprint/<rest>
+      const coBpSub = url.pathname.match(/^\/([a-z0-9-]{2,60})\/blueprint\/(.+)$/);
+      if (coBpSub && !PORTAL_RESERVED.has(coBpSub[1])) {
+        const co = await getCompany(env, coBpSub[1]);
+        const entry = co && co.blueprintId ? BLUEPRINT_REGISTRY.find((b) => b.id === co.blueprintId) : null;
+        if (entry) {
+          const assetUrl = new URL(url.toString());
+          assetUrl.pathname = `/${entry.dir}/${coBpSub[2]}`;
+          return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
+        }
+      }
+    }
+
     const discMatch = url.pathname.match(/^\/discovery\/([a-z0-9-]+)\/?$/);
     if (discMatch && (request.method === 'GET' || request.method === 'HEAD')) {
+      // Old-style discovery URL: send it to the company folder when one
+      // owns this discovery, so every client lands on the new experience.
+      const owner = await findCompanyByDiscoveryHandle(env, discMatch[1]);
+      if (owner) return Response.redirect(`${url.origin}/${owner.id}/discovery`, 301);
       const assetUrl = new URL(url.toString());
       assetUrl.pathname = '/discovery/index.html';
       return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
@@ -439,6 +494,10 @@ export default {
         // sub-asset traffic (CSS/JS/images) never pays the KV lookup.
         const rest = bpMatch[2] || '/';
         if (request.method === 'GET' && (rest === '/' || rest === '/index.html')) {
+          // Old-style blueprint URL: redirect the document to its company
+          // folder; sub-assets keep serving from here untouched.
+          const owner = await findCompanyByBlueprintId(env, entry.id);
+          if (owner) return Response.redirect(`${url.origin}/${owner.id}/blueprint/`, 301);
           const meta = await getBpMeta(env, entry.id);
           if (meta.disabled) {
             const adminSess = await getAdminSession(request, env);
@@ -2326,7 +2385,15 @@ async function getDiscoveryByHandle(env, handle) {
     return { demo: true, ...DEMO_DISCOVERY };
   }
   const id = await env.BLUEPRINT_AUTH.get(`dischandle:${clean}`);
-  if (!id) return null;
+  if (!id) {
+    // Company-folder alias: /<companyId>/discovery reaches the experience
+    // with the company id, which may differ from the discovery handle.
+    const co = await getCompany(env, clean);
+    if (co && co.discoveryHandle && co.discoveryHandle !== clean) {
+      return getDiscoveryByHandle(env, co.discoveryHandle);
+    }
+    return null;
+  }
   const raw = await env.BLUEPRINT_AUTH.get(`discovery:${id}`);
   if (!raw) return null;
   try { return { id, ...JSON.parse(raw) }; } catch { return null; }
@@ -2798,6 +2865,7 @@ function companySlug(name) {
 }
 
 async function uniqueCompanyId(env, base) {
+  if (PORTAL_RESERVED.has(base)) base = `${base}-co`;
   for (let i = 0; i < 20; i++) {
     const candidate = i === 0 ? base : `${base}-${i + 1}`;
     if (!(await env.BLUEPRINT_AUTH.get(`company:${candidate}`))) return candidate;
@@ -2865,6 +2933,7 @@ async function listCompanies(env) {
 async function handleAdminListCompanies(request, env) {
   const sess = await getAdminSession(request, env);
   if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  try { await migrateCompaniesV1(env); } catch (_) { /* migration is best-effort */ }
   return json(200, { ok: true, companies: await listCompanies(env) });
 }
 
@@ -2878,7 +2947,12 @@ async function handleAdminCreateCompany(request, env) {
   const fields = companyFieldsFrom(body);
   if (!fields.name) return json(400, { ok: false, error: 'Company name is required' });
 
-  const id = await uniqueCompanyId(env, companySlug(fields.name));
+  // The company folder follows the store domain: companyname.com →
+  // go.uncap.com/companyname/. Name is only the fallback when no domain.
+  const base = fields.storeUrl
+    ? discoveryHandleFromWebsite(fields.storeUrl, fields.name)
+    : companySlug(fields.name);
+  const id = await uniqueCompanyId(env, base);
   const rec = {
     id, ...fields,
     hasLogo: false, files: [],
@@ -3218,4 +3292,109 @@ async function handlePortalLogout(request, env) {
       'set-cookie': `${PORTAL_COOKIE}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`,
     },
   }));
+}
+
+// Top-level path segments that can never be company folders.
+const PORTAL_RESERVED = new Set([
+  'admin', 'api', 'discovery', 'blueprint', 'blueprints', 'discoveries',
+  'build', 'portal', 'assets', 'vendor', 'legal', 'demo', 'companies',
+  'company', 'delivery', 'growth', 'favicon-32', 'index',
+]);
+
+async function findCompanyByBlueprintId(env, bpId) {
+  const companies = await listCompanies(env);
+  return companies.find((c) => c.blueprintId === bpId) || null;
+}
+
+async function findCompanyByDiscoveryHandle(env, handle) {
+  const clean = (handle || '').toString().trim().toLowerCase();
+  if (!clean || clean === DEMO_DISCOVERY_HANDLE) return null;
+  const companies = await listCompanies(env);
+  return companies.find((c) => c.discoveryHandle === clean) || null;
+}
+
+// ── One-time migration: give every existing blueprint and discovery a
+// portal company, so old clients get the new /<company>/ experience.
+// Flag-guarded and idempotent; runs from the admin companies list.
+async function migrateCompaniesV1(env) {
+  if (await env.BLUEPRINT_AUTH.get('comigrate:v1')) return;
+  await env.BLUEPRINT_AUTH.put('comigrate:v1', new Date().toISOString());
+
+  const upsert = async (slug, patch) => {
+    const id = slug.replace(/[^a-z0-9-]/g, '') || 'client';
+    let rec = await getCompany(env, id);
+    if (!rec) {
+      rec = {
+        id, name: patch.name || id, storeUrl: '', address: '', description: '',
+        platform: '', erp: '', attioCompanyId: '', leadContact: null, contacts: [],
+        palette: null, hasLogo: false, files: [], discoveryHandle: '', blueprintId: '',
+        createdAt: new Date().toISOString(), createdBy: 'migration',
+      };
+    }
+    for (const [k, v] of Object.entries(patch)) {
+      if (v === undefined || v === null || v === '') continue;
+      if (k === 'contacts') {
+        const have = new Set((rec.contacts || []).map((c) => c.email).concat(rec.leadContact ? [rec.leadContact.email] : []));
+        rec.contacts = [...(rec.contacts || []), ...v.filter((c) => c && c.email && !have.has(c.email))];
+      } else if (k === 'leadContact') {
+        if (!rec.leadContact) {
+          rec.leadContact = v;
+          rec.contacts = (rec.contacts || []).filter((c) => c.email !== v.email);
+        }
+      } else if (!rec[k]) {
+        rec[k] = v;
+      }
+    }
+    await putCompany(env, rec);
+    return rec;
+  };
+
+  // 1. Every shipped blueprint plus every KV draft becomes a company; its
+  //    contacts come from the blueprint record or the email allowlist.
+  const drafts = await env.BLUEPRINT_AUTH.list({ prefix: 'bp:', limit: 500 });
+  const bpEntries = BLUEPRINT_REGISTRY.map((b) => ({ id: b.id, name: b.name || b.id, website: '', leadContact: null, contacts: [] }));
+  for (const k of drafts.keys) {
+    try {
+      const r = JSON.parse(await env.BLUEPRINT_AUTH.get(k.name));
+      if (r && r.id) bpEntries.push({ id: r.id, name: r.name || r.id, website: r.website || '', leadContact: r.leadContact || null, contacts: r.associatedContacts || [] });
+    } catch (_) { /* skip unreadable draft */ }
+  }
+  for (const bp of bpEntries) {
+    let lead = bp.leadContact;
+    let contacts = bp.contacts || [];
+    if (!lead && !contacts.length) {
+      try {
+        const allow = JSON.parse((await env.BLUEPRINT_AUTH.get(`bpallow:${bp.id}`)) || '[]');
+        const people = allow.filter((e) => typeof e === 'string' && EMAIL_RE.test(e)).map((email) => ({ name: '', email: email.toLowerCase(), title: '' }));
+        lead = people[0] || null;
+        contacts = people.slice(1);
+      } catch (_) { /* no allowlist */ }
+    }
+    const slug = bp.website ? discoveryHandleFromWebsite(bp.website, bp.name) : bp.id;
+    await upsert(slug, { name: bp.name, storeUrl: bp.website, blueprintId: bp.id, leadContact: lead, contacts });
+  }
+
+  // 2. Every discovery joins (or creates) the company matching its domain,
+  //    bringing contacts, palette, and logo along.
+  const discList = await env.BLUEPRINT_AUTH.list({ prefix: 'discovery:', limit: 500 });
+  for (const k of discList.keys) {
+    let rec;
+    try { rec = JSON.parse(await env.BLUEPRINT_AUTH.get(k.name)); } catch { continue; }
+    if (!rec || !rec.handle || rec.handle === DEMO_DISCOVERY_HANDLE) continue;
+    if (rec.companyId && (await getCompany(env, rec.companyId))) continue;
+    const slug = discoveryHandleFromWebsite(rec.website, rec.company);
+    const lead = rec.leadContact || null;
+    const co = await upsert(slug, {
+      name: rec.company, storeUrl: rec.website, address: rec.address,
+      discoveryHandle: rec.handle, palette: rec.palette || null,
+      leadContact: lead, contacts: rec.associatedContacts || [],
+    });
+    if (rec.hasLogo && !co.hasLogo) {
+      try {
+        const id = k.name.slice('discovery:'.length);
+        const logo = await env.BLUEPRINT_AUTH.get(`disclogo:${id}`);
+        if (logo) { await env.BLUEPRINT_AUTH.put(`cologo:${co.id}`, logo); co.hasLogo = true; await putCompany(env, co); }
+      } catch (_) { /* logo copy is best-effort */ }
+    }
+  }
 }

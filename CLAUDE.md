@@ -10,12 +10,23 @@ Assets in `public/`. There is **no build step** — `index.html` loads
 React, ReactDOM, and `@babel/standalone` (vendored under `/vendor/`) from
 `<script>` tags, and Babel transpiles `.jsx` files in the browser.
 
-- Root page (`/` on `go.uncap.com`): the **customer portal**
+- Root page (`/` on `go.uncap.com`): the **customer portal** login
   (`public/index.html` + `public/portal/PortalApp.jsx`). Passwordless
   sign-in (email → 6-digit code) for contacts on portal Companies;
   7-day `__Host-bp_portal` cookie sessions (`portal_session:<token>` in
-  KV). Static five-tab nav: Company / Discovery / Blueprint / Delivery /
-  Growth. View + signature only
+  KV). View + signature only
+- **Company folder URLs**: every company lives at
+  `go.uncap.com/<companyId>/` where the id derives from its store domain
+  (companyname.com → `companyname`). Tabs are sub-paths: `/company`
+  (portal profile), `/discovery` (the discovery experience itself, or a
+  completed-manually portal page), `/blueprint` (the blueprint proposal
+  itself, or an under-review portal page), `/delivery`, `/growth`. All
+  future portal functions extend this folder structure. Old
+  `/blueprint/<id>/` and `/discovery/<handle>` document URLs 301 to the
+  company folder; `PORTAL_RESERVED` in `worker/index.js` guards the
+  segments that can never be company ids. `comigrate:v1` (flag-guarded,
+  runs from the admin Companies list) backfilled a company for every
+  pre-portal blueprint and discovery
 - Admin app lives at `/admin` (`public/admin/index.html` +
   `public/admin/AdminApp.jsx`, client routes `/admin/companies|
   discoveries|blueprints`). Google sign-in (Google Identity Services),
