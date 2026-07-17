@@ -553,7 +553,10 @@
     const [page, setPage] = useState(1);
     const [error, setError] = useState('');
 
-    const shareUrl = (r) => `${window.location.origin}/discovery/${r.handle}/`;
+    // New company-folder URLs everywhere. Share = the portal-framed page a
+    // client opens; app = the raw experience the admin previews in a frame.
+    const shareUrl = (r) => `${window.location.origin}${r.companyId ? '/' + r.companyId + '/discovery' : '/discovery/' + r.handle + '/'}`;
+    const appUrl = (r) => r.companyId ? '/' + r.companyId + '/discovery/app' : '/discovery/' + r.handle + '/';
     const copyUrl = async (r) => {
       try { await navigator.clipboard.writeText(shareUrl(r)); }
       catch (_) { window.prompt('Copy the discovery link:', shareUrl(r)); }
@@ -571,7 +574,7 @@
 
     const discActions = (r) => (
       <span style={{ display: 'inline-flex', gap: 8, flexWrap: 'wrap', justifyContent: isMobile ? 'flex-start' : 'flex-end' }}>
-        <a href={'/discovery/' + r.handle + '/'} onClick={previewClick('/discovery/' + r.handle + '/', r.company || r.handle)} target="_blank" rel="noreferrer" title="Preview discovery" aria-label="Preview discovery"
+        <a href={appUrl(r)} onClick={previewClick(appUrl(r), r.company || r.handle)} target="_blank" rel="noreferrer" title="Preview discovery" aria-label="Preview discovery"
           style={{ ...S.btnIcon, textDecoration: 'none' }}><IconEye/></a>
         <button type="button" title={copied === r.id ? 'Copied ✓' : 'Copy link'} aria-label="Copy link" style={S.btnIcon} onClick={() => copyUrl(r)}>
           {copied === r.id ? <IconCheck/> : <IconShare/>}
@@ -661,8 +664,8 @@
           onSaved={(d) => {
             setShowNew(false);
             // Creating a discovery moves the admin straight into the
-            // Discovery Experience to run the session on the call.
-            if (d && d.handle) { window.location.href = '/discovery/' + d.handle + '/'; return; }
+            // Discovery Experience (new company-folder URL) to run the call.
+            if (d && (d.companyId || d.handle)) { window.location.href = d.companyId ? '/' + d.companyId + '/discovery/app' : '/discovery/' + d.handle + '/'; return; }
             load();
           }}/>}
         {transcriptFor && <TranscriptModal disc={transcriptFor} onClose={() => setTranscriptFor(null)}/>}
@@ -1335,7 +1338,10 @@
       };
     }, [printFor, isMobile]);
 
-    const shareUrl = (bp) => `${window.location.origin}/blueprint/${bp.id}/`;
+    // New company-folder URLs. Share = the portal-framed page a client
+    // opens; app = the raw proposal the admin previews / prints in a frame.
+    const shareUrl = (bp) => `${window.location.origin}${bp.companyId ? '/' + bp.companyId + '/blueprint' : '/blueprint/' + bp.id + '/'}`;
+    const appUrl = (bp) => bp.companyId ? '/' + bp.companyId + '/blueprint/app' : '/blueprint/' + bp.id + '/';
     const copyShare = async (bp) => {
       try { await navigator.clipboard.writeText(shareUrl(bp)); }
       catch (_) { window.prompt('Copy the client link:', shareUrl(bp)); }
@@ -1430,7 +1436,7 @@
     // One actions row, shared by the desktop table and the mobile cards.
     const rowActions = (bp) => (
       <span style={{ display: 'inline-flex', gap: 8, flexWrap: 'wrap', justifyContent: isMobile ? 'flex-start' : 'flex-end' }}>
-        <a href={'/blueprint/' + bp.id + '/'} onClick={previewClick('/blueprint/' + bp.id + '/', bp.name || bp.id)} target="_blank" rel="noreferrer" title="Preview" aria-label="Preview"
+        <a href={appUrl(bp)} onClick={previewClick(appUrl(bp), bp.name || bp.id)} target="_blank" rel="noreferrer" title="Preview" aria-label="Preview"
           style={{ ...S.btnIcon, textDecoration: 'none' }}><IconEye/></a>
         <button type="button" title={copied === bp.id ? 'Copied ✓' : 'Share'} aria-label="Share" style={S.btnIcon} onClick={() => copyShare(bp)}>
           {copied === bp.id ? <IconCheck/> : <IconShare/>}
@@ -1460,7 +1466,7 @@
                 ['shopify', 'For Shopify Partner Program', 'Key sections + Master Services Agreement'],
                 ['client', 'For the Client', 'Whole document + terms + signature audit trail']].map(([mode, l, sub]) => (
                 <button key={mode} type="button"
-                  onClick={() => { setPrintFor(null); window.open('/blueprint/' + bp.id + '/?bpPrint=' + mode, '_blank'); }}
+                  onClick={() => { setPrintFor(null); window.open(appUrl(bp) + (appUrl(bp).includes('?') ? '&' : '?') + 'bpPrint=' + mode, '_blank'); }}
                   style={{ background: 'transparent', border: 'none', color: '#fff', textAlign: 'left', padding: '9px 11px', borderRadius: 6, cursor: 'pointer', fontFamily: T.mono, fontSize: 10.5, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', display: 'flex', flexDirection: 'column', gap: 3 }}>
                   {l}
                   <span style={{ fontSize: 9, letterSpacing: '0.02em', textTransform: 'none', opacity: 0.6, fontWeight: 500 }}>{sub}</span>

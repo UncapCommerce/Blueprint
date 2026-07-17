@@ -1626,6 +1626,12 @@ async function handleAdminBlueprints(request, env) {
     i.signature = recs[0] || null;
   }));
 
+  // Attach each blueprint's owning portal company so the admin can link to
+  // the new /<companyId>/blueprint URL instead of the legacy path.
+  const companies = await listCompanies(env);
+  const byBp = new Map(companies.filter((c) => c.blueprintId).map((c) => [c.blueprintId, c.id]));
+  for (const i of items) i.companyId = byBp.get(i.id) || '';
+
   return json(200, { ok: true, blueprints: items });
 }
 
@@ -1933,6 +1939,12 @@ async function handleAdminListDiscoveries(request, env) {
       return { id, ...rec };
     } catch { return null; }
   }))).filter(Boolean);
+
+  // Attach each discovery's owning portal company so the admin links to the
+  // new /<companyId>/discovery URL instead of the legacy /discovery/<handle>.
+  const companies = await listCompanies(env);
+  const byHandle = new Map(companies.filter((c) => c.discoveryHandle).map((c) => [c.discoveryHandle, c.id]));
+  for (const d of discoveries) d.companyId = d.companyId || byHandle.get(d.handle) || '';
 
   return json(200, { ok: true, discoveries });
 }
@@ -3285,12 +3297,12 @@ async function handlePortalMe(request, env) {
   let discovery = null;
   if (rec.discoveryHandle) {
     const disc = await getDiscoveryByHandle(env, rec.discoveryHandle);
-    if (disc) discovery = { handle: disc.handle, status: disc.status || 'new', url: `/discovery/${disc.handle}/` };
+    if (disc) discovery = { handle: disc.handle, status: disc.status || 'new', url: `/${rec.id}/discovery` };
   }
   let blueprint = null;
   if (rec.blueprintId) {
     const known = BLUEPRINT_REGISTRY.some((b) => b.id === rec.blueprintId) || !!(await env.BLUEPRINT_AUTH.get(`bp:${rec.blueprintId}`));
-    if (known) blueprint = { id: rec.blueprintId, url: `/blueprint/${rec.blueprintId}/` };
+    if (known) blueprint = { id: rec.blueprintId, url: `/${rec.id}/blueprint` };
   }
   return json(200, {
     ok: true,
