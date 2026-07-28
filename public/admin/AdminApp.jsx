@@ -1548,16 +1548,12 @@
       if (bp.disabled) return (
         <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 999, fontFamily: T.mono, fontSize: 9.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', background: T.black, color: '#fff', border: `1px solid ${T.black}` }}>Disabled</span>
       );
-      if (bp.kind === 'draft') {
-        // A templated draft marked ready is live to the client, even though it
-        // isn't a shipped registry page. Only the still-hidden ones are "Draft".
-        if (bp.contentStatus === 'ready') return (
-          <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 999, fontFamily: T.mono, fontSize: 9.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', background: '#DFFCE6', color: '#064E2E', border: '1px solid #9BDDB0' }}>Live</span>
-        );
-        return (
-          <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 999, fontFamily: T.mono, fontSize: 9.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', background: '#FFF6E0', color: '#6A4E00', border: '1px solid #E8C36A' }}>Draft</span>
-        );
-      }
+      // A templated draft still hidden from the client is "Draft". Once marked
+      // ready it behaves like a shipped blueprint below (Signed / Expired /
+      // Live), so only the not-ready ones early-return here.
+      if (bp.kind === 'draft' && bp.contentStatus !== 'ready') return (
+        <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 999, fontFamily: T.mono, fontSize: 9.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', background: '#FFF6E0', color: '#6A4E00', border: '1px solid #E8C36A' }}>Draft</span>
+      );
       if (bp.signature) return (
         <span>
           <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 999, fontFamily: T.mono, fontSize: 9.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', background: '#DFFCE6', color: '#064E2E', border: '1px solid #9BDDB0' }}>Signed</span>
@@ -1569,6 +1565,10 @@
       if (bp.expired) return (
         <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 999, fontFamily: T.mono, fontSize: 9.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', background: '#FDE8E8', color: '#8A1C1C', border: '1px solid #F0A9A9' }}>Expired</span>
       );
+      // Ready templated blueprint, live but not yet signed.
+      if (bp.kind === 'draft') return (
+        <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 999, fontFamily: T.mono, fontSize: 9.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', background: '#DFFCE6', color: '#064E2E', border: '1px solid #9BDDB0' }}>Live</span>
+      );
       return (
         <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 999, fontFamily: T.mono, fontSize: 9.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', background: '#EEF0FE', color: '#3A44C4', border: '1px solid #C3C9F5' }}>Open</span>
       );
@@ -1577,7 +1577,7 @@
     // Same precedence as statusChip, as a plain value for filtering.
     const rowStatus = (bp) => {
       if (bp.disabled) return 'disabled';
-      if (bp.kind === 'draft') return 'draft';
+      if (bp.kind === 'draft' && bp.contentStatus !== 'ready') return 'draft';
       if (bp.signature) return 'signed';
       if (bp.expired) return 'expired';
       return 'open';
@@ -1661,6 +1661,15 @@
             document.body
           )}
         </span>
+        {/* Templated blueprints (draft or live) keep a content editor + delete;
+            shipped registry pages have neither. */}
+        {bp.kind === 'draft' && (
+          <a href={'/admin/blueprint/' + bp.id} onClick={navClick('/admin/blueprint/' + bp.id)} style={{ ...S.btnGhost, textDecoration: 'none' }}>Edit</a>
+        )}
+        {me.isSuper && bp.kind === 'draft' && (
+          <button type="button" title="Delete blueprint" aria-label="Delete blueprint"
+            style={{ ...S.btnIcon, color: '#B3261E', borderColor: '#F0A9A9' }} onClick={() => deleteBp(bp)}><IconTrash/></button>
+        )}
       </span>
     );
 
@@ -1729,7 +1738,7 @@
                   <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={S.eyebrow}>Expires</span>{expiresCell(bp)}
                   </div>
-                  <div style={{ marginTop: 11 }}>{bp.kind === 'live' ? rowActions(bp) : draftActions(bp)}</div>
+                  <div style={{ marginTop: 11 }}>{bp.kind === 'live' || bp.contentStatus === 'ready' ? rowActions(bp) : draftActions(bp)}</div>
                 </div>
               ))}
             </div>
@@ -1755,7 +1764,7 @@
                       <td style={S.td}>{channelCell(bp)}</td>
                       <td style={{ ...S.td, whiteSpace: 'nowrap' }}>{expiresCell(bp)}</td>
                       <td style={{ ...S.td, textAlign: 'right', whiteSpace: 'nowrap' }}>
-                        {bp.kind === 'live' ? rowActions(bp) : draftActions(bp)}
+                        {bp.kind === 'live' || bp.contentStatus === 'ready' ? rowActions(bp) : draftActions(bp)}
                       </td>
                     </tr>
                   ))}

@@ -1477,7 +1477,9 @@ async function handleAdminBlueprints(request, env) {
     i.channel   = meta.channel || i.channel || '';
     i.expired   = isBpExpired(meta);
 
-    if (i.kind !== 'live') return;
+    // Registry pages and templated drafts that have gone live (contentStatus
+    // 'ready') can both be signed, so load signatures for either.
+    if (i.kind !== 'live' && i.contentStatus !== 'ready') return;
     const rollup = await env.BLUEPRINT_AUTH.get(`bpsigned:${i.id}`);
     if (rollup) { try { i.signature = JSON.parse(rollup); return; } catch { /* fall through */ } }
     const list = await env.BLUEPRINT_AUTH.list({ prefix: `signature:${i.id}:`, limit: 10 });
@@ -1495,6 +1497,15 @@ async function handleAdminBlueprints(request, env) {
   const companies = await listCompanies(env);
   const byBp = new Map(companies.filter((c) => c.blueprintId).map((c) => [c.blueprintId, c.id]));
   for (const i of items) i.companyId = byBp.get(i.id) || '';
+
+  // Blueprint numbers run in creation order. Registry pages carry a hardcoded
+  // num; number the remaining blueprints (templated drafts) after the highest
+  // one in use, oldest first, so a published draft reads as a first-class
+  // blueprint (e.g. 015) instead of a blank "-".
+  let maxNum = items.reduce((m, i) => Math.max(m, parseInt(i.num, 10) || 0), 0);
+  items.filter((i) => !i.num)
+    .sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0))
+    .forEach((i) => { maxNum += 1; i.num = String(maxNum).padStart(3, '0'); });
 
   return json(200, { ok: true, blueprints: items });
 }
