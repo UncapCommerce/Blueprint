@@ -200,7 +200,7 @@ function BPIntro() {
               { k: 'Prepared by', v: 'Denis Dyli', s: 'Principal' },
               { k: 'Client lead',  v: 'Daniel Fernandes',  s: 'VP of Product · dfernandes@hpsx.com' },
               { k: 'Company', v: 'Hydra Power Systems', s: '5445 NE 122nd Ave., Portland, OR 97230' },
-              { k: 'Valid through', v: validThrough,    s: bpExp ? 'Set in portal' : '30 days' }
+              { k: 'Valid through', v: validThrough,    s: '30 days' }
             ].map((c, i) => (
               <div key={i} style={{
                 padding: '14px 0', borderBottom: '1px solid #1F1F1F',
