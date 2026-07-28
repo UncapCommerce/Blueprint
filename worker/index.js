@@ -1460,6 +1460,10 @@ async function handleAdminBlueprints(request, env) {
         website: rec.website || '', leadClient: rec.leadClient || '', address: rec.address || '',
         createdAt: rec.createdAt || '', createdBy: rec.createdBy || '',
         leadContact: rec.leadContact || null, associatedContacts: rec.associatedContacts || [],
+        // Templated-content readiness so the admin list can distinguish a draft
+        // that is live to the client ('ready') from one still hidden ('draft'),
+        // and 'none' before any content has been generated.
+        contentStatus: rec.content && rec.content.status ? rec.content.status : (rec.content ? 'draft' : 'none'),
       });
     } catch { /* skip corrupt record */ }
   }

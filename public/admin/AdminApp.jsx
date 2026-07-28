@@ -1548,9 +1548,16 @@
       if (bp.disabled) return (
         <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 999, fontFamily: T.mono, fontSize: 9.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', background: T.black, color: '#fff', border: `1px solid ${T.black}` }}>Disabled</span>
       );
-      if (bp.kind === 'draft') return (
-        <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 999, fontFamily: T.mono, fontSize: 9.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', background: '#FFF6E0', color: '#6A4E00', border: '1px solid #E8C36A' }}>Draft</span>
-      );
+      if (bp.kind === 'draft') {
+        // A templated draft marked ready is live to the client, even though it
+        // isn't a shipped registry page. Only the still-hidden ones are "Draft".
+        if (bp.contentStatus === 'ready') return (
+          <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 999, fontFamily: T.mono, fontSize: 9.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', background: '#DFFCE6', color: '#064E2E', border: '1px solid #9BDDB0' }}>Live</span>
+        );
+        return (
+          <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 999, fontFamily: T.mono, fontSize: 9.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', background: '#FFF6E0', color: '#6A4E00', border: '1px solid #E8C36A' }}>Draft</span>
+        );
+      }
       if (bp.signature) return (
         <span>
           <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 999, fontFamily: T.mono, fontSize: 9.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', background: '#DFFCE6', color: '#064E2E', border: '1px solid #9BDDB0' }}>Signed</span>
@@ -1654,10 +1661,21 @@
             document.body
           )}
         </span>
-        {bp.kind === 'draft' && (
-          <a href={'/admin/blueprint/' + bp.id} onClick={navClick('/admin/blueprint/' + bp.id)} style={{ ...S.btnGhost, textDecoration: 'none' }}>Edit</a>
-        )}
-        {me.isSuper && bp.kind === 'draft' && (
+      </span>
+    );
+
+    // Draft rows can't be previewed, shared, or signed yet: their one job is
+    // to open the content editor, where the admin reviews and flips the
+    // templated content draft -> ready (which makes it live to the client).
+    // Without this the row rendered a dead "Generation - phase 2" label and
+    // the publish flow was unreachable.
+    const draftActions = (bp) => (
+      <span style={{ display: 'inline-flex', gap: 8, flexWrap: 'wrap', justifyContent: isMobile ? 'flex-start' : 'flex-end' }}>
+        <button type="button" title="Activity" aria-label="Activity" style={S.btnIcon} onClick={() => setActivityBp(bp)}><IconActivity/></button>
+        <a href={'/admin/blueprint/' + bp.id} onClick={navClick('/admin/blueprint/' + bp.id)} style={{ ...S.btn, textDecoration: 'none' }}>
+          {bp.contentStatus === 'ready' ? 'Edit' : 'Review & publish'}
+        </a>
+        {me.isSuper && (
           <button type="button" title="Delete draft" aria-label="Delete draft"
             style={{ ...S.btnIcon, color: '#B3261E', borderColor: '#F0A9A9' }} onClick={() => deleteBp(bp)}><IconTrash/></button>
         )}
@@ -1711,13 +1729,7 @@
                   <div style={{ marginTop: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={S.eyebrow}>Expires</span>{expiresCell(bp)}
                   </div>
-                  {bp.kind === 'live' ? (
-                    <div style={{ marginTop: 11 }}>{rowActions(bp)}</div>
-                  ) : (
-                    <div style={{ marginTop: 8, fontFamily: T.mono, fontSize: 10.5, color: T.fg3 }}>
-                      {bp.website ? bp.website + ' · ' : ''}Generation · phase 2
-                    </div>
-                  )}
+                  <div style={{ marginTop: 11 }}>{bp.kind === 'live' ? rowActions(bp) : draftActions(bp)}</div>
                 </div>
               ))}
             </div>
@@ -1743,9 +1755,7 @@
                       <td style={S.td}>{channelCell(bp)}</td>
                       <td style={{ ...S.td, whiteSpace: 'nowrap' }}>{expiresCell(bp)}</td>
                       <td style={{ ...S.td, textAlign: 'right', whiteSpace: 'nowrap' }}>
-                        {bp.kind === 'live'
-                          ? rowActions(bp)
-                          : <span style={{ fontFamily: T.mono, fontSize: 10.5, color: T.fg3 }}>Generation · phase 2</span>}
+                        {bp.kind === 'live' ? rowActions(bp) : draftActions(bp)}
                       </td>
                     </tr>
                   ))}
