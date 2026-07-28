@@ -1791,6 +1791,11 @@ async function handleAdminBpToken(request, env) {
   catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
   const blueprintId = normalizeBlueprintId(body.blueprintId);
 
+  // The blueprint page reads this to render its "Valid through" date from the
+  // expiration an admin set in the app, rather than a hardcoded value.
+  const bpMeta = await getBpMeta(env, blueprintId);
+  const expiresAt = (bpMeta && bpMeta.expiresAt) || '';
+
   const sess = await getAdminSession(request, env);
   if (sess) {
     const token = genToken();
@@ -1799,7 +1804,7 @@ async function handleAdminBpToken(request, env) {
       JSON.stringify({ email: sess.email, admin: true, selfTest: true, blueprintId, ip: clientIp(request), userAgent: clientUa(request), ts: Date.now() }),
       { expirationTtl: SESSION_TTL_SECONDS }
     );
-    return json(200, { ok: true, token });
+    return json(200, { ok: true, token, expiresAt });
   }
   // Signed-in portal customers pass their own company's blueprint gate
   // silently — the gate already calls this endpoint on load.
@@ -1813,7 +1818,7 @@ async function handleAdminBpToken(request, env) {
         JSON.stringify({ email: portal.email, name: portal.name || '', portal: true, blueprintId, ip: clientIp(request), userAgent: clientUa(request), ts: Date.now() }),
         { expirationTtl: SESSION_TTL_SECONDS }
       );
-      return json(200, { ok: true, token });
+      return json(200, { ok: true, token, expiresAt });
     }
   }
   return json(401, { ok: false, error: 'Not signed in' });

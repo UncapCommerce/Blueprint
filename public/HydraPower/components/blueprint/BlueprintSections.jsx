@@ -93,6 +93,13 @@ function BPSerif({ children }) {
 function BPIntro() {
   const [r, setR] = React.useState(false);
   React.useEffect(() => { const t = setTimeout(() => setR(true), 80); return () => clearTimeout(t); }, []);
+  // "Valid through" comes from the expiration set on this blueprint in the app
+  // (surfaced on window.__bpExpiresAt by the Gate); fall back if none is set.
+  const bpExp = (typeof window !== 'undefined' && window.__bpExpiresAt) || '';
+  const expMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(bpExp);
+  const validThrough = expMatch
+    ? ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+expMatch[2] - 1] + ' ' + (+expMatch[3]) + ', ' + expMatch[1]
+    : 'Jul 31, 2026';
   return (
     <section id="intro" data-bp-section="intro" style={{
       background: 'var(--uc-black)',
@@ -124,7 +131,7 @@ function BPIntro() {
           <span style={{ display: 'inline-flex', alignItems: 'center' }}>
             <img src={window.__resources.shopifyBadge} alt="Shopify Platinum Partner" style={{ height: 30, width: 'auto', display: 'block', filter: 'brightness(0) invert(1)' }}/>
           </span>
-          <span>BLUEPRINT 001 · PREPARED JUNE 2026 · CONFIDENTIAL</span>
+          <span>BLUEPRINT 015 · PREPARED JULY 2026 · CONFIDENTIAL</span>
         </div>
 
         {/* Big title */}
@@ -193,7 +200,7 @@ function BPIntro() {
               { k: 'Prepared by', v: 'Denis Dyli', s: 'Principal' },
               { k: 'Client lead',  v: 'Daniel Fernandes',  s: 'VP of Product · dfernandes@hpsx.com' },
               { k: 'Company', v: 'Hydra Power Systems', s: '5445 NE 122nd Ave., Portland, OR 97230' },
-              { k: 'Valid through', v: 'Jul 31, 2026',    s: '30 days' }
+              { k: 'Valid through', v: validThrough,    s: bpExp ? 'Set in portal' : '30 days' }
             ].map((c, i) => (
               <div key={i} style={{
                 padding: '14px 0', borderBottom: '1px solid #1F1F1F',
@@ -2448,12 +2455,12 @@ function BPInvestment() {
     'Go live, a clean handoff, and a 30-day warranty'
   ];
   const schedule = [
-    { n: '01', amount: '$16,500', due: 'Due at signup' },
-    { n: '02', amount: '$16,500', due: 'Due at design approval' },
-    { n: '03', amount: '$16,500', due: 'Due at development kickoff' },
-    { n: '04', amount: '$16,500', due: 'Due at integration milestone' },
-    { n: '05', amount: '$16,500', due: 'Due at UAT start' },
-    { n: '06', amount: '$16,500', due: 'Due at project completion' }
+    { n: '01', amount: '$16,500', due: 'Beginning of month 1' },
+    { n: '02', amount: '$16,500', due: 'Beginning of month 2' },
+    { n: '03', amount: '$16,500', due: 'Beginning of month 3' },
+    { n: '04', amount: '$16,500', due: 'Beginning of month 4' },
+    { n: '05', amount: '$16,500', due: 'Beginning of month 5' },
+    { n: '06', amount: '$16,500', due: 'Beginning of month 6' }
   ];
   return (
     <BPSection id="investment" n="15" label="Investment" dark tail="FIXED · NO SURPRISES">
@@ -2525,15 +2532,15 @@ function BPInvestment() {
             <div key={i} style={{
               position: 'relative', overflow: 'hidden',
               background: 'var(--uc-paper)', border: '1px solid var(--line-2)', borderRadius: 10,
-              padding: 'clamp(20px, 2.2vw, 28px)', display: 'flex', flexDirection: 'column', gap: 'clamp(18px, 2.4vw, 30px)'
+              padding: 'clamp(13px, 1.5vw, 18px)', display: 'flex', flexDirection: 'column', gap: 'clamp(10px, 1.2vw, 14px)'
             }}>
               {i === 0 && <span aria-hidden="true" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 3, background: 'var(--uc-signal)' }}/>}
               <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 10 }}>
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-2)' }}>Installment {i + 1}</span>
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.1em', color: 'var(--fg-3)' }}>{s.n} / 06</span>
               </div>
-              <div style={{ fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(30px, 3.4vw, 46px)', letterSpacing: '-0.04em', lineHeight: 0.9, color: 'var(--fg-1)' }}>{s.amount}</div>
-              <div style={{ paddingTop: 'clamp(12px, 1.4vw, 16px)', borderTop: '1px solid var(--line-1)', fontFamily: 'var(--font-mono)', fontSize: 12, letterSpacing: '0.04em', color: 'var(--fg-2)' }}>{s.due}</div>
+              <div style={{ fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(22px, 2.4vw, 30px)', letterSpacing: '-0.04em', lineHeight: 0.9, color: 'var(--fg-1)' }}>{s.amount}</div>
+              <div style={{ paddingTop: 'clamp(8px, 1vw, 11px)', borderTop: '1px solid var(--line-1)', fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.04em', color: 'var(--fg-2)' }}>{s.due}</div>
             </div>
           ))}
         </div>
