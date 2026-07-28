@@ -43,6 +43,7 @@ const files = [
   'public/Weedoo/index.html',
   'public/CartonCraftSupply/index.html',
   'public/Uncap/index.html',
+  'public/HydraPower/index.html',
   'public/demo/blueprint/index.html',
   'public/discovery/index.html',
 ];

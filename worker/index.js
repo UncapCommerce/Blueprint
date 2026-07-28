@@ -1031,6 +1031,7 @@ const BLUEPRINT_REGISTRY = [
   { id: 'weedooboats',      dir: 'Weedoo',           name: 'Weedoo Greenboat',  num: '012', channel: 'Inbound' },
   { id: 'cartoncraftsupply', dir: 'CartonCraftSupply', name: 'Carton Craft Supply', num: '013', channel: 'Inbound' },
   { id: 'uncap', dir: 'Uncap', name: 'Uncap (Demo)', num: '014', channel: 'Inbound' },
+  { id: 'hydra-powersystems', dir: 'HydraPower', name: 'Hydra-Power Systems', num: '015', channel: 'Inbound' },
 ];
 
 function getCookie(request, name) {
