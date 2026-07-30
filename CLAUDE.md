@@ -34,15 +34,22 @@ React, ReactDOM, and `@babel/standalone` (vendored under `/vendor/`) from
   (`admin_session:<token>`) behind an HttpOnly `__Host-bp_admin` cookie.
   Sections: Companies / Discoveries / Blueprints (+ Users for the super
   admin)
-- **Admin hierarchy**: any `@uncap.com` Google account can sign in but is
-  "pending" until approved. `SUPER_ADMIN_EMAIL` (`denis@uncap.com`) is the
-  only super admin: only they can approve/revoke users (the Users section)
-  and delete companies/discoveries. `SEED_APPROVED_ADMINS`
-  (`ryan@uncap.com`, `mj@uncap.com`) are auto-approved and can't be
-  revoked. Users records live in KV (`adminuser:<email>`); the worker
-  gates every `/api/admin/*` route (except config/login/me/logout and the
-  dual-auth bp-token) on approval, and the destructive/user endpoints on
-  super-admin, so the UI hiding is defense-in-depth only
+- **Admin hierarchy (4 roles)**: any `@uncap.com` Google account can sign
+  in but is **Pending** (no access) until the Admin approves them into a
+  role. Roles, most to least privileged: **Admin** (`SUPER_ADMIN_EMAIL` =
+  `denis@uncap.com`, the only one; `isSuperAdmin`) manages users/roles and
+  can do everything; **Management** (approved by Admin) has full content
+  access plus delete + reopen-signed (`adminCanDelete`); **Staff**
+  (approved by Admin) can create/edit/invite/view but not delete;
+  **Pending** has no access. Role lives on the `adminuser:<email>` KV
+  record (`role`), resolved by `getAdminRole`/`roleFromRecord` (legacy
+  approved records with no role default to Staff). `SEED_MANAGEMENT`
+  (`ryan@uncap.com`, `mj@uncap.com`) are auto-approved as Management and
+  can't be revoked or downgraded. The worker gates every `/api/admin/*`
+  route (except config/login/me/logout and the dual-auth bp-token) on
+  approval, the delete/reopen endpoints on `adminCanDelete`
+  (Admin+Management), and the Users endpoints on Admin only, so UI hiding
+  is defense-in-depth only
 - **Companies are the source of truth** for creation flows: new
   discoveries and blueprint drafts pick a portal company (never Attio
   directly; Attio is only the one-time import in Add company) and pull

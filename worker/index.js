@@ -961,8 +961,21 @@ const ADMIN_COOKIE = '__Host-bp_admin';
 // KV: adminuser:<email> → { email, name, picture, approved, approvedBy,
 // approvedAt, createdAt, lastLoginAt }.
 const SUPER_ADMIN_EMAIL = 'denis@uncap.com';
-const SEED_APPROVED_ADMINS = ['ryan@uncap.com', 'mj@uncap.com'];
+// Seeded teammates are auto-approved and land as Management (one tier below
+// Admin). Not revocable or downgradable.
+const SEED_MANAGEMENT = ['ryan@uncap.com', 'mj@uncap.com'];
 const isSuperAdmin = (email) => (email || '').toString().toLowerCase() === SUPER_ADMIN_EMAIL;
+
+// Team roles, most to least privileged:
+//   admin       — denis@uncap.com only. Manages users/roles + can do everything.
+//   management  — approved by the Admin. Full content access + delete + reopen.
+//   staff       — approved by the Admin. Create/edit/invite/view; no deletes.
+//   pending     — signed in with @uncap.com but not approved. No access.
+const ROLE_ADMIN = 'admin';
+const ROLE_MANAGEMENT = 'management';
+const ROLE_STAFF = 'staff';
+const ROLE_PENDING = 'pending';
+const ASSIGNABLE_ROLES = [ROLE_MANAGEMENT, ROLE_STAFF];
 
 async function getAdminUser(env, email) {
   const e = (email || '').toString().toLowerCase();
@@ -979,21 +992,44 @@ async function upsertAdminUser(env, email, patch) {
   return next;
 }
 
-// Approved = super admin, a seeded teammate, or an explicitly-approved record.
-async function adminIsApproved(env, email) {
+// Resolve a role from an email + its record. Admin and seeded Management are
+// computed; everyone else comes from the record. Legacy approved records with
+// no explicit role default to Staff (the lower tier).
+function roleFromRecord(email, u) {
   const e = (email || '').toString().toLowerCase();
-  if (isSuperAdmin(e) || SEED_APPROVED_ADMINS.includes(e)) return true;
-  const u = await getAdminUser(env, e);
-  return !!(u && u.approved);
+  if (isSuperAdmin(e)) return ROLE_ADMIN;
+  if (SEED_MANAGEMENT.includes(e)) return ROLE_MANAGEMENT;
+  if (u && u.approved) return (u.role === ROLE_MANAGEMENT || u.role === ROLE_STAFF) ? u.role : ROLE_STAFF;
+  return ROLE_PENDING;
 }
 
-// Make sure the super admin and seeded teammates always exist as approved
-// records so they show in the Users list before their first sign-in.
+async function getAdminRole(env, email) {
+  const e = (email || '').toString().toLowerCase();
+  if (isSuperAdmin(e)) return ROLE_ADMIN;
+  if (SEED_MANAGEMENT.includes(e)) return ROLE_MANAGEMENT;
+  return roleFromRecord(e, await getAdminUser(env, e));
+}
+
+// Approved = holds any team role (Admin / Management / Staff), i.e. not pending.
+async function adminIsApproved(env, email) {
+  return (await getAdminRole(env, email)) !== ROLE_PENDING;
+}
+
+// Delete content + reopen signed blueprints: Admin or Management only.
+async function adminCanDelete(env, email) {
+  const r = await getAdminRole(env, email);
+  return r === ROLE_ADMIN || r === ROLE_MANAGEMENT;
+}
+
+// Make sure the Admin and seeded Management teammates always exist as approved
+// records with the right role so they show in the Users list before first
+// sign-in.
 async function seedAdminUsers(env) {
-  for (const e of [SUPER_ADMIN_EMAIL, ...SEED_APPROVED_ADMINS]) {
+  const seeds = [[SUPER_ADMIN_EMAIL, ROLE_ADMIN], ...SEED_MANAGEMENT.map((e) => [e, ROLE_MANAGEMENT])];
+  for (const [e, role] of seeds) {
     const u = await getAdminUser(env, e);
-    if (!u || !u.approved) {
-      await upsertAdminUser(env, e, { approved: true, approvedBy: 'system', approvedAt: new Date().toISOString() });
+    if (!u || !u.approved || u.role !== role) {
+      await upsertAdminUser(env, e, { approved: true, role, approvedBy: (u && u.approvedBy) || 'system', approvedAt: (u && u.approvedAt) || new Date().toISOString() });
     }
   }
 }
@@ -1229,9 +1265,10 @@ async function handleAdminMarkSigned(request, env) {
   if (!known) return json(404, { ok: false, error: 'Unknown blueprint' });
 
   if (body.signed === false) {
-    // Clearing a recorded signature (reopen) is restricted to the owner.
-    if ((sess.email || '').toLowerCase() !== 'denis@uncap.com') {
-      return json(403, { ok: false, error: 'Only denis@uncap.com can reopen a signed blueprint.' });
+    // Clearing a recorded signature (reopen) is a destructive action: Admin
+    // or Management only.
+    if (!(await adminCanDelete(env, sess.email))) {
+      return json(403, { ok: false, error: 'Only Admin or Management can reopen a signed blueprint.' });
     }
     await env.BLUEPRINT_AUTH.delete(`bpsigned:${id}`);
     await logActivity(env, null, { type: 'status', entity: 'blueprint', id, name: await bpDisplayName(env, id), actor: sess.email, detail: 'Marked open (signature cleared)' });
@@ -1339,15 +1376,16 @@ async function handleGoogleLogin(request, env) {
     return json(403, { ok: false, error: 'Reserved for the Uncap team (@uncap.com).' });
   }
 
-  // Record every teammate who signs in so the super admin can approve them.
-  // Super admin + seeded teammates are approved on sight.
-  const autoApprove = isSuperAdmin(email) || SEED_APPROVED_ADMINS.includes(email);
+  // Record every teammate who signs in so the Admin can approve them.
+  // Admin + seeded Management are approved on sight, with their role stamped.
+  const seedRole = isSuperAdmin(email) ? ROLE_ADMIN : (SEED_MANAGEMENT.includes(email) ? ROLE_MANAGEMENT : '');
   await upsertAdminUser(env, email, {
     name: payload.name || '', picture: payload.picture || '',
     lastLoginAt: new Date().toISOString(),
-    ...(autoApprove ? { approved: true, approvedBy: 'system', approvedAt: new Date().toISOString() } : {}),
+    ...(seedRole ? { approved: true, role: seedRole, approvedBy: 'system', approvedAt: new Date().toISOString() } : {}),
   });
-  const approved = await adminIsApproved(env, email);
+  const role = await getAdminRole(env, email);
+  const approved = role !== ROLE_PENDING;
 
   const token = genToken();
   await env.BLUEPRINT_AUTH.put(
@@ -1356,7 +1394,7 @@ async function handleGoogleLogin(request, env) {
     { expirationTtl: ADMIN_SESSION_TTL_SECONDS }
   );
 
-  return withSecurityHeaders(new Response(JSON.stringify({ ok: true, email, name: payload.name || '', picture: payload.picture || '', approved, isSuper: isSuperAdmin(email) }), {
+  return withSecurityHeaders(new Response(JSON.stringify({ ok: true, email, name: payload.name || '', picture: payload.picture || '', approved, role, isSuper: isSuperAdmin(email), canDelete: role === ROLE_ADMIN || role === ROLE_MANAGEMENT }), {
     status: 200,
     headers: {
       'content-type': 'application/json; charset=utf-8',
@@ -1369,50 +1407,62 @@ async function handleGoogleLogin(request, env) {
 async function handleAdminMe(request, env) {
   const sess = await getAdminSession(request, env);
   if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  const role = await getAdminRole(env, sess.email);
   return json(200, {
     ok: true, email: sess.email, name: sess.name || '', picture: sess.picture || '',
-    approved: await adminIsApproved(env, sess.email),
+    approved: role !== ROLE_PENDING,
+    role,
     isSuper: isSuperAdmin(sess.email),
+    canDelete: role === ROLE_ADMIN || role === ROLE_MANAGEMENT,
   });
 }
 
-// ── User management (super admin only) ────────────────────────────────────
+// ── User management (Admin only) ──────────────────────────────────────────
 async function handleAdminListUsers(request, env) {
   const sess = await getAdminSession(request, env);
   if (!sess) return json(401, { ok: false, error: 'Not signed in' });
-  if (!isSuperAdmin(sess.email)) return json(403, { ok: false, error: 'Super admin only' });
+  if (!isSuperAdmin(sess.email)) return json(403, { ok: false, error: 'Admin only' });
   await seedAdminUsers(env);
   const list = await env.BLUEPRINT_AUTH.list({ prefix: 'adminuser:', limit: 500 });
   const users = (await Promise.all(list.keys.map((k) => env.BLUEPRINT_AUTH.get(k.name).then((v) => {
     try { return JSON.parse(v); } catch { return null; }
   })))).filter(Boolean);
+  const rank = { [ROLE_ADMIN]: 0, [ROLE_MANAGEMENT]: 1, [ROLE_STAFF]: 2, [ROLE_PENDING]: 3 };
   for (const u of users) {
     u.isSuper = isSuperAdmin(u.email);
-    if (u.isSuper || SEED_APPROVED_ADMINS.includes(u.email)) u.approved = true;
+    u.role = roleFromRecord(u.email, u);
+    u.approved = u.role !== ROLE_PENDING;
+    // Seeded Management and the Admin are fixed and can't be changed.
+    u.locked = u.isSuper || SEED_MANAGEMENT.includes(u.email);
   }
-  users.sort((a, b) => (b.isSuper - a.isSuper) || (b.approved - a.approved) || a.email.localeCompare(b.email));
+  users.sort((a, b) => (rank[a.role] - rank[b.role]) || a.email.localeCompare(b.email));
   return json(200, { ok: true, users });
 }
 
 async function handleAdminApproveUser(request, env) {
   const sess = await getAdminSession(request, env);
   if (!sess) return json(401, { ok: false, error: 'Not signed in' });
-  if (!isSuperAdmin(sess.email)) return json(403, { ok: false, error: 'Super admin only' });
+  if (!isSuperAdmin(sess.email)) return json(403, { ok: false, error: 'Admin only' });
   if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
   let body;
   try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
   const email = (body.email || '').toString().trim().toLowerCase();
   if (!email.endsWith('@uncap.com')) return json(400, { ok: false, error: 'Only @uncap.com accounts' });
-  if (isSuperAdmin(email)) return json(400, { ok: false, error: 'The super admin cannot be changed' });
-  if (SEED_APPROVED_ADMINS.includes(email) && body.approved === false) {
-    return json(400, { ok: false, error: 'This teammate is permanently approved' });
+  if (isSuperAdmin(email)) return json(400, { ok: false, error: 'The Admin cannot be changed' });
+  if (SEED_MANAGEMENT.includes(email)) return json(400, { ok: false, error: 'This teammate is permanently Management' });
+
+  // Assign a role, or revoke (empty/pending role, or approved:false = revoke).
+  const rawRole = (body.role || '').toString().trim().toLowerCase();
+  const revoke = body.approved === false || rawRole === ROLE_PENDING || (!rawRole && body.approved !== true);
+  if (!revoke && !ASSIGNABLE_ROLES.includes(rawRole)) {
+    return json(400, { ok: false, error: 'Role must be management or staff' });
   }
-  const user = await upsertAdminUser(env, email, {
-    approved: !!body.approved,
-    approvedBy: sess.email,
-    approvedAt: new Date().toISOString(),
-  });
-  await logActivity(env, null, { type: body.approved ? 'created' : 'deleted', entity: 'user', id: email, name: email, actor: sess.email, detail: body.approved ? 'User approved' : 'User access revoked' });
+  const patch = revoke
+    ? { approved: false, role: '', approvedBy: sess.email, approvedAt: new Date().toISOString() }
+    : { approved: true, role: rawRole, approvedBy: sess.email, approvedAt: new Date().toISOString() };
+  const user = await upsertAdminUser(env, email, patch);
+  user.role = roleFromRecord(email, user);
+  await logActivity(env, null, { type: revoke ? 'deleted' : 'created', entity: 'user', id: email, name: email, actor: sess.email, detail: revoke ? 'User access revoked' : `User approved as ${rawRole}` });
   return json(200, { ok: true, user });
 }
 
@@ -1740,7 +1790,7 @@ async function handleAdminGenerateBlueprint(request, env) {
 async function handleAdminDeleteBlueprint(request, env) {
   const sess = await getAdminSession(request, env);
   if (!sess) return json(401, { ok: false, error: 'Not signed in' });
-  if (!isSuperAdmin(sess.email)) return json(403, { ok: false, error: 'Only denis@uncap.com can delete blueprints.' });
+  if (!(await adminCanDelete(env, sess.email))) return json(403, { ok: false, error: 'Only Admin or Management can delete blueprints.' });
   if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
   let body;
   try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
@@ -2215,7 +2265,7 @@ async function handleAdminDiscoveryPrefill(request, env) {
 async function handleAdminDeleteDiscovery(request, env) {
   const sess = await getAdminSession(request, env);
   if (!sess) return json(401, { ok: false, error: 'Not signed in' });
-  if (!isSuperAdmin(sess.email)) return json(403, { ok: false, error: 'Only denis@uncap.com can delete discoveries.' });
+  if (!(await adminCanDelete(env, sess.email))) return json(403, { ok: false, error: 'Only Admin or Management can delete discoveries.' });
   if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
 
   let body;
@@ -3182,7 +3232,7 @@ async function handleAdminUpdateCompany(request, env) {
 async function handleAdminDeleteCompany(request, env) {
   const sess = await getAdminSession(request, env);
   if (!sess) return json(401, { ok: false, error: 'Not signed in' });
-  if (!isSuperAdmin(sess.email)) return json(403, { ok: false, error: 'Only denis@uncap.com can delete companies.' });
+  if (!(await adminCanDelete(env, sess.email))) return json(403, { ok: false, error: 'Only Admin or Management can delete companies.' });
   if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
   let body;
   try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }

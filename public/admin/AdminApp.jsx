@@ -539,7 +539,7 @@
           {copied === r.id ? <IconCheck/> : <IconShare/>}
         </button>
         <button type="button" style={S.btnGhost} onClick={() => setTranscriptFor(r)}>Transcript</button>
-        {me.isSuper && (
+        {me.canDelete && (
           <button type="button" title="Delete discovery" aria-label="Delete discovery"
             style={{ ...S.btnIcon, color: '#B3261E', borderColor: '#F0A9A9' }} onClick={() => deleteDisc(r)}><IconTrash/></button>
         )}
@@ -768,8 +768,6 @@
     ['brief', 'Technical Brief'],
     ['doc', 'Documents'],
   ];
-  // Teammates the server permanently keeps approved (no Revoke button).
-  const SEED_LOCKED = ['ryan@uncap.com', 'mj@uncap.com'];
 
   // Send portal invites and summarize the per-recipient result for an alert.
   async function inviteToPortal(id, emails) {
@@ -839,7 +837,7 @@
                   <button type="button" style={{ ...S.btnGhost, flexShrink: 0 }} onClick={() => invite(co)}>Invite</button>
                 ) : null}
                 <a href={'/admin/company/' + co.id} onClick={navClick('/admin/company/' + co.id)} style={{ ...S.btnGhost, flexShrink: 0, textDecoration: 'none' }}>View</a>
-                {me.isSuper && (
+                {me.canDelete && (
                   <button type="button" aria-label={'Delete ' + co.name} onClick={() => remove(co)}
                     style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 6, border: `1px solid ${T.line}`, background: 'transparent', color: '#B3261E', cursor: 'pointer', flexShrink: 0 }}><IconTrash/></button>
                 )}
@@ -1666,7 +1664,7 @@
         {bp.kind === 'draft' && (
           <a href={'/admin/blueprint/' + bp.id} onClick={navClick('/admin/blueprint/' + bp.id)} style={{ ...S.btnGhost, textDecoration: 'none' }}>Edit</a>
         )}
-        {me.isSuper && bp.kind === 'draft' && (
+        {me.canDelete && bp.kind === 'draft' && (
           <button type="button" title="Delete blueprint" aria-label="Delete blueprint"
             style={{ ...S.btnIcon, color: '#B3261E', borderColor: '#F0A9A9' }} onClick={() => deleteBp(bp)}><IconTrash/></button>
         )}
@@ -1684,7 +1682,7 @@
         <a href={'/admin/blueprint/' + bp.id} onClick={navClick('/admin/blueprint/' + bp.id)} style={{ ...S.btn, textDecoration: 'none' }}>
           {bp.contentStatus === 'ready' ? 'Edit' : 'Review & publish'}
         </a>
-        {me.isSuper && (
+        {me.canDelete && (
           <button type="button" title="Delete draft" aria-label="Delete draft"
             style={{ ...S.btnIcon, color: '#B3261E', borderColor: '#F0A9A9' }} onClick={() => deleteBp(bp)}><IconTrash/></button>
         )}
@@ -2367,7 +2365,7 @@
     );
   }
 
-  // ── Users (super admin only) ─────────────────────────────────────────
+  // ── Users (Admin only) ───────────────────────────────────────────────
   function Users() {
     const [rows, setRows] = useState(null);
     const [error, setError] = useState('');
@@ -2379,20 +2377,34 @@
     };
     useEffect(() => { load(); }, []);
 
-    const setApproved = async (u, approved) => {
+    // Assign a role ('management' | 'staff') or revoke access (role '').
+    const setRole = async (u, role) => {
+      if (role === u.role) return;
+      if (!role && !window.confirm(`Revoke ${u.name || u.email}?\n\nThey keep their @uncap.com sign-in but lose all dashboard access until re-approved.`)) return;
       setBusy(u.email); setError('');
       try {
-        await api('/api/admin/users/approve', { method: 'POST', body: JSON.stringify({ email: u.email, approved }) });
+        await api('/api/admin/users/approve', { method: 'POST', body: JSON.stringify({ email: u.email, role, approved: !!role }) });
         await load();
       } catch (err) { setError(err.message); }
       setBusy('');
+    };
+
+    const ROLE_CHIP = {
+      admin:      { l: 'ADMIN',      bg: '#0A0A0A', fg: '#E8FF52' },
+      management: { l: 'MANAGEMENT', bg: '#DDE6FF', fg: '#21318C' },
+      staff:      { l: 'STAFF',      bg: '#DFFCE6', fg: '#064E2E' },
+      pending:    { l: 'PENDING',    bg: '#FDECC8', fg: '#6A4E00' },
+    };
+    const roleChip = (role) => {
+      const c = ROLE_CHIP[role] || ROLE_CHIP.pending;
+      return <span style={{ fontFamily: T.mono, fontSize: 9, letterSpacing: '0.06em', background: c.bg, color: c.fg, borderRadius: 999, padding: '4px 10px', flexShrink: 0 }}>{c.l}</span>;
     };
 
     return (
       <Page>
         <PageHead eyebrow="Admin" title="Users"/>
         <div style={{ fontFamily: T.sans, fontSize: 13.5, color: T.fg2, marginTop: -12, marginBottom: 20 }}>
-          Anyone with an @uncap.com Google account can sign in, but stays pending until you approve them here.
+          Anyone with an @uncap.com Google account can sign in, but stays <b>Pending</b> (no access) until you approve them. <b>Management</b> can delete content and reopen signed blueprints; <b>Staff</b> can create, edit, invite, and view but not delete. Only you (Admin) manage roles here.
         </div>
         {rows === null ? (
           <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>Loading…</div>
@@ -2409,19 +2421,22 @@
                   <div style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 14, color: T.fg1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.name || u.email}</div>
                   <div style={{ fontFamily: T.mono, fontSize: 11, color: T.fg3, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.email}{u.lastLoginAt ? ' · last in ' + fmtWhen(u.lastLoginAt) : ' · never signed in'}</div>
                 </div>
-                {u.isSuper
-                  ? <span style={{ fontFamily: T.mono, fontSize: 9, letterSpacing: '0.06em', background: '#0A0A0A', color: '#E8FF52', borderRadius: 999, padding: '4px 10px', flexShrink: 0 }}>SUPER ADMIN</span>
-                  : u.approved
-                    ? <>
-                        <span style={{ fontFamily: T.mono, fontSize: 9, letterSpacing: '0.06em', background: '#DFFCE6', color: '#064E2E', borderRadius: 999, padding: '4px 10px', flexShrink: 0 }}>APPROVED</span>
-                        {SEED_LOCKED.includes(u.email)
-                          ? null
-                          : <button type="button" style={{ ...S.btnGhost, flexShrink: 0 }} disabled={busy === u.email} onClick={() => setApproved(u, false)}>{busy === u.email ? '…' : 'Revoke'}</button>}
-                      </>
-                    : <>
-                        <span style={{ fontFamily: T.mono, fontSize: 9, letterSpacing: '0.06em', background: '#FDECC8', color: '#6A4E00', borderRadius: 999, padding: '4px 10px', flexShrink: 0 }}>PENDING</span>
-                        <button type="button" style={{ ...S.btn, flexShrink: 0, padding: '8px 14px', fontSize: 13 }} disabled={busy === u.email} onClick={() => setApproved(u, true)}>{busy === u.email ? '…' : 'Approve'}</button>
-                      </>}
+                {roleChip(u.role)}
+                {u.role === 'admin' || u.locked ? null
+                  : u.role === 'pending'
+                    ? <span style={{ display: 'inline-flex', gap: 6, flexShrink: 0 }}>
+                        <button type="button" style={{ ...S.btn, flexShrink: 0, padding: '7px 11px', fontSize: 12.5 }} disabled={busy === u.email} onClick={() => setRole(u, 'management')}>{busy === u.email ? '…' : 'Management'}</button>
+                        <button type="button" style={{ ...S.btnGhost, flexShrink: 0, padding: '7px 11px', fontSize: 12.5 }} disabled={busy === u.email} onClick={() => setRole(u, 'staff')}>{busy === u.email ? '…' : 'Staff'}</button>
+                      </span>
+                    : <span style={{ display: 'inline-flex', gap: 6, alignItems: 'center', flexShrink: 0 }}>
+                        <select value={u.role} onChange={(e) => setRole(u, e.target.value)} disabled={busy === u.email}
+                          aria-label={'Role for ' + u.email}
+                          style={{ ...S.input, width: 'auto', padding: '6px 10px', fontSize: 12.5, cursor: 'pointer' }}>
+                          <option value="management">Management</option>
+                          <option value="staff">Staff</option>
+                        </select>
+                        <button type="button" style={{ ...S.btnGhost, flexShrink: 0 }} disabled={busy === u.email} onClick={() => setRole(u, '')}>{busy === u.email ? '…' : 'Revoke'}</button>
+                      </span>}
               </div>
             ))}
           </div>
