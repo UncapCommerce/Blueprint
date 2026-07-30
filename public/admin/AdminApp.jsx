@@ -103,6 +103,12 @@
     if (base[0] === 'discoveries') return 'discoveries';
     if (base[0] === 'blueprints') return 'blueprints';
     if (base[0] === 'companies') return 'companies';
+    if (base[0] === 'projects') return 'projects';
+    if (base[0] === 'retainers') return 'retainers';
+    if (base[0] === 'revenues' && base[1] === 'fixed') return 'rev-fixed';
+    if (base[0] === 'revenues' && base[1] === 'recurring') return 'rev-recurring';
+    if (base[0] === 'revenues' && base[1] === 'apps') return 'rev-apps';
+    if (base[0] === 'dashboard') return 'dashboard';
     if (base[0] === 'users') return 'users';
     return 'home';
   }
@@ -263,28 +269,82 @@
   }
 
   // ── top navigation ───────────────────────────────────────────────────
-  function TopBar({ me, route, onLogout }) {
-    const items = [
-      { id: 'companies',   l: 'Companies' },
-      { id: 'discoveries', l: 'Discoveries' },
-      { id: 'blueprints',  l: 'Blueprints' },
-      ...(me.isSuper ? [{ id: 'users', l: 'Users' }] : []),
-    ];
-    // The company profile page counts as part of the Companies section.
-    const active = route === 'company-profile' ? 'companies' : route;
-    const pill = (it) => {
-      const path = it.id === 'home' ? '/admin' : '/admin/' + it.id;
-      const on = active === it.id;
-      return (
-        <a key={it.id} href={path} onClick={navClick(path)} style={{
-          padding: '4px 11px', borderRadius: 4, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
-          fontFamily: T.sans, fontSize: 12, fontWeight: on ? 700 : 500, lineHeight: 1,
-          color: on ? '#0A0A0A' : '#D4D2CC',
-          background: on ? '#FFFFFF' : 'transparent',
-          transition: 'background 180ms, color 180ms',
-        }}>{it.l}</a>
-      );
+  // Pill styling shared by plain nav links and dropdown triggers.
+  function navPillStyle(on) {
+    return {
+      display: 'inline-flex', alignItems: 'center', gap: 5,
+      padding: '4px 11px', borderRadius: 4, border: 'none', cursor: 'pointer',
+      textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
+      fontFamily: T.sans, fontSize: 12, fontWeight: on ? 700 : 500, lineHeight: 1,
+      color: on ? '#0A0A0A' : '#D4D2CC',
+      background: on ? '#FFFFFF' : 'transparent',
+      transition: 'background 180ms, color 180ms',
     };
+  }
+
+  // A top-nav dropdown: a trigger pill that opens a dark panel of sub-links.
+  function NavMenu({ label, items, active }) {
+    const [open, setOpen] = useState(false);
+    const ref = useRef(null);
+    const on = items.some((it) => it.id === active);
+    useEffect(() => {
+      if (!open) return;
+      const onDoc = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+      document.addEventListener('mousedown', onDoc);
+      return () => document.removeEventListener('mousedown', onDoc);
+    }, [open]);
+    // Close whenever the route changes (a sub-link was chosen).
+    useEffect(() => { setOpen(false); }, [active]);
+    return (
+      <span ref={ref} style={{ position: 'relative', flexShrink: 0 }}>
+        <button type="button" onClick={() => setOpen((o) => !o)} style={navPillStyle(on)}>
+          {label} <span style={{ opacity: 0.55, fontSize: 9 }}>▾</span>
+        </button>
+        {open && (
+          <div style={{
+            position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 60,
+            background: '#141414', border: '1px solid #2A2A2A', borderRadius: 8, padding: 5,
+            minWidth: 176, display: 'flex', flexDirection: 'column', gap: 1,
+            boxShadow: '0 16px 40px -18px rgba(0,0,0,0.85)',
+          }}>
+            {items.map((it) => {
+              const sel = it.id === active;
+              return (
+                <a key={it.id} href={it.path} onClick={(e) => { setOpen(false); navClick(it.path)(e); }} style={{
+                  padding: '8px 11px', borderRadius: 5, textDecoration: 'none', whiteSpace: 'nowrap',
+                  fontFamily: T.sans, fontSize: 12.5, fontWeight: sel ? 700 : 500, lineHeight: 1,
+                  color: sel ? '#0A0A0A' : '#E6E4DE', background: sel ? T.signal : 'transparent',
+                }}>{it.l}</a>
+              );
+            })}
+          </div>
+        )}
+      </span>
+    );
+  }
+
+  function TopBar({ me, route, onLogout }) {
+    // The company profile / blueprint editor pages count toward their section.
+    const active = route === 'company-profile' ? 'companies'
+      : route === 'blueprint-editor' ? 'blueprints'
+      : route;
+    const SALES = [
+      { id: 'companies',   l: 'Companies',   path: '/admin/companies' },
+      { id: 'discoveries', l: 'Discoveries', path: '/admin/discoveries' },
+      { id: 'blueprints',  l: 'Blueprints',  path: '/admin/blueprints' },
+    ];
+    const SERVICES = [
+      { id: 'projects',  l: 'Projects',  path: '/admin/projects' },
+      { id: 'retainers', l: 'Retainers', path: '/admin/retainers' },
+    ];
+    const REVENUES = [
+      { id: 'rev-fixed',     l: 'Fixed',     path: '/admin/revenues/fixed' },
+      { id: 'rev-recurring', l: 'Recurring', path: '/admin/revenues/recurring' },
+      { id: 'rev-apps',      l: 'Apps',      path: '/admin/revenues/apps' },
+    ];
+    const pill = (id, l, path) => (
+      <a key={id} href={path} onClick={navClick(path)} style={navPillStyle(active === id)}>{l}</a>
+    );
     const MONO = 'var(--font-mono, "JetBrains Mono", ui-monospace, monospace)';
     return (
       <header style={{ position: 'sticky', top: 0, zIndex: 50, background: '#0A0A0A' }}>
@@ -295,7 +355,14 @@
             <span style={{ fontFamily: MONO, fontSize: 8.5, letterSpacing: '0.12em', color: '#9A9A9A' }}>ADMIN</span>
           </a>
 
-          <nav style={{ flex: '1 1 auto', display: 'flex', alignItems: 'center', gap: 2, overflowX: 'auto' }}>{items.map(pill)}</nav>
+          <nav style={{ flex: '1 1 auto', display: 'flex', alignItems: 'center', gap: 4, overflow: 'visible' }}>
+            {pill('home', 'Activities', '/admin')}
+            <NavMenu label="Sales" items={SALES} active={active}/>
+            <NavMenu label="Services" items={SERVICES} active={active}/>
+            <NavMenu label="Revenues" items={REVENUES} active={active}/>
+            {pill('dashboard', 'Dashboard', '/admin/dashboard')}
+            {me.isSuper ? pill('users', 'Users', '/admin/users') : null}
+          </nav>
 
           <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 10 }}>
             {me.picture
@@ -327,6 +394,22 @@
         </div>
         {action || null}
       </div>
+    );
+  }
+
+  // Placeholder for sections that are navigable but not yet designed
+  // (Services, Revenues, Dashboard). Keeps the nav functional end to end.
+  function SectionStub({ eyebrow, title, note }) {
+    return (
+      <Page>
+        <PageHead eyebrow={eyebrow} title={title}/>
+        <div style={{ ...S.card, padding: 40, textAlign: 'center' }}>
+          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, ...S.eyebrow, marginBottom: 12 }}>
+            <span style={{ width: 6, height: 6, borderRadius: 999, background: T.signal }}/>Coming soon
+          </div>
+          <div style={{ fontFamily: T.sans, fontSize: 14.5, lineHeight: 1.6, color: T.fg2, maxWidth: 520, margin: '0 auto' }}>{note}</div>
+        </div>
+      </Page>
     );
   }
 
@@ -2336,6 +2419,12 @@
           : route === 'companies' ? <Companies me={me}/>
           : route === 'discoveries' ? <Discoveries me={me}/>
           : route === 'blueprints' ? <Blueprints me={me}/>
+          : route === 'projects' ? <SectionStub eyebrow="Services" title="Projects" note="Fixed-scope client projects will live here — tracked from kickoff through delivery. Design coming next."/>
+          : route === 'retainers' ? <SectionStub eyebrow="Services" title="Retainers" note="Ongoing retainer engagements and their scope will live here. Design coming next."/>
+          : route === 'rev-fixed' ? <SectionStub eyebrow="Revenues" title="Fixed" note="One-time / fixed-fee revenue will be reported here. Design coming next."/>
+          : route === 'rev-recurring' ? <SectionStub eyebrow="Revenues" title="Recurring" note="Recurring retainer and subscription revenue will be reported here. Design coming next."/>
+          : route === 'rev-apps' ? <SectionStub eyebrow="Revenues" title="Apps" note="App and product revenue will be reported here. Design coming next."/>
+          : route === 'dashboard' ? <SectionStub eyebrow="Overview" title="Dashboard" note="A cross-section overview of activity, sales, services, and revenue. We’ll design this in the next steps."/>
           : <Home/>}
       </div>
     );
