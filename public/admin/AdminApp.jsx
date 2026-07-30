@@ -413,6 +413,123 @@
     );
   }
 
+  // ── Revenues > Recurring (Shopify paid orders) ───────────────────────
+  function RecurringRevenue() {
+    const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const presetRange = (p) => {
+      const now = new Date(), y = now.getFullYear(), m = now.getMonth();
+      let from, to = now;
+      if (p === 'day') { from = new Date(y, m, now.getDate()); to = new Date(y, m, now.getDate()); }
+      else if (p === 'quarter') { from = new Date(y, Math.floor(m / 3) * 3, 1); }
+      else if (p === 'year') { from = new Date(y, 0, 1); to = new Date(y, 11, 31); }
+      else if (p === 'ytd') { from = new Date(y, 0, 1); }
+      else { from = new Date(y, m, 1); } // month (default)
+      return { from: ymd(from), to: ymd(to) };
+    };
+    const PRESETS = [['day', 'Day'], ['month', 'Month'], ['quarter', 'Quarter'], ['year', 'Year'], ['ytd', 'YTD'], ['custom', 'Custom']];
+
+    const [preset, setPreset] = useState('month');
+    const [range, setRange] = useState(() => presetRange('month'));
+    const [data, setData] = useState(null);
+    const [error, setError] = useState('');
+
+    const pickPreset = (p) => { setPreset(p); if (p !== 'custom') setRange(presetRange(p)); };
+    const setCustom = (k, v) => { if (v) setRange((r) => ({ ...r, [k]: v })); };
+
+    useEffect(() => {
+      let dead = false; setData(null); setError('');
+      api(`/api/admin/revenue/recurring?from=${encodeURIComponent(range.from)}&to=${encodeURIComponent(range.to)}`)
+        .then((d) => { if (!dead) setData(d); })
+        .catch((e) => { if (!dead) { setError(e.message); setData({}); } });
+      return () => { dead = true; };
+    }, [range.from, range.to]);
+
+    const money = (n, cur) => { try { return new Intl.NumberFormat(undefined, { style: 'currency', currency: cur || 'USD' }).format(n || 0); } catch (_) { return '$' + (n || 0).toFixed(2); } };
+    const fmtDate = (s) => { if (!s) return ''; const d = new Date(s); return isNaN(d.getTime()) ? s.slice(0, 10) : d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }); };
+    const statChip = (label, value) => (
+      <div style={{ ...S.card, padding: '16px 20px', minWidth: 150 }}>
+        <div style={S.eyebrow}>{label}</div>
+        <div style={{ fontFamily: T.hero, fontWeight: 800, fontSize: 30, letterSpacing: '-0.02em', color: T.fg1, marginTop: 6 }}>{value}</div>
+      </div>
+    );
+
+    return (
+      <Page>
+        <PageHead eyebrow="Revenues" title="Recurring"/>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 18 }}>
+          {PRESETS.map(([id, l]) => (
+            <button key={id} type="button" onClick={() => pickPreset(id)}
+              style={{ ...(preset === id ? S.btn : S.btnGhost), padding: '7px 13px', fontSize: 12.5 }}>{l}</button>
+          ))}
+          {preset === 'custom' && (
+            <span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}>
+              <input type="date" value={range.from} onChange={(e) => setCustom('from', e.target.value)} style={{ ...S.input, width: 'auto', padding: '7px 10px', fontSize: 13 }}/>
+              <span style={{ color: T.fg3, fontFamily: T.mono, fontSize: 12 }}>to</span>
+              <input type="date" value={range.to} onChange={(e) => setCustom('to', e.target.value)} style={{ ...S.input, width: 'auto', padding: '7px 10px', fontSize: 13 }}/>
+            </span>
+          )}
+        </div>
+
+        {data === null ? (
+          <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>Loading…</div>
+        ) : data.connected === false ? (
+          <div style={{ ...S.card, padding: 32 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, ...S.eyebrow, marginBottom: 12 }}><span style={{ width: 6, height: 6, borderRadius: 999, background: '#E8C36A' }}/>Shopify not connected</div>
+            <div style={{ fontFamily: T.sans, fontSize: 14.5, lineHeight: 1.6, color: T.fg2, maxWidth: 640 }}>
+              Recurring revenue reads paid orders from Shopify. To switch it on, add a Custom App Admin API token and store domain as Cloudflare secrets/vars: <b>SHOPIFY_ADMIN_TOKEN</b>, <b>SHOPIFY_SHOP_DOMAIN</b>, and <b>SHOPIFY_STORE_HANDLE</b>. Once saved, this tab lists every paid order with a link to Shopify and totals for the selected range.
+            </div>
+          </div>
+        ) : (error || data.ok === false) ? (
+          <div style={{ ...S.card, padding: 28 }}>
+            <div style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 15, color: T.fg1, marginBottom: 6 }}>Couldn&rsquo;t reach Shopify</div>
+            <div style={{ fontFamily: T.mono, fontSize: 12, color: '#B3261E', wordBreak: 'break-word' }}>{error || data.error}</div>
+          </div>
+        ) : (
+          <>
+            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 16 }}>
+              {statChip('Total collected', money(data.total, data.currency))}
+              {statChip('Orders', data.count)}
+              <div style={{ ...S.card, padding: '16px 20px', minWidth: 170 }}>
+                <div style={S.eyebrow}>Range</div>
+                <div style={{ fontFamily: T.mono, fontSize: 13, color: T.fg2, marginTop: 12 }}>{data.from} → {data.to}</div>
+              </div>
+            </div>
+            {data.truncated && (
+              <div style={{ marginBottom: 12, fontFamily: T.mono, fontSize: 11.5, color: '#6A4E00', background: '#FDF6E3', border: '1px solid #E8C36A', borderRadius: 6, padding: '8px 12px' }}>
+                Showing the first batch of orders for this range; narrow the dates for a complete total.
+              </div>
+            )}
+            {data.orders.length === 0 ? (
+              <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>No paid orders in this range.</div>
+            ) : (
+              <div style={{ ...S.card, overflow: 'hidden' }}>
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead><tr>
+                      <th style={S.th}>Date</th><th style={S.th}>Order</th><th style={S.th}>Customer</th><th style={{ ...S.th, textAlign: 'right' }}>Amount</th><th style={S.th}>Status</th><th style={{ ...S.th, textAlign: 'right' }}>Shopify</th>
+                    </tr></thead>
+                    <tbody>
+                      {data.orders.map((o) => (
+                        <tr key={o.id}>
+                          <td style={{ ...S.td, whiteSpace: 'nowrap', fontFamily: T.mono, fontSize: 12.5 }}>{fmtDate(o.date)}</td>
+                          <td style={{ ...S.td, fontWeight: 700 }}>{o.name}</td>
+                          <td style={S.td}>{o.customer || '—'}</td>
+                          <td style={{ ...S.td, textAlign: 'right', fontFamily: T.mono, whiteSpace: 'nowrap' }}>{money(o.amount, o.currency)}</td>
+                          <td style={S.td}><span style={{ fontFamily: T.mono, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', background: '#DFFCE6', color: '#064E2E', borderRadius: 999, padding: '3px 9px', whiteSpace: 'nowrap' }}>{o.status}</span></td>
+                          <td style={{ ...S.td, textAlign: 'right', whiteSpace: 'nowrap' }}><a href={o.adminUrl} target="_blank" rel="noreferrer" style={{ ...S.btnGhost, textDecoration: 'none', padding: '5px 10px', fontSize: 12 }}>Open ↗</a></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </Page>
+    );
+  }
+
   // ── modal chrome ─────────────────────────────────────────────────────
   function Modal({ title, sub, onClose, children, width }) {
     const isMobile = useIsMobile();
@@ -2422,7 +2539,7 @@
           : route === 'projects' ? <SectionStub eyebrow="Services" title="Projects" note="Fixed-scope client projects will live here — tracked from kickoff through delivery. Design coming next."/>
           : route === 'retainers' ? <SectionStub eyebrow="Services" title="Retainers" note="Ongoing retainer engagements and their scope will live here. Design coming next."/>
           : route === 'rev-fixed' ? <SectionStub eyebrow="Revenues" title="Fixed" note="One-time / fixed-fee revenue will be reported here. Design coming next."/>
-          : route === 'rev-recurring' ? <SectionStub eyebrow="Revenues" title="Recurring" note="Recurring retainer and subscription revenue will be reported here. Design coming next."/>
+          : route === 'rev-recurring' ? <RecurringRevenue/>
           : route === 'rev-apps' ? <SectionStub eyebrow="Revenues" title="Apps" note="App and product revenue will be reported here. Design coming next."/>
           : route === 'dashboard' ? <SectionStub eyebrow="Overview" title="Dashboard" note="A cross-section overview of activity, sales, services, and revenue. We’ll design this in the next steps."/>
           : <Home/>}

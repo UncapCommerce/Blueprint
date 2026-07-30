@@ -274,6 +274,9 @@ export default {
     if (url.pathname === '/api/admin/bp-token' && request.method === 'POST') {
       return handleAdminBpToken(request, env);
     }
+    if (url.pathname === '/api/admin/revenue/recurring' && request.method === 'GET') {
+      return handleAdminRecurringRevenue(request, env);
+    }
     if (url.pathname === '/api/admin/discoveries' && request.method === 'GET') {
       return handleAdminListDiscoveries(request, env);
     }
@@ -1032,6 +1035,98 @@ async function seedAdminUsers(env) {
       await upsertAdminUser(env, e, { approved: true, role, approvedBy: (u && u.approvedBy) || 'system', approvedAt: (u && u.approvedAt) || new Date().toISOString() });
     }
   }
+}
+
+// ── Shopify integration (Revenues > Recurring) ────────────────────────────
+// Reads paid orders from the Shopify Admin API. Credentials live as Cloudflare
+// secrets/vars (not wrangler.toml, which deploys with --keep-vars):
+//   SHOPIFY_ADMIN_TOKEN   — Admin API access token (shpat_...)   [secret]
+//   SHOPIFY_SHOP_DOMAIN   — <store>.myshopify.com                [var]
+//   SHOPIFY_STORE_HANDLE  — admin.shopify.com/store/<handle>, for order links [var]
+//   SHOPIFY_API_VERSION   — optional; defaults below             [var]
+const SHOPIFY_API_VERSION_DEFAULT = '2024-10';
+
+function shopifyConfig(env) {
+  const domain = (env.SHOPIFY_SHOP_DOMAIN || '').toString().trim().replace(/^https?:\/\//, '').replace(/\/+$/, '');
+  const token = (env.SHOPIFY_ADMIN_TOKEN || '').toString().trim();
+  const handle = (env.SHOPIFY_STORE_HANDLE || '').toString().trim();
+  const version = (env.SHOPIFY_API_VERSION || SHOPIFY_API_VERSION_DEFAULT).toString().trim();
+  return { domain, token, handle, version, ok: !!(domain && token) };
+}
+
+// Fetch paid orders in [fromISO, toISO], following REST Link-header pagination
+// up to a page cap (250/page). Returns { orders, truncated }.
+async function shopifyFetchPaidOrders(env, fromISO, toISO, pageCap = 12) {
+  const cfg = shopifyConfig(env);
+  const fields = 'id,name,created_at,processed_at,total_price,current_total_price,currency,financial_status,customer';
+  let url = `https://${cfg.domain}/admin/api/${cfg.version}/orders.json?status=any&financial_status=paid&limit=250`
+    + `&created_at_min=${encodeURIComponent(fromISO)}&created_at_max=${encodeURIComponent(toISO)}`
+    + `&fields=${encodeURIComponent(fields)}`;
+  const out = [];
+  let truncated = false;
+  for (let page = 0; page < pageCap; page++) {
+    const resp = await fetch(url, { headers: { 'X-Shopify-Access-Token': cfg.token, 'Accept': 'application/json' } });
+    if (!resp.ok) {
+      const body = await resp.text().catch(() => '');
+      throw new Error(`Shopify ${resp.status}: ${body.slice(0, 180)}`);
+    }
+    const data = await resp.json().catch(() => ({}));
+    out.push(...(Array.isArray(data.orders) ? data.orders : []));
+    const link = resp.headers.get('Link') || resp.headers.get('link') || '';
+    const m = link.match(/<([^>]+)>;\s*rel="next"/);
+    if (!m) break;
+    url = m[1];
+    if (page === pageCap - 1) truncated = true;
+  }
+  return { orders: out, truncated };
+}
+
+// GET /api/admin/revenue/recurring?from=YYYY-MM-DD&to=YYYY-MM-DD
+// The client computes the window (day/month/quarter/year/ytd/custom); the
+// worker just pulls paid orders in that range and totals them.
+async function handleAdminRecurringRevenue(request, env) {
+  const cfg = shopifyConfig(env);
+  if (!cfg.ok) return json(200, { ok: true, connected: false });
+
+  const url = new URL(request.url);
+  const from = (url.searchParams.get('from') || '').slice(0, 10);
+  const to = (url.searchParams.get('to') || '').slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to)) {
+    return json(400, { ok: false, error: 'from and to must be YYYY-MM-DD' });
+  }
+
+  let result;
+  try {
+    result = await shopifyFetchPaidOrders(env, `${from}T00:00:00Z`, `${to}T23:59:59Z`);
+  } catch (err) {
+    return json(502, { ok: false, connected: true, error: err.message || 'Shopify request failed' });
+  }
+
+  const rows = result.orders.map((o) => {
+    const cust = o.customer || {};
+    const name = [cust.first_name, cust.last_name].filter(Boolean).join(' ').trim();
+    return {
+      id: String(o.id),
+      name: o.name || ('#' + o.id),
+      date: o.processed_at || o.created_at || '',
+      amount: parseFloat(o.current_total_price || o.total_price || '0') || 0,
+      currency: o.currency || '',
+      status: o.financial_status || '',
+      customer: name || cust.email || '',
+      adminUrl: cfg.handle
+        ? `https://admin.shopify.com/store/${cfg.handle}/orders/${o.id}`
+        : `https://${cfg.domain}/admin/orders/${o.id}`,
+    };
+  }).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  return json(200, {
+    ok: true, connected: true, from, to,
+    count: rows.length,
+    total: rows.reduce((s, r) => s + r.amount, 0),
+    currency: rows.length ? rows[0].currency : '',
+    truncated: result.truncated,
+    orders: rows,
+  });
 }
 
 // Google OAuth "Web application" Client ID. This is a public identifier
