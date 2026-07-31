@@ -553,6 +553,158 @@
     );
   }
 
+  // ── Revenues > Fixed (QuickBooks invoices + payments) ────────────────
+  function FixedRevenue() {
+    const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const presetRange = (p) => {
+      const now = new Date(), y = now.getFullYear(), m = now.getMonth();
+      let from, to = now;
+      if (p === 'day') { from = new Date(y, m, now.getDate()); to = new Date(y, m, now.getDate()); }
+      else if (p === 'quarter') { from = new Date(y, Math.floor(m / 3) * 3, 1); }
+      else if (p === 'year') { from = new Date(y, 0, 1); to = new Date(y, 11, 31); }
+      else if (p === 'ytd') { from = new Date(y, 0, 1); }
+      else { from = new Date(y, m, 1); }
+      return { from: ymd(from), to: ymd(to) };
+    };
+    const PRESETS = [['day', 'Day'], ['month', 'Month'], ['quarter', 'Quarter'], ['year', 'Year'], ['ytd', 'YTD'], ['custom', 'Custom']];
+
+    const [preset, setPreset] = useState('month');
+    const [range, setRange] = useState(() => presetRange('month'));
+    const [kind, setKind] = useState('payments');
+    const [data, setData] = useState(null);
+    const [error, setError] = useState('');
+
+    const pickPreset = (p) => { setPreset(p); if (p !== 'custom') setRange(presetRange(p)); };
+    const setCustom = (k, v) => { if (v) setRange((r) => ({ ...r, [k]: v })); };
+
+    useEffect(() => {
+      let dead = false; setData(null); setError('');
+      api(`/api/admin/revenue/fixed?kind=${kind}&from=${encodeURIComponent(range.from)}&to=${encodeURIComponent(range.to)}`)
+        .then((d) => { if (!dead) setData(d); })
+        .catch((e) => { if (!dead) { setError(e.message); setData({}); } });
+      return () => { dead = true; };
+    }, [range.from, range.to, kind]);
+
+    const money = (n, cur) => { try { return new Intl.NumberFormat(undefined, { style: 'currency', currency: cur || 'USD' }).format(n || 0); } catch (_) { return '$' + (n || 0).toFixed(2); } };
+    const fmtDate = (s) => { if (!s) return ''; const d = new Date(s); return isNaN(d.getTime()) ? s.slice(0, 10) : d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }); };
+    const invoices = kind === 'invoices';
+
+    return (
+      <Page>
+        <PageHead eyebrow="Revenues" title="Fixed"/>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 14 }}>
+          {[['payments', 'Payments'], ['invoices', 'Invoices']].map(([id, l]) => (
+            <button key={id} type="button" onClick={() => setKind(id)}
+              style={{ ...(kind === id ? S.btn : S.btnGhost), padding: '7px 15px', fontSize: 12.5 }}>{l}</button>
+          ))}
+        </div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 18 }}>
+          {PRESETS.map(([id, l]) => (
+            <button key={id} type="button" onClick={() => pickPreset(id)}
+              style={{ ...(preset === id ? S.btn : S.btnGhost), padding: '7px 13px', fontSize: 12.5 }}>{l}</button>
+          ))}
+          {preset === 'custom' && (
+            <span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}>
+              <input type="date" value={range.from} onChange={(e) => setCustom('from', e.target.value)} style={{ ...S.input, width: 'auto', padding: '7px 10px', fontSize: 13 }}/>
+              <span style={{ color: T.fg3, fontFamily: T.mono, fontSize: 12 }}>to</span>
+              <input type="date" value={range.to} onChange={(e) => setCustom('to', e.target.value)} style={{ ...S.input, width: 'auto', padding: '7px 10px', fontSize: 13 }}/>
+            </span>
+          )}
+        </div>
+
+        {data === null ? (
+          <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>Loading…</div>
+        ) : data.connected === false ? (
+          <div style={{ ...S.card, padding: 32 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, ...S.eyebrow, marginBottom: 12 }}><span style={{ width: 6, height: 6, borderRadius: 999, background: '#E8C36A' }}/>QuickBooks not connected</div>
+            {data.canConnect ? (
+              <>
+                <div style={{ fontFamily: T.sans, fontSize: 14.5, lineHeight: 1.6, color: T.fg2, maxWidth: 640, marginBottom: 18 }}>
+                  QuickBooks is configured ({data.environment}). Click Connect to authorize read access to your accounting data once; then Fixed revenue lists invoices and payments with links to QuickBooks and totals for the selected range.
+                </div>
+                <a href="/api/qbo/install" style={{ ...S.btn, textDecoration: 'none', display: 'inline-block' }}>Connect QuickBooks</a>
+              </>
+            ) : (
+              <>
+                <div style={{ fontFamily: T.sans, fontSize: 14.5, lineHeight: 1.6, color: T.fg2, maxWidth: 640 }}>
+                  Fixed revenue syncs invoices and payments from QuickBooks Online. Add these as Cloudflare vars/secrets, then reload. A <b>Connect QuickBooks</b> button appears here once they&rsquo;re set.
+                </div>
+                {data.have && (
+                  <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {[['QBO_CLIENT_ID', data.have.clientId], ['QBO_CLIENT_SECRET', data.have.clientSecret]].map(([k, present]) => (
+                      <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: T.mono, fontSize: 12.5 }}>
+                        <span style={{ width: 16, textAlign: 'center', color: present ? '#0A7A3B' : '#B3261E' }}>{present ? '✓' : '✗'}</span>
+                        <span style={{ color: present ? T.fg2 : T.fg1, fontWeight: present ? 500 : 700 }}>{k}</span>
+                        <span style={{ color: T.fg3, fontSize: 11 }}>{present ? 'detected' : 'missing (required)'}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+        ) : (error || data.ok === false) ? (
+          <div style={{ ...S.card, padding: 28 }}>
+            <div style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 15, color: T.fg1, marginBottom: 6 }}>Couldn&rsquo;t reach QuickBooks</div>
+            <div style={{ fontFamily: T.mono, fontSize: 12, color: '#B3261E', wordBreak: 'break-word' }}>{error || data.error}</div>
+          </div>
+        ) : (
+          <>
+            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 16 }}>
+              <div style={{ ...S.card, padding: '16px 20px', minWidth: 180 }}>
+                <div style={S.eyebrow}>{invoices ? 'Total invoiced' : 'Total collected'}</div>
+                <div style={{ fontFamily: T.hero, fontWeight: 800, fontSize: 30, letterSpacing: '-0.02em', color: T.fg1, marginTop: 6 }}>{money(data.total, data.currency)}</div>
+              </div>
+              <div style={{ ...S.card, padding: '16px 20px', minWidth: 120 }}>
+                <div style={S.eyebrow}>{invoices ? 'Invoices' : 'Payments'}</div>
+                <div style={{ fontFamily: T.hero, fontWeight: 800, fontSize: 30, letterSpacing: '-0.02em', color: T.fg1, marginTop: 6 }}>{data.count}</div>
+              </div>
+              <div style={{ ...S.card, padding: '16px 20px', minWidth: 170 }}>
+                <div style={S.eyebrow}>Range</div>
+                <div style={{ fontFamily: T.mono, fontSize: 13, color: T.fg2, marginTop: 12 }}>{data.from} → {data.to}</div>
+              </div>
+            </div>
+            {data.truncated && (
+              <div style={{ marginBottom: 12, fontFamily: T.mono, fontSize: 11.5, color: '#6A4E00', background: '#FDF6E3', border: '1px solid #E8C36A', borderRadius: 6, padding: '8px 12px' }}>
+                Showing the first batch for this range; narrow the dates for a complete total.
+              </div>
+            )}
+            {data.rows.length === 0 ? (
+              <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>No {invoices ? 'invoices' : 'payments'} in this range.</div>
+            ) : (
+              <div style={{ ...S.card, overflow: 'hidden' }}>
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead><tr>
+                      <th style={S.th}>Date</th>
+                      {invoices ? <th style={S.th}>Invoice #</th> : null}
+                      <th style={S.th}>Customer</th>
+                      <th style={{ ...S.th, textAlign: 'right' }}>Amount</th>
+                      {invoices ? <th style={{ ...S.th, textAlign: 'right' }}>Balance</th> : null}
+                      <th style={{ ...S.th, textAlign: 'right' }}>QuickBooks</th>
+                    </tr></thead>
+                    <tbody>
+                      {data.rows.map((r) => (
+                        <tr key={r.id}>
+                          <td style={{ ...S.td, whiteSpace: 'nowrap', fontFamily: T.mono, fontSize: 12.5 }}>{fmtDate(r.date)}</td>
+                          {invoices ? <td style={{ ...S.td, fontWeight: 700 }}>{r.docNumber || ('#' + r.id)}</td> : null}
+                          <td style={S.td}>{r.customer || '—'}</td>
+                          <td style={{ ...S.td, textAlign: 'right', fontFamily: T.mono, whiteSpace: 'nowrap' }}>{money(r.amount, r.currency)}</td>
+                          {invoices ? <td style={{ ...S.td, textAlign: 'right', fontFamily: T.mono, whiteSpace: 'nowrap', color: r.balance ? '#B3261E' : T.fg3 }}>{r.balance != null ? money(r.balance, r.currency) : '—'}</td> : null}
+                          <td style={{ ...S.td, textAlign: 'right', whiteSpace: 'nowrap' }}><a href={r.link} target="_blank" rel="noreferrer" style={{ ...S.btnGhost, textDecoration: 'none', padding: '5px 10px', fontSize: 12 }}>Open ↗</a></td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </Page>
+    );
+  }
+
   // ── modal chrome ─────────────────────────────────────────────────────
   function Modal({ title, sub, onClose, children, width }) {
     const isMobile = useIsMobile();
@@ -2561,7 +2713,7 @@
           : route === 'blueprints' ? <Blueprints me={me}/>
           : route === 'projects' ? <SectionStub eyebrow="Services" title="Projects" note="Fixed-scope client projects will live here — tracked from kickoff through delivery. Design coming next."/>
           : route === 'retainers' ? <SectionStub eyebrow="Services" title="Retainers" note="Ongoing retainer engagements and their scope will live here. Design coming next."/>
-          : route === 'rev-fixed' ? <SectionStub eyebrow="Revenues" title="Fixed" note="One-time / fixed-fee revenue will be reported here. Design coming next."/>
+          : route === 'rev-fixed' ? <FixedRevenue/>
           : route === 'rev-recurring' ? <RecurringRevenue/>
           : route === 'rev-apps' ? <SectionStub eyebrow="Revenues" title="Apps" note="App and product revenue will be reported here. Design coming next."/>
           : route === 'dashboard' ? <SectionStub eyebrow="Overview" title="Dashboard" note="A cross-section overview of activity, sales, services, and revenue. We’ll design this in the next steps."/>

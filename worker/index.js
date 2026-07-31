@@ -241,6 +241,12 @@ export default {
     if (url.pathname === '/api/shopify/callback' && (request.method === 'GET' || request.method === 'HEAD')) {
       return handleShopifyCallback(request, env);
     }
+    if (url.pathname === '/api/qbo/install' && (request.method === 'GET' || request.method === 'HEAD')) {
+      return handleQboInstall(request, env);
+    }
+    if (url.pathname === '/api/qbo/callback' && (request.method === 'GET' || request.method === 'HEAD')) {
+      return handleQboCallback(request, env);
+    }
 
     // Admin approval gate: every other /api/admin/* endpoint requires an
     // APPROVED @uncap.com user. Unapproved users can only check their status
@@ -286,6 +292,9 @@ export default {
     }
     if (url.pathname === '/api/admin/revenue/recurring' && request.method === 'GET') {
       return handleAdminRecurringRevenue(request, env);
+    }
+    if (url.pathname === '/api/admin/revenue/fixed' && request.method === 'GET') {
+      return handleAdminFixedRevenue(request, env);
     }
     if (url.pathname === '/api/admin/discoveries' && request.method === 'GET') {
       return handleAdminListDiscoveries(request, env);
@@ -1273,6 +1282,226 @@ async function handleShopifyCallback(request, env) {
   await env.BLUEPRINT_AUTH.put(SHOPIFY_SHOP_KEY, shop.toLowerCase());
   await logActivity(env, null, { type: 'status', entity: 'company', id: 'shopify', name: 'Shopify', actor: 'system', detail: `Shopify connected (OAuth) — ${shop.toLowerCase()}` });
   return finish('Recurring revenue is now pulling paid orders from Shopify.', true);
+}
+
+// ── QuickBooks Online integration (Revenues > Fixed) ──────────────────────
+// Syncs invoices and payments via the QBO Accounting API. OAuth 2.0 with a
+// refresh token (access tokens expire hourly, so we refresh on demand). Creds
+// are Cloudflare vars/secrets; the realm (company) id + tokens are captured
+// during Connect and stored in KV under `qbo:tokens`.
+//   QBO_CLIENT_ID     — Intuit app Client ID     [var]
+//   QBO_CLIENT_SECRET — Intuit app Client Secret [secret]
+//   QBO_ENVIRONMENT   — 'production' (default) or 'sandbox' [var]
+const QBO_TOKENS_KEY = 'qbo:tokens';
+const QBO_MINOR_VERSION = '70';
+
+function qboConfig(env) {
+  const environment = ((env.QBO_ENVIRONMENT || 'production').toString().trim().toLowerCase() === 'sandbox') ? 'sandbox' : 'production';
+  return {
+    clientId: (env.QBO_CLIENT_ID || '').toString().trim(),
+    clientSecret: (env.QBO_CLIENT_SECRET || '').toString().trim(),
+    environment,
+    apiBase: environment === 'sandbox' ? 'https://sandbox-quickbooks.api.intuit.com' : 'https://quickbooks.api.intuit.com',
+    appBase: environment === 'sandbox' ? 'https://app.sandbox.qbo.intuit.com' : 'https://app.qbo.intuit.com',
+  };
+}
+
+async function qboGetTokens(env) {
+  const raw = await env.BLUEPRINT_AUTH.get(QBO_TOKENS_KEY);
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch { return null; }
+}
+
+// Refresh the access token using the stored refresh token; persists the result.
+async function qboRefresh(env, tokens) {
+  const cfg = qboConfig(env);
+  const resp = await fetch('https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer', {
+    method: 'POST',
+    headers: {
+      'authorization': 'Basic ' + btoa(`${cfg.clientId}:${cfg.clientSecret}`),
+      'content-type': 'application/x-www-form-urlencoded',
+      'accept': 'application/json',
+    },
+    body: `grant_type=refresh_token&refresh_token=${encodeURIComponent(tokens.refreshToken)}`,
+  });
+  if (!resp.ok) {
+    const body = await resp.text().catch(() => '');
+    throw new Error(`QBO token refresh ${resp.status}: ${body.slice(0, 160)}`);
+  }
+  const d = await resp.json().catch(() => ({}));
+  const next = {
+    ...tokens,
+    accessToken: d.access_token || tokens.accessToken,
+    refreshToken: d.refresh_token || tokens.refreshToken, // Intuit rotates this
+    expiresAt: Date.now() + ((d.expires_in || 3600) * 1000),
+  };
+  await env.BLUEPRINT_AUTH.put(QBO_TOKENS_KEY, JSON.stringify(next));
+  return next;
+}
+
+// Return a valid { accessToken, realmId } (refreshing if within 2 min of expiry)
+// or null if not connected.
+async function qboValidToken(env) {
+  let tokens = await qboGetTokens(env);
+  if (!tokens || !tokens.accessToken || !tokens.realmId) return null;
+  if (!tokens.expiresAt || Date.now() > tokens.expiresAt - 120000) {
+    tokens = await qboRefresh(env, tokens);
+  }
+  return { accessToken: tokens.accessToken, realmId: tokens.realmId };
+}
+
+// Run a QBO SQL query, following STARTPOSITION pagination up to a page cap.
+async function qboQueryAll(env, auth, entity, whereClause, pageCap = 10) {
+  const cfg = qboConfig(env);
+  const out = [];
+  let start = 1;
+  const size = 100;
+  let truncated = false;
+  for (let page = 0; page < pageCap; page++) {
+    const sql = `select * from ${entity} ${whereClause} order by TxnDate desc startposition ${start} maxresults ${size}`;
+    const url = `${cfg.apiBase}/v3/company/${auth.realmId}/query?minorversion=${QBO_MINOR_VERSION}&query=${encodeURIComponent(sql)}`;
+    const resp = await fetch(url, { headers: { 'authorization': 'Bearer ' + auth.accessToken, 'accept': 'application/json' } });
+    if (!resp.ok) {
+      const body = await resp.text().catch(() => '');
+      throw new Error(`QBO ${resp.status}: ${body.slice(0, 180)}`);
+    }
+    const data = await resp.json().catch(() => ({}));
+    const rows = (data.QueryResponse && data.QueryResponse[entity]) || [];
+    out.push(...rows);
+    if (rows.length < size) break;
+    start += size;
+    if (page === pageCap - 1) truncated = true;
+  }
+  return { rows: out, truncated };
+}
+
+// GET /api/admin/revenue/fixed?from&to&kind=payments|invoices
+async function handleAdminFixedRevenue(request, env) {
+  const cfg = qboConfig(env);
+  const auth = await qboValidToken(env).catch(() => null);
+  if (!auth) {
+    return json(200, {
+      ok: true, connected: false,
+      canConnect: !!(cfg.clientId && cfg.clientSecret),
+      have: { clientId: !!cfg.clientId, clientSecret: !!cfg.clientSecret },
+      environment: cfg.environment,
+    });
+  }
+
+  const url = new URL(request.url);
+  const from = (url.searchParams.get('from') || '').slice(0, 10);
+  const to = (url.searchParams.get('to') || '').slice(0, 10);
+  const kind = (url.searchParams.get('kind') || 'payments') === 'invoices' ? 'invoices' : 'payments';
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to)) {
+    return json(400, { ok: false, error: 'from and to must be YYYY-MM-DD' });
+  }
+
+  const where = `where TxnDate >= '${from}' and TxnDate <= '${to}'`;
+  let result;
+  try {
+    result = await qboQueryAll(env, auth, kind === 'invoices' ? 'Invoice' : 'Payment', where);
+  } catch (err) {
+    return json(502, { ok: false, connected: true, error: err.message || 'QuickBooks request failed' });
+  }
+
+  const rows = result.rows.map((r) => {
+    const amount = parseFloat(r.TotalAmt || 0) || 0;
+    const cust = (r.CustomerRef && (r.CustomerRef.name || r.CustomerRef.value)) || '';
+    const path = kind === 'invoices' ? 'invoice' : 'recvpayment';
+    return {
+      id: String(r.Id),
+      docNumber: r.DocNumber || '',
+      date: r.TxnDate || '',
+      amount,
+      balance: r.Balance != null ? (parseFloat(r.Balance) || 0) : null,
+      currency: (r.CurrencyRef && r.CurrencyRef.value) || '',
+      customer: cust,
+      link: `${cfg.appBase}/app/${path}?txnId=${r.Id}`,
+    };
+  }).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  return json(200, {
+    ok: true, connected: true, kind, from, to,
+    count: rows.length,
+    total: rows.reduce((s, r) => s + r.amount, 0),
+    currency: rows.length ? rows[0].currency : '',
+    truncated: result.truncated,
+    rows,
+  });
+}
+
+// GET /api/qbo/install — admin-only. Redirects to Intuit's OAuth screen.
+async function handleQboInstall(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess || !(await adminIsApproved(env, sess.email))) {
+    return new Response('Sign in to the Uncap admin first, then retry.', { status: 401 });
+  }
+  const cfg = qboConfig(env);
+  if (!cfg.clientId || !cfg.clientSecret) {
+    return new Response('QuickBooks is not configured: set QBO_CLIENT_ID and QBO_CLIENT_SECRET.', { status: 400 });
+  }
+  const state = genToken();
+  await env.BLUEPRINT_AUTH.put(`qbo_oauth_state:${state}`, '1', { expirationTtl: 600 });
+  const redirect = `${new URL(request.url).origin}/api/qbo/callback`;
+  const authorize = 'https://appcenter.intuit.com/connect/oauth2?client_id=' + encodeURIComponent(cfg.clientId)
+    + '&response_type=code&scope=' + encodeURIComponent('com.intuit.quickbooks.accounting')
+    + '&redirect_uri=' + encodeURIComponent(redirect)
+    + '&state=' + encodeURIComponent(state);
+  return Response.redirect(authorize, 302);
+}
+
+// GET /api/qbo/callback — Intuit redirects with ?code&state&realmId.
+async function handleQboCallback(request, env) {
+  const url = new URL(request.url);
+  const cfg = qboConfig(env);
+  const code = (url.searchParams.get('code') || '').toString();
+  const state = (url.searchParams.get('state') || '').toString();
+  const realmId = (url.searchParams.get('realmId') || '').toString();
+
+  const finish = (msg, okFlag) => new Response(
+    `<!doctype html><meta charset="utf-8"><body style="font-family:system-ui;max-width:520px;margin:80px auto;padding:0 20px;color:#0A0A0A">`
+    + `<h2 style="margin:0 0 8px">${okFlag ? 'QuickBooks connected' : 'QuickBooks connection failed'}</h2>`
+    + `<p style="color:#555;line-height:1.5">${escapeHtml(msg)}</p>`
+    + `<p><a href="/admin/revenues/fixed" style="color:#0A0A0A;font-weight:700">Back to Fixed revenue &rarr;</a></p></body>`,
+    { status: okFlag ? 200 : 400, headers: { 'content-type': 'text/html; charset=utf-8' } }
+  );
+
+  const stateVal = await env.BLUEPRINT_AUTH.get(`qbo_oauth_state:${state}`);
+  if (!stateVal) return finish('Expired or invalid install state. Start the connect flow again.', false);
+  await env.BLUEPRINT_AUTH.delete(`qbo_oauth_state:${state}`);
+  if (!code) return finish('Missing authorization code.', false);
+  if (!realmId) return finish('Missing realmId (company id) in the callback.', false);
+
+  const redirect = `${url.origin}/api/qbo/callback`;
+  let tokenResp;
+  try {
+    tokenResp = await fetch('https://oauth.platform.intuit.com/oauth2/v1/tokens/bearer', {
+      method: 'POST',
+      headers: {
+        'authorization': 'Basic ' + btoa(`${cfg.clientId}:${cfg.clientSecret}`),
+        'content-type': 'application/x-www-form-urlencoded',
+        'accept': 'application/json',
+      },
+      body: `grant_type=authorization_code&code=${encodeURIComponent(code)}&redirect_uri=${encodeURIComponent(redirect)}`,
+    });
+  } catch (err) {
+    return finish('Token exchange request failed: ' + (err.message || err), false);
+  }
+  if (!tokenResp.ok) {
+    const body = await tokenResp.text().catch(() => '');
+    return finish(`Token exchange rejected (${tokenResp.status}): ${body.slice(0, 160)}`, false);
+  }
+  const d = await tokenResp.json().catch(() => ({}));
+  if (!d.access_token || !d.refresh_token) return finish('No tokens returned by QuickBooks.', false);
+
+  await env.BLUEPRINT_AUTH.put(QBO_TOKENS_KEY, JSON.stringify({
+    accessToken: d.access_token,
+    refreshToken: d.refresh_token,
+    expiresAt: Date.now() + ((d.expires_in || 3600) * 1000),
+    realmId,
+  }));
+  await logActivity(env, null, { type: 'status', entity: 'company', id: 'quickbooks', name: 'QuickBooks', actor: 'system', detail: `QuickBooks connected (OAuth) — realm ${realmId}` });
+  return finish('Fixed revenue is now syncing invoices and payments from QuickBooks.', true);
 }
 
 // Google OAuth "Web application" Client ID. This is a public identifier
