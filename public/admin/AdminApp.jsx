@@ -475,9 +475,18 @@
         ) : data.connected === false ? (
           <div style={{ ...S.card, padding: 32 }}>
             <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, ...S.eyebrow, marginBottom: 12 }}><span style={{ width: 6, height: 6, borderRadius: 999, background: '#E8C36A' }}/>Shopify not connected</div>
-            <div style={{ fontFamily: T.sans, fontSize: 14.5, lineHeight: 1.6, color: T.fg2, maxWidth: 640 }}>
-              Recurring revenue reads paid orders from Shopify. To switch it on, add a Custom App Admin API token and store domain as Cloudflare secrets/vars: <b>SHOPIFY_ADMIN_TOKEN</b>, <b>SHOPIFY_SHOP_DOMAIN</b>, and <b>SHOPIFY_STORE_HANDLE</b>. Once saved, this tab lists every paid order with a link to Shopify and totals for the selected range.
-            </div>
+            {data.canConnect ? (
+              <>
+                <div style={{ fontFamily: T.sans, fontSize: 14.5, lineHeight: 1.6, color: T.fg2, maxWidth: 640, marginBottom: 18 }}>
+                  Shopify is configured. Click Connect to authorize read-only access to your orders once, then Recurring revenue lists every paid order with a link to Shopify and totals for the selected range.
+                </div>
+                <a href="/api/shopify/install" style={{ ...S.btn, textDecoration: 'none', display: 'inline-block' }}>Connect Shopify</a>
+              </>
+            ) : (
+              <div style={{ fontFamily: T.sans, fontSize: 14.5, lineHeight: 1.6, color: T.fg2, maxWidth: 640 }}>
+                Recurring revenue reads paid orders from Shopify. Add these as Cloudflare vars/secrets, then reload: <b>SHOPIFY_SHOP_DOMAIN</b>, <b>SHOPIFY_CLIENT_ID</b>, <b>SHOPIFY_CLIENT_SECRET</b>, and <b>SHOPIFY_STORE_HANDLE</b> (for order links). A <b>Connect Shopify</b> button appears here once they&rsquo;re set.
+              </div>
+            )}
           </div>
         ) : (error || data.ok === false) ? (
           <div style={{ ...S.card, padding: 28 }}>

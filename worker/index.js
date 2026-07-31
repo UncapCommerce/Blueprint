@@ -232,6 +232,16 @@ export default {
       return handleAdminLogout(request, env);
     }
 
+    // Shopify OAuth (one-time install). install is admin-gated inside its
+    // handler; callback is validated by state nonce + HMAC (not the admin gate,
+    // since Shopify is the caller).
+    if (url.pathname === '/api/shopify/install' && (request.method === 'GET' || request.method === 'HEAD')) {
+      return handleShopifyInstall(request, env);
+    }
+    if (url.pathname === '/api/shopify/callback' && (request.method === 'GET' || request.method === 'HEAD')) {
+      return handleShopifyCallback(request, env);
+    }
+
     // Admin approval gate: every other /api/admin/* endpoint requires an
     // APPROVED @uncap.com user. Unapproved users can only check their status
     // (me), sign out, and read config. bp-token is exempt — it has its own
@@ -1038,25 +1048,44 @@ async function seedAdminUsers(env) {
 }
 
 // ── Shopify integration (Revenues > Recurring) ────────────────────────────
-// Reads paid orders from the Shopify Admin API. Credentials live as Cloudflare
-// secrets/vars (not wrangler.toml, which deploys with --keep-vars):
-//   SHOPIFY_ADMIN_TOKEN   — Admin API access token (shpat_...)   [secret]
+// Reads paid orders from the Shopify Admin API. Two ways to authenticate:
+//   A) Store custom app: set SHOPIFY_ADMIN_TOKEN (shpat_...) as a secret.
+//   B) Dev Dashboard app (Client ID + secret): run the one-time OAuth install
+//      (/api/shopify/install), which stores an offline token in KV under
+//      `shopify:admin_token`. Env token (A) wins if present.
+// Vars/secrets (Cloudflare dashboard, not wrangler.toml — deploys --keep-vars):
 //   SHOPIFY_SHOP_DOMAIN   — <store>.myshopify.com                [var]
-//   SHOPIFY_STORE_HANDLE  — admin.shopify.com/store/<handle>, for order links [var]
-//   SHOPIFY_API_VERSION   — optional; defaults below             [var]
+//   SHOPIFY_STORE_HANDLE  — admin.shopify.com/store/<handle>, for links [var]
+//   SHOPIFY_ADMIN_TOKEN   — path A only                          [secret]
+//   SHOPIFY_CLIENT_ID     — path B (App Client ID)               [var]
+//   SHOPIFY_CLIENT_SECRET — path B (shpss_...)                   [secret]
+//   SHOPIFY_SCOPES        — optional; default read_orders        [var]
+//   SHOPIFY_API_VERSION   — optional; default below              [var]
 const SHOPIFY_API_VERSION_DEFAULT = '2024-10';
+const SHOPIFY_SCOPES_DEFAULT = 'read_orders';
+const SHOPIFY_TOKEN_KEY = 'shopify:admin_token';
 
 function shopifyConfig(env) {
-  const domain = (env.SHOPIFY_SHOP_DOMAIN || '').toString().trim().replace(/^https?:\/\//, '').replace(/\/+$/, '');
-  const token = (env.SHOPIFY_ADMIN_TOKEN || '').toString().trim();
-  const handle = (env.SHOPIFY_STORE_HANDLE || '').toString().trim();
-  const version = (env.SHOPIFY_API_VERSION || SHOPIFY_API_VERSION_DEFAULT).toString().trim();
-  return { domain, token, handle, version, ok: !!(domain && token) };
+  return {
+    domain: (env.SHOPIFY_SHOP_DOMAIN || '').toString().trim().replace(/^https?:\/\//, '').replace(/\/+$/, ''),
+    handle: (env.SHOPIFY_STORE_HANDLE || '').toString().trim(),
+    version: (env.SHOPIFY_API_VERSION || SHOPIFY_API_VERSION_DEFAULT).toString().trim(),
+    clientId: (env.SHOPIFY_CLIENT_ID || '').toString().trim(),
+    clientSecret: (env.SHOPIFY_CLIENT_SECRET || '').toString().trim(),
+    scopes: (env.SHOPIFY_SCOPES || SHOPIFY_SCOPES_DEFAULT).toString().trim(),
+  };
+}
+
+// Effective token: env secret (path A) wins, else the OAuth token from KV (B).
+async function shopifyGetToken(env) {
+  const direct = (env.SHOPIFY_ADMIN_TOKEN || '').toString().trim();
+  if (direct) return direct;
+  return (await env.BLUEPRINT_AUTH.get(SHOPIFY_TOKEN_KEY)) || '';
 }
 
 // Fetch paid orders in [fromISO, toISO], following REST Link-header pagination
 // up to a page cap (250/page). Returns { orders, truncated }.
-async function shopifyFetchPaidOrders(env, fromISO, toISO, pageCap = 12) {
+async function shopifyFetchPaidOrders(env, token, fromISO, toISO, pageCap = 12) {
   const cfg = shopifyConfig(env);
   const fields = 'id,name,created_at,processed_at,total_price,current_total_price,currency,financial_status,customer';
   let url = `https://${cfg.domain}/admin/api/${cfg.version}/orders.json?status=any&financial_status=paid&limit=250`
@@ -1065,7 +1094,7 @@ async function shopifyFetchPaidOrders(env, fromISO, toISO, pageCap = 12) {
   const out = [];
   let truncated = false;
   for (let page = 0; page < pageCap; page++) {
-    const resp = await fetch(url, { headers: { 'X-Shopify-Access-Token': cfg.token, 'Accept': 'application/json' } });
+    const resp = await fetch(url, { headers: { 'X-Shopify-Access-Token': token, 'Accept': 'application/json' } });
     if (!resp.ok) {
       const body = await resp.text().catch(() => '');
       throw new Error(`Shopify ${resp.status}: ${body.slice(0, 180)}`);
@@ -1082,11 +1111,13 @@ async function shopifyFetchPaidOrders(env, fromISO, toISO, pageCap = 12) {
 }
 
 // GET /api/admin/revenue/recurring?from=YYYY-MM-DD&to=YYYY-MM-DD
-// The client computes the window (day/month/quarter/year/ytd/custom); the
-// worker just pulls paid orders in that range and totals them.
 async function handleAdminRecurringRevenue(request, env) {
   const cfg = shopifyConfig(env);
-  if (!cfg.ok) return json(200, { ok: true, connected: false });
+  const token = await shopifyGetToken(env);
+  if (!cfg.domain || !token) {
+    // canConnect: OAuth is fully configured, just not authorized yet.
+    return json(200, { ok: true, connected: false, canConnect: !!(cfg.domain && cfg.clientId && cfg.clientSecret) });
+  }
 
   const url = new URL(request.url);
   const from = (url.searchParams.get('from') || '').slice(0, 10);
@@ -1097,7 +1128,7 @@ async function handleAdminRecurringRevenue(request, env) {
 
   let result;
   try {
-    result = await shopifyFetchPaidOrders(env, `${from}T00:00:00Z`, `${to}T23:59:59Z`);
+    result = await shopifyFetchPaidOrders(env, token, `${from}T00:00:00Z`, `${to}T23:59:59Z`);
   } catch (err) {
     return json(502, { ok: false, connected: true, error: err.message || 'Shopify request failed' });
   }
@@ -1127,6 +1158,96 @@ async function handleAdminRecurringRevenue(request, env) {
     truncated: result.truncated,
     orders: rows,
   });
+}
+
+// ── Shopify OAuth (one-time install for the Dev Dashboard app) ─────────────
+function shopifyOAuthRedirectUri(request) {
+  return `${new URL(request.url).origin}/api/shopify/callback`;
+}
+
+// GET /api/shopify/install — admin-only. Kicks off OAuth: stores a state nonce
+// and redirects the browser to Shopify's authorize screen.
+async function handleShopifyInstall(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess || !(await adminIsApproved(env, sess.email))) {
+    return new Response('Sign in to the Uncap admin first, then retry.', { status: 401 });
+  }
+  const cfg = shopifyConfig(env);
+  if (!cfg.domain || !cfg.clientId || !cfg.clientSecret) {
+    return new Response('Shopify is not configured: set SHOPIFY_SHOP_DOMAIN, SHOPIFY_CLIENT_ID, and SHOPIFY_CLIENT_SECRET.', { status: 400 });
+  }
+  const state = genToken();
+  await env.BLUEPRINT_AUTH.put(`shopify_oauth_state:${state}`, cfg.domain, { expirationTtl: 600 });
+  const authorize = `https://${cfg.domain}/admin/oauth/authorize?client_id=${encodeURIComponent(cfg.clientId)}`
+    + `&scope=${encodeURIComponent(cfg.scopes)}`
+    + `&redirect_uri=${encodeURIComponent(shopifyOAuthRedirectUri(request))}`
+    + `&state=${encodeURIComponent(state)}`
+    + `&grant_options[]=`; // offline (default) token
+  return Response.redirect(authorize, 302);
+}
+
+// Verify Shopify's HMAC signature over the callback query params.
+async function shopifyVerifyHmac(url, secret) {
+  const params = new URLSearchParams(url.search);
+  const given = params.get('hmac') || '';
+  params.delete('hmac');
+  params.delete('signature');
+  const message = [...params.keys()].sort().map((k) => `${k}=${params.get(k)}`).join('&');
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  const sig = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(message));
+  const hex = [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, '0')).join('');
+  if (hex.length !== given.length) return false;
+  let diff = 0;
+  for (let i = 0; i < hex.length; i++) diff |= hex.charCodeAt(i) ^ given.charCodeAt(i);
+  return diff === 0;
+}
+
+// GET /api/shopify/callback — Shopify redirects here with ?code&hmac&shop&state.
+// Validates, exchanges the code for an offline access token, stores it in KV.
+async function handleShopifyCallback(request, env) {
+  const url = new URL(request.url);
+  const cfg = shopifyConfig(env);
+  const shop = (url.searchParams.get('shop') || '').toString();
+  const code = (url.searchParams.get('code') || '').toString();
+  const state = (url.searchParams.get('state') || '').toString();
+
+  const finish = (msg, okFlag) => new Response(
+    `<!doctype html><meta charset="utf-8"><body style="font-family:system-ui;max-width:520px;margin:80px auto;padding:0 20px;color:#0A0A0A">`
+    + `<h2 style="margin:0 0 8px">${okFlag ? 'Shopify connected' : 'Shopify connection failed'}</h2>`
+    + `<p style="color:#555;line-height:1.5">${escapeHtml(msg)}</p>`
+    + `<p><a href="/admin/revenues/recurring" style="color:#0A0A0A;font-weight:700">Back to Recurring revenue &rarr;</a></p></body>`,
+    { status: okFlag ? 200 : 400, headers: { 'content-type': 'text/html; charset=utf-8' } }
+  );
+
+  if (!/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/i.test(shop)) return finish('Invalid shop domain in the callback.', false);
+  if (shop.toLowerCase() !== cfg.domain.toLowerCase()) return finish('Callback shop does not match SHOPIFY_SHOP_DOMAIN.', false);
+  const stateShop = await env.BLUEPRINT_AUTH.get(`shopify_oauth_state:${state}`);
+  if (!stateShop || stateShop.toLowerCase() !== shop.toLowerCase()) return finish('Expired or invalid install state. Start the connect flow again.', false);
+  await env.BLUEPRINT_AUTH.delete(`shopify_oauth_state:${state}`);
+  if (!(await shopifyVerifyHmac(url, cfg.clientSecret))) return finish('Signature check failed (client secret mismatch).', false);
+  if (!code) return finish('Missing authorization code.', false);
+
+  let tokenResp;
+  try {
+    tokenResp = await fetch(`https://${shop}/admin/oauth/access_token`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', 'accept': 'application/json' },
+      body: JSON.stringify({ client_id: cfg.clientId, client_secret: cfg.clientSecret, code }),
+    });
+  } catch (err) {
+    return finish('Token exchange request failed: ' + (err.message || err), false);
+  }
+  if (!tokenResp.ok) {
+    const body = await tokenResp.text().catch(() => '');
+    return finish(`Token exchange rejected (${tokenResp.status}): ${body.slice(0, 160)}`, false);
+  }
+  const data = await tokenResp.json().catch(() => ({}));
+  const accessToken = (data && data.access_token) || '';
+  if (!accessToken) return finish('No access token returned by Shopify.', false);
+
+  await env.BLUEPRINT_AUTH.put(SHOPIFY_TOKEN_KEY, accessToken);
+  await logActivity(env, null, { type: 'status', entity: 'company', id: 'shopify', name: 'Shopify', actor: 'system', detail: 'Shopify connected (OAuth)' });
+  return finish('Recurring revenue is now pulling paid orders from Shopify.', true);
 }
 
 // Google OAuth "Web application" Client ID. This is a public identifier
