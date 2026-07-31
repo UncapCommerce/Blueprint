@@ -1076,10 +1076,13 @@ function shopifyConfig(env) {
   };
 }
 
-// Effective token: env secret (path A) wins, else the OAuth token from KV (B).
+// Effective token: a real Admin token from the env secret (path A) wins, else
+// the OAuth token from KV (path B). The env value is only honoured if it looks
+// like an Admin API token (shpat_/shpca_/shpua_) — a mis-pasted API key, client
+// ID, or app secret (shpss_) is ignored so it can't mask a valid OAuth token.
 async function shopifyGetToken(env) {
   const direct = (env.SHOPIFY_ADMIN_TOKEN || '').toString().trim();
-  if (direct) return direct;
+  if (/^shp(at|ca|ua)_/.test(direct)) return direct;
   return (await env.BLUEPRINT_AUTH.get(SHOPIFY_TOKEN_KEY)) || '';
 }
 
