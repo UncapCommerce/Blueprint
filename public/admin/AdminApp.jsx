@@ -483,20 +483,23 @@
                 <a href="/api/shopify/install" style={{ ...S.btn, textDecoration: 'none', display: 'inline-block' }}>Connect Shopify</a>
               </>
             ) : (
-              <div style={{ fontFamily: T.sans, fontSize: 14.5, lineHeight: 1.6, color: T.fg2, maxWidth: 640 }}>
-                Recurring revenue reads paid orders from Shopify. Add these as Cloudflare vars/secrets, then reload. A <b>Connect Shopify</b> button appears here once the first three are set.
-              </div>
-              {data.have && (
-                <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
-                  {[['SHOPIFY_SHOP_DOMAIN', data.have.domain, true], ['SHOPIFY_CLIENT_ID', data.have.clientId, true], ['SHOPIFY_CLIENT_SECRET', data.have.clientSecret, true], ['SHOPIFY_STORE_HANDLE', data.have.handle, false]].map(([k, present, req]) => (
-                    <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: T.mono, fontSize: 12.5 }}>
-                      <span style={{ width: 16, textAlign: 'center', color: present ? '#0A7A3B' : (req ? '#B3261E' : '#9A8A5A') }}>{present ? '✓' : '✗'}</span>
-                      <span style={{ color: present ? T.fg2 : T.fg1, fontWeight: present ? 500 : 700 }}>{k}</span>
-                      <span style={{ color: T.fg3, fontSize: 11 }}>{present ? 'detected' : (req ? 'missing (required)' : 'missing (optional, for order links)')}</span>
-                    </div>
-                  ))}
+              <>
+                <div style={{ fontFamily: T.sans, fontSize: 14.5, lineHeight: 1.6, color: T.fg2, maxWidth: 640 }}>
+                  Recurring revenue reads paid orders from Shopify. Add these as Cloudflare vars/secrets, then reload. A <b>Connect Shopify</b> button appears here once the first three are set.
                 </div>
-              )}
+                {data.have && (
+                  <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                    {[['SHOPIFY_SHOP_DOMAIN', data.have.domain, true], ['SHOPIFY_CLIENT_ID', data.have.clientId, true], ['SHOPIFY_CLIENT_SECRET', data.have.clientSecret, true], ['SHOPIFY_STORE_HANDLE', data.have.handle, false]].map(([k, present, req]) => (
+                      <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: T.mono, fontSize: 12.5 }}>
+                        <span style={{ width: 16, textAlign: 'center', color: present ? '#0A7A3B' : (req ? '#B3261E' : '#9A8A5A') }}>{present ? '✓' : '✗'}</span>
+                        <span style={{ color: present ? T.fg2 : T.fg1, fontWeight: present ? 500 : 700 }}>{k}</span>
+                        <span style={{ color: T.fg3, fontSize: 11 }}>{present ? 'detected' : (req ? 'missing (required)' : 'missing (optional, for order links)')}</span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
             )}
           </div>
         ) : (error || data.ok === false) ? (
