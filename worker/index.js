@@ -1119,7 +1119,13 @@ async function handleAdminRecurringRevenue(request, env) {
   const token = await shopifyGetToken(env);
   if (!cfg.domain || !token) {
     // canConnect: OAuth is fully configured, just not authorized yet.
-    return json(200, { ok: true, connected: false, canConnect: !!(cfg.domain && cfg.clientId && cfg.clientSecret) });
+    // `have` reports which vars the worker can see (presence only, no values)
+    // so a missing/misnamed var is obvious in the UI.
+    return json(200, {
+      ok: true, connected: false,
+      canConnect: !!(cfg.domain && cfg.clientId && cfg.clientSecret),
+      have: { domain: !!cfg.domain, clientId: !!cfg.clientId, clientSecret: !!cfg.clientSecret, handle: !!cfg.handle },
+    });
   }
 
   const url = new URL(request.url);
