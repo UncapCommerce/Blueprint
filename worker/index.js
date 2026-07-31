@@ -1064,6 +1064,7 @@ async function seedAdminUsers(env) {
 const SHOPIFY_API_VERSION_DEFAULT = '2024-10';
 const SHOPIFY_SCOPES_DEFAULT = 'read_orders';
 const SHOPIFY_TOKEN_KEY = 'shopify:admin_token';
+const SHOPIFY_SHOP_KEY = 'shopify:shop_domain';
 
 function shopifyConfig(env) {
   return {
@@ -1086,12 +1087,21 @@ async function shopifyGetToken(env) {
   return (await env.BLUEPRINT_AUTH.get(SHOPIFY_TOKEN_KEY)) || '';
 }
 
+// Effective shop domain: the canonical *.myshopify.com captured during OAuth
+// (KV) wins over the configured env hint, so the token and API calls always
+// target the shop Shopify actually authenticated.
+async function shopifyShopDomain(env) {
+  const kv = await env.BLUEPRINT_AUTH.get(SHOPIFY_SHOP_KEY);
+  if (kv) return kv;
+  return (env.SHOPIFY_SHOP_DOMAIN || '').toString().trim().replace(/^https?:\/\//, '').replace(/\/+$/, '');
+}
+
 // Fetch paid orders in [fromISO, toISO], following REST Link-header pagination
 // up to a page cap (250/page). Returns { orders, truncated }.
-async function shopifyFetchPaidOrders(env, token, fromISO, toISO, pageCap = 12) {
+async function shopifyFetchPaidOrders(env, shop, token, fromISO, toISO, pageCap = 12) {
   const cfg = shopifyConfig(env);
   const fields = 'id,name,created_at,processed_at,total_price,current_total_price,currency,financial_status,customer';
-  let url = `https://${cfg.domain}/admin/api/${cfg.version}/orders.json?status=any&financial_status=paid&limit=250`
+  let url = `https://${shop}/admin/api/${cfg.version}/orders.json?status=any&financial_status=paid&limit=250`
     + `&created_at_min=${encodeURIComponent(fromISO)}&created_at_max=${encodeURIComponent(toISO)}`
     + `&fields=${encodeURIComponent(fields)}`;
   const out = [];
@@ -1117,7 +1127,8 @@ async function shopifyFetchPaidOrders(env, token, fromISO, toISO, pageCap = 12) 
 async function handleAdminRecurringRevenue(request, env) {
   const cfg = shopifyConfig(env);
   const token = await shopifyGetToken(env);
-  if (!cfg.domain || !token) {
+  const shop = await shopifyShopDomain(env);
+  if (!shop || !token) {
     // canConnect: OAuth is fully configured, just not authorized yet.
     // `have` reports which vars the worker can see (presence only, no values)
     // so a missing/misnamed var is obvious in the UI.
@@ -1137,7 +1148,7 @@ async function handleAdminRecurringRevenue(request, env) {
 
   let result;
   try {
-    result = await shopifyFetchPaidOrders(env, token, `${from}T00:00:00Z`, `${to}T23:59:59Z`);
+    result = await shopifyFetchPaidOrders(env, shop, token, `${from}T00:00:00Z`, `${to}T23:59:59Z`);
   } catch (err) {
     return json(502, { ok: false, connected: true, error: err.message || 'Shopify request failed' });
   }
@@ -1155,7 +1166,7 @@ async function handleAdminRecurringRevenue(request, env) {
       customer: name || cust.email || '',
       adminUrl: cfg.handle
         ? `https://admin.shopify.com/store/${cfg.handle}/orders/${o.id}`
-        : `https://${cfg.domain}/admin/orders/${o.id}`,
+        : `https://${shop}/admin/orders/${o.id}`,
     };
   }).sort((a, b) => new Date(b.date) - new Date(a.date));
 
@@ -1228,10 +1239,14 @@ async function handleShopifyCallback(request, env) {
     { status: okFlag ? 200 : 400, headers: { 'content-type': 'text/html; charset=utf-8' } }
   );
 
+  // Shop must be a real myshopify domain; its authenticity is proven by the
+  // HMAC below (signed with our client secret), so we trust whatever canonical
+  // shop Shopify reports rather than requiring it to equal the configured hint.
   if (!/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/i.test(shop)) return finish('Invalid shop domain in the callback.', false);
-  if (shop.toLowerCase() !== cfg.domain.toLowerCase()) return finish('Callback shop does not match SHOPIFY_SHOP_DOMAIN.', false);
-  const stateShop = await env.BLUEPRINT_AUTH.get(`shopify_oauth_state:${state}`);
-  if (!stateShop || stateShop.toLowerCase() !== shop.toLowerCase()) return finish('Expired or invalid install state. Start the connect flow again.', false);
+  // State is CSRF-only: confirm we issued this install (existence), don't tie it
+  // to a specific domain string.
+  const stateVal = await env.BLUEPRINT_AUTH.get(`shopify_oauth_state:${state}`);
+  if (!stateVal) return finish('Expired or invalid install state. Start the connect flow again.', false);
   await env.BLUEPRINT_AUTH.delete(`shopify_oauth_state:${state}`);
   if (!(await shopifyVerifyHmac(url, cfg.clientSecret))) return finish('Signature check failed (client secret mismatch).', false);
   if (!code) return finish('Missing authorization code.', false);
@@ -1255,7 +1270,8 @@ async function handleShopifyCallback(request, env) {
   if (!accessToken) return finish('No access token returned by Shopify.', false);
 
   await env.BLUEPRINT_AUTH.put(SHOPIFY_TOKEN_KEY, accessToken);
-  await logActivity(env, null, { type: 'status', entity: 'company', id: 'shopify', name: 'Shopify', actor: 'system', detail: 'Shopify connected (OAuth)' });
+  await env.BLUEPRINT_AUTH.put(SHOPIFY_SHOP_KEY, shop.toLowerCase());
+  await logActivity(env, null, { type: 'status', entity: 'company', id: 'shopify', name: 'Shopify', actor: 'system', detail: `Shopify connected (OAuth) — ${shop.toLowerCase()}` });
   return finish('Recurring revenue is now pulling paid orders from Shopify.', true);
 }
 
