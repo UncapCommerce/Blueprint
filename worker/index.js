@@ -295,19 +295,19 @@ export default {
       return handleAdminBpToken(request, env);
     }
     if (url.pathname === '/api/admin/revenue/recurring' && request.method === 'GET') {
-      return handleAdminRecurringRevenue(request, env);
+      return revenueCached(request, env, ctx, () => handleAdminRecurringRevenue(request, env));
     }
     if (url.pathname === '/api/admin/revenue/fixed' && request.method === 'GET') {
-      return handleAdminFixedRevenue(request, env);
+      return revenueCached(request, env, ctx, () => handleAdminFixedRevenue(request, env));
     }
     if (url.pathname === '/api/admin/revenue/apps' && request.method === 'GET') {
-      return handleAdminAppsRevenue(request, env);
+      return revenueCached(request, env, ctx, () => handleAdminAppsRevenue(request, env));
     }
     if (url.pathname === '/api/admin/revenue/referrals' && request.method === 'GET') {
-      return handleAdminReferralsRevenue(request, env);
+      return revenueCached(request, env, ctx, () => handleAdminReferralsRevenue(request, env));
     }
     if (url.pathname === '/api/admin/revenue/summary' && request.method === 'GET') {
-      return handleAdminRevenueSummary(request, env);
+      return revenueCached(request, env, ctx, () => handleAdminRevenueSummary(request, env));
     }
     if (url.pathname === '/api/admin/discoveries' && request.method === 'GET') {
       return handleAdminListDiscoveries(request, env);
@@ -1154,6 +1154,79 @@ async function shopifyFetchPaidOrders(env, shop, token, fromISO, toISO, pageCap 
   return { orders: out, truncated };
 }
 
+// ── Revenue read-through cache (stale-while-revalidate) ───────────────────
+// The revenue endpoints each fan out to slow, rate-limited external APIs
+// (Shopify, Stripe, QuickBooks, Shopify Partner) with pagination, so a live
+// recompute can take several seconds. We cache each computed response in KV
+// and serve it stale-while-revalidate: a value younger than FRESH is returned
+// as is; an older-but-usable value is returned instantly while a background
+// refresh runs (ctx.waitUntil), so OS paints numbers immediately and self-
+// heals within minutes. ?refresh=1 forces a live recompute and re-primes.
+const REVENUE_CACHE_FRESH_MS = 5 * 60 * 1000;        // serve without revalidating
+const REVENUE_CACHE_MAX_MS = 24 * 60 * 60 * 1000;    // usable-but-stale ceiling
+const REVENUE_CACHE_TTL_SEC = 7 * 24 * 60 * 60;      // KV row lifetime
+
+// Stable cache key from the request path + query (minus the refresh flag).
+function revenueCacheKey(url) {
+  const p = new URLSearchParams(url.search);
+  p.delete('refresh');
+  p.sort();
+  return `revcache:${url.pathname}?${p.toString()}`;
+}
+
+// Wrap a handler (which returns a Response) with the SWR cache. Only 200/ok
+// bodies are cached, so a transient failure never gets pinned.
+async function revenueCached(request, env, ctx, compute) {
+  const url = new URL(request.url);
+  const force = url.searchParams.get('refresh') === '1';
+  const key = revenueCacheKey(url);
+
+  let cached = null;
+  if (!force) {
+    try { cached = JSON.parse((await env.BLUEPRINT_AUTH.get(key)) || 'null'); } catch { cached = null; }
+  }
+  const now = Date.now();
+  const age = cached ? now - (cached.at || 0) : Infinity;
+
+  const withMeta = (bodyStr, at, stale) => {
+    let obj;
+    try { obj = JSON.parse(bodyStr); } catch { return json(200, { ok: true }); }
+    obj.cachedAt = at;
+    obj.cacheAgeMs = Date.now() - at;
+    obj.stale = stale;
+    return json(200, obj);
+  };
+
+  const recompute = async () => {
+    const resp = await compute();
+    const text = await resp.clone().text();
+    let ok = false;
+    try { ok = JSON.parse(text).ok === true; } catch { ok = false; }
+    if (resp.status === 200 && ok) {
+      await env.BLUEPRINT_AUTH.put(key, JSON.stringify({ at: Date.now(), body: text }), { expirationTtl: REVENUE_CACHE_TTL_SEC }).catch(() => {});
+    }
+    return { resp, text };
+  };
+
+  // Fresh enough: straight from cache.
+  if (cached && age < REVENUE_CACHE_FRESH_MS) return withMeta(cached.body, cached.at, false);
+
+  // Usable but stale: serve now, refresh in the background.
+  if (cached && age < REVENUE_CACHE_MAX_MS) {
+    if (ctx && ctx.waitUntil) ctx.waitUntil(recompute().catch(() => {}));
+    return withMeta(cached.body, cached.at, true);
+  }
+
+  // Cold cache or forced: compute live.
+  const { resp, text } = await recompute();
+  let obj;
+  try { obj = JSON.parse(text); } catch { return resp; }
+  obj.cachedAt = Date.now();
+  obj.cacheAgeMs = 0;
+  obj.stale = false;
+  return json(resp.status, obj);
+}
+
 // GET /api/admin/revenue/recurring?from=YYYY-MM-DD&to=YYYY-MM-DD
 // The "Retainers" revenue stream: Shopify paid orders + Stripe payments,
 // blended into one list. Either source alone is enough to be connected.
@@ -1796,52 +1869,64 @@ async function handleAdminRevenueSummary(request, env) {
   let currency = '';
   const setCur = (c) => { if (!currency && c) currency = c; };
 
-  // Retainers — Shopify paid orders + Stripe payments (blended)
-  const sToken = await shopifyGetToken(env);
-  const sShop = await shopifyShopDomain(env);
+  // Every source group runs concurrently — they hit independent external APIs,
+  // so fanning out cuts a cold recompute from the sum of latencies to the max.
   const stripe = stripeConfig(env);
-  const recurringOn = !!(sShop && sToken) || !!stripe.key;
-  sources.recurring = recurringOn ? { connected: true, ok: true } : { connected: false };
-  if (sShop && sToken) {
-    try {
-      const r = await shopifyFetchPaidOrders(env, sShop, sToken, minISO, maxISO);
-      for (const o of r.orders) { items.push({ date: (o.processed_at || o.created_at || '').slice(0, 10), amount: parseFloat(o.current_total_price || o.total_price || 0) || 0 }); setCur(o.currency); }
-    } catch (e) { sources.recurring = { connected: true, ok: false, error: 'Shopify: ' + e.message }; }
-  }
-  if (stripe.key) {
-    try {
-      const fromUnix = Math.floor(Date.parse(minISO) / 1000);
-      const toUnix = Math.floor(Date.parse(maxISO) / 1000);
-      const r = await stripeFetchCharges(env, fromUnix, toUnix);
-      for (const ch of r.charges) { if (ch.status === 'succeeded' && ch.paid) { items.push({ date: ch.created ? new Date(ch.created * 1000).toISOString().slice(0, 10) : '', amount: ((ch.amount_captured != null ? ch.amount_captured : ch.amount) || 0) / 100 }); setCur((ch.currency || '').toUpperCase()); } }
-    } catch (e) { sources.recurring = { connected: true, ok: false, error: (sources.recurring.error ? sources.recurring.error + ' | ' : '') + 'Stripe: ' + e.message }; }
-  }
-
-  // Fixed — QuickBooks payments + sales receipts
-  const qauth = await qboValidToken(env).catch(() => null);
-  if (qauth) {
-    sources.fixed = { connected: true, ok: true };
-    try {
-      const where = `where TxnDate >= '${yearFrom}' and TxnDate <= '${today}'`;
-      const [pay, sr] = await Promise.all([qboQueryAll(env, qauth, 'Payment', where), qboQueryAll(env, qauth, 'SalesReceipt', where)]);
-      for (const r of [...pay.rows, ...sr.rows]) { items.push({ date: r.TxnDate || '', amount: parseFloat(r.TotalAmt || 0) || 0 }); setCur(r.CurrencyRef && r.CurrencyRef.value); }
-    } catch (e) { sources.fixed = { connected: true, ok: false, error: e.message }; }
-  } else sources.fixed = { connected: false };
-
-  // Apps + Referrals — Shopify Partner API
-  const pcfg = partnerConfig(env);
-  if (pcfg.orgId && pcfg.token) {
-    sources.apps = { connected: true, ok: true };
-    sources.referrals = { connected: true, ok: true };
-    try {
-      const a = await partnerFetchAppTransactions(env, minISO, maxISO);
-      for (const n of a.nodes) { items.push({ date: (n.createdAt || '').slice(0, 10), amount: parseFloat((n.netAmount && n.netAmount.amount) || 0) || 0 }); setCur(n.netAmount && n.netAmount.currencyCode); }
-    } catch (e) { sources.apps = { connected: true, ok: false, error: e.message }; }
-    try {
-      const rf = await partnerFetchReferrals(env, minISO, maxISO);
-      for (const n of rf.nodes) { items.push({ date: (n.createdAt || '').slice(0, 10), amount: parseFloat((n.amount && n.amount.amount) || 0) || 0 }); setCur(n.amount && n.amount.currencyCode); }
-    } catch (e) { sources.referrals = { connected: true, ok: false, error: e.message }; }
-  } else { sources.apps = { connected: false }; sources.referrals = { connected: false }; }
+  await Promise.all([
+    // Retainers — Shopify paid orders + Stripe payments (blended)
+    (async () => {
+      const sToken = await shopifyGetToken(env);
+      const sShop = await shopifyShopDomain(env);
+      const recurringOn = !!(sShop && sToken) || !!stripe.key;
+      sources.recurring = recurringOn ? { connected: true, ok: true } : { connected: false };
+      if (sShop && sToken) {
+        try {
+          const r = await shopifyFetchPaidOrders(env, sShop, sToken, minISO, maxISO);
+          for (const o of r.orders) { items.push({ date: (o.processed_at || o.created_at || '').slice(0, 10), amount: parseFloat(o.current_total_price || o.total_price || 0) || 0 }); setCur(o.currency); }
+        } catch (e) { sources.recurring = { connected: true, ok: false, error: 'Shopify: ' + e.message }; }
+      }
+      if (stripe.key) {
+        try {
+          const fromUnix = Math.floor(Date.parse(minISO) / 1000);
+          const toUnix = Math.floor(Date.parse(maxISO) / 1000);
+          const r = await stripeFetchCharges(env, fromUnix, toUnix);
+          for (const ch of r.charges) { if (ch.status === 'succeeded' && ch.paid) { items.push({ date: ch.created ? new Date(ch.created * 1000).toISOString().slice(0, 10) : '', amount: ((ch.amount_captured != null ? ch.amount_captured : ch.amount) || 0) / 100 }); setCur((ch.currency || '').toUpperCase()); } }
+        } catch (e) { sources.recurring = { connected: true, ok: false, error: (sources.recurring.error ? sources.recurring.error + ' | ' : '') + 'Stripe: ' + e.message }; }
+      }
+    })(),
+    // Fixed — QuickBooks payments + sales receipts
+    (async () => {
+      const qauth = await qboValidToken(env).catch(() => null);
+      if (!qauth) { sources.fixed = { connected: false }; return; }
+      sources.fixed = { connected: true, ok: true };
+      try {
+        const where = `where TxnDate >= '${yearFrom}' and TxnDate <= '${today}'`;
+        const [pay, sr] = await Promise.all([qboQueryAll(env, qauth, 'Payment', where), qboQueryAll(env, qauth, 'SalesReceipt', where)]);
+        for (const r of [...pay.rows, ...sr.rows]) { items.push({ date: r.TxnDate || '', amount: parseFloat(r.TotalAmt || 0) || 0 }); setCur(r.CurrencyRef && r.CurrencyRef.value); }
+      } catch (e) { sources.fixed = { connected: true, ok: false, error: e.message }; }
+    })(),
+    // Apps + Referrals — Shopify Partner API
+    (async () => {
+      const pcfg = partnerConfig(env);
+      if (!(pcfg.orgId && pcfg.token)) { sources.apps = { connected: false }; sources.referrals = { connected: false }; return; }
+      sources.apps = { connected: true, ok: true };
+      sources.referrals = { connected: true, ok: true };
+      await Promise.all([
+        (async () => {
+          try {
+            const a = await partnerFetchAppTransactions(env, minISO, maxISO);
+            for (const n of a.nodes) { items.push({ date: (n.createdAt || '').slice(0, 10), amount: parseFloat((n.netAmount && n.netAmount.amount) || 0) || 0 }); setCur(n.netAmount && n.netAmount.currencyCode); }
+          } catch (e) { sources.apps = { connected: true, ok: false, error: e.message }; }
+        })(),
+        (async () => {
+          try {
+            const rf = await partnerFetchReferrals(env, minISO, maxISO);
+            for (const n of rf.nodes) { items.push({ date: (n.createdAt || '').slice(0, 10), amount: parseFloat((n.amount && n.amount.amount) || 0) || 0 }); setCur(n.amount && n.amount.currencyCode); }
+          } catch (e) { sources.referrals = { connected: true, ok: false, error: e.message }; }
+        })(),
+      ]);
+    })(),
+  ]);
 
   // YYYY-MM-DD compares lexicographically = chronologically.
   const sumFrom = (from) => items.reduce((s, it) => (it.date && it.date >= from) ? s + it.amount : s, 0);

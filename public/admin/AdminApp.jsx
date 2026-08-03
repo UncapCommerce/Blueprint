@@ -458,6 +458,32 @@
   }
 
   // ── Revenues > Recurring (Shopify paid orders) ───────────────────────
+  // Human "how long ago" from an epoch ms, for the cache freshness line.
+  const timeAgo = (at) => {
+    if (!at) return '';
+    const s = Math.max(0, Math.round((Date.now() - at) / 1000));
+    if (s < 60) return 'just now';
+    const m = Math.round(s / 60); if (m < 60) return m + 'm ago';
+    const h = Math.round(m / 60); if (h < 24) return h + 'h ago';
+    return Math.round(h / 24) + 'd ago';
+  };
+
+  // Freshness line + manual refresh for the cached revenue views. Numbers are
+  // served from a stale-while-revalidate cache so they paint instantly; this
+  // shows how old they are and lets the admin force a live re-pull.
+  function CacheBar({ data, refreshing, onRefresh }) {
+    if (!data || !data.cachedAt) return null;
+    return (
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14, fontFamily: T.mono, fontSize: 11.5, color: T.fg3 }}>
+        <span>{data.stale ? 'Updating in background…' : 'Updated ' + timeAgo(data.cachedAt)}</span>
+        <button type="button" onClick={onRefresh} disabled={refreshing}
+          style={{ ...S.btnGhost, padding: '4px 10px', fontSize: 11.5, opacity: refreshing ? 0.6 : 1, cursor: refreshing ? 'default' : 'pointer' }}>
+          {refreshing ? 'Refreshing…' : 'Refresh'}
+        </button>
+      </div>
+    );
+  }
+
   function RecurringRevenue() {
     const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     const presetRange = (p) => {
@@ -476,17 +502,26 @@
     const [range, setRange] = useState(() => presetRange('month'));
     const [data, setData] = useState(null);
     const [error, setError] = useState('');
+    const [refreshing, setRefreshing] = useState(false);
 
     const pickPreset = (p) => { setPreset(p); if (p !== 'custom') setRange(presetRange(p)); };
     const setCustom = (k, v) => { if (v) setRange((r) => ({ ...r, [k]: v })); };
 
+    const load = (force) => {
+      if (force) setRefreshing(true); else setData(null);
+      setError('');
+      return api(`/api/admin/revenue/recurring?from=${encodeURIComponent(range.from)}&to=${encodeURIComponent(range.to)}${force ? '&refresh=1' : ''}`)
+        .then((d) => setData(d))
+        .catch((e) => { setError(e.message); setData((p) => p || {}); })
+        .finally(() => { if (force) setRefreshing(false); });
+    };
+    useEffect(() => { load(false); /* eslint-disable-next-line */ }, [range.from, range.to]);
+    // Served a stale value? The worker is repriming the cache in the
+    // background; pull the fresh number a moment later without a spinner.
     useEffect(() => {
-      let dead = false; setData(null); setError('');
-      api(`/api/admin/revenue/recurring?from=${encodeURIComponent(range.from)}&to=${encodeURIComponent(range.to)}`)
-        .then((d) => { if (!dead) setData(d); })
-        .catch((e) => { if (!dead) { setError(e.message); setData({}); } });
-      return () => { dead = true; };
-    }, [range.from, range.to]);
+      if (data && data.stale) { const t = setTimeout(() => load(false), 6000); return () => clearTimeout(t); }
+      // eslint-disable-next-line
+    }, [data && data.stale, data && data.cachedAt]);
 
     const money = (n, cur) => { try { return new Intl.NumberFormat(undefined, { style: 'currency', currency: cur || 'USD' }).format(n || 0); } catch (_) { return '$' + (n || 0).toFixed(2); } };
     const fmtDate = (s) => { if (!s) return ''; const d = new Date(s); return isNaN(d.getTime()) ? s.slice(0, 10) : d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }); };
@@ -553,6 +588,7 @@
           </div>
         ) : (
           <>
+            <CacheBar data={data} refreshing={refreshing} onRefresh={() => load(true)}/>
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 16 }}>
               {statChip('Total collected', money(data.total, data.currency))}
               {statChip('Payments', data.count)}
@@ -1009,15 +1045,22 @@
   function RevenueOverview() {
     const [data, setData] = useState(null);
     const [error, setError] = useState('');
+    const [refreshing, setRefreshing] = useState(false);
+    const today = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })();
+    const load = (force) => {
+      if (force) setRefreshing(true); else setData(null);
+      setError('');
+      return api('/api/admin/revenue/summary?today=' + today + (force ? '&refresh=1' : ''))
+        .then((r) => setData(r))
+        .catch((e) => { setError(e.message); setData((p) => p || {}); })
+        .finally(() => { if (force) setRefreshing(false); });
+    };
+    useEffect(() => { load(false); /* eslint-disable-next-line */ }, []);
+    // Self-heal a stale read once the worker's background refresh lands.
     useEffect(() => {
-      const d = new Date();
-      const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-      let dead = false; setData(null); setError('');
-      api('/api/admin/revenue/summary?today=' + today)
-        .then((r) => { if (!dead) setData(r); })
-        .catch((e) => { if (!dead) { setError(e.message); setData({}); } });
-      return () => { dead = true; };
-    }, []);
+      if (data && data.stale) { const t = setTimeout(() => load(false), 6000); return () => clearTimeout(t); }
+      // eslint-disable-next-line
+    }, [data && data.stale, data && data.cachedAt]);
     const money = (n, cur) => { try { return new Intl.NumberFormat(undefined, { style: 'currency', currency: cur || 'USD', maximumFractionDigits: 0 }).format(n || 0); } catch (_) { return '$' + Math.round(n || 0); } };
     const BLOCKS = [['This month', 'month'], ['This quarter', 'quarter'], ['This year', 'year']];
     const SRC = [['recurring', 'Retainers'], ['fixed', 'Projects'], ['apps', 'Apps'], ['referrals', 'Referrals']];
@@ -1034,6 +1077,7 @@
           </div>
         ) : (
           <>
+            <CacheBar data={data} refreshing={refreshing} onRefresh={() => load(true)}/>
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
               {BLOCKS.map(([label, key]) => (
                 <div key={key} style={{ ...S.card, flex: '1 1 240px', padding: 'clamp(20px, 3vw, 32px)' }}>
