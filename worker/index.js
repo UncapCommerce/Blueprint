@@ -1201,9 +1201,12 @@ async function revenueCached(request, env, ctx, compute) {
   const recompute = async () => {
     const resp = await compute();
     const text = await resp.clone().text();
-    let ok = false;
-    try { ok = JSON.parse(text).ok === true; } catch { ok = false; }
-    if (resp.status === 200 && ok) {
+    let ok = false, partial = false;
+    try { const b = JSON.parse(text); ok = b.ok === true; partial = b.partial === true; } catch { ok = false; }
+    // Never cache a partial read (a source errored, so a total is under-counted)
+    // — otherwise a transient hiccup gets pinned and shows a wrong number until
+    // a manual refresh. Leaving it uncached means the next load retries live.
+    if (resp.status === 200 && ok && !partial) {
       await env.BLUEPRINT_AUTH.put(key, JSON.stringify({ at: Date.now(), body: text }), { expirationTtl: REVENUE_CACHE_TTL_SEC }).catch(() => {});
     }
     return { resp, text };
@@ -1315,6 +1318,7 @@ async function handleAdminRecurringRevenue(request, env) {
   });
   return json(200, {
     ok: true, connected: true, from, to,
+    partial: errors.length > 0,
     count: rows.length,
     total: rows.reduce((s, r) => s + r.amount, 0),
     currency: rows.length ? rows[0].currency : '',
@@ -1575,6 +1579,7 @@ async function handleAdminFixedRevenue(request, env) {
 
   return json(200, {
     ok: true, connected: true, kind, from, to,
+    partial: errors.length > 0,
     count: rows.length,
     total: rows.reduce((s, r) => s + r.amount, 0),
     currency: rows.length ? rows[0].currency : '',
@@ -1939,8 +1944,12 @@ async function handleAdminRevenueSummary(request, env) {
   const byPeriod = (srcs) => ({ month: sumFrom(monthFrom, srcs), quarter: sumFrom(quarterFrom, srcs), year: sumFrom(yearFrom, srcs) });
   const total = byPeriod(null);            // all revenues
   const services = byPeriod(['fixed', 'recurring']); // Projects + Retainers
+  // A connected source that errored means the totals are under-counted — mark
+  // the response partial so it isn't cached and the client can retry.
+  const partial = Object.keys(sources).some((k) => sources[k] && sources[k].connected && sources[k].ok === false);
   return json(200, {
     ok: true,
+    partial,
     currency,
     month: total.month,
     quarter: total.quarter,

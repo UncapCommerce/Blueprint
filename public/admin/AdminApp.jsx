@@ -1046,9 +1046,10 @@
     const [data, setData] = useState(null);
     const [error, setError] = useState('');
     const [refreshing, setRefreshing] = useState(false);
+    const [partialTries, setPartialTries] = useState(0);
     const today = (() => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; })();
-    const load = (force) => {
-      if (force) setRefreshing(true); else setData(null);
+    const load = (force, silent) => {
+      if (force) setRefreshing(true); else if (!silent) setData(null);
       setError('');
       return api('/api/admin/revenue/summary?today=' + today + (force ? '&refresh=1' : ''))
         .then((r) => setData(r))
@@ -1058,9 +1059,19 @@
     useEffect(() => { load(false); /* eslint-disable-next-line */ }, []);
     // Self-heal a stale read once the worker's background refresh lands.
     useEffect(() => {
-      if (data && data.stale) { const t = setTimeout(() => load(false), 6000); return () => clearTimeout(t); }
+      if (data && data.stale) { const t = setTimeout(() => load(false, true), 6000); return () => clearTimeout(t); }
       // eslint-disable-next-line
     }, [data && data.stale, data && data.cachedAt]);
+    // Partial read (a source errored, so totals are under-counted). Partials are
+    // never cached, so a silent retry recomputes live — usually the hiccup is
+    // gone. Cap the attempts so a genuinely-down source doesn't loop forever.
+    useEffect(() => {
+      if (data && data.partial && partialTries < 3) {
+        const t = setTimeout(() => { setPartialTries((n) => n + 1); load(false, true); }, 2500);
+        return () => clearTimeout(t);
+      }
+      // eslint-disable-next-line
+    }, [data && data.partial, partialTries]);
     const money = (n, cur) => { try { return new Intl.NumberFormat(undefined, { style: 'currency', currency: cur || 'USD', maximumFractionDigits: 0 }).format(n || 0); } catch (_) { return '$' + Math.round(n || 0); } };
     const BLOCKS = [['This month', 'month'], ['This quarter', 'quarter'], ['This year', 'year']];
     const SRC = [['recurring', 'Retainers'], ['fixed', 'Projects'], ['apps', 'Apps'], ['referrals', 'Referrals']];
@@ -1078,6 +1089,11 @@
         ) : (
           <>
             <CacheBar data={data} refreshing={refreshing} onRefresh={() => load(true)}/>
+            {data.partial && (
+              <div style={{ marginBottom: 16, fontFamily: T.mono, fontSize: 11.5, color: '#6A4E00', background: '#FDF6E3', border: '1px solid #E8C36A', borderRadius: 6, padding: '8px 12px' }}>
+                {partialTries < 3 ? 'A revenue source is slow to respond, retrying…' : 'A revenue source is unavailable, so these totals may be incomplete. Check the source chips below or hit Refresh.'}
+              </div>
+            )}
             {[
               ['Services', 'Projects + Retainers', data.services || {}, false],
               ['Total', 'All revenues', data.total || { month: data.month, quarter: data.quarter, year: data.year }, true],
