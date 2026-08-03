@@ -1233,7 +1233,12 @@ async function handleAdminRecurringRevenue(request, env) {
     return json(502, { ok: false, connected: true, error: errors.join(' | ') });
   }
 
-  rows.sort((a, b) => new Date(b.date) - new Date(a.date));
+  // Newest first, blended across Shopify + Stripe. Rows missing a date sort last.
+  rows.sort((a, b) => {
+    const ta = Date.parse(a.date) || 0;
+    const tb = Date.parse(b.date) || 0;
+    return tb - ta;
+  });
   return json(200, {
     ok: true, connected: true, from, to,
     count: rows.length,
