@@ -309,6 +309,9 @@ export default {
     if (url.pathname === '/api/admin/revenue/summary' && request.method === 'GET') {
       return handleAdminRevenueSummary(request, env);
     }
+    if (url.pathname === '/api/admin/retainers' && request.method === 'GET') {
+      return handleAdminRetainers(request, env);
+    }
     if (url.pathname === '/api/admin/discoveries' && request.method === 'GET') {
       return handleAdminListDiscoveries(request, env);
     }
@@ -1804,6 +1807,94 @@ async function handleAdminRevenueSummary(request, env) {
     year: sumFrom(yearFrom),
     windows: { month: monthFrom, quarter: quarterFrom, year: yearFrom, to: today },
     sources,
+  });
+}
+
+// ── Stripe integration (Services > Retainers) ────────────────────────────
+// Lists retainer payments collected in Stripe. Static secret key (no OAuth).
+//   STRIPE_SECRET_KEY — sk_live_... (or sk_test_... for test mode) [secret]
+function stripeConfig(env) {
+  const key = (env.STRIPE_SECRET_KEY || '').toString().trim();
+  const test = key.startsWith('sk_test') || key.startsWith('rk_test');
+  return { key, test, dashBase: test ? 'https://dashboard.stripe.com/test' : 'https://dashboard.stripe.com' };
+}
+
+// Fetch succeeded charges in [fromUnix, toUnix], following Stripe cursor
+// pagination (starting_after) up to a page cap (100/page).
+async function stripeFetchCharges(env, fromUnix, toUnix, pageCap = 20) {
+  const cfg = stripeConfig(env);
+  const out = [];
+  let startingAfter = '';
+  let truncated = false;
+  for (let page = 0; page < pageCap; page++) {
+    const params = new URLSearchParams();
+    params.set('limit', '100');
+    params.set('created[gte]', String(fromUnix));
+    params.set('created[lte]', String(toUnix));
+    if (startingAfter) params.set('starting_after', startingAfter);
+    const resp = await fetch('https://api.stripe.com/v1/charges?' + params.toString(), {
+      headers: { 'authorization': 'Bearer ' + cfg.key, 'accept': 'application/json' },
+    });
+    if (!resp.ok) {
+      const b = await resp.text().catch(() => '');
+      throw new Error(`Stripe ${resp.status}: ${b.slice(0, 180)}`);
+    }
+    const data = await resp.json().catch(() => ({}));
+    const rows = Array.isArray(data.data) ? data.data : [];
+    out.push(...rows);
+    if (!data.has_more || !rows.length) break;
+    startingAfter = rows[rows.length - 1].id;
+    if (page === pageCap - 1) truncated = true;
+  }
+  return { charges: out, truncated };
+}
+
+// GET /api/admin/retainers?from&to
+async function handleAdminRetainers(request, env) {
+  const cfg = stripeConfig(env);
+  if (!cfg.key) return json(200, { ok: true, connected: false, have: { secretKey: false } });
+
+  const url = new URL(request.url);
+  const from = (url.searchParams.get('from') || '').slice(0, 10);
+  const to = (url.searchParams.get('to') || '').slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to)) {
+    return json(400, { ok: false, error: 'from and to must be YYYY-MM-DD' });
+  }
+  const fromUnix = Math.floor(Date.parse(`${from}T00:00:00Z`) / 1000);
+  const toUnix = Math.floor(Date.parse(`${to}T23:59:59Z`) / 1000);
+
+  let result;
+  try {
+    result = await stripeFetchCharges(env, fromUnix, toUnix);
+  } catch (err) {
+    return json(502, { ok: false, connected: true, error: err.message || 'Stripe request failed' });
+  }
+
+  const rows = result.charges
+    .filter((c) => c.status === 'succeeded' && c.paid)
+    .map((c) => {
+      const bd = c.billing_details || {};
+      const amt = ((c.amount_captured != null ? c.amount_captured : c.amount) || 0) / 100;
+      return {
+        id: c.id,
+        date: c.created ? new Date(c.created * 1000).toISOString() : '',
+        amount: amt,
+        currency: (c.currency || '').toUpperCase(),
+        customer: bd.name || bd.email || (typeof c.customer === 'string' ? c.customer : '') || '',
+        description: c.description || '',
+        link: `${cfg.dashBase}/payments/${c.payment_intent || c.id}`,
+      };
+    })
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  return json(200, {
+    ok: true, connected: true, from, to, test: cfg.test,
+    count: rows.length,
+    total: rows.reduce((s, r) => s + r.amount, 0),
+    currency: rows.length ? rows[0].currency : '',
+    truncated: result.truncated,
+    dashboardUrl: `${cfg.dashBase}/payments`,
+    rows,
   });
 }
 
