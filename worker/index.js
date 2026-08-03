@@ -1406,26 +1406,36 @@ async function handleAdminFixedRevenue(request, env) {
   }
 
   const where = `where TxnDate >= '${from}' and TxnDate <= '${to}'`;
-  let result;
+  // "Money collected" is not only the Payment entity — a sale paid on the spot
+  // is a SalesReceipt (no invoice). Query both so nothing is missed. Invoices
+  // are their own entity.
+  const entities = kind === 'invoices' ? ['Invoice'] : ['Payment', 'SalesReceipt'];
+  const linkPath = { Invoice: 'invoice', Payment: 'recvpayment', SalesReceipt: 'salesreceipt' };
+  let raw = [];
+  let truncated = false;
   try {
-    result = await qboQueryAll(env, auth, kind === 'invoices' ? 'Invoice' : 'Payment', where);
+    const results = await Promise.all(entities.map((e) => qboQueryAll(env, auth, e, where)));
+    results.forEach((res, i) => {
+      truncated = truncated || res.truncated;
+      for (const r of res.rows) raw.push({ ...r, _entity: entities[i] });
+    });
   } catch (err) {
     return json(502, { ok: false, connected: true, error: err.message || 'QuickBooks request failed' });
   }
 
-  const rows = result.rows.map((r) => {
+  const rows = raw.map((r) => {
     const amount = parseFloat(r.TotalAmt || 0) || 0;
     const cust = (r.CustomerRef && (r.CustomerRef.name || r.CustomerRef.value)) || '';
-    const path = kind === 'invoices' ? 'invoice' : 'recvpayment';
     return {
       id: String(r.Id),
+      type: r._entity,
       docNumber: r.DocNumber || '',
       date: r.TxnDate || '',
       amount,
       balance: r.Balance != null ? (parseFloat(r.Balance) || 0) : null,
       currency: (r.CurrencyRef && r.CurrencyRef.value) || '',
       customer: cust,
-      link: `${cfg.appBase}/app/${path}?txnId=${r.Id}`,
+      link: `${cfg.appBase}/app/${linkPath[r._entity] || 'recvpayment'}?txnId=${r.Id}`,
     };
   }).sort((a, b) => new Date(b.date) - new Date(a.date));
 
@@ -1434,7 +1444,7 @@ async function handleAdminFixedRevenue(request, env) {
     count: rows.length,
     total: rows.reduce((s, r) => s + r.amount, 0),
     currency: rows.length ? rows[0].currency : '',
-    truncated: result.truncated,
+    truncated,
     rows,
   });
 }
