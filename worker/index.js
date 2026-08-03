@@ -1082,7 +1082,7 @@ async function seedAdminUsers(env) {
 //   SHOPIFY_CLIENT_SECRET — path B (shpss_...)                   [secret]
 //   SHOPIFY_SCOPES        — optional; default read_orders        [var]
 //   SHOPIFY_API_VERSION   — optional; default below              [var]
-const SHOPIFY_API_VERSION_DEFAULT = '2024-10';
+const SHOPIFY_API_VERSION_DEFAULT = '2025-10';
 const SHOPIFY_SCOPES_DEFAULT = 'read_orders';
 const SHOPIFY_TOKEN_KEY = 'shopify:admin_token';
 const SHOPIFY_SHOP_KEY = 'shopify:shop_domain';
@@ -1541,7 +1541,7 @@ async function handleQboCallback(request, env) {
 //   SHOPIFY_PARTNER_ORG_ID       — the numeric org id in the partners URL [var]
 //   SHOPIFY_PARTNER_TOKEN        — Partner API client access token        [secret]
 //   SHOPIFY_PARTNER_API_VERSION  — optional; default below                [var]
-const SHOPIFY_PARTNER_API_VERSION_DEFAULT = '2024-10';
+const SHOPIFY_PARTNER_API_VERSION_DEFAULT = '2025-10';
 
 function partnerConfig(env) {
   return {
