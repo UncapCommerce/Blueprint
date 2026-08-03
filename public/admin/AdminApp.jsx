@@ -669,6 +669,11 @@
                 Showing the first batch for this range; narrow the dates for a complete total.
               </div>
             )}
+            {data.warning && (
+              <div style={{ marginBottom: 12, fontFamily: T.mono, fontSize: 11.5, color: '#8A1C1C', background: '#FDE8E8', border: '1px solid #F0A9A9', borderRadius: 6, padding: '8px 12px', wordBreak: 'break-word' }}>
+                Partial data: {data.warning}
+              </div>
+            )}
             {data.rows.length === 0 ? (
               <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>No {invoices ? 'invoices' : 'payments'} in this range.</div>
             ) : (

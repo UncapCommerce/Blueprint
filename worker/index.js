@@ -1411,16 +1411,24 @@ async function handleAdminFixedRevenue(request, env) {
   // are their own entity.
   const entities = kind === 'invoices' ? ['Invoice'] : ['Payment', 'SalesReceipt'];
   const linkPath = { Invoice: 'invoice', Payment: 'recvpayment', SalesReceipt: 'salesreceipt' };
-  let raw = [];
+  const raw = [];
   let truncated = false;
-  try {
-    const results = await Promise.all(entities.map((e) => qboQueryAll(env, auth, e, where)));
-    results.forEach((res, i) => {
-      truncated = truncated || res.truncated;
-      for (const r of res.rows) raw.push({ ...r, _entity: entities[i] });
-    });
-  } catch (err) {
-    return json(502, { ok: false, connected: true, error: err.message || 'QuickBooks request failed' });
+  const errors = [];
+  // Query each entity independently so a failure on one (e.g. SalesReceipt)
+  // never hides the others.
+  const results = await Promise.all(entities.map((e) =>
+    qboQueryAll(env, auth, e, where)
+      .then((res) => ({ e, ...res }))
+      .catch((err) => ({ e, rows: [], truncated: false, error: err.message || String(err) }))
+  ));
+  for (const res of results) {
+    if (res.error) { errors.push(`${res.e}: ${res.error}`); continue; }
+    truncated = truncated || res.truncated;
+    for (const r of res.rows) raw.push({ ...r, _entity: res.e });
+  }
+  // Only hard-fail if every entity failed (nothing usable came back).
+  if (errors.length === entities.length) {
+    return json(502, { ok: false, connected: true, error: errors.join(' | ') });
   }
 
   const rows = raw.map((r) => {
@@ -1445,6 +1453,7 @@ async function handleAdminFixedRevenue(request, env) {
     total: rows.reduce((s, r) => s + r.amount, 0),
     currency: rows.length ? rows[0].currency : '',
     truncated,
+    warning: errors.length ? errors.join(' | ') : '',
     rows,
   });
 }
