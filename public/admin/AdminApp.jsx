@@ -710,6 +710,135 @@
     );
   }
 
+  // ── Revenues > Apps (Shopify Partner app earnings) ───────────────────
+  function AppsRevenue() {
+    const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    const presetRange = (p) => {
+      const now = new Date(), y = now.getFullYear(), m = now.getMonth();
+      let from, to = now;
+      if (p === 'day') { from = new Date(y, m, now.getDate()); to = new Date(y, m, now.getDate()); }
+      else if (p === 'quarter') { from = new Date(y, Math.floor(m / 3) * 3, 1); }
+      else if (p === 'year') { from = new Date(y, 0, 1); to = new Date(y, 11, 31); }
+      else if (p === 'ytd') { from = new Date(y, 0, 1); }
+      else { from = new Date(y, m, 1); }
+      return { from: ymd(from), to: ymd(to) };
+    };
+    const PRESETS = [['day', 'Day'], ['month', 'Month'], ['quarter', 'Quarter'], ['year', 'Year'], ['ytd', 'YTD'], ['custom', 'Custom']];
+
+    const [preset, setPreset] = useState('month');
+    const [range, setRange] = useState(() => presetRange('month'));
+    const [data, setData] = useState(null);
+    const [error, setError] = useState('');
+
+    const pickPreset = (p) => { setPreset(p); if (p !== 'custom') setRange(presetRange(p)); };
+    const setCustom = (k, v) => { if (v) setRange((r) => ({ ...r, [k]: v })); };
+
+    useEffect(() => {
+      let dead = false; setData(null); setError('');
+      api(`/api/admin/revenue/apps?from=${encodeURIComponent(range.from)}&to=${encodeURIComponent(range.to)}`)
+        .then((d) => { if (!dead) setData(d); })
+        .catch((e) => { if (!dead) { setError(e.message); setData({}); } });
+      return () => { dead = true; };
+    }, [range.from, range.to]);
+
+    const money = (n, cur) => { try { return new Intl.NumberFormat(undefined, { style: 'currency', currency: cur || 'USD' }).format(n || 0); } catch (_) { return '$' + (n || 0).toFixed(2); } };
+    const fmtDate = (s) => { if (!s) return ''; const d = new Date(s); return isNaN(d.getTime()) ? s.slice(0, 10) : d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }); };
+
+    return (
+      <Page>
+        <PageHead eyebrow="Revenues" title="Apps" action={data && data.dashboardUrl ? (
+          <a href={data.dashboardUrl} target="_blank" rel="noreferrer" style={{ ...S.btnGhost, textDecoration: 'none' }}>Partner Dashboard ↗</a>
+        ) : null}/>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 18 }}>
+          {PRESETS.map(([id, l]) => (
+            <button key={id} type="button" onClick={() => pickPreset(id)}
+              style={{ ...(preset === id ? S.btn : S.btnGhost), padding: '7px 13px', fontSize: 12.5 }}>{l}</button>
+          ))}
+          {preset === 'custom' && (
+            <span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}>
+              <input type="date" value={range.from} onChange={(e) => setCustom('from', e.target.value)} style={{ ...S.input, width: 'auto', padding: '7px 10px', fontSize: 13 }}/>
+              <span style={{ color: T.fg3, fontFamily: T.mono, fontSize: 12 }}>to</span>
+              <input type="date" value={range.to} onChange={(e) => setCustom('to', e.target.value)} style={{ ...S.input, width: 'auto', padding: '7px 10px', fontSize: 13 }}/>
+            </span>
+          )}
+        </div>
+
+        {data === null ? (
+          <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>Loading…</div>
+        ) : data.connected === false ? (
+          <div style={{ ...S.card, padding: 32 }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, ...S.eyebrow, marginBottom: 12 }}><span style={{ width: 6, height: 6, borderRadius: 999, background: '#E8C36A' }}/>Partner API not connected</div>
+            <div style={{ fontFamily: T.sans, fontSize: 14.5, lineHeight: 1.6, color: T.fg2, maxWidth: 640 }}>
+              Apps revenue reads your app earnings from the Shopify Partner Dashboard. Create a Partner API client (Partner Dashboard → Settings → Partner API clients), then add these as Cloudflare vars/secrets and reload:
+            </div>
+            {data.have && (
+              <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                {[['SHOPIFY_PARTNER_ORG_ID', data.have.orgId], ['SHOPIFY_PARTNER_TOKEN', data.have.token]].map(([k, present]) => (
+                  <div key={k} style={{ display: 'flex', alignItems: 'center', gap: 10, fontFamily: T.mono, fontSize: 12.5 }}>
+                    <span style={{ width: 16, textAlign: 'center', color: present ? '#0A7A3B' : '#B3261E' }}>{present ? '✓' : '✗'}</span>
+                    <span style={{ color: present ? T.fg2 : T.fg1, fontWeight: present ? 500 : 700 }}>{k}</span>
+                    <span style={{ color: T.fg3, fontSize: 11 }}>{present ? 'detected' : 'missing (required)'}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (error || data.ok === false) ? (
+          <div style={{ ...S.card, padding: 28 }}>
+            <div style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 15, color: T.fg1, marginBottom: 6 }}>Couldn&rsquo;t reach the Partner API</div>
+            <div style={{ fontFamily: T.mono, fontSize: 12, color: '#B3261E', wordBreak: 'break-word' }}>{error || data.error}</div>
+          </div>
+        ) : (
+          <>
+            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 16 }}>
+              <div style={{ ...S.card, padding: '16px 20px', minWidth: 180 }}>
+                <div style={S.eyebrow}>Net app revenue</div>
+                <div style={{ fontFamily: T.hero, fontWeight: 800, fontSize: 30, letterSpacing: '-0.02em', color: T.fg1, marginTop: 6 }}>{money(data.total, data.currency)}</div>
+              </div>
+              <div style={{ ...S.card, padding: '16px 20px', minWidth: 120 }}>
+                <div style={S.eyebrow}>Transactions</div>
+                <div style={{ fontFamily: T.hero, fontWeight: 800, fontSize: 30, letterSpacing: '-0.02em', color: T.fg1, marginTop: 6 }}>{data.count}</div>
+              </div>
+              <div style={{ ...S.card, padding: '16px 20px', minWidth: 170 }}>
+                <div style={S.eyebrow}>Range</div>
+                <div style={{ fontFamily: T.mono, fontSize: 13, color: T.fg2, marginTop: 12 }}>{data.from} → {data.to}</div>
+              </div>
+            </div>
+            {data.truncated && (
+              <div style={{ marginBottom: 12, fontFamily: T.mono, fontSize: 11.5, color: '#6A4E00', background: '#FDF6E3', border: '1px solid #E8C36A', borderRadius: 6, padding: '8px 12px' }}>
+                Showing the first batch for this range; narrow the dates for a complete total.
+              </div>
+            )}
+            {data.rows.length === 0 ? (
+              <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>No app transactions in this range.</div>
+            ) : (
+              <div style={{ ...S.card, overflow: 'hidden' }}>
+                <div style={{ overflowX: 'auto' }}>
+                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                    <thead><tr>
+                      <th style={S.th}>Date</th><th style={S.th}>App</th><th style={S.th}>Shop</th><th style={S.th}>Type</th><th style={{ ...S.th, textAlign: 'right' }}>Net</th>
+                    </tr></thead>
+                    <tbody>
+                      {data.rows.map((r) => (
+                        <tr key={r.id}>
+                          <td style={{ ...S.td, whiteSpace: 'nowrap', fontFamily: T.mono, fontSize: 12.5 }}>{fmtDate(r.date)}</td>
+                          <td style={{ ...S.td, fontWeight: 700 }}>{r.app || '—'}</td>
+                          <td style={{ ...S.td, fontFamily: T.mono, fontSize: 12 }}>{r.shop || '—'}</td>
+                          <td style={S.td}><span style={{ fontFamily: T.mono, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', background: '#EEF0FE', color: '#3A44C4', borderRadius: 999, padding: '3px 9px', whiteSpace: 'nowrap' }}>{r.type}</span></td>
+                          <td style={{ ...S.td, textAlign: 'right', fontFamily: T.mono, whiteSpace: 'nowrap', color: r.amount < 0 ? '#B3261E' : T.fg1 }}>{money(r.amount, r.currency)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </Page>
+    );
+  }
+
   // ── modal chrome ─────────────────────────────────────────────────────
   function Modal({ title, sub, onClose, children, width }) {
     const isMobile = useIsMobile();
@@ -2720,7 +2849,7 @@
           : route === 'retainers' ? <SectionStub eyebrow="Services" title="Retainers" note="Ongoing retainer engagements and their scope will live here. Design coming next."/>
           : route === 'rev-fixed' ? <FixedRevenue/>
           : route === 'rev-recurring' ? <RecurringRevenue/>
-          : route === 'rev-apps' ? <SectionStub eyebrow="Revenues" title="Apps" note="App and product revenue will be reported here. Design coming next."/>
+          : route === 'rev-apps' ? <AppsRevenue/>
           : route === 'dashboard' ? <SectionStub eyebrow="Overview" title="Dashboard" note="A cross-section overview of activity, sales, services, and revenue. We’ll design this in the next steps."/>
           : <Home/>}
       </div>

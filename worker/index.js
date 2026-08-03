@@ -296,6 +296,9 @@ export default {
     if (url.pathname === '/api/admin/revenue/fixed' && request.method === 'GET') {
       return handleAdminFixedRevenue(request, env);
     }
+    if (url.pathname === '/api/admin/revenue/apps' && request.method === 'GET') {
+      return handleAdminAppsRevenue(request, env);
+    }
     if (url.pathname === '/api/admin/discoveries' && request.method === 'GET') {
       return handleAdminListDiscoveries(request, env);
     }
@@ -1530,6 +1533,115 @@ async function handleQboCallback(request, env) {
   }));
   await logActivity(env, null, { type: 'status', entity: 'company', id: 'quickbooks', name: 'QuickBooks', actor: 'system', detail: `QuickBooks connected (OAuth) — realm ${realmId}` });
   return finish('Fixed revenue is now syncing invoices and payments from QuickBooks.', true);
+}
+
+// ── Shopify Partner API (Revenues > Apps) ─────────────────────────────────
+// App earnings from the Shopify Partner Dashboard (subscription/one-time/usage
+// sales, net of Shopify's cut). Uses a static Partner API token (no OAuth).
+//   SHOPIFY_PARTNER_ORG_ID       — the numeric org id in the partners URL [var]
+//   SHOPIFY_PARTNER_TOKEN        — Partner API client access token        [secret]
+//   SHOPIFY_PARTNER_API_VERSION  — optional; default below                [var]
+const SHOPIFY_PARTNER_API_VERSION_DEFAULT = '2024-10';
+
+function partnerConfig(env) {
+  return {
+    orgId: (env.SHOPIFY_PARTNER_ORG_ID || '').toString().trim(),
+    token: (env.SHOPIFY_PARTNER_TOKEN || '').toString().trim(),
+    version: (env.SHOPIFY_PARTNER_API_VERSION || SHOPIFY_PARTNER_API_VERSION_DEFAULT).toString().trim(),
+  };
+}
+
+// Query the Partner API for app-revenue transactions in a window, following
+// cursor pagination up to a page cap. Returns { nodes, truncated }.
+async function partnerFetchAppTransactions(env, minISO, maxISO, pageCap = 20) {
+  const cfg = partnerConfig(env);
+  const endpoint = `https://partners.shopify.com/${cfg.orgId}/api/${cfg.version}/graphql.json`;
+  const query = `query($first:Int!,$after:String,$min:DateTime!,$max:DateTime!){
+    transactions(first:$first, after:$after, createdAtMin:$min, createdAtMax:$max,
+      types:[APP_SUBSCRIPTION_SALE, APP_ONE_TIME_SALE, APP_USAGE_SALE, APP_SALE_ADJUSTMENT, APP_SALE_CREDIT]) {
+      edges { cursor node {
+        __typename
+        ... on AppSubscriptionSale { id createdAt netAmount{amount currencyCode} app{name} shop{myshopifyDomain} }
+        ... on AppOneTimeSale      { id createdAt netAmount{amount currencyCode} app{name} shop{myshopifyDomain} }
+        ... on AppUsageSale        { id createdAt netAmount{amount currencyCode} app{name} shop{myshopifyDomain} }
+        ... on AppSaleAdjustment   { id createdAt netAmount{amount currencyCode} app{name} shop{myshopifyDomain} }
+        ... on AppSaleCredit       { id createdAt netAmount{amount currencyCode} app{name} shop{myshopifyDomain} }
+      } }
+      pageInfo { hasNextPage }
+    }
+  }`;
+  const nodes = [];
+  let after = null;
+  let truncated = false;
+  for (let page = 0; page < pageCap; page++) {
+    const resp = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'X-Shopify-Access-Token': cfg.token, 'content-type': 'application/json', 'accept': 'application/json' },
+      body: JSON.stringify({ query, variables: { first: 100, after, min: minISO, max: maxISO } }),
+    });
+    if (!resp.ok) {
+      const body = await resp.text().catch(() => '');
+      throw new Error(`Partner API ${resp.status}: ${body.slice(0, 180)}`);
+    }
+    const data = await resp.json().catch(() => ({}));
+    if (data.errors && data.errors.length) throw new Error('Partner API: ' + (data.errors[0].message || 'query error'));
+    const conn = data.data && data.data.transactions;
+    const edges = (conn && conn.edges) || [];
+    for (const e of edges) nodes.push(e.node);
+    if (!conn || !conn.pageInfo || !conn.pageInfo.hasNextPage || !edges.length) break;
+    after = edges[edges.length - 1].cursor;
+    if (page === pageCap - 1) truncated = true;
+  }
+  return { nodes, truncated };
+}
+
+// GET /api/admin/revenue/apps?from&to
+async function handleAdminAppsRevenue(request, env) {
+  const cfg = partnerConfig(env);
+  if (!cfg.orgId || !cfg.token) {
+    return json(200, {
+      ok: true, connected: false,
+      have: { orgId: !!cfg.orgId, token: !!cfg.token },
+    });
+  }
+
+  const url = new URL(request.url);
+  const from = (url.searchParams.get('from') || '').slice(0, 10);
+  const to = (url.searchParams.get('to') || '').slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to)) {
+    return json(400, { ok: false, error: 'from and to must be YYYY-MM-DD' });
+  }
+
+  let result;
+  try {
+    result = await partnerFetchAppTransactions(env, `${from}T00:00:00Z`, `${to}T23:59:59Z`);
+  } catch (err) {
+    return json(502, { ok: false, connected: true, error: err.message || 'Partner API request failed' });
+  }
+
+  const TYPE_LABEL = {
+    AppSubscriptionSale: 'Subscription', AppOneTimeSale: 'One-time', AppUsageSale: 'Usage',
+    AppSaleAdjustment: 'Adjustment', AppSaleCredit: 'Credit',
+  };
+  const rows = result.nodes.map((n) => ({
+    id: String(n.id || ''),
+    date: n.createdAt || '',
+    app: (n.app && n.app.name) || '',
+    shop: (n.shop && n.shop.myshopifyDomain) || '',
+    type: TYPE_LABEL[n.__typename] || (n.__typename || ''),
+    amount: parseFloat((n.netAmount && n.netAmount.amount) || 0) || 0,
+    currency: (n.netAmount && n.netAmount.currencyCode) || '',
+  })).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  return json(200, {
+    ok: true, connected: true, from, to,
+    count: rows.length,
+    total: rows.reduce((s, r) => s + r.amount, 0),
+    currency: rows.length ? rows[0].currency : '',
+    truncated: result.truncated,
+    dashboardUrl: `https://partners.shopify.com/${cfg.orgId}/apps`,
+    rows,
+  });
 }
 
 // Google OAuth "Web application" Client ID. This is a public identifier
