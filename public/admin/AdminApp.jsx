@@ -343,7 +343,7 @@
       ],
       revenues: [
         { id: 'revenues',      l: 'Overview',   path: '/admin/revenues' },
-        { id: 'rev-fixed',     l: 'Fixed',      path: '/admin/revenues/fixed' },
+        { id: 'rev-fixed',     l: 'Projects',   path: '/admin/revenues/fixed' },
         { id: 'rev-recurring', l: 'Recurring',  path: '/admin/revenues/recurring' },
         { id: 'rev-apps',      l: 'Apps',        path: '/admin/revenues/apps' },
         { id: 'rev-referrals', l: 'Referrals',  path: '/admin/revenues/referrals' },
@@ -635,7 +635,7 @@
 
     return (
       <Page>
-        <PageHead eyebrow="Revenues" title="Fixed"/>
+        <PageHead eyebrow="Revenues" title="Projects"/>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 14 }}>
           {[['payments', 'Payments'], ['invoices', 'Invoices']].map(([id, l]) => (
             <button key={id} type="button" onClick={() => setKind(id)}
@@ -1015,7 +1015,7 @@
     }, []);
     const money = (n, cur) => { try { return new Intl.NumberFormat(undefined, { style: 'currency', currency: cur || 'USD', maximumFractionDigits: 0 }).format(n || 0); } catch (_) { return '$' + Math.round(n || 0); } };
     const BLOCKS = [['This month', 'month'], ['This quarter', 'quarter'], ['This year', 'year']];
-    const SRC = [['recurring', 'Recurring'], ['fixed', 'Fixed'], ['apps', 'Apps'], ['referrals', 'Referrals']];
+    const SRC = [['recurring', 'Recurring'], ['fixed', 'Projects'], ['apps', 'Apps'], ['referrals', 'Referrals']];
 
     return (
       <Page>
