@@ -109,6 +109,7 @@
     if (base[0] === 'revenues' && base[1] === 'recurring') return 'rev-recurring';
     if (base[0] === 'revenues' && base[1] === 'apps') return 'rev-apps';
     if (base[0] === 'revenues' && base[1] === 'referrals') return 'rev-referrals';
+    if (base[0] === 'revenues') return 'revenues';
     if (base[0] === 'dashboard') return 'dashboard';
     if (base[0] === 'users') return 'users';
     return 'home';
@@ -325,30 +326,52 @@
   }
 
   function TopBar({ me, route, onLogout }) {
-    // The company profile / blueprint editor pages count toward their section.
-    const active = route === 'company-profile' ? 'companies'
-      : route === 'blueprint-editor' ? 'blueprints'
-      : route;
-    const SALES = [
-      { id: 'companies',   l: 'Companies',   path: '/admin/companies' },
-      { id: 'discoveries', l: 'Discoveries', path: '/admin/discoveries' },
-      { id: 'blueprints',  l: 'Blueprints',  path: '/admin/blueprints' },
-    ];
-    const SERVICES = [
-      { id: 'projects',  l: 'Projects',  path: '/admin/projects' },
-      { id: 'retainers', l: 'Retainers', path: '/admin/retainers' },
-    ];
-    const REVENUES = [
-      { id: 'rev-fixed',     l: 'Fixed',     path: '/admin/revenues/fixed' },
-      { id: 'rev-recurring', l: 'Recurring', path: '/admin/revenues/recurring' },
-      { id: 'rev-apps',      l: 'Apps',      path: '/admin/revenues/apps' },
-      { id: 'rev-referrals', l: 'Referrals', path: '/admin/revenues/referrals' },
-    ];
-    const pill = (id, l, path) => (
-      <a key={id} href={path} onClick={navClick(path)} style={navPillStyle(active === id)}>{l}</a>
-    );
     const MONO = 'var(--font-mono, "JetBrains Mono", ui-monospace, monospace)';
     const isMobile = useIsMobile();
+
+    // Sub-navs per section (the second row). Sales/Services land on their first
+    // sub-page; Revenues lands on its Overview page.
+    const SUB = {
+      sales: [
+        { id: 'companies',   l: 'Companies',   path: '/admin/companies' },
+        { id: 'discoveries', l: 'Discoveries', path: '/admin/discoveries' },
+        { id: 'blueprints',  l: 'Blueprints',  path: '/admin/blueprints' },
+      ],
+      services: [
+        { id: 'projects',  l: 'Projects',  path: '/admin/projects' },
+        { id: 'retainers', l: 'Retainers', path: '/admin/retainers' },
+      ],
+      revenues: [
+        { id: 'revenues',      l: 'Overview',   path: '/admin/revenues' },
+        { id: 'rev-fixed',     l: 'Fixed',      path: '/admin/revenues/fixed' },
+        { id: 'rev-recurring', l: 'Recurring',  path: '/admin/revenues/recurring' },
+        { id: 'rev-apps',      l: 'Apps',        path: '/admin/revenues/apps' },
+        { id: 'rev-referrals', l: 'Referrals',  path: '/admin/revenues/referrals' },
+      ],
+    };
+    // First row. Clicking a section lands on its main page; its match[] maps
+    // routes back to the owning section.
+    const SECTIONS = [
+      { id: 'activities', l: 'Activities', path: '/admin', match: ['home'] },
+      { id: 'sales', l: 'Sales', path: '/admin/companies', match: ['companies', 'discoveries', 'blueprints', 'company-profile', 'blueprint-editor'] },
+      { id: 'services', l: 'Services', path: '/admin/projects', match: ['projects', 'retainers'] },
+      ...(me.isSuper ? [{ id: 'revenues', l: 'Revenues', path: '/admin/revenues', match: ['revenues', 'rev-fixed', 'rev-recurring', 'rev-apps', 'rev-referrals'] }] : []),
+      { id: 'dashboard', l: 'Dashboard', path: '/admin/dashboard', match: ['dashboard'] },
+      ...(me.isSuper ? [{ id: 'users', l: 'Users', path: '/admin/users', match: ['users'] }] : []),
+    ];
+    const activeSection = SECTIONS.find((s) => s.match.includes(route)) || SECTIONS[0];
+    const subs = SUB[activeSection.id] || [];
+
+    const sectionPill = (s) => (
+      <a key={s.id} href={s.path} onClick={navClick(s.path)} style={navPillStyle(activeSection.id === s.id)}>{s.l}</a>
+    );
+    const subPill = (it) => (
+      <a key={it.id} href={it.path} onClick={navClick(it.path)} style={{
+        padding: '4px 11px', borderRadius: 4, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
+        fontFamily: T.sans, fontSize: 12, fontWeight: route === it.id ? 700 : 500, lineHeight: 1,
+        color: route === it.id ? '#0A0A0A' : '#C9C7C1', background: route === it.id ? T.signal : 'transparent',
+      }}>{it.l}</a>
+    );
 
     const brand = (
       <a href="/admin" onClick={navClick('/admin')} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', flex: '0 0 auto' }}>
@@ -366,43 +389,33 @@
         <button type="button" onClick={onLogout} style={{ border: '1px solid #4D4D4D', background: 'transparent', color: '#FFFFFF', borderRadius: 4, padding: '3px 9px', fontSize: 10.5, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>Sign out</button>
       </div>
     );
-
-    if (isMobile) {
-      // Touch layout: dropdowns don't work well on touch, so flatten every
-      // section into one horizontally scrollable row on a second line.
-      const flat = [
-        { id: 'home', l: 'Activities', path: '/admin' },
-        ...SALES, ...SERVICES,
-        ...(me.isSuper ? REVENUES : []),
-        { id: 'dashboard', l: 'Dashboard', path: '/admin/dashboard' },
-        ...(me.isSuper ? [{ id: 'users', l: 'Users', path: '/admin/users' }] : []),
-      ];
-      return (
-        <header style={{ position: 'sticky', top: 0, zIndex: 50, background: '#0A0A0A' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, height: 46, padding: '0 14px' }}>
-            {brand}{account}
-          </div>
-          <nav style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '0 10px 8px', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-            {flat.map((it) => pill(it.id, it.l, it.path))}
-          </nav>
-        </header>
-      );
-    }
+    const scroll = { overflowX: 'auto', WebkitOverflowScrolling: 'touch' };
 
     return (
       <header style={{ position: 'sticky', top: 0, zIndex: 50, background: '#0A0A0A' }}>
-        <div style={{ width: '100%', boxSizing: 'border-box', height: 40, display: 'flex', alignItems: 'center', gap: 16, padding: '0 16px' }}>
+        {/* Row 1 — sections */}
+        <div style={{ boxSizing: 'border-box', minHeight: isMobile ? 46 : 40, display: 'flex', alignItems: 'center', gap: isMobile ? 12 : 16, padding: isMobile ? '0 14px' : '0 16px' }}>
           {brand}
-          <nav style={{ flex: '1 1 auto', display: 'flex', alignItems: 'center', gap: 4, overflow: 'visible' }}>
-            {pill('home', 'Activities', '/admin')}
-            <NavMenu label="Sales" items={SALES} active={active}/>
-            <NavMenu label="Services" items={SERVICES} active={active}/>
-            {me.isSuper ? <NavMenu label="Revenues" items={REVENUES} active={active}/> : null}
-            {pill('dashboard', 'Dashboard', '/admin/dashboard')}
-            {me.isSuper ? pill('users', 'Users', '/admin/users') : null}
-          </nav>
+          {!isMobile && (
+            <nav style={{ flex: '1 1 auto', display: 'flex', alignItems: 'center', gap: 4, overflow: 'visible' }}>
+              {SECTIONS.map(sectionPill)}
+            </nav>
+          )}
           {account}
         </div>
+        {isMobile && (
+          <nav style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '0 10px 6px', ...scroll }}>
+            {SECTIONS.map(sectionPill)}
+          </nav>
+        )}
+        {/* Row 2 — sub-navs of the active section */}
+        {subs.length > 0 && (
+          <div style={{ background: '#161616', borderTop: '1px solid #242424' }}>
+            <nav style={{ display: 'flex', alignItems: 'center', gap: 4, padding: isMobile ? '7px 10px' : '7px 16px', ...scroll }}>
+              {subs.map(subPill)}
+            </nav>
+          </div>
+        )}
       </header>
     );
   }
@@ -981,6 +994,66 @@
                 </div>
               </div>
             )}
+          </>
+        )}
+      </Page>
+    );
+  }
+
+  // ── Revenues > Overview (combined totals) ────────────────────────────
+  function RevenueOverview() {
+    const [data, setData] = useState(null);
+    const [error, setError] = useState('');
+    useEffect(() => {
+      const d = new Date();
+      const today = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      let dead = false; setData(null); setError('');
+      api('/api/admin/revenue/summary?today=' + today)
+        .then((r) => { if (!dead) setData(r); })
+        .catch((e) => { if (!dead) { setError(e.message); setData({}); } });
+      return () => { dead = true; };
+    }, []);
+    const money = (n, cur) => { try { return new Intl.NumberFormat(undefined, { style: 'currency', currency: cur || 'USD', maximumFractionDigits: 0 }).format(n || 0); } catch (_) { return '$' + Math.round(n || 0); } };
+    const BLOCKS = [['This month', 'month'], ['This quarter', 'quarter'], ['This year', 'year']];
+    const SRC = [['recurring', 'Recurring'], ['fixed', 'Fixed'], ['apps', 'Apps'], ['referrals', 'Referrals']];
+
+    return (
+      <Page>
+        <PageHead eyebrow="Revenues" title="Overview"/>
+        {data === null ? (
+          <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>Loading…</div>
+        ) : (error || data.ok === false) ? (
+          <div style={{ ...S.card, padding: 28 }}>
+            <div style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 15, color: T.fg1, marginBottom: 6 }}>Couldn&rsquo;t load revenue</div>
+            <div style={{ fontFamily: T.mono, fontSize: 12, color: '#B3261E', wordBreak: 'break-word' }}>{error || data.error}</div>
+          </div>
+        ) : (
+          <>
+            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+              {BLOCKS.map(([label, key]) => (
+                <div key={key} style={{ ...S.card, flex: '1 1 240px', padding: 'clamp(20px, 3vw, 32px)' }}>
+                  <div style={S.eyebrow}>{label}</div>
+                  <div style={{ fontFamily: T.hero, fontWeight: 800, fontSize: 'clamp(34px, 4.5vw, 52px)', letterSpacing: '-0.03em', lineHeight: 1, color: T.fg1, marginTop: 12 }}>{money(data[key], data.currency)}</div>
+                </div>
+              ))}
+            </div>
+            <div style={{ marginTop: 18, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+              <span style={{ fontFamily: T.mono, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.fg3, marginRight: 4 }}>Sources</span>
+              {SRC.map(([k, l]) => {
+                const s = (data.sources && data.sources[k]) || {};
+                const ok = s.connected && s.ok !== false;
+                const color = ok ? '#0A7A3B' : (s.connected ? '#B3261E' : '#9A8A5A');
+                const label = ok ? l : (s.connected ? l + ' (error)' : l + ' (not connected)');
+                return (
+                  <span key={k} title={s.error || ''} style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: T.mono, fontSize: 11.5, color: T.fg2, border: `1px solid ${T.line}`, borderRadius: 999, padding: '4px 10px' }}>
+                    <span style={{ width: 7, height: 7, borderRadius: 999, background: color }}/>{label}
+                  </span>
+                );
+              })}
+            </div>
+            <div style={{ marginTop: 14, fontFamily: T.sans, fontSize: 13, color: T.fg3 }}>
+              Combined across Recurring, Fixed, Apps, and Referrals through {data.windows ? data.windows.to : ''}. Open a sub-tab for the detail behind each number.
+            </div>
           </>
         )}
       </Page>
@@ -2995,6 +3068,7 @@
           : route === 'blueprints' ? <Blueprints me={me}/>
           : route === 'projects' ? <SectionStub eyebrow="Services" title="Projects" note="Fixed-scope client projects will live here — tracked from kickoff through delivery. Design coming next."/>
           : route === 'retainers' ? <SectionStub eyebrow="Services" title="Retainers" note="Ongoing retainer engagements and their scope will live here. Design coming next."/>
+          : route === 'revenues' ? (me.isSuper ? <RevenueOverview/> : <Home/>)
           : route === 'rev-fixed' ? (me.isSuper ? <FixedRevenue/> : <Home/>)
           : route === 'rev-recurring' ? (me.isSuper ? <RecurringRevenue/> : <Home/>)
           : route === 'rev-apps' ? (me.isSuper ? <AppsRevenue/> : <Home/>)

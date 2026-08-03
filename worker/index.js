@@ -306,6 +306,9 @@ export default {
     if (url.pathname === '/api/admin/revenue/referrals' && request.method === 'GET') {
       return handleAdminReferralsRevenue(request, env);
     }
+    if (url.pathname === '/api/admin/revenue/summary' && request.method === 'GET') {
+      return handleAdminRevenueSummary(request, env);
+    }
     if (url.pathname === '/api/admin/discoveries' && request.method === 'GET') {
       return handleAdminListDiscoveries(request, env);
     }
@@ -437,7 +440,7 @@ export default {
     // The admin dashboard lives at /admin (client-side routes /admin/
     // discoveries|blueprints|companies and the company profile page
     // /admin/company/<id> included); the root is the portal.
-    if (/^\/admin(\/(discoveries|blueprints|companies|users|projects|retainers|dashboard|revenues\/(fixed|recurring|apps|referrals)|company\/[a-z0-9-]+|blueprint\/[a-z0-9-]+))?\/?$/.test(url.pathname) && (request.method === 'GET' || request.method === 'HEAD')) {
+    if (/^\/admin(\/(discoveries|blueprints|companies|users|projects|retainers|dashboard|revenues(\/(fixed|recurring|apps|referrals))?|company\/[a-z0-9-]+|blueprint\/[a-z0-9-]+))?\/?$/.test(url.pathname) && (request.method === 'GET' || request.method === 'HEAD')) {
       const assetUrl = new URL(url.toString());
       assetUrl.pathname = '/admin/index.html';
       return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
@@ -1729,6 +1732,78 @@ async function handleAdminReferralsRevenue(request, env) {
     truncated: result.truncated,
     dashboardUrl: `https://partners.shopify.com/${cfg.orgId}`,
     rows,
+  });
+}
+
+// GET /api/admin/revenue/summary?today=YYYY-MM-DD
+// Combined revenue totals across all sources for this month / quarter / year.
+// Fetches the full year window once per source, then buckets by date (month
+// and quarter are subsets of the year). Per-source failures degrade to 0.
+async function handleAdminRevenueSummary(request, env) {
+  const url = new URL(request.url);
+  const today = (url.searchParams.get('today') || '').slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(today)) return json(400, { ok: false, error: 'today must be YYYY-MM-DD' });
+  const y = today.slice(0, 4);
+  const mm = parseInt(today.slice(5, 7), 10);
+  const pad = (n) => String(n).padStart(2, '0');
+  const monthFrom = `${y}-${pad(mm)}-01`;
+  const quarterFrom = `${y}-${pad(Math.floor((mm - 1) / 3) * 3 + 1)}-01`;
+  const yearFrom = `${y}-01-01`;
+  const minISO = `${yearFrom}T00:00:00Z`;
+  const maxISO = `${today}T23:59:59Z`;
+
+  const items = []; // { date:'YYYY-MM-DD', amount:Number }
+  const sources = {};
+  let currency = '';
+  const setCur = (c) => { if (!currency && c) currency = c; };
+
+  // Recurring — Shopify paid orders
+  const sToken = await shopifyGetToken(env);
+  const sShop = await shopifyShopDomain(env);
+  if (sShop && sToken) {
+    sources.recurring = { connected: true, ok: true };
+    try {
+      const r = await shopifyFetchPaidOrders(env, sShop, sToken, minISO, maxISO);
+      for (const o of r.orders) { items.push({ date: (o.processed_at || o.created_at || '').slice(0, 10), amount: parseFloat(o.current_total_price || o.total_price || 0) || 0 }); setCur(o.currency); }
+    } catch (e) { sources.recurring = { connected: true, ok: false, error: e.message }; }
+  } else sources.recurring = { connected: false };
+
+  // Fixed — QuickBooks payments + sales receipts
+  const qauth = await qboValidToken(env).catch(() => null);
+  if (qauth) {
+    sources.fixed = { connected: true, ok: true };
+    try {
+      const where = `where TxnDate >= '${yearFrom}' and TxnDate <= '${today}'`;
+      const [pay, sr] = await Promise.all([qboQueryAll(env, qauth, 'Payment', where), qboQueryAll(env, qauth, 'SalesReceipt', where)]);
+      for (const r of [...pay.rows, ...sr.rows]) { items.push({ date: r.TxnDate || '', amount: parseFloat(r.TotalAmt || 0) || 0 }); setCur(r.CurrencyRef && r.CurrencyRef.value); }
+    } catch (e) { sources.fixed = { connected: true, ok: false, error: e.message }; }
+  } else sources.fixed = { connected: false };
+
+  // Apps + Referrals — Shopify Partner API
+  const pcfg = partnerConfig(env);
+  if (pcfg.orgId && pcfg.token) {
+    sources.apps = { connected: true, ok: true };
+    sources.referrals = { connected: true, ok: true };
+    try {
+      const a = await partnerFetchAppTransactions(env, minISO, maxISO);
+      for (const n of a.nodes) { items.push({ date: (n.createdAt || '').slice(0, 10), amount: parseFloat((n.netAmount && n.netAmount.amount) || 0) || 0 }); setCur(n.netAmount && n.netAmount.currencyCode); }
+    } catch (e) { sources.apps = { connected: true, ok: false, error: e.message }; }
+    try {
+      const rf = await partnerFetchReferrals(env, minISO, maxISO);
+      for (const n of rf.nodes) { items.push({ date: (n.createdAt || '').slice(0, 10), amount: parseFloat((n.amount && n.amount.amount) || 0) || 0 }); setCur(n.amount && n.amount.currencyCode); }
+    } catch (e) { sources.referrals = { connected: true, ok: false, error: e.message }; }
+  } else { sources.apps = { connected: false }; sources.referrals = { connected: false }; }
+
+  // YYYY-MM-DD compares lexicographically = chronologically.
+  const sumFrom = (from) => items.reduce((s, it) => (it.date && it.date >= from) ? s + it.amount : s, 0);
+  return json(200, {
+    ok: true,
+    currency,
+    month: sumFrom(monthFrom),
+    quarter: sumFrom(quarterFrom),
+    year: sumFrom(yearFrom),
+    windows: { month: monthFrom, quarter: quarterFrom, year: yearFrom, to: today },
+    sources,
   });
 }
 
