@@ -258,6 +258,10 @@ export default {
       if (!(await adminIsApproved(env, gate.email))) {
         return json(403, { ok: false, error: 'Your account is pending approval from denis@uncap.com.' });
       }
+      // Revenue is Admin-only for now.
+      if (url.pathname.startsWith('/api/admin/revenue/') && !isSuperAdmin(gate.email)) {
+        return json(403, { ok: false, error: 'Revenue is restricted to the Admin.' });
+      }
     }
 
     if (url.pathname === '/api/admin/users' && request.method === 'GET') {
@@ -298,6 +302,9 @@ export default {
     }
     if (url.pathname === '/api/admin/revenue/apps' && request.method === 'GET') {
       return handleAdminAppsRevenue(request, env);
+    }
+    if (url.pathname === '/api/admin/revenue/referrals' && request.method === 'GET') {
+      return handleAdminReferralsRevenue(request, env);
     }
     if (url.pathname === '/api/admin/discoveries' && request.method === 'GET') {
       return handleAdminListDiscoveries(request, env);
@@ -430,7 +437,7 @@ export default {
     // The admin dashboard lives at /admin (client-side routes /admin/
     // discoveries|blueprints|companies and the company profile page
     // /admin/company/<id> included); the root is the portal.
-    if (/^\/admin(\/(discoveries|blueprints|companies|users|projects|retainers|dashboard|revenues\/(fixed|recurring|apps)|company\/[a-z0-9-]+|blueprint\/[a-z0-9-]+))?\/?$/.test(url.pathname) && (request.method === 'GET' || request.method === 'HEAD')) {
+    if (/^\/admin(\/(discoveries|blueprints|companies|users|projects|retainers|dashboard|revenues\/(fixed|recurring|apps|referrals)|company\/[a-z0-9-]+|blueprint\/[a-z0-9-]+))?\/?$/.test(url.pathname) && (request.method === 'GET' || request.method === 'HEAD')) {
       const assetUrl = new URL(url.toString());
       assetUrl.pathname = '/admin/index.html';
       return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
@@ -1640,6 +1647,88 @@ async function handleAdminAppsRevenue(request, env) {
     currency: rows.length ? rows[0].currency : '',
     truncated: result.truncated,
     dashboardUrl: `https://partners.shopify.com/${cfg.orgId}/apps`,
+    rows,
+  });
+}
+
+// Query the Partner API for referral-payout transactions in a window.
+async function partnerFetchReferrals(env, minISO, maxISO, pageCap = 20) {
+  const cfg = partnerConfig(env);
+  const endpoint = `https://partners.shopify.com/${cfg.orgId}/api/${cfg.version}/graphql.json`;
+  const query = `query($first:Int!,$after:String,$min:DateTime!,$max:DateTime!){
+    transactions(first:$first, after:$after, createdAtMin:$min, createdAtMax:$max,
+      types:[REFERRAL_TRANSACTION, REFERRAL_ADJUSTMENT]) {
+      edges { cursor node {
+        __typename
+        ... on ReferralTransaction { id createdAt amount{amount currencyCode} shop{myshopifyDomain} }
+        ... on ReferralAdjustment  { id createdAt amount{amount currencyCode} }
+      } }
+      pageInfo { hasNextPage }
+    }
+  }`;
+  const nodes = [];
+  let after = null;
+  let truncated = false;
+  for (let page = 0; page < pageCap; page++) {
+    const resp = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'X-Shopify-Access-Token': cfg.token, 'content-type': 'application/json', 'accept': 'application/json' },
+      body: JSON.stringify({ query, variables: { first: 100, after, min: minISO, max: maxISO } }),
+    });
+    if (!resp.ok) {
+      const body = await resp.text().catch(() => '');
+      throw new Error(`Partner API ${resp.status}: ${body.slice(0, 180)}`);
+    }
+    const data = await resp.json().catch(() => ({}));
+    if (data.errors && data.errors.length) throw new Error('Partner API: ' + (data.errors[0].message || 'query error'));
+    const conn = data.data && data.data.transactions;
+    const edges = (conn && conn.edges) || [];
+    for (const e of edges) nodes.push(e.node);
+    if (!conn || !conn.pageInfo || !conn.pageInfo.hasNextPage || !edges.length) break;
+    after = edges[edges.length - 1].cursor;
+    if (page === pageCap - 1) truncated = true;
+  }
+  return { nodes, truncated };
+}
+
+// GET /api/admin/revenue/referrals?from&to
+async function handleAdminReferralsRevenue(request, env) {
+  const cfg = partnerConfig(env);
+  if (!cfg.orgId || !cfg.token) {
+    return json(200, { ok: true, connected: false, have: { orgId: !!cfg.orgId, token: !!cfg.token } });
+  }
+
+  const url = new URL(request.url);
+  const from = (url.searchParams.get('from') || '').slice(0, 10);
+  const to = (url.searchParams.get('to') || '').slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to)) {
+    return json(400, { ok: false, error: 'from and to must be YYYY-MM-DD' });
+  }
+
+  let result;
+  try {
+    result = await partnerFetchReferrals(env, `${from}T00:00:00Z`, `${to}T23:59:59Z`);
+  } catch (err) {
+    return json(502, { ok: false, connected: true, error: err.message || 'Partner API request failed' });
+  }
+
+  const TYPE_LABEL = { ReferralTransaction: 'Referral', ReferralAdjustment: 'Adjustment' };
+  const rows = result.nodes.map((n) => ({
+    id: String(n.id || ''),
+    date: n.createdAt || '',
+    shop: (n.shop && n.shop.myshopifyDomain) || '',
+    type: TYPE_LABEL[n.__typename] || (n.__typename || ''),
+    amount: parseFloat((n.amount && n.amount.amount) || 0) || 0,
+    currency: (n.amount && n.amount.currencyCode) || '',
+  })).sort((a, b) => new Date(b.date) - new Date(a.date));
+
+  return json(200, {
+    ok: true, connected: true, from, to,
+    count: rows.length,
+    total: rows.reduce((s, r) => s + r.amount, 0),
+    currency: rows.length ? rows[0].currency : '',
+    truncated: result.truncated,
+    dashboardUrl: `https://partners.shopify.com/${cfg.orgId}`,
     rows,
   });
 }
