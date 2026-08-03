@@ -1078,28 +1078,25 @@
         ) : (
           <>
             <CacheBar data={data} refreshing={refreshing} onRefresh={() => load(true)}/>
-            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-              {BLOCKS.map(([label, key]) => (
-                <div key={key} style={{ ...S.card, flex: '1 1 240px', padding: 'clamp(20px, 3vw, 32px)' }}>
-                  <div style={S.eyebrow}>{label}</div>
-                  <div style={{ fontFamily: T.hero, fontWeight: 800, fontSize: 'clamp(34px, 4.5vw, 52px)', letterSpacing: '-0.03em', lineHeight: 1, color: T.fg1, marginTop: 12 }}>{money(data[key], data.currency)}</div>
+            {[
+              ['Services', 'Projects + Retainers', data.services || {}, false],
+              ['Total', 'All revenues', data.total || { month: data.month, quarter: data.quarter, year: data.year }, true],
+            ].map(([label, sub, vals, strong]) => (
+              <div key={label} style={{ marginBottom: 22 }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginBottom: 10 }}>
+                  <span style={{ fontFamily: T.hero, fontWeight: 800, fontSize: 18, letterSpacing: '-0.01em', color: T.fg1 }}>{label}</span>
+                  <span style={{ fontFamily: T.sans, fontSize: 12, color: T.fg3 }}>{sub}</span>
                 </div>
-              ))}
-            </div>
-
-            <div style={{ ...S.eyebrow, marginTop: 22 }}>Year to date</div>
-            <div style={{ marginTop: 10, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
-              {[
-                ['Services', 'Projects + Retainers', data.services ? data.services.year : 0, false],
-                ['Total', 'All revenues', data.total ? data.total.year : data.year, true],
-              ].map(([label, sub, val, strong]) => (
-                <div key={label} style={{ ...S.card, flex: '1 1 240px', padding: 'clamp(18px, 2.6vw, 28px)', border: strong ? `1.5px solid ${T.fg1}` : `1px solid ${T.line}` }}>
-                  <div style={S.eyebrow}>{label}</div>
-                  <div style={{ fontFamily: T.sans, fontSize: 11.5, color: T.fg3, marginTop: 3 }}>{sub}</div>
-                  <div style={{ fontFamily: T.hero, fontWeight: 800, fontSize: 'clamp(28px, 3.8vw, 44px)', letterSpacing: '-0.03em', lineHeight: 1, color: T.fg1, marginTop: 12 }}>{money(val, data.currency)}</div>
+                <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+                  {BLOCKS.map(([plabel, pkey]) => (
+                    <div key={pkey} style={{ ...S.card, flex: '1 1 200px', padding: 'clamp(18px, 2.6vw, 28px)', border: strong ? `1.5px solid ${T.fg1}` : `1px solid ${T.line}` }}>
+                      <div style={S.eyebrow}>{plabel}</div>
+                      <div style={{ fontFamily: T.hero, fontWeight: 800, fontSize: 'clamp(30px, 4vw, 46px)', letterSpacing: '-0.03em', lineHeight: 1, color: T.fg1, marginTop: 12 }}>{money(vals[pkey], data.currency)}</div>
+                    </div>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
             <div style={{ marginTop: 18, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
               <span style={{ fontFamily: T.mono, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.fg3, marginRight: 4 }}>Sources</span>
               {SRC.map(([k, l]) => {
