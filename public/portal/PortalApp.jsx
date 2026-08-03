@@ -4,6 +4,17 @@
 // Delivery / Growth.
 const { useState, useEffect } = React;
 
+// Local narrow-viewport hook (the portal doesn't load the shared _hooks.jsx).
+function useIsNarrow() {
+  const [narrow, setNarrow] = useState(typeof window !== 'undefined' && window.innerWidth <= 720);
+  useEffect(() => {
+    const on = () => setNarrow(window.innerWidth <= 720);
+    window.addEventListener('resize', on);
+    return () => window.removeEventListener('resize', on);
+  }, []);
+  return narrow;
+}
+
 // Company-folder URLs: every client lives at /<companyId>/<tab>. The
 // worker serves the discovery experience and blueprint proposal directly
 // at their folder paths when they exist; this shell renders everything
@@ -80,7 +91,7 @@ function PortalLogin({ onSignedIn }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 26 }}>
           <img src="/assets/uncap-logo-black.svg" alt="Uncap" style={{ height: 22, display: 'block' }}/>
           <span style={{ width: 1, height: 22, background: '#C9C7C0' }}></span>
-          <span style={{ fontFamily: 'var(--font-mono, "JetBrains Mono", ui-monospace, monospace)', fontSize: 10, letterSpacing: '0.12em', color: '#707070' }}>CLIENT PORTAL</span>
+          <span style={{ fontFamily: 'var(--font-mono, "JetBrains Mono", ui-monospace, monospace)', fontSize: 10, letterSpacing: '0.12em', color: '#707070' }}>PORTAL</span>
         </div>
         <div style={{ background: '#FFFFFF', border: '1px solid #E4E1D8', borderRadius: 8, padding: 28 }}>
           {step === 'email' ? (
@@ -132,27 +143,50 @@ function Portal({ me, onSignOut }) {
   const framed = (tab === 'Discovery' && me.discovery) || (tab === 'Blueprint' && me.blueprint);
 
   const MONO = 'var(--font-mono, "JetBrains Mono", ui-monospace, monospace)';
+  const isMobile = useIsNarrow();
+  const logo = (
+    <div onClick={() => setTab('Company')} style={{ display: 'flex', alignItems: 'center', gap: 10, flex: '0 0 auto', cursor: 'pointer' }}>
+      <img src="/assets/uncap-logo-white.svg" alt="Uncap" style={{ height: 13, display: 'block' }}/>
+      <span style={{ width: 1, height: 14, background: '#4D4D4D' }}></span>
+      <span style={{ fontFamily: MONO, fontSize: 8.5, letterSpacing: '0.12em', color: '#9A9A9A' }}>PORTAL</span>
+    </div>
+  );
+  const tabBtn = (t) => (
+    <button key={t} onClick={() => setTab(t)}
+      style={{ border: 'none', background: tab === t ? '#FFFFFF' : 'transparent', color: tab === t ? '#0A0A0A' : '#D4D2CC', borderRadius: 4, padding: '4px 11px', fontSize: 12, fontWeight: tab === t ? 700 : 500, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, transition: 'background 180ms, color 180ms' }}>{t}</button>
+  );
+  const signOutBtn = (
+    <button onClick={onSignOut} style={{ border: '1px solid #4D4D4D', background: 'transparent', color: '#FFFFFF', borderRadius: 4, padding: '3px 9px', fontSize: 10.5, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>Sign out</button>
+  );
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
       <div style={{ flex: '0 0 auto', background: '#0A0A0A', zIndex: 50 }}>
-        <div style={{ width: '100%', boxSizing: 'border-box', height: 34, display: 'flex', alignItems: 'center', gap: 16, padding: '0 16px' }}>
-          <div onClick={() => setTab('Company')} style={{ display: 'flex', alignItems: 'center', gap: 10, flex: '0 0 auto', cursor: 'pointer' }}>
-            <img src="/assets/uncap-logo-white.svg" alt="Uncap" style={{ height: 13, display: 'block' }}/>
-            <span style={{ width: 1, height: 14, background: '#4D4D4D' }}></span>
-            <span style={{ fontFamily: MONO, fontSize: 8.5, letterSpacing: '0.12em', color: '#9A9A9A' }}>CLIENT PORTAL</span>
+        {isMobile ? (
+          <>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, height: 44, padding: '0 14px' }}>
+              {logo}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
+                <span style={{ fontSize: 11.5, fontWeight: 650, color: '#FFFFFF', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 130 }}>{co.name || ''}</span>
+                {signOutBtn}
+              </div>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 2, padding: '0 10px 8px', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+              {TABS.map(tabBtn)}
+            </div>
+          </>
+        ) : (
+          <div style={{ width: '100%', boxSizing: 'border-box', height: 34, display: 'flex', alignItems: 'center', gap: 16, padding: '0 16px' }}>
+            {logo}
+            <div style={{ flex: '1 1 auto', display: 'flex', alignItems: 'center', gap: 2, overflowX: 'auto' }}>
+              {TABS.map(tabBtn)}
+            </div>
+            <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <span style={{ fontSize: 11.5, fontWeight: 650, color: '#FFFFFF', whiteSpace: 'nowrap' }}>{co.name || ''}</span>
+              <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.04em', color: '#9A9A9A', whiteSpace: 'nowrap' }}>{me.email}</span>
+              {signOutBtn}
+            </div>
           </div>
-          <div style={{ flex: '1 1 auto', display: 'flex', alignItems: 'center', gap: 2, overflowX: 'auto' }}>
-            {TABS.map((t) => (
-              <button key={t} onClick={() => setTab(t)}
-                style={{ border: 'none', background: tab === t ? '#FFFFFF' : 'transparent', color: tab === t ? '#0A0A0A' : '#D4D2CC', borderRadius: 4, padding: '4px 11px', fontSize: 12, fontWeight: tab === t ? 700 : 500, cursor: 'pointer', whiteSpace: 'nowrap', transition: 'background 180ms, color 180ms' }}>{t}</button>
-            ))}
-          </div>
-          <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 10 }}>
-            <span style={{ fontSize: 11.5, fontWeight: 650, color: '#FFFFFF', whiteSpace: 'nowrap' }}>{co.name || ''}</span>
-            <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.04em', color: '#9A9A9A', whiteSpace: 'nowrap' }}>{me.email}</span>
-            <button onClick={onSignOut} style={{ border: '1px solid #4D4D4D', background: 'transparent', color: '#FFFFFF', borderRadius: 4, padding: '3px 9px', fontSize: 10.5, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>Sign out</button>
-          </div>
-        </div>
+        )}
       </div>
 
       {framed ? (

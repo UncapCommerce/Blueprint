@@ -348,15 +348,51 @@
       <a key={id} href={path} onClick={navClick(path)} style={navPillStyle(active === id)}>{l}</a>
     );
     const MONO = 'var(--font-mono, "JetBrains Mono", ui-monospace, monospace)';
+    const isMobile = useIsMobile();
+
+    const brand = (
+      <a href="/admin" onClick={navClick('/admin')} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', flex: '0 0 auto' }}>
+        <img src="/assets/uncap-logo-white.svg" alt="Uncap" style={{ height: 14, width: 'auto', display: 'block' }}/>
+        <span style={{ width: 1, height: 14, background: '#4D4D4D' }}></span>
+        <span style={{ fontFamily: MONO, fontSize: 8.5, letterSpacing: '0.12em', color: '#9A9A9A' }}>OS</span>
+      </a>
+    );
+    const account = (
+      <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 10 }}>
+        {me.picture
+          ? <img src={me.picture} alt="" referrerPolicy="no-referrer" style={{ width: 22, height: 22, borderRadius: 999, border: '1px solid #4D4D4D' }}/>
+          : <span style={{ width: 22, height: 22, borderRadius: 999, background: T.signal, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontFamily: MONO, fontSize: 10, fontWeight: 700, color: '#0A0A0A' }}>{(me.email || '?')[0].toUpperCase()}</span>}
+        {!isMobile && <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.04em', color: '#9A9A9A', whiteSpace: 'nowrap' }}>{me.email}</span>}
+        <button type="button" onClick={onLogout} style={{ border: '1px solid #4D4D4D', background: 'transparent', color: '#FFFFFF', borderRadius: 4, padding: '3px 9px', fontSize: 10.5, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>Sign out</button>
+      </div>
+    );
+
+    if (isMobile) {
+      // Touch layout: dropdowns don't work well on touch, so flatten every
+      // section into one horizontally scrollable row on a second line.
+      const flat = [
+        { id: 'home', l: 'Activities', path: '/admin' },
+        ...SALES, ...SERVICES,
+        ...(me.isSuper ? REVENUES : []),
+        { id: 'dashboard', l: 'Dashboard', path: '/admin/dashboard' },
+        ...(me.isSuper ? [{ id: 'users', l: 'Users', path: '/admin/users' }] : []),
+      ];
+      return (
+        <header style={{ position: 'sticky', top: 0, zIndex: 50, background: '#0A0A0A' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, height: 46, padding: '0 14px' }}>
+            {brand}{account}
+          </div>
+          <nav style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '0 10px 8px', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+            {flat.map((it) => pill(it.id, it.l, it.path))}
+          </nav>
+        </header>
+      );
+    }
+
     return (
       <header style={{ position: 'sticky', top: 0, zIndex: 50, background: '#0A0A0A' }}>
         <div style={{ width: '100%', boxSizing: 'border-box', height: 40, display: 'flex', alignItems: 'center', gap: 16, padding: '0 16px' }}>
-          <a href="/admin" onClick={navClick('/admin')} style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none', flex: '0 0 auto' }}>
-            <img src="/assets/uncap-logo-white.svg" alt="Uncap" style={{ height: 14, width: 'auto', display: 'block' }}/>
-            <span style={{ width: 1, height: 14, background: '#4D4D4D' }}></span>
-            <span style={{ fontFamily: MONO, fontSize: 8.5, letterSpacing: '0.12em', color: '#9A9A9A' }}>ADMIN</span>
-          </a>
-
+          {brand}
           <nav style={{ flex: '1 1 auto', display: 'flex', alignItems: 'center', gap: 4, overflow: 'visible' }}>
             {pill('home', 'Activities', '/admin')}
             <NavMenu label="Sales" items={SALES} active={active}/>
@@ -365,14 +401,7 @@
             {pill('dashboard', 'Dashboard', '/admin/dashboard')}
             {me.isSuper ? pill('users', 'Users', '/admin/users') : null}
           </nav>
-
-          <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 10 }}>
-            {me.picture
-              ? <img src={me.picture} alt="" referrerPolicy="no-referrer" style={{ width: 22, height: 22, borderRadius: 999, border: '1px solid #4D4D4D' }}/>
-              : <span style={{ width: 22, height: 22, borderRadius: 999, background: T.signal, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontFamily: MONO, fontSize: 10, fontWeight: 700, color: '#0A0A0A' }}>{(me.email || '?')[0].toUpperCase()}</span>}
-            <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.04em', color: '#9A9A9A', whiteSpace: 'nowrap' }}>{me.email}</span>
-            <button type="button" onClick={onLogout} style={{ border: '1px solid #4D4D4D', background: 'transparent', color: '#FFFFFF', borderRadius: 4, padding: '3px 9px', fontSize: 10.5, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>Sign out</button>
-          </div>
+          {account}
         </div>
       </header>
     );
