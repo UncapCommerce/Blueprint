@@ -309,9 +309,6 @@ export default {
     if (url.pathname === '/api/admin/revenue/summary' && request.method === 'GET') {
       return handleAdminRevenueSummary(request, env);
     }
-    if (url.pathname === '/api/admin/retainers' && request.method === 'GET') {
-      return handleAdminRetainers(request, env);
-    }
     if (url.pathname === '/api/admin/discoveries' && request.method === 'GET') {
       return handleAdminListDiscoveries(request, env);
     }
@@ -1158,18 +1155,21 @@ async function shopifyFetchPaidOrders(env, shop, token, fromISO, toISO, pageCap 
 }
 
 // GET /api/admin/revenue/recurring?from=YYYY-MM-DD&to=YYYY-MM-DD
+// The "Retainers" revenue stream: Shopify paid orders + Stripe payments,
+// blended into one list. Either source alone is enough to be connected.
 async function handleAdminRecurringRevenue(request, env) {
   const cfg = shopifyConfig(env);
   const token = await shopifyGetToken(env);
   const shop = await shopifyShopDomain(env);
-  if (!shop || !token) {
-    // canConnect: OAuth is fully configured, just not authorized yet.
-    // `have` reports which vars the worker can see (presence only, no values)
-    // so a missing/misnamed var is obvious in the UI.
+  const stripe = stripeConfig(env);
+  const shopifyOn = !!(shop && token);
+  const stripeOn = !!stripe.key;
+
+  if (!shopifyOn && !stripeOn) {
     return json(200, {
       ok: true, connected: false,
       canConnect: !!(cfg.domain && cfg.clientId && cfg.clientSecret),
-      have: { domain: !!cfg.domain, clientId: !!cfg.clientId, clientSecret: !!cfg.clientSecret, handle: !!cfg.handle },
+      have: { domain: !!cfg.domain, clientId: !!cfg.clientId, clientSecret: !!cfg.clientSecret, handle: !!cfg.handle, stripe: false },
     });
   }
 
@@ -1180,36 +1180,67 @@ async function handleAdminRecurringRevenue(request, env) {
     return json(400, { ok: false, error: 'from and to must be YYYY-MM-DD' });
   }
 
-  let result;
-  try {
-    result = await shopifyFetchPaidOrders(env, shop, token, `${from}T00:00:00Z`, `${to}T23:59:59Z`);
-  } catch (err) {
-    return json(502, { ok: false, connected: true, error: err.message || 'Shopify request failed' });
+  const rows = [];
+  const errors = [];
+  let truncated = false;
+
+  if (shopifyOn) {
+    try {
+      const r = await shopifyFetchPaidOrders(env, shop, token, `${from}T00:00:00Z`, `${to}T23:59:59Z`);
+      truncated = truncated || r.truncated;
+      for (const o of r.orders) {
+        const c = o.customer || {};
+        const nm = [c.first_name, c.last_name].filter(Boolean).join(' ').trim();
+        rows.push({
+          id: 'shopify:' + o.id, source: 'Shopify',
+          name: o.name || ('#' + o.id),
+          date: o.processed_at || o.created_at || '',
+          amount: parseFloat(o.current_total_price || o.total_price || '0') || 0,
+          currency: (o.currency || '').toUpperCase(),
+          status: o.financial_status || '',
+          customer: nm || c.email || '',
+          adminUrl: cfg.handle ? `https://admin.shopify.com/store/${cfg.handle}/orders/${o.id}` : `https://${shop}/admin/orders/${o.id}`,
+        });
+      }
+    } catch (err) { errors.push('Shopify: ' + (err.message || err)); }
   }
 
-  const rows = result.orders.map((o) => {
-    const cust = o.customer || {};
-    const name = [cust.first_name, cust.last_name].filter(Boolean).join(' ').trim();
-    return {
-      id: String(o.id),
-      name: o.name || ('#' + o.id),
-      date: o.processed_at || o.created_at || '',
-      amount: parseFloat(o.current_total_price || o.total_price || '0') || 0,
-      currency: o.currency || '',
-      status: o.financial_status || '',
-      customer: name || cust.email || '',
-      adminUrl: cfg.handle
-        ? `https://admin.shopify.com/store/${cfg.handle}/orders/${o.id}`
-        : `https://${shop}/admin/orders/${o.id}`,
-    };
-  }).sort((a, b) => new Date(b.date) - new Date(a.date));
+  if (stripeOn) {
+    try {
+      const fromUnix = Math.floor(Date.parse(`${from}T00:00:00Z`) / 1000);
+      const toUnix = Math.floor(Date.parse(`${to}T23:59:59Z`) / 1000);
+      const r = await stripeFetchCharges(env, fromUnix, toUnix);
+      truncated = truncated || r.truncated;
+      for (const ch of r.charges) {
+        if (ch.status !== 'succeeded' || !ch.paid) continue;
+        const bd = ch.billing_details || {};
+        rows.push({
+          id: 'stripe:' + ch.id, source: 'Stripe',
+          name: ch.description || ch.id,
+          date: ch.created ? new Date(ch.created * 1000).toISOString() : '',
+          amount: ((ch.amount_captured != null ? ch.amount_captured : ch.amount) || 0) / 100,
+          currency: (ch.currency || '').toUpperCase(),
+          status: 'succeeded',
+          customer: bd.name || bd.email || (typeof ch.customer === 'string' ? ch.customer : '') || '',
+          adminUrl: `${stripe.dashBase}/payments/${ch.payment_intent || ch.id}`,
+        });
+      }
+    } catch (err) { errors.push('Stripe: ' + (err.message || err)); }
+  }
 
+  // Hard-fail only if every attempted source failed.
+  if (!rows.length && errors.length >= (Number(shopifyOn) + Number(stripeOn))) {
+    return json(502, { ok: false, connected: true, error: errors.join(' | ') });
+  }
+
+  rows.sort((a, b) => new Date(b.date) - new Date(a.date));
   return json(200, {
     ok: true, connected: true, from, to,
     count: rows.length,
     total: rows.reduce((s, r) => s + r.amount, 0),
     currency: rows.length ? rows[0].currency : '',
-    truncated: result.truncated,
+    truncated,
+    warning: errors.length ? errors.join(' | ') : '',
     orders: rows,
   });
 }
@@ -1760,16 +1791,26 @@ async function handleAdminRevenueSummary(request, env) {
   let currency = '';
   const setCur = (c) => { if (!currency && c) currency = c; };
 
-  // Recurring — Shopify paid orders
+  // Retainers — Shopify paid orders + Stripe payments (blended)
   const sToken = await shopifyGetToken(env);
   const sShop = await shopifyShopDomain(env);
+  const stripe = stripeConfig(env);
+  const recurringOn = !!(sShop && sToken) || !!stripe.key;
+  sources.recurring = recurringOn ? { connected: true, ok: true } : { connected: false };
   if (sShop && sToken) {
-    sources.recurring = { connected: true, ok: true };
     try {
       const r = await shopifyFetchPaidOrders(env, sShop, sToken, minISO, maxISO);
       for (const o of r.orders) { items.push({ date: (o.processed_at || o.created_at || '').slice(0, 10), amount: parseFloat(o.current_total_price || o.total_price || 0) || 0 }); setCur(o.currency); }
-    } catch (e) { sources.recurring = { connected: true, ok: false, error: e.message }; }
-  } else sources.recurring = { connected: false };
+    } catch (e) { sources.recurring = { connected: true, ok: false, error: 'Shopify: ' + e.message }; }
+  }
+  if (stripe.key) {
+    try {
+      const fromUnix = Math.floor(Date.parse(minISO) / 1000);
+      const toUnix = Math.floor(Date.parse(maxISO) / 1000);
+      const r = await stripeFetchCharges(env, fromUnix, toUnix);
+      for (const ch of r.charges) { if (ch.status === 'succeeded' && ch.paid) { items.push({ date: ch.created ? new Date(ch.created * 1000).toISOString().slice(0, 10) : '', amount: ((ch.amount_captured != null ? ch.amount_captured : ch.amount) || 0) / 100 }); setCur((ch.currency || '').toUpperCase()); } }
+    } catch (e) { sources.recurring = { connected: true, ok: false, error: (sources.recurring.error ? sources.recurring.error + ' | ' : '') + 'Stripe: ' + e.message }; }
+  }
 
   // Fixed — QuickBooks payments + sales receipts
   const qauth = await qboValidToken(env).catch(() => null);
@@ -1847,55 +1888,6 @@ async function stripeFetchCharges(env, fromUnix, toUnix, pageCap = 20) {
     if (page === pageCap - 1) truncated = true;
   }
   return { charges: out, truncated };
-}
-
-// GET /api/admin/retainers?from&to
-async function handleAdminRetainers(request, env) {
-  const cfg = stripeConfig(env);
-  if (!cfg.key) return json(200, { ok: true, connected: false, have: { secretKey: false } });
-
-  const url = new URL(request.url);
-  const from = (url.searchParams.get('from') || '').slice(0, 10);
-  const to = (url.searchParams.get('to') || '').slice(0, 10);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(from) || !/^\d{4}-\d{2}-\d{2}$/.test(to)) {
-    return json(400, { ok: false, error: 'from and to must be YYYY-MM-DD' });
-  }
-  const fromUnix = Math.floor(Date.parse(`${from}T00:00:00Z`) / 1000);
-  const toUnix = Math.floor(Date.parse(`${to}T23:59:59Z`) / 1000);
-
-  let result;
-  try {
-    result = await stripeFetchCharges(env, fromUnix, toUnix);
-  } catch (err) {
-    return json(502, { ok: false, connected: true, error: err.message || 'Stripe request failed' });
-  }
-
-  const rows = result.charges
-    .filter((c) => c.status === 'succeeded' && c.paid)
-    .map((c) => {
-      const bd = c.billing_details || {};
-      const amt = ((c.amount_captured != null ? c.amount_captured : c.amount) || 0) / 100;
-      return {
-        id: c.id,
-        date: c.created ? new Date(c.created * 1000).toISOString() : '',
-        amount: amt,
-        currency: (c.currency || '').toUpperCase(),
-        customer: bd.name || bd.email || (typeof c.customer === 'string' ? c.customer : '') || '',
-        description: c.description || '',
-        link: `${cfg.dashBase}/payments/${c.payment_intent || c.id}`,
-      };
-    })
-    .sort((a, b) => new Date(b.date) - new Date(a.date));
-
-  return json(200, {
-    ok: true, connected: true, from, to, test: cfg.test,
-    count: rows.length,
-    total: rows.reduce((s, r) => s + r.amount, 0),
-    currency: rows.length ? rows[0].currency : '',
-    truncated: result.truncated,
-    dashboardUrl: `${cfg.dashBase}/payments`,
-    rows,
-  });
 }
 
 // Google OAuth "Web application" Client ID. This is a public identifier

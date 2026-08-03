@@ -344,7 +344,7 @@
       revenues: [
         { id: 'revenues',      l: 'Overview',   path: '/admin/revenues' },
         { id: 'rev-fixed',     l: 'Projects',   path: '/admin/revenues/fixed' },
-        { id: 'rev-recurring', l: 'Recurring',  path: '/admin/revenues/recurring' },
+        { id: 'rev-recurring', l: 'Retainers',  path: '/admin/revenues/recurring' },
         { id: 'rev-apps',      l: 'Apps',        path: '/admin/revenues/apps' },
         { id: 'rev-referrals', l: 'Referrals',  path: '/admin/revenues/referrals' },
       ],
@@ -499,7 +499,7 @@
 
     return (
       <Page>
-        <PageHead eyebrow="Revenues" title="Recurring"/>
+        <PageHead eyebrow="Revenues" title="Retainers"/>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 18 }}>
           {PRESETS.map(([id, l]) => (
             <button key={id} type="button" onClick={() => pickPreset(id)}
@@ -518,18 +518,18 @@
           <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>Loading…</div>
         ) : data.connected === false ? (
           <div style={{ ...S.card, padding: 32 }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, ...S.eyebrow, marginBottom: 12 }}><span style={{ width: 6, height: 6, borderRadius: 999, background: '#E8C36A' }}/>Shopify not connected</div>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, ...S.eyebrow, marginBottom: 12 }}><span style={{ width: 6, height: 6, borderRadius: 999, background: '#E8C36A' }}/>No revenue source connected</div>
             {data.canConnect ? (
               <>
                 <div style={{ fontFamily: T.sans, fontSize: 14.5, lineHeight: 1.6, color: T.fg2, maxWidth: 640, marginBottom: 18 }}>
-                  Shopify is configured. Click Connect to authorize read-only access to your orders once, then Recurring revenue lists every paid order with a link to Shopify and totals for the selected range.
+                  Shopify is configured. Click Connect to authorize read-only access to your orders once. Retainers blends Shopify paid orders with Stripe payments (add <b>STRIPE_SECRET_KEY</b> in Cloudflare to include Stripe).
                 </div>
                 <a href="/api/shopify/install" style={{ ...S.btn, textDecoration: 'none', display: 'inline-block' }}>Connect Shopify</a>
               </>
             ) : (
               <>
                 <div style={{ fontFamily: T.sans, fontSize: 14.5, lineHeight: 1.6, color: T.fg2, maxWidth: 640 }}>
-                  Recurring revenue reads paid orders from Shopify. Add these as Cloudflare vars/secrets, then reload. A <b>Connect Shopify</b> button appears here once the first three are set.
+                  Retainers blends Shopify paid orders with Stripe payments. Connect Shopify (set the vars below, then a <b>Connect Shopify</b> button appears) and/or add <b>STRIPE_SECRET_KEY</b> in Cloudflare for Stripe. Then reload.
                 </div>
                 {data.have && (
                   <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -555,7 +555,7 @@
           <>
             <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 16 }}>
               {statChip('Total collected', money(data.total, data.currency))}
-              {statChip('Orders', data.count)}
+              {statChip('Payments', data.count)}
               <div style={{ ...S.card, padding: '16px 20px', minWidth: 170 }}>
                 <div style={S.eyebrow}>Range</div>
                 <div style={{ fontFamily: T.mono, fontSize: 13, color: T.fg2, marginTop: 12 }}>{data.from} → {data.to}</div>
@@ -563,26 +563,31 @@
             </div>
             {data.truncated && (
               <div style={{ marginBottom: 12, fontFamily: T.mono, fontSize: 11.5, color: '#6A4E00', background: '#FDF6E3', border: '1px solid #E8C36A', borderRadius: 6, padding: '8px 12px' }}>
-                Showing the first batch of orders for this range; narrow the dates for a complete total.
+                Showing the first batch for this range; narrow the dates for a complete total.
+              </div>
+            )}
+            {data.warning && (
+              <div style={{ marginBottom: 12, fontFamily: T.mono, fontSize: 11.5, color: '#8A1C1C', background: '#FDE8E8', border: '1px solid #F0A9A9', borderRadius: 6, padding: '8px 12px', wordBreak: 'break-word' }}>
+                Partial data: {data.warning}
               </div>
             )}
             {data.orders.length === 0 ? (
-              <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>No paid orders in this range.</div>
+              <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>No payments in this range.</div>
             ) : (
               <div style={{ ...S.card, overflow: 'hidden' }}>
                 <div style={{ overflowX: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead><tr>
-                      <th style={S.th}>Date</th><th style={S.th}>Order</th><th style={S.th}>Customer</th><th style={{ ...S.th, textAlign: 'right' }}>Amount</th><th style={S.th}>Status</th><th style={{ ...S.th, textAlign: 'right' }}>Shopify</th>
+                      <th style={S.th}>Date</th><th style={S.th}>Source</th><th style={S.th}>Reference</th><th style={S.th}>Customer</th><th style={{ ...S.th, textAlign: 'right' }}>Amount</th><th style={{ ...S.th, textAlign: 'right' }}>Open</th>
                     </tr></thead>
                     <tbody>
                       {data.orders.map((o) => (
                         <tr key={o.id}>
                           <td style={{ ...S.td, whiteSpace: 'nowrap', fontFamily: T.mono, fontSize: 12.5 }}>{fmtDate(o.date)}</td>
-                          <td style={{ ...S.td, fontWeight: 700 }}>{o.name}</td>
+                          <td style={S.td}><span style={{ fontFamily: T.mono, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', background: o.source === 'Stripe' ? '#EEE9FF' : '#DFFCE6', color: o.source === 'Stripe' ? '#4B2CC4' : '#064E2E', borderRadius: 999, padding: '3px 9px', whiteSpace: 'nowrap' }}>{o.source}</span></td>
+                          <td style={{ ...S.td, fontWeight: 700, maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.name}</td>
                           <td style={S.td}>{o.customer || '—'}</td>
                           <td style={{ ...S.td, textAlign: 'right', fontFamily: T.mono, whiteSpace: 'nowrap' }}>{money(o.amount, o.currency)}</td>
-                          <td style={S.td}><span style={{ fontFamily: T.mono, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', background: '#DFFCE6', color: '#064E2E', borderRadius: 999, padding: '3px 9px', whiteSpace: 'nowrap' }}>{o.status}</span></td>
                           <td style={{ ...S.td, textAlign: 'right', whiteSpace: 'nowrap' }}><a href={o.adminUrl} target="_blank" rel="noreferrer" style={{ ...S.btnGhost, textDecoration: 'none', padding: '5px 10px', fontSize: 12 }}>Open ↗</a></td>
                         </tr>
                       ))}
@@ -1015,7 +1020,7 @@
     }, []);
     const money = (n, cur) => { try { return new Intl.NumberFormat(undefined, { style: 'currency', currency: cur || 'USD', maximumFractionDigits: 0 }).format(n || 0); } catch (_) { return '$' + Math.round(n || 0); } };
     const BLOCKS = [['This month', 'month'], ['This quarter', 'quarter'], ['This year', 'year']];
-    const SRC = [['recurring', 'Recurring'], ['fixed', 'Projects'], ['apps', 'Apps'], ['referrals', 'Referrals']];
+    const SRC = [['recurring', 'Retainers'], ['fixed', 'Projects'], ['apps', 'Apps'], ['referrals', 'Referrals']];
 
     return (
       <Page>
@@ -1061,128 +1066,6 @@
   }
 
   // ── Services > Retainers (Stripe payments) ───────────────────────────
-  function Retainers() {
-    const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    const presetRange = (p) => {
-      const now = new Date(), y = now.getFullYear(), m = now.getMonth();
-      let from, to = now;
-      if (p === 'day') { from = new Date(y, m, now.getDate()); to = new Date(y, m, now.getDate()); }
-      else if (p === 'month') { from = new Date(y, m, 1); }
-      else if (p === 'quarter') { from = new Date(y, Math.floor(m / 3) * 3, 1); }
-      else if (p === 'year') { from = new Date(y, 0, 1); to = new Date(y, 11, 31); }
-      else { from = new Date(y, 0, 1); } // ytd (default)
-      return { from: ymd(from), to: ymd(to) };
-    };
-    const PRESETS = [['day', 'Day'], ['month', 'Month'], ['quarter', 'Quarter'], ['year', 'Year'], ['ytd', 'YTD'], ['custom', 'Custom']];
-
-    const [preset, setPreset] = useState('ytd');
-    const [range, setRange] = useState(() => presetRange('ytd'));
-    const [data, setData] = useState(null);
-    const [error, setError] = useState('');
-
-    const pickPreset = (p) => { setPreset(p); if (p !== 'custom') setRange(presetRange(p)); };
-    const setCustom = (k, v) => { if (v) setRange((r) => ({ ...r, [k]: v })); };
-
-    useEffect(() => {
-      let dead = false; setData(null); setError('');
-      api(`/api/admin/retainers?from=${encodeURIComponent(range.from)}&to=${encodeURIComponent(range.to)}`)
-        .then((d) => { if (!dead) setData(d); })
-        .catch((e) => { if (!dead) { setError(e.message); setData({}); } });
-      return () => { dead = true; };
-    }, [range.from, range.to]);
-
-    const money = (n, cur) => { try { return new Intl.NumberFormat(undefined, { style: 'currency', currency: cur || 'USD' }).format(n || 0); } catch (_) { return '$' + (n || 0).toFixed(2); } };
-    const fmtDate = (s) => { if (!s) return ''; const d = new Date(s); return isNaN(d.getTime()) ? s.slice(0, 10) : d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }); };
-
-    return (
-      <Page>
-        <PageHead eyebrow="Services" title="Retainers" action={data && data.dashboardUrl ? (
-          <a href={data.dashboardUrl} target="_blank" rel="noreferrer" style={{ ...S.btnGhost, textDecoration: 'none' }}>Stripe ↗</a>
-        ) : null}/>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', marginBottom: 18 }}>
-          {PRESETS.map(([id, l]) => (
-            <button key={id} type="button" onClick={() => pickPreset(id)}
-              style={{ ...(preset === id ? S.btn : S.btnGhost), padding: '7px 13px', fontSize: 12.5 }}>{l}</button>
-          ))}
-          {preset === 'custom' && (
-            <span style={{ display: 'inline-flex', gap: 8, alignItems: 'center' }}>
-              <input type="date" value={range.from} onChange={(e) => setCustom('from', e.target.value)} style={{ ...S.input, width: 'auto', padding: '7px 10px', fontSize: 13 }}/>
-              <span style={{ color: T.fg3, fontFamily: T.mono, fontSize: 12 }}>to</span>
-              <input type="date" value={range.to} onChange={(e) => setCustom('to', e.target.value)} style={{ ...S.input, width: 'auto', padding: '7px 10px', fontSize: 13 }}/>
-            </span>
-          )}
-        </div>
-
-        {data === null ? (
-          <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>Loading…</div>
-        ) : data.connected === false ? (
-          <div style={{ ...S.card, padding: 32 }}>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, ...S.eyebrow, marginBottom: 12 }}><span style={{ width: 6, height: 6, borderRadius: 999, background: '#E8C36A' }}/>Stripe not connected</div>
-            <div style={{ fontFamily: T.sans, fontSize: 14.5, lineHeight: 1.6, color: T.fg2, maxWidth: 640 }}>
-              Retainers lists payments collected in Stripe. Add your Stripe secret key as a Cloudflare secret named <b>STRIPE_SECRET_KEY</b> (starts with <b>sk_live_</b>), then reload.
-            </div>
-          </div>
-        ) : (error || data.ok === false) ? (
-          <div style={{ ...S.card, padding: 28 }}>
-            <div style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 15, color: T.fg1, marginBottom: 6 }}>Couldn&rsquo;t reach Stripe</div>
-            <div style={{ fontFamily: T.mono, fontSize: 12, color: '#B3261E', wordBreak: 'break-word' }}>{error || data.error}</div>
-          </div>
-        ) : (
-          <>
-            {data.test && (
-              <div style={{ marginBottom: 12, fontFamily: T.mono, fontSize: 11.5, color: '#6A4E00', background: '#FDF6E3', border: '1px solid #E8C36A', borderRadius: 6, padding: '8px 12px' }}>
-                Test-mode key — showing Stripe test data. Use an sk_live_ key for real payments.
-              </div>
-            )}
-            <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap', marginBottom: 16 }}>
-              <div style={{ ...S.card, padding: '16px 20px', minWidth: 180 }}>
-                <div style={S.eyebrow}>Collected</div>
-                <div style={{ fontFamily: T.hero, fontWeight: 800, fontSize: 30, letterSpacing: '-0.02em', color: T.fg1, marginTop: 6 }}>{money(data.total, data.currency)}</div>
-              </div>
-              <div style={{ ...S.card, padding: '16px 20px', minWidth: 120 }}>
-                <div style={S.eyebrow}>Payments</div>
-                <div style={{ fontFamily: T.hero, fontWeight: 800, fontSize: 30, letterSpacing: '-0.02em', color: T.fg1, marginTop: 6 }}>{data.count}</div>
-              </div>
-              <div style={{ ...S.card, padding: '16px 20px', minWidth: 170 }}>
-                <div style={S.eyebrow}>Range</div>
-                <div style={{ fontFamily: T.mono, fontSize: 13, color: T.fg2, marginTop: 12 }}>{data.from} → {data.to}</div>
-              </div>
-            </div>
-            {data.truncated && (
-              <div style={{ marginBottom: 12, fontFamily: T.mono, fontSize: 11.5, color: '#6A4E00', background: '#FDF6E3', border: '1px solid #E8C36A', borderRadius: 6, padding: '8px 12px' }}>
-                Showing the first batch for this range; narrow the dates for a complete total.
-              </div>
-            )}
-            {data.rows.length === 0 ? (
-              <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>No payments in this range.</div>
-            ) : (
-              <div style={{ ...S.card, overflow: 'hidden' }}>
-                <div style={{ overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse' }}>
-                    <thead><tr>
-                      <th style={S.th}>Date</th><th style={S.th}>Customer</th><th style={S.th}>Description</th><th style={{ ...S.th, textAlign: 'right' }}>Amount</th><th style={{ ...S.th, textAlign: 'right' }}>Stripe</th>
-                    </tr></thead>
-                    <tbody>
-                      {data.rows.map((r) => (
-                        <tr key={r.id}>
-                          <td style={{ ...S.td, whiteSpace: 'nowrap', fontFamily: T.mono, fontSize: 12.5 }}>{fmtDate(r.date)}</td>
-                          <td style={{ ...S.td, fontWeight: 700 }}>{r.customer || '—'}</td>
-                          <td style={S.td}>{r.description || '—'}</td>
-                          <td style={{ ...S.td, textAlign: 'right', fontFamily: T.mono, whiteSpace: 'nowrap' }}>{money(r.amount, r.currency)}</td>
-                          <td style={{ ...S.td, textAlign: 'right', whiteSpace: 'nowrap' }}><a href={r.link} target="_blank" rel="noreferrer" style={{ ...S.btnGhost, textDecoration: 'none', padding: '5px 10px', fontSize: 12 }}>Open ↗</a></td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </Page>
-    );
-  }
-
   // ── modal chrome ─────────────────────────────────────────────────────
   function Modal({ title, sub, onClose, children, width }) {
     const isMobile = useIsMobile();
@@ -3190,7 +3073,7 @@
           : route === 'discoveries' ? <Discoveries me={me}/>
           : route === 'blueprints' ? <Blueprints me={me}/>
           : route === 'projects' ? <SectionStub eyebrow="Services" title="Projects" note="Fixed-scope client projects will live here — tracked from kickoff through delivery. Design coming next."/>
-          : route === 'retainers' ? <Retainers/>
+          : route === 'retainers' ? <SectionStub eyebrow="Services" title="Retainers" note="Ongoing retainer engagements and their scope will live here. Retainer payments are tracked under Revenues → Retainers."/>
           : route === 'revenues' ? (me.isSuper ? <RevenueOverview/> : <Home/>)
           : route === 'rev-fixed' ? (me.isSuper ? <FixedRevenue/> : <Home/>)
           : route === 'rev-recurring' ? (me.isSuper ? <RecurringRevenue/> : <Home/>)
