@@ -1657,11 +1657,10 @@ async function partnerFetchReferrals(env, minISO, maxISO, pageCap = 20) {
   const endpoint = `https://partners.shopify.com/${cfg.orgId}/api/${cfg.version}/graphql.json`;
   const query = `query($first:Int!,$after:String,$min:DateTime!,$max:DateTime!){
     transactions(first:$first, after:$after, createdAtMin:$min, createdAtMax:$max,
-      types:[REFERRAL_TRANSACTION, REFERRAL_ADJUSTMENT]) {
+      types:[REFERRAL]) {
       edges { cursor node {
         __typename
         ... on ReferralTransaction { id createdAt amount{amount currencyCode} shop{myshopifyDomain} }
-        ... on ReferralAdjustment  { id createdAt amount{amount currencyCode} }
       } }
       pageInfo { hasNextPage }
     }
