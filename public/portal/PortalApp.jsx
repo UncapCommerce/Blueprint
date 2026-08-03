@@ -91,12 +91,12 @@ function PortalLogin({ onSignedIn }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 26 }}>
           <img src="/assets/uncap-logo-black.svg" alt="Uncap" style={{ height: 22, display: 'block' }}/>
           <span style={{ width: 1, height: 22, background: '#C9C7C0' }}></span>
-          <span style={{ fontFamily: 'var(--font-mono, "JetBrains Mono", ui-monospace, monospace)', fontSize: 10, letterSpacing: '0.12em', color: '#707070' }}>PORTAL</span>
+          <span style={{ fontFamily: 'var(--font-mono, "JetBrains Mono", ui-monospace, monospace)', fontSize: 10, letterSpacing: '0.12em', color: '#707070' }}>HUB</span>
         </div>
         <div style={{ background: '#FFFFFF', border: '1px solid #E4E1D8', borderRadius: 8, padding: 28 }}>
           {step === 'email' ? (
             <>
-              <div style={{ fontFamily: 'var(--font-display, "Inter Display", Inter, sans-serif)', fontSize: 22, fontWeight: 750, letterSpacing: '-0.02em' }}>Sign in to your portal.</div>
+              <div style={{ fontFamily: 'var(--font-display, "Inter Display", Inter, sans-serif)', fontSize: 22, fontWeight: 750, letterSpacing: '-0.02em' }}>Sign in to your Hub.</div>
               <div style={{ fontSize: 14, color: '#4D4D4D', lineHeight: 1.55, marginTop: 8 }}>Enter your work email and we&#39;ll send you a six-digit code. No password needed.</div>
               <div style={{ marginTop: 18 }}>
                 <input style={input} type="email" placeholder="you@company.com" value={email} autoFocus
@@ -108,7 +108,7 @@ function PortalLogin({ onSignedIn }) {
           ) : (
             <>
               <div style={{ fontFamily: 'var(--font-display, "Inter Display", Inter, sans-serif)', fontSize: 22, fontWeight: 750, letterSpacing: '-0.02em' }}>Check your inbox.</div>
-              <div style={{ fontSize: 14, color: '#4D4D4D', lineHeight: 1.55, marginTop: 8 }}>If <b>{email.trim()}</b> has portal access, a six-digit code is on its way. It expires in 10 minutes.</div>
+              <div style={{ fontSize: 14, color: '#4D4D4D', lineHeight: 1.55, marginTop: 8 }}>If <b>{email.trim()}</b> has Hub access, a six-digit code is on its way. It expires in 10 minutes.</div>
               <div style={{ marginTop: 18 }}>
                 <input style={{ ...input, fontFamily: 'var(--font-mono, "JetBrains Mono", ui-monospace, monospace)', letterSpacing: '0.35em', textAlign: 'center' }} inputMode="numeric" maxLength={6} placeholder="000000" value={code} autoFocus
                   onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
@@ -148,7 +148,7 @@ function Portal({ me, onSignOut }) {
     <div onClick={() => setTab('Company')} style={{ display: 'flex', alignItems: 'center', gap: 10, flex: '0 0 auto', cursor: 'pointer' }}>
       <img src="/assets/uncap-logo-white.svg" alt="Uncap" style={{ height: 13, display: 'block' }}/>
       <span style={{ width: 1, height: 14, background: '#4D4D4D' }}></span>
-      <span style={{ fontFamily: MONO, fontSize: 8.5, letterSpacing: '0.12em', color: '#9A9A9A' }}>PORTAL</span>
+      <span style={{ fontFamily: MONO, fontSize: 8.5, letterSpacing: '0.12em', color: '#9A9A9A' }}>HUB</span>
     </div>
   );
   const tabBtn = (t) => (

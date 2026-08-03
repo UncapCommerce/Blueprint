@@ -1127,10 +1127,10 @@
   function PortalCompanyPicker({ company, onPick, onClear }) {
     const [list, setList] = useState(null);
     useEffect(() => { api('/api/admin/companies').then((d) => setList(d.companies || [])).catch(() => setList([])); }, []);
-    if (company) return <SelectedCard title={company.name} sub={[company.storeUrl, company.address].filter(Boolean).join(' · ') || 'Portal company'} onClear={onClear}/>;
+    if (company) return <SelectedCard title={company.name} sub={[company.storeUrl, company.address].filter(Boolean).join(' · ') || 'Hub company'} onClear={onClear}/>;
     return (
       <div>
-        <label style={S.label}>Company · from your portal companies</label>
+        <label style={S.label}>Company · from your Hub companies</label>
         {list === null ? (
           <div style={{ fontFamily: T.sans, fontSize: 13, color: T.fg3, padding: '8px 2px' }}>Loading companies…</div>
         ) : list.length === 0 ? (
@@ -1450,28 +1450,28 @@
     useEffect(() => { load(); }, []);
 
     const remove = async (co) => {
-      if (!window.confirm('Remove ' + co.name + ' from the portal?\n\nTheir contacts lose portal access and uploaded files are deleted. Discoveries and blueprints are not touched.')) return;
+      if (!window.confirm('Remove ' + co.name + ' from the Hub?\n\nTheir contacts lose Hub access and uploaded files are deleted. Discoveries and blueprints are not touched.')) return;
       try { await api('/api/admin/company/delete', { method: 'POST', body: JSON.stringify({ id: co.id }) }); load(); }
       catch (err) { window.alert(err.message); }
     };
 
     const invite = async (co) => {
       const n = 1 + (co.contacts || []).length;
-      if (!window.confirm('Send a portal invite to ' + co.name + "'s " + n + ' contact' + (n === 1 ? '' : 's') + '?')) return;
+      if (!window.confirm('Send a Hub invite to ' + co.name + "'s " + n + ' contact' + (n === 1 ? '' : 's') + '?')) return;
       try { const d = await inviteToPortal(co.id); window.alert(inviteSummary(d.results)); load(); }
       catch (err) { window.alert(err.message); }
     };
 
     return (
       <Page>
-        <PageHead eyebrow="Portal" title="Companies" action={
+        <PageHead eyebrow="Hub" title="Companies" action={
           <button type="button" style={S.btnLime} onClick={() => setAdding(true)}>+ Add company</button>
         }/>
         {rows === null ? (
           <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>Loading…</div>
         ) : rows.length === 0 ? (
           <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>
-            {error || 'No companies yet. Add the first one to open the portal to its contacts.'}
+            {error || 'No companies yet. Add the first one to open the Hub to its contacts.'}
           </div>
         ) : (
           <div style={{ ...S.card, overflow: 'hidden' }}>
@@ -1645,7 +1645,7 @@
     };
     return (
       <div>
-        <label style={S.label}>Contacts · they sign in to the portal with these emails</label>
+        <label style={S.label}>Contacts · they sign in to the Hub with these emails</label>
         {state === 'loading' && <div style={{ fontFamily: T.sans, fontSize: 13, color: T.fg3, padding: '8px 2px' }}>Loading contacts from Attio…</div>}
         {state === 'error' && <div style={{ fontFamily: T.sans, fontSize: 13, color: '#B3261E', padding: '8px 2px' }}>Couldn&#39;t load contacts from Attio. Add them below.</div>}
         {contacts.length > 0 && (
@@ -1693,7 +1693,7 @@
     }, [id]);
     if (error) return (
       <Page>
-        <PageHead eyebrow="Portal" title="Company" action={<a href="/admin/companies" onClick={navClick('/admin/companies')} style={{ ...S.btnGhost, textDecoration: 'none' }}>← Companies</a>}/>
+        <PageHead eyebrow="Hub" title="Company" action={<a href="/admin/companies" onClick={navClick('/admin/companies')} style={{ ...S.btnGhost, textDecoration: 'none' }}>← Companies</a>}/>
         <div style={{ ...S.card, padding: 40, textAlign: 'center', color: '#B3261E', fontFamily: T.sans, fontSize: 14 }}>{error}</div>
       </Page>
     );
@@ -1821,7 +1821,7 @@
         <PageHead eyebrow="Portal · company profile" title={co.name || 'Company'} action={
           <div style={{ display: 'flex', gap: 8 }}>
             {inviteList.length ? <button type="button" style={S.btnGhost} disabled={!!inviting} onClick={() => doInvite()}>{inviting === 'all' ? 'Sending…' : 'Invite all'}</button> : null}
-            <a href={portalUrl} target="_blank" rel="noreferrer" style={{ ...S.btnGhost, textDecoration: 'none' }}>Open portal ↗</a>
+            <a href={portalUrl} target="_blank" rel="noreferrer" style={{ ...S.btnGhost, textDecoration: 'none' }}>Open Hub ↗</a>
             <a href="/admin/companies" onClick={navClick('/admin/companies')} style={{ ...S.btnGhost, textDecoration: 'none' }}>← Companies</a>
           </div>
         }/>
@@ -1847,7 +1847,7 @@
             onAdd={(c) => setContacts((l) => l.some((x) => x.email === c.email) ? l : [...l, c])}/>
           {inviteList.length ? (
             <div>
-              <label style={S.label}>Invite to portal · sends the portal link; the address must be a verified Cloudflare destination</label>
+              <label style={S.label}>Invite to Hub · sends the Hub link; the address must be a verified Cloudflare destination</label>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {inviteList.map((c) => {
                   const inv = invites[c.email.toLowerCase()];

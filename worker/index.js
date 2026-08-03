@@ -3625,19 +3625,19 @@ async function sendCompanyInvite(env, company, contact) {
   const link = `https://${GO_HOST}/${company.id}/company`;
   const co = company.name || 'your company';
   const hi = contact.name ? contact.name.split(' ')[0] : 'there';
-  const subject = `Your Uncap portal for ${co} is ready`;
+  const subject = `Your Uncap Hub for ${co} is ready`;
   const text =
     `Hi ${hi},\n\n` +
-    `Your Uncap client portal for ${co} is ready. It's where you'll find your company details, your discovery, and your blueprint proposal.\n\n` +
+    `Your Uncap Hub for ${co} is ready. It's where you'll find your company details, your discovery, and your blueprint proposal.\n\n` +
     `Open it here:\n${link}\n\n` +
     `Sign in with this email address (${contact.email}) and we'll send you a 6-digit code. No password needed.\n\n` +
     `See you inside,\nThe Uncap team`;
   const html = `
     <div style="font-family:-apple-system,Inter,Arial,sans-serif;color:#0A0A0A;line-height:1.55;max-width:480px;margin:0 auto;padding:32px 24px;background:#F2EFE7;">
-      <div style="font-family:monospace;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#707070;margin-bottom:22px;">Uncap · Client Portal</div>
-      <p style="font-size:20px;font-weight:700;letter-spacing:-0.01em;margin:0 0 12px;">Your portal is ready, ${escapeHtml(hi)}.</p>
-      <p style="font-size:15px;margin:0 0 20px;color:#1A1A1A;">Your Uncap client portal for <b>${escapeHtml(co)}</b> is where you'll find your company details, your discovery, and your blueprint proposal.</p>
-      <p style="margin:0 0 22px;"><a href="${escapeHtml(link)}" style="display:inline-block;background:#0A0A0A;color:#FFFFFF;text-decoration:none;font-size:15px;font-weight:650;border-radius:6px;padding:14px 26px;">Open your portal</a></p>
+      <div style="font-family:monospace;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#707070;margin-bottom:22px;">Uncap · Hub</div>
+      <p style="font-size:20px;font-weight:700;letter-spacing:-0.01em;margin:0 0 12px;">Your Hub is ready, ${escapeHtml(hi)}.</p>
+      <p style="font-size:15px;margin:0 0 20px;color:#1A1A1A;">Your Uncap Hub for <b>${escapeHtml(co)}</b> is where you'll find your company details, your discovery, and your blueprint proposal.</p>
+      <p style="margin:0 0 22px;"><a href="${escapeHtml(link)}" style="display:inline-block;background:#0A0A0A;color:#FFFFFF;text-decoration:none;font-size:15px;font-weight:650;border-radius:6px;padding:14px 26px;">Open your Hub</a></p>
       <p style="font-size:13px;color:#707070;margin:0;">Sign in with this email (${escapeHtml(contact.email)}) and we'll send you a 6-digit code. No password needed.</p>
     </div>`;
   await sendViaCloudflareEmail(env, { to: contact.email, subject, text, html });
@@ -4094,7 +4094,7 @@ async function handlePortalRequestCode(request, env) {
   await env.BLUEPRINT_AUTH.put(`pocode:${encodeURIComponent(email)}`, code, { expirationTtl: CODE_TTL_SECONDS });
   await env.BLUEPRINT_AUTH.delete(`potries:${encodeURIComponent(email)}`).catch(() => {});
   try {
-    await sendCodeEmail(env, { to: email, code, label: 'Client Portal' });
+    await sendCodeEmail(env, { to: email, code, label: 'Hub' });
   } catch (err) {
     console.error('portal sendCodeEmail failed:', err && err.message);
     return json(502, { ok: false, error: 'Could not send the code right now. Try again shortly.' });
