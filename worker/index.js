@@ -1171,7 +1171,8 @@ function revenueCacheKey(url) {
   const p = new URLSearchParams(url.search);
   p.delete('refresh');
   p.sort();
-  return `revcache:${url.pathname}?${p.toString()}`;
+  // Bump the version when the response shape changes so old bodies are ignored.
+  return `revcache:v2:${url.pathname}?${p.toString()}`;
 }
 
 // Wrap a handler (which returns a Response) with the SWR cache. Only 200/ok
@@ -1882,7 +1883,7 @@ async function handleAdminRevenueSummary(request, env) {
       if (sShop && sToken) {
         try {
           const r = await shopifyFetchPaidOrders(env, sShop, sToken, minISO, maxISO);
-          for (const o of r.orders) { items.push({ date: (o.processed_at || o.created_at || '').slice(0, 10), amount: parseFloat(o.current_total_price || o.total_price || 0) || 0 }); setCur(o.currency); }
+          for (const o of r.orders) { items.push({ src: 'recurring', date: (o.processed_at || o.created_at || '').slice(0, 10), amount: parseFloat(o.current_total_price || o.total_price || 0) || 0 }); setCur(o.currency); }
         } catch (e) { sources.recurring = { connected: true, ok: false, error: 'Shopify: ' + e.message }; }
       }
       if (stripe.key) {
@@ -1890,7 +1891,7 @@ async function handleAdminRevenueSummary(request, env) {
           const fromUnix = Math.floor(Date.parse(minISO) / 1000);
           const toUnix = Math.floor(Date.parse(maxISO) / 1000);
           const r = await stripeFetchCharges(env, fromUnix, toUnix);
-          for (const ch of r.charges) { if (ch.status === 'succeeded' && ch.paid) { items.push({ date: ch.created ? new Date(ch.created * 1000).toISOString().slice(0, 10) : '', amount: ((ch.amount_captured != null ? ch.amount_captured : ch.amount) || 0) / 100 }); setCur((ch.currency || '').toUpperCase()); } }
+          for (const ch of r.charges) { if (ch.status === 'succeeded' && ch.paid) { items.push({ src: 'recurring', date: ch.created ? new Date(ch.created * 1000).toISOString().slice(0, 10) : '', amount: ((ch.amount_captured != null ? ch.amount_captured : ch.amount) || 0) / 100 }); setCur((ch.currency || '').toUpperCase()); } }
         } catch (e) { sources.recurring = { connected: true, ok: false, error: (sources.recurring.error ? sources.recurring.error + ' | ' : '') + 'Stripe: ' + e.message }; }
       }
     })(),
@@ -1902,7 +1903,7 @@ async function handleAdminRevenueSummary(request, env) {
       try {
         const where = `where TxnDate >= '${yearFrom}' and TxnDate <= '${today}'`;
         const [pay, sr] = await Promise.all([qboQueryAll(env, qauth, 'Payment', where), qboQueryAll(env, qauth, 'SalesReceipt', where)]);
-        for (const r of [...pay.rows, ...sr.rows]) { items.push({ date: r.TxnDate || '', amount: parseFloat(r.TotalAmt || 0) || 0 }); setCur(r.CurrencyRef && r.CurrencyRef.value); }
+        for (const r of [...pay.rows, ...sr.rows]) { items.push({ src: 'fixed', date: r.TxnDate || '', amount: parseFloat(r.TotalAmt || 0) || 0 }); setCur(r.CurrencyRef && r.CurrencyRef.value); }
       } catch (e) { sources.fixed = { connected: true, ok: false, error: e.message }; }
     })(),
     // Apps + Referrals — Shopify Partner API
@@ -1915,27 +1916,37 @@ async function handleAdminRevenueSummary(request, env) {
         (async () => {
           try {
             const a = await partnerFetchAppTransactions(env, minISO, maxISO);
-            for (const n of a.nodes) { items.push({ date: (n.createdAt || '').slice(0, 10), amount: parseFloat((n.netAmount && n.netAmount.amount) || 0) || 0 }); setCur(n.netAmount && n.netAmount.currencyCode); }
+            for (const n of a.nodes) { items.push({ src: 'apps', date: (n.createdAt || '').slice(0, 10), amount: parseFloat((n.netAmount && n.netAmount.amount) || 0) || 0 }); setCur(n.netAmount && n.netAmount.currencyCode); }
           } catch (e) { sources.apps = { connected: true, ok: false, error: e.message }; }
         })(),
         (async () => {
           try {
             const rf = await partnerFetchReferrals(env, minISO, maxISO);
-            for (const n of rf.nodes) { items.push({ date: (n.createdAt || '').slice(0, 10), amount: parseFloat((n.amount && n.amount.amount) || 0) || 0 }); setCur(n.amount && n.amount.currencyCode); }
+            for (const n of rf.nodes) { items.push({ src: 'referrals', date: (n.createdAt || '').slice(0, 10), amount: parseFloat((n.amount && n.amount.amount) || 0) || 0 }); setCur(n.amount && n.amount.currencyCode); }
           } catch (e) { sources.referrals = { connected: true, ok: false, error: e.message }; }
         })(),
       ]);
     })(),
   ]);
 
-  // YYYY-MM-DD compares lexicographically = chronologically.
-  const sumFrom = (from) => items.reduce((s, it) => (it.date && it.date >= from) ? s + it.amount : s, 0);
+  // YYYY-MM-DD compares lexicographically = chronologically. `srcs` null means
+  // all sources (grand total); otherwise restrict to the named categories.
+  const sumFrom = (from, srcs) => items.reduce((s, it) => {
+    if (!it.date || it.date < from) return s;
+    if (srcs && !srcs.includes(it.src)) return s;
+    return s + it.amount;
+  }, 0);
+  const byPeriod = (srcs) => ({ month: sumFrom(monthFrom, srcs), quarter: sumFrom(quarterFrom, srcs), year: sumFrom(yearFrom, srcs) });
+  const total = byPeriod(null);            // all revenues
+  const services = byPeriod(['fixed', 'recurring']); // Projects + Retainers
   return json(200, {
     ok: true,
     currency,
-    month: sumFrom(monthFrom),
-    quarter: sumFrom(quarterFrom),
-    year: sumFrom(yearFrom),
+    month: total.month,
+    quarter: total.quarter,
+    year: total.year,
+    total,
+    services,
     windows: { month: monthFrom, quarter: quarterFrom, year: yearFrom, to: today },
     sources,
   });

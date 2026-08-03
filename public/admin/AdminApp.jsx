@@ -1086,6 +1086,20 @@
                 </div>
               ))}
             </div>
+
+            <div style={{ ...S.eyebrow, marginTop: 22 }}>Year to date</div>
+            <div style={{ marginTop: 10, display: 'flex', gap: 16, flexWrap: 'wrap' }}>
+              {[
+                ['Services', 'Projects + Retainers', data.services ? data.services.year : 0, false],
+                ['Total', 'All revenues', data.total ? data.total.year : data.year, true],
+              ].map(([label, sub, val, strong]) => (
+                <div key={label} style={{ ...S.card, flex: '1 1 240px', padding: 'clamp(18px, 2.6vw, 28px)', border: strong ? `1.5px solid ${T.fg1}` : `1px solid ${T.line}` }}>
+                  <div style={S.eyebrow}>{label}</div>
+                  <div style={{ fontFamily: T.sans, fontSize: 11.5, color: T.fg3, marginTop: 3 }}>{sub}</div>
+                  <div style={{ fontFamily: T.hero, fontWeight: 800, fontSize: 'clamp(28px, 3.8vw, 44px)', letterSpacing: '-0.03em', lineHeight: 1, color: T.fg1, marginTop: 12 }}>{money(val, data.currency)}</div>
+                </div>
+              ))}
+            </div>
             <div style={{ marginTop: 18, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
               <span style={{ fontFamily: T.mono, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.fg3, marginRight: 4 }}>Sources</span>
               {SRC.map(([k, l]) => {
