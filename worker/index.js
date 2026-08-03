@@ -415,6 +415,15 @@ export default {
     // loads its data over /api/discovery/*. Handles are dot-free slugs, so
     // real assets under /discovery/ (index.html, *.jsx, *.js — all with a
     // dot) never match here and are served normally by Static Assets.
+    // Clean URLs for the static legal pages: /legal/privacy and /legal/terms
+    // map to their .html assets (html_handling is off, so we route explicitly).
+    const legalMatch = url.pathname.match(/^\/legal\/(privacy|terms)\/?$/);
+    if (legalMatch && (request.method === 'GET' || request.method === 'HEAD')) {
+      const assetUrl = new URL(url.toString());
+      assetUrl.pathname = `/legal/${legalMatch[1]}.html`;
+      return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
+    }
+
     // The admin dashboard lives at /admin (client-side routes /admin/
     // discoveries|blueprints|companies and the company profile page
     // /admin/company/<id> included); the root is the portal.
