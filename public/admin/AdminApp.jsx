@@ -369,7 +369,7 @@
       <a key={it.id} href={it.path} onClick={navClick(it.path)} style={{
         padding: '4px 11px', borderRadius: 4, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
         fontFamily: T.sans, fontSize: 12, fontWeight: route === it.id ? 700 : 500, lineHeight: 1,
-        color: route === it.id ? '#0A0A0A' : '#C9C7C1', background: route === it.id ? T.signal : 'transparent',
+        color: route === it.id ? '#0A0A0A' : T.fg2, background: route === it.id ? T.signal : 'transparent',
       }}>{it.l}</a>
     );
 
@@ -410,7 +410,7 @@
         )}
         {/* Row 2 — sub-navs of the active section */}
         {subs.length > 0 && (
-          <div style={{ background: '#161616', borderTop: '1px solid #242424' }}>
+          <div style={{ background: T.paper, borderBottom: `1px solid ${T.line}` }}>
             <nav style={{ display: 'flex', alignItems: 'center', gap: 4, padding: isMobile ? '7px 10px' : '7px 16px', ...scroll }}>
               {subs.map(subPill)}
             </nav>
