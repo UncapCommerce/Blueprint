@@ -258,9 +258,9 @@ export default {
       if (!(await adminIsApproved(env, gate.email))) {
         return json(403, { ok: false, error: 'Your account is pending approval from denis@uncap.com.' });
       }
-      // Revenue is Admin-only for now.
-      if (url.pathname.startsWith('/api/admin/revenue/') && !isSuperAdmin(gate.email)) {
-        return json(403, { ok: false, error: 'Revenue is restricted to the Admin.' });
+      // Revenue is visible to Admin and Management.
+      if (url.pathname.startsWith('/api/admin/revenue/') && !(await adminCanDelete(env, gate.email))) {
+        return json(403, { ok: false, error: 'Revenue is restricted to Admin and Management.' });
       }
     }
 

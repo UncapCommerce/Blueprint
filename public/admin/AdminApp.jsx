@@ -355,7 +355,7 @@
       { id: 'activities', l: 'Activities', path: '/admin', match: ['home'] },
       { id: 'sales', l: 'Sales', path: '/admin/companies', match: ['companies', 'discoveries', 'blueprints', 'company-profile', 'blueprint-editor'] },
       { id: 'services', l: 'Services', path: '/admin/projects', match: ['projects', 'retainers'] },
-      ...(me.isSuper ? [{ id: 'revenues', l: 'Revenues', path: '/admin/revenues', match: ['revenues', 'rev-fixed', 'rev-recurring', 'rev-apps', 'rev-referrals'] }] : []),
+      ...(me.canDelete ? [{ id: 'revenues', l: 'Revenues', path: '/admin/revenues', match: ['revenues', 'rev-fixed', 'rev-recurring', 'rev-apps', 'rev-referrals'] }] : []),
       { id: 'dashboard', l: 'Dashboard', path: '/admin/dashboard', match: ['dashboard'] },
       ...(me.isSuper ? [{ id: 'users', l: 'Users', path: '/admin/users', match: ['users'] }] : []),
     ];
@@ -496,7 +496,7 @@
     const money = (n) => { try { return new Intl.NumberFormat(undefined, { style: 'currency', currency: currency || 'USD', maximumFractionDigits: 0 }).format(n || 0); } catch (_) { return '$' + Math.round(n || 0); } };
     const segs = CH.map(([k, l, color]) => ({ k, l, color, value: (channels && channels[k]) || 0 })).filter((s) => s.value > 0);
     const total = segs.reduce((s, x) => s + x.value, 0);
-    const r = 70, sw = 28, C = 2 * Math.PI * r;
+    const r = 78, sw = 24, C = 2 * Math.PI * r;
     let acc = 0;
     return (
       <div style={{ ...S.card, padding: 'clamp(20px, 3vw, 28px)', marginBottom: 22 }}>
@@ -505,7 +505,7 @@
           <div style={{ fontFamily: T.sans, fontSize: 14, color: T.fg3 }}>No revenue recorded yet this year.</div>
         ) : (
           <div style={{ display: 'flex', gap: 'clamp(20px, 5vw, 48px)', alignItems: 'center', flexWrap: 'wrap' }}>
-            <svg width="176" height="176" viewBox="0 0 200 200" style={{ flexShrink: 0 }}>
+            <svg width="220" height="220" viewBox="0 0 200 200" style={{ flexShrink: 0, maxWidth: '100%' }}>
               <g transform="rotate(-90 100 100)">
                 {segs.map((s) => {
                   const len = (s.value / total) * C;
@@ -517,8 +517,8 @@
                   return el;
                 })}
               </g>
-              <text x="100" y="97" textAnchor="middle" style={{ fontFamily: T.hero, fontWeight: 800, fontSize: 21, fill: T.fg1 }}>{money(total)}</text>
-              <text x="100" y="116" textAnchor="middle" style={{ fontFamily: T.mono, fontSize: 9, letterSpacing: '0.08em', fill: T.fg3 }}>YTD</text>
+              <text x="100" y="98" textAnchor="middle" style={{ fontFamily: T.hero, fontWeight: 800, fontSize: 24, fill: T.fg1 }}>{money(total)}</text>
+              <text x="100" y="117" textAnchor="middle" style={{ fontFamily: T.mono, fontSize: 9, letterSpacing: '0.08em', fill: T.fg3 }}>YTD</text>
             </svg>
             <div style={{ flex: '1 1 220px', display: 'flex', flexDirection: 'column', gap: 11, minWidth: 200 }}>
               {segs.map((s) => (
@@ -3198,11 +3198,11 @@
           : route === 'blueprints' ? <Blueprints me={me}/>
           : route === 'projects' ? <SectionStub eyebrow="Services" title="Projects" note="Fixed-scope client projects will live here — tracked from kickoff through delivery. Design coming next."/>
           : route === 'retainers' ? <SectionStub eyebrow="Services" title="Retainers" note="Ongoing retainer engagements and their scope will live here. Retainer payments are tracked under Revenues → Retainers."/>
-          : route === 'revenues' ? (me.isSuper ? <RevenueOverview/> : <Home/>)
-          : route === 'rev-fixed' ? (me.isSuper ? <FixedRevenue/> : <Home/>)
-          : route === 'rev-recurring' ? (me.isSuper ? <RecurringRevenue/> : <Home/>)
-          : route === 'rev-apps' ? (me.isSuper ? <AppsRevenue/> : <Home/>)
-          : route === 'rev-referrals' ? (me.isSuper ? <ReferralsRevenue/> : <Home/>)
+          : route === 'revenues' ? (me.canDelete ? <RevenueOverview/> : <Home/>)
+          : route === 'rev-fixed' ? (me.canDelete ? <FixedRevenue/> : <Home/>)
+          : route === 'rev-recurring' ? (me.canDelete ? <RecurringRevenue/> : <Home/>)
+          : route === 'rev-apps' ? (me.canDelete ? <AppsRevenue/> : <Home/>)
+          : route === 'rev-referrals' ? (me.canDelete ? <ReferralsRevenue/> : <Home/>)
           : route === 'dashboard' ? <SectionStub eyebrow="Overview" title="Dashboard" note="A cross-section overview of activity, sales, services, and revenue. We’ll design this in the next steps."/>
           : <Home/>}
       </div>
