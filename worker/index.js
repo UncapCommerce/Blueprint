@@ -253,6 +253,7 @@ export default {
     // (me), sign out, and read config. bp-token is exempt — it has its own
     // dual admin/portal auth and is called by signed-in portal customers.
     if (url.pathname.startsWith('/api/admin/') && url.pathname !== '/api/admin/bp-token') {
+      await purgeRemovedAdmins(env);
       const gate = await getAdminSession(request, env);
       if (!gate) return json(401, { ok: false, error: 'Not signed in' });
       if (!(await adminIsApproved(env, gate.email))) {
@@ -1007,8 +1008,13 @@ const ADMIN_COOKIE = '__Host-bp_admin';
 const SUPER_ADMIN_EMAIL = 'denis@uncap.com';
 // Seeded teammates are auto-approved and land as Management (one tier below
 // Admin). Not revocable or downgradable.
-const SEED_MANAGEMENT = ['ryan@uncap.com', 'mj@uncap.com'];
+const SEED_MANAGEMENT = ['mj@uncap.com'];
+// Teammates removed from the app entirely: blocked from signing in, denied all
+// access, and purged from KV (record + sessions) by a one-time cleanup.
+// Reversible — remove an email here to let them request access again.
+const REMOVED_ADMINS = ['ryan@uncap.com'];
 const isSuperAdmin = (email) => (email || '').toString().toLowerCase() === SUPER_ADMIN_EMAIL;
+const isRemovedAdmin = (email) => REMOVED_ADMINS.includes((email || '').toString().toLowerCase());
 
 // Team roles, most to least privileged:
 //   admin       — denis@uncap.com only. Manages users/roles + can do everything.
@@ -1041,6 +1047,7 @@ async function upsertAdminUser(env, email, patch) {
 // no explicit role default to Staff (the lower tier).
 function roleFromRecord(email, u) {
   const e = (email || '').toString().toLowerCase();
+  if (isRemovedAdmin(e)) return ROLE_PENDING;
   if (isSuperAdmin(e)) return ROLE_ADMIN;
   if (SEED_MANAGEMENT.includes(e)) return ROLE_MANAGEMENT;
   if (u && u.approved) return (u.role === ROLE_MANAGEMENT || u.role === ROLE_STAFF) ? u.role : ROLE_STAFF;
@@ -1049,6 +1056,7 @@ function roleFromRecord(email, u) {
 
 async function getAdminRole(env, email) {
   const e = (email || '').toString().toLowerCase();
+  if (isRemovedAdmin(e)) return ROLE_PENDING;
   if (isSuperAdmin(e)) return ROLE_ADMIN;
   if (SEED_MANAGEMENT.includes(e)) return ROLE_MANAGEMENT;
   return roleFromRecord(e, await getAdminUser(env, e));
@@ -1076,6 +1084,29 @@ async function seedAdminUsers(env) {
       await upsertAdminUser(env, e, { approved: true, role, approvedBy: (u && u.approvedBy) || 'system', approvedAt: (u && u.approvedAt) || new Date().toISOString() });
     }
   }
+}
+
+// Purge every REMOVED_ADMINS teammate from KV — their user record plus any live
+// admin sessions — so removal is complete, not just gated. Runs at most once per
+// isolate (the in-memory guard) and is fully idempotent, so it's safe to call on
+// every admin request; deletes still succeed even when the record is long gone.
+let _adminPurgeDone = false;
+async function purgeRemovedAdmins(env) {
+  if (_adminPurgeDone || !REMOVED_ADMINS.length) return;
+  _adminPurgeDone = true;
+  try {
+    for (const email of REMOVED_ADMINS) {
+      await env.BLUEPRINT_AUTH.delete(`adminuser:${email}`).catch(() => {});
+    }
+    // Best-effort: revoke any active sessions the removed teammates still hold.
+    const list = await env.BLUEPRINT_AUTH.list({ prefix: 'admin_session:', limit: 1000 });
+    for (const k of list.keys) {
+      const raw = await env.BLUEPRINT_AUTH.get(k.name);
+      if (!raw) continue;
+      let s; try { s = JSON.parse(raw); } catch { continue; }
+      if (isRemovedAdmin(s && s.email)) await env.BLUEPRINT_AUTH.delete(k.name).catch(() => {});
+    }
+  } catch { _adminPurgeDone = false; } // let a later request retry on failure
 }
 
 // ── Shopify integration (Revenues > Recurring) ────────────────────────────
@@ -2348,6 +2379,9 @@ async function handleGoogleLogin(request, env) {
   const email = payload.email.toLowerCase();
   if (!email.endsWith('@uncap.com')) {
     return json(403, { ok: false, error: 'Reserved for the Uncap team (@uncap.com).' });
+  }
+  if (isRemovedAdmin(email)) {
+    return json(403, { ok: false, error: 'This account no longer has access.' });
   }
 
   // Record every teammate who signs in so the Admin can approve them.
@@ -3963,7 +3997,7 @@ async function handleAdminCompanyInvite(request, env) {
 // `wrangler deploy --keep-vars`, so wrangler.toml var edits don't take
 // effect — the dashboard vars win. Any addresses set in env.NOTIFY_EMAIL
 // (comma-separated) are merged in on top, deduped.
-const NOTIFY_RECIPIENTS = ['denis@uncap.com', 'ryan@uncap.com'];
+const NOTIFY_RECIPIENTS = ['denis@uncap.com'];
 
 function notifyRecipients(env) {
   const fromEnv = (env.NOTIFY_EMAIL || '')
@@ -3971,7 +4005,7 @@ function notifyRecipients(env) {
     .map((s) => s.trim().toLowerCase())
     .filter(Boolean);
   const all = [...NOTIFY_RECIPIENTS.map((s) => s.toLowerCase()), ...fromEnv];
-  return [...new Set(all)];
+  return [...new Set(all)].filter((e) => !isRemovedAdmin(e));
 }
 
 async function notifyAdmin(env, { subject, text }) {
