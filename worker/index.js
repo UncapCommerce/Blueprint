@@ -1172,7 +1172,7 @@ function revenueCacheKey(url) {
   p.delete('refresh');
   p.sort();
   // Bump the version when the response shape changes so old bodies are ignored.
-  return `revcache:v2:${url.pathname}?${p.toString()}`;
+  return `revcache:v3:${url.pathname}?${p.toString()}`;
 }
 
 // Wrap a handler (which returns a Response) with the SWR cache. Only 200/ok
@@ -1944,6 +1944,13 @@ async function handleAdminRevenueSummary(request, env) {
   const byPeriod = (srcs) => ({ month: sumFrom(monthFrom, srcs), quarter: sumFrom(quarterFrom, srcs), year: sumFrom(yearFrom, srcs) });
   const total = byPeriod(null);            // all revenues
   const services = byPeriod(['fixed', 'recurring']); // Projects + Retainers
+  // Year-to-date amount per revenue channel, for the Overview mix pie.
+  const channels = {
+    recurring: sumFrom(yearFrom, ['recurring']),
+    fixed: sumFrom(yearFrom, ['fixed']),
+    apps: sumFrom(yearFrom, ['apps']),
+    referrals: sumFrom(yearFrom, ['referrals']),
+  };
   // A connected source that errored means the totals are under-counted — mark
   // the response partial so it isn't cached and the client can retry.
   const partial = Object.keys(sources).some((k) => sources[k] && sources[k].connected && sources[k].ok === false);
@@ -1956,6 +1963,7 @@ async function handleAdminRevenueSummary(request, env) {
     year: total.year,
     total,
     services,
+    channels,
     windows: { month: monthFrom, quarter: quarterFrom, year: yearFrom, to: today },
     sources,
   });

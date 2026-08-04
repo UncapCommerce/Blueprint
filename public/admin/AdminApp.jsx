@@ -484,6 +484,58 @@
     );
   }
 
+  // Donut of the YTD revenue mix by channel, with a % + amount legend. Inline
+  // SVG (no chart lib) — segments drawn as dash-arc slices on one ring.
+  function RevenuePie({ channels, currency }) {
+    const CH = [
+      ['recurring', 'Retainers', '#A8E10C'],
+      ['fixed',     'Projects',  '#1E7A5E'],
+      ['apps',      'Apps',      '#E4A11B'],
+      ['referrals', 'Referrals', '#6A5ACD'],
+    ];
+    const money = (n) => { try { return new Intl.NumberFormat(undefined, { style: 'currency', currency: currency || 'USD', maximumFractionDigits: 0 }).format(n || 0); } catch (_) { return '$' + Math.round(n || 0); } };
+    const segs = CH.map(([k, l, color]) => ({ k, l, color, value: (channels && channels[k]) || 0 })).filter((s) => s.value > 0);
+    const total = segs.reduce((s, x) => s + x.value, 0);
+    const r = 70, sw = 28, C = 2 * Math.PI * r;
+    let acc = 0;
+    return (
+      <div style={{ ...S.card, padding: 'clamp(20px, 3vw, 28px)', marginBottom: 22 }}>
+        <div style={{ ...S.eyebrow, marginBottom: 16 }}>Revenue mix · year to date</div>
+        {total === 0 ? (
+          <div style={{ fontFamily: T.sans, fontSize: 14, color: T.fg3 }}>No revenue recorded yet this year.</div>
+        ) : (
+          <div style={{ display: 'flex', gap: 'clamp(20px, 5vw, 48px)', alignItems: 'center', flexWrap: 'wrap' }}>
+            <svg width="176" height="176" viewBox="0 0 200 200" style={{ flexShrink: 0 }}>
+              <g transform="rotate(-90 100 100)">
+                {segs.map((s) => {
+                  const len = (s.value / total) * C;
+                  const el = (
+                    <circle key={s.k} cx="100" cy="100" r={r} fill="none" stroke={s.color} strokeWidth={sw}
+                      strokeDasharray={`${len} ${C - len}`} strokeDashoffset={-acc}/>
+                  );
+                  acc += len;
+                  return el;
+                })}
+              </g>
+              <text x="100" y="97" textAnchor="middle" style={{ fontFamily: T.hero, fontWeight: 800, fontSize: 21, fill: T.fg1 }}>{money(total)}</text>
+              <text x="100" y="116" textAnchor="middle" style={{ fontFamily: T.mono, fontSize: 9, letterSpacing: '0.08em', fill: T.fg3 }}>YTD</text>
+            </svg>
+            <div style={{ flex: '1 1 220px', display: 'flex', flexDirection: 'column', gap: 11, minWidth: 200 }}>
+              {segs.map((s) => (
+                <div key={s.k} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <span style={{ width: 12, height: 12, borderRadius: 3, background: s.color, flexShrink: 0 }}/>
+                  <span style={{ fontFamily: T.sans, fontSize: 13.5, fontWeight: 600, color: T.fg1, flex: '1 1 auto' }}>{s.l}</span>
+                  <span style={{ fontFamily: T.hero, fontWeight: 800, fontSize: 15, color: T.fg1, minWidth: 44, textAlign: 'right' }}>{Math.round((s.value / total) * 100)}%</span>
+                  <span style={{ fontFamily: T.mono, fontSize: 12, color: T.fg3, minWidth: 76, textAlign: 'right' }}>{money(s.value)}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  }
+
   function RecurringRevenue() {
     const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     const presetRange = (p) => {
@@ -1113,6 +1165,7 @@
                 </div>
               </div>
             ))}
+            <RevenuePie channels={data.channels} currency={data.currency}/>
             <div style={{ marginTop: 18, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
               <span style={{ fontFamily: T.mono, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.fg3, marginRight: 4 }}>Sources</span>
               {SRC.map(([k, l]) => {
