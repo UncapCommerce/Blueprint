@@ -2073,6 +2073,7 @@ const BLUEPRINT_REGISTRY = [
   { id: 'cartoncraftsupply', dir: 'CartonCraftSupply', name: 'Carton Craft Supply', num: '013', channel: 'Inbound' },
   { id: 'uncap', dir: 'Uncap', name: 'Uncap (Demo)', num: '014', channel: 'Inbound' },
   { id: 'hydra-powersystems', dir: 'HydraPower', name: 'Hydra-Power Systems', num: '015', channel: 'Inbound' },
+  { id: 'trusty-cook', dir: 'TrustyCook', name: 'Trusty-Cook', num: '016', channel: 'Inbound' },
 ];
 
 function getCookie(request, name) {
@@ -4166,11 +4167,33 @@ async function listCompanies(env) {
   return rows.filter(Boolean).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
 }
 
+// Link a shipped bespoke blueprint to its portal company when the company was
+// created without going through the draft flow (which sets the link itself).
+// Idempotent: only writes when the link is missing/different. Matched by id,
+// name, or store domain. `companies` is the already-listed array (mutated in
+// place so the caller's response reflects the link without a re-list).
+async function linkBespokeBlueprintToCompany(env, companies, blueprintId, matchers) {
+  if (!BLUEPRINT_REGISTRY.some((b) => b.id === blueprintId)) return;
+  const co = companies.find((c) => c && matchers.some((m) => m(c)));
+  if (co && co.blueprintId !== blueprintId) {
+    co.blueprintId = blueprintId;
+    await putCompany(env, co).catch(() => {});
+  }
+}
+
 async function handleAdminListCompanies(request, env) {
   const sess = await getAdminSession(request, env);
   if (!sess) return json(401, { ok: false, error: 'Not signed in' });
   try { await migrateCompaniesV1(env); } catch (_) { /* migration is best-effort */ }
-  return json(200, { ok: true, companies: await listCompanies(env) });
+  const companies = await listCompanies(env);
+  try {
+    await linkBespokeBlueprintToCompany(env, companies, 'trusty-cook', [
+      (c) => c.id === 'trusty-cook' || c.id === 'trustycook',
+      (c) => /trusty[\s-]?cook/i.test(c.name || ''),
+      (c) => /trustycook/i.test(c.storeUrl || ''),
+    ]);
+  } catch (_) { /* best-effort link */ }
+  return json(200, { ok: true, companies });
 }
 
 async function handleAdminCreateCompany(request, env) {

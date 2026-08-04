@@ -44,6 +44,7 @@ const files = [
   'public/CartonCraftSupply/index.html',
   'public/Uncap/index.html',
   'public/HydraPower/index.html',
+  'public/TrustyCook/index.html',
   'public/demo/blueprint/index.html',
   'public/discovery/index.html',
 ];
