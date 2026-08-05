@@ -2074,6 +2074,7 @@ const BLUEPRINT_REGISTRY = [
   { id: 'uncap', dir: 'Uncap', name: 'Uncap (Demo)', num: '014', channel: 'Inbound' },
   { id: 'hydra-powersystems', dir: 'HydraPower', name: 'Hydra-Power Systems', num: '015', channel: 'Inbound' },
   { id: 'trusty-cook', dir: 'TrustyCook', name: 'Trusty-Cook', num: '016', channel: 'Inbound' },
+  { id: 'qpfeed', dir: 'QPFeed', name: 'QP Feed', num: '017', channel: 'Inbound' },
 ];
 
 function getCookie(request, name) {
@@ -4191,6 +4192,11 @@ async function handleAdminListCompanies(request, env) {
       (c) => c.id === 'trusty-cook' || c.id === 'trustycook',
       (c) => /trusty[\s-]?cook/i.test(c.name || ''),
       (c) => /trustycook/i.test(c.storeUrl || ''),
+    ]);
+    await linkBespokeBlueprintToCompany(env, companies, 'qpfeed', [
+      (c) => c.id === 'qpfeed' || c.id === 'qp-feed',
+      (c) => /qp[\s-]?feed/i.test(c.name || ''),
+      (c) => /qpfeed/i.test(c.storeUrl || ''),
     ]);
   } catch (_) { /* best-effort link */ }
   return json(200, { ok: true, companies });
