@@ -2441,45 +2441,6 @@ function BPInvestmentCard({ p }) {
   );
 }
 
-function BPPackagePanel({ title, serif, tagline, blurb, price, walkaway, work }) {
-  return (
-    <div style={{
-      position: 'relative', overflow: 'hidden',
-      background: '#0F0F0F', color: 'var(--uc-paper)',
-      border: '1px solid #1F1F1F', borderRadius: 12,
-      display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)'
-    }}>
-      <span aria-hidden="true" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 3, background: 'var(--uc-signal)', zIndex: 2 }}/>
-      <div style={{ padding: 'clamp(28px, 3.4vw, 52px)', display: 'flex', flexDirection: 'column', gap: 'clamp(18px, 2vw, 26px)' }}>
-        <div>
-          <h3 style={{ margin: 0, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(40px, 5vw, 76px)', letterSpacing: '-0.045em', lineHeight: 0.9, color: 'var(--uc-paper)' }}>{title} <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, fontSize: '0.62em', letterSpacing: '-0.02em' }}>{serif}</span></h3>
-          <div style={{ marginTop: 'clamp(14px, 1.6vw, 20px)', fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 'clamp(17px, 1.6vw, 24px)', lineHeight: 1.25, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>{tagline}</div>
-        </div>
-        <p style={{ margin: 0, maxWidth: 460, fontFamily: 'var(--font-serif)', fontSize: 'clamp(14.5px, 1.2vw, 17px)', lineHeight: 1.55, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>{blurb}</p>
-        <div style={{ padding: 'clamp(18px, 2vw, 26px) clamp(20px, 2.2vw, 28px)', background: 'var(--uc-signal)', borderRadius: 12, boxShadow: '0 22px 60px -26px rgba(232,255,82,0.45)' }}>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--uc-black)' }}>Fixed price</div>
-          <div style={{ marginTop: 4, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(52px, 6vw, 88px)', letterSpacing: '-0.05em', lineHeight: 0.85, color: 'var(--uc-black)' }}>{price}</div>
-        </div>
-        <div style={{ marginTop: 'auto', padding: 'clamp(16px, 1.8vw, 22px)', background: '#141414', border: '1px solid #1F1F1F', borderRadius: 10 }}>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--uc-stone-500)', marginBottom: 8 }}>You walk away with</div>
-          <div style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(15px, 1.3vw, 18px)', lineHeight: 1.4, color: 'var(--uc-paper)', textWrap: 'pretty' }}>{walkaway}</div>
-        </div>
-      </div>
-      <div style={{ padding: 'clamp(28px, 3.4vw, 52px)', borderLeft: '1px solid #1F1F1F' }}>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--uc-stone-500)', marginBottom: 'clamp(18px, 2vw, 26px)' }}>The work</div>
-        <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 'clamp(13px, 1.5vw, 18px)' }}>
-          {work.map((w, i) => (
-            <li key={i} style={{ display: 'grid', gridTemplateColumns: '20px 1fr', gap: 14, alignItems: 'start' }}>
-              <span style={{ marginTop: 1, width: 18, height: 18, borderRadius: 999, background: 'var(--uc-signal)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M2 6 L5 9 L10 3" stroke="var(--uc-black)" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"/></svg></span>
-              <span style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(14px, 1.15vw, 16.5px)', fontWeight: 500, lineHeight: 1.35, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>{w}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  );
-}
-
 function BPInvestment() {
   const work = [
     'Tech stack architecture, scoped up front',
@@ -2657,8 +2618,10 @@ function BPWhy() {
       </BPHeadline>
 
       {/* Platinum partner badge */}
-      <div style={{ marginTop: 'clamp(28px, 3vw, 40px)', display: 'inline-flex', alignItems: 'center', gap: 14, padding: '12px 18px', background: 'var(--uc-paper)', borderRadius: 6 }}>
-        <img src="assets/shopify-platinum-partner-black.svg" alt="Shopify Platinum Partner" style={{ height: 26, display: 'block' }}/>
+      <div style={{ marginTop: 'clamp(28px, 3vw, 40px)', display: 'inline-flex', alignItems: 'center', gap: 16, padding: '12px 20px', background: '#111', border: '1px solid #2B2B2B', borderRadius: 6 }}>
+        <img src={window.__resources.uncapLogoWhite} alt="Uncap" style={{ height: 22, display: 'block' }}/>
+        <span style={{ width: 1, height: 22, background: '#2B2B2B' }}/>
+        <img src={window.__resources.shopifyBadge} alt="Shopify Platinum Partner" style={{ height: 22, display: 'block', filter: 'brightness(0) invert(1)' }}/>
       </div>
 
       {/* About Uncap intro + stats */}
@@ -2672,7 +2635,7 @@ function BPWhy() {
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', borderTop: '1px solid #1F1F1F' }}>
           {[
-            { v: '2014', l: 'Shopify experts since' },
+            { v: '2013', l: 'Shopify experts since' },
             { v: '380+', l: 'Projects launched' }
           ].map((s, i) => (
             <div key={i} style={{ padding: '16px 0', borderBottom: '1px solid #1F1F1F', display: 'flex', alignItems: 'baseline', gap: 16 }}>
@@ -2739,13 +2702,14 @@ function BPProof() {
     dotted: { bg: 'var(--uc-bone)', border: 'var(--uc-stone-300)', fg: 'var(--fg-1)', sub: 'var(--fg-2)', faint: 'var(--fg-3)', line: 'var(--line-1)', avBg: 'var(--uc-paper)', avFg: 'var(--fg-1)', avLine: 'var(--line-1)', borderStyle: 'dotted' }
   };
   const cards = [
-    { v: 'dark', q: 'The team communicated consistently and efficiently — internal stakeholders were impressed with Uncap\u2019s vast technical expertise.', stat: '60 Days', statL: 'Migrating to Shopify after Blueprint', n: 'Todd Arey', c: 'E3 Spark Plugs' },
+    { v: 'dark', q: 'I cannot praise Uncap enough. They are a hell of a team.', n: 'Andy Blechschmidt', c: 'Jerico' },
     { v: 'dotted', q: 'The integration of our platforms created an easy solution that even our complex systems sales teams can use.', stat: '83% Lower TCO', statL: 'Total cost of ownership on Shopify', n: 'Bryan Snyder', c: 'Canon Medical' },
     { v: 'paper', q: 'During the Blueprint, Uncap walked through every requirement — what was native, what needed an app, and what was custom.', stat: '1M SKUs', statL: 'Mapped to sync from Epicor to Shopify', n: 'Denise Foley', c: 'ULE Group' },
+    { v: 'paper', q: 'The professionalism, high quality of the design, timely communication and responsiveness have been greatly appreciated (especially compared to our previous dev agency partner).', stat: 'BigCommerce\nMigration', statL: 'Migrated to Shopify with Uncap', n: 'Kiki Fischer', c: 'Rescue Essentials' },
     { v: 'signal', q: 'They are brilliant and very knowledgeable of all that Shopify can do.', stat: 'Product Configurations', statL: 'Custom product ordering for manufacturing', n: 'Peggy Farabaugh', c: 'Vermont Woods' },
-    { v: 'paper', q: 'Uncap demonstrated a deep understanding of the Shopify ecosystem from the get-go.', stat: 'Custom ERP', statL: 'Integration data mapping for Shopify', n: 'Andy Morgan', c: 'ScooterWorks' },
+    { v: 'dotted', q: 'Uncap demonstrated a deep understanding of the Shopify ecosystem from the get-go.', stat: 'Custom ERP', statL: 'Integration data mapping for Shopify', n: 'Andy Morgan', c: 'ScooterWorks' },
     { v: 'paper', q: 'The personal touch and constant communication is what separates them from other companies with a 50+ person team where the attention to detail may be lost.', n: 'Brandt DeVries', c: 'WeldingStore' },
-    { v: 'dark', q: 'I cannot praise Uncap enough. They are a hell of a team.', n: 'Andy Blechschmidt', c: 'Jerico' }
+    { v: 'dark', q: 'The team and internal stakeholders were impressed with Uncap\u2019s vast technical expertise.', stat: '60 Days', statL: 'Migrating to Shopify after Blueprint', n: 'Todd Arey', c: 'E3 Spark Plugs' }
   ];
   const Stars = ({ color }) => (
     <div style={{ display: 'flex', gap: 3 }}>{[0,1,2,3,4].map(i => (<span key={i} style={{ color, fontSize: 12 }}>★</span>))}</div>
@@ -2759,7 +2723,7 @@ function BPProof() {
           <BPSerif>our word for it.</BPSerif>
         </BPHeadline>
         <p style={{ margin: 0, maxWidth: 380, fontFamily: 'var(--font-serif)', fontSize: 'clamp(15px, 1.3vw, 18px)', lineHeight: 1.5, color: 'var(--fg-2)', textWrap: 'pretty' }}>
-          Operators who ran the same play — built, integrated, and grew on Shopify with Uncap.
+          Operators who ran the same play — replatformed, integrated, and grew on Shopify with Uncap.
         </p>
       </div>
 
@@ -2779,9 +2743,9 @@ function BPProof() {
               <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 'clamp(15px, 1.4vw, 18px)', lineHeight: 1.35, letterSpacing: '-0.01em', color: t.fg, textWrap: 'pretty' }}>&ldquo;{card.q}&rdquo;</div>
 
               {card.stat && (
-                <div style={{ paddingTop: 14, borderTop: '1px solid ' + t.line, display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 0.9fr)', gap: 12, alignItems: 'start' }}>
-                  <span style={{ fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(22px, 2.2vw, 30px)', letterSpacing: '-0.04em', lineHeight: 0.95, color: t.fg, textTransform: 'uppercase' }}>{card.stat}</span>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.faint, textAlign: 'right', lineHeight: 1.4 }}>{card.statL}</span>
+                <div style={{ paddingTop: 14, borderTop: '1px solid ' + t.line, display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  <span style={{ fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(22px, 2.2vw, 30px)', letterSpacing: '-0.04em', lineHeight: 0.95, color: t.fg, textTransform: 'uppercase', overflowWrap: 'anywhere', whiteSpace: 'pre-line' }}>{card.stat}</span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: t.faint, lineHeight: 1.4 }}>{card.statL}</span>
                 </div>
               )}
 
@@ -2800,7 +2764,6 @@ function BPProof() {
   );
 }
 
-// ── 10 NEXT STEPS ───────────────────────────────────────────────────────────
 // ── Approve & kickoff CTA. Clicking opens an inline signature modal that
 // captures the signer's full name and title; submitting POSTs them to
 // /api/auth/sign which persists a record in KV (1-year TTL) and emails
@@ -3067,11 +3030,10 @@ function BPApproveButton() {
 }
 
 // ── 10 NEXT STEPS ───────────────────────────────────────────────────────────
-
 function BPNext() {
   const steps = [
     { n: '01', t: 'Approve this Blueprint', d: 'Sign off on scope, timeline, and investment.' },
-    { n: '02', t: 'Onboard within 2 weeks', d: 'Discovery session + access to systems.' },
+    { n: '02', t: 'Onboard within one week', d: 'Discovery session + access to systems.' },
     { n: '03', t: 'Ship in 16 weeks', d: 'Launch live, then move into Growth.' }
   ];
   return (
