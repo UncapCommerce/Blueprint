@@ -2507,9 +2507,9 @@ function BPInvestment() {
     'Uncap Connect app, configured and monitored'
   ];
   const schedule = [
-    { n: '01', amount: '$23,000', due: 'Due at signup' },
-    { n: '02', amount: '$11,500', due: 'Due at design approval' },
-    { n: '03', amount: '$11,500', due: 'Due at project completion' }
+    { n: '01', amount: '$34,000', due: 'Due at signup' },
+    { n: '02', amount: '$17,000', due: 'Due at design approval' },
+    { n: '03', amount: '$17,000', due: 'Due at project completion' }
   ];
   return (
     <BPSection id="investment" n="15" label="Investment" dark tail="FIXED · NO SURPRISES">
@@ -2535,9 +2535,14 @@ function BPInvestment() {
 
       {/* Payment schedule */}
       <div style={{ marginTop: 'clamp(28px, 3.2vw, 44px)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 'clamp(16px, 1.8vw, 22px)' }}>
-          <span aria-hidden="true" style={{ width: 16, height: 2, background: 'var(--uc-signal)' }}/>
-          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--uc-stone-500)' }}>Payment schedule</span>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap', marginBottom: 'clamp(16px, 1.8vw, 22px)' }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
+            <span aria-hidden="true" style={{ width: 16, height: 2, background: 'var(--uc-signal)' }}/>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--uc-stone-500)' }}>Payment schedule</span>
+          </span>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 700, letterSpacing: '0.04em', color: 'var(--uc-stone-300)' }}>
+            Total Payment: <span style={{ fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 15, letterSpacing: '-0.01em', color: 'var(--uc-paper)' }}>$68,000</span> <span style={{ color: 'var(--uc-stone-500)' }}>· Build + Integration</span>
+          </span>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
           {schedule.map((s, i) => (
@@ -2577,7 +2582,8 @@ function BPInvestment() {
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--uc-stone-500)' }}>If needed</div>
-          <div style={{ marginTop: 6, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(34px, 3.6vw, 52px)', letterSpacing: '-0.045em', lineHeight: 0.9, color: 'var(--uc-paper)' }}>$8k</div>
+          <div style={{ marginTop: 6, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(34px, 3.6vw, 52px)', letterSpacing: '-0.045em', lineHeight: 0.9, color: 'var(--uc-paper)' }}>$13.5k</div>
+          <div style={{ marginTop: 8, fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', color: 'var(--uc-stone-500)' }}>100 HRS</div>
         </div>
       </div>
     </BPSection>
