@@ -19,7 +19,7 @@ function useIsNarrow() {
 // worker serves the discovery experience and blueprint proposal directly
 // at their folder paths when they exist; this shell renders everything
 // else (and the not-ready fallbacks for those two).
-const PATH_MATCH = window.location.pathname.match(/^\/([a-z0-9-]+)\/(company|discovery|blueprint|delivery|growth)\/?$/);
+const PATH_MATCH = window.location.pathname.match(/^\/([a-z0-9-]+)\/(company|estimate|discovery|blueprint|onboarding|delivery|growth)\/?$/);
 const URL_SLUG = PATH_MATCH ? PATH_MATCH[1] : '';
 const URL_TAB = PATH_MATCH ? PATH_MATCH[2] : 'company';
 
@@ -129,25 +129,34 @@ function PortalLogin({ onSignedIn }) {
 }
 
 // ── Portal shell ──────────────────────────────────────────────────────────
-const TABS = ['Company', 'Discovery', 'Blueprint', 'Delivery', 'Growth'];
+// The landing ("Overview") keeps the /company URL slug so existing links and
+// the admin "Open Hub" button still resolve. The rest map slug === lowercase.
+const TABS = [
+  { key: 'Overview',   slug: 'company' },
+  { key: 'Estimate',   slug: 'estimate' },
+  { key: 'Discovery',  slug: 'discovery' },
+  { key: 'Blueprint',  slug: 'blueprint' },
+  { key: 'Onboarding', slug: 'onboarding' },
+];
+const slugForTab = (key) => (TABS.find((t) => t.key === key) || TABS[0]).slug;
+const tabForSlug = (slug) => (TABS.find((t) => t.slug === slug) || TABS[0]).key;
 
 function Portal({ me, onSignOut }) {
   const co = me.company || {};
-  const initialTab = TABS.find((t) => t.toLowerCase() === URL_TAB) || 'Company';
-  const [tab, setTabState] = useState(initialTab);
+  const [tab, setTabState] = useState(tabForSlug(URL_TAB));
   // Every tab switches in place under the fixed toolbar; the discovery
   // and blueprint experiences load framed below it, so the customer never
   // leaves the shell (or their session).
   const setTab = (t) => {
     setTabState(t);
-    try { window.history.replaceState(null, '', '/' + co.id + '/' + t.toLowerCase()); } catch (_) {}
+    try { window.history.replaceState(null, '', '/' + co.id + '/' + slugForTab(t)); } catch (_) {}
   };
   const framed = (tab === 'Discovery' && me.discovery) || (tab === 'Blueprint' && me.blueprint);
 
   const MONO = 'var(--font-mono, "JetBrains Mono", ui-monospace, monospace)';
   const isMobile = useIsNarrow();
   const logo = (
-    <div onClick={() => setTab('Company')} style={{ display: 'flex', alignItems: 'center', gap: 10, flex: '0 0 auto', cursor: 'pointer' }}>
+    <div onClick={() => setTab('Overview')} style={{ display: 'flex', alignItems: 'center', gap: 10, flex: '0 0 auto', cursor: 'pointer' }}>
       <img src="/assets/uncap-logo-white.svg" alt="Uncap" style={{ height: 13, display: 'block' }}/>
       <span style={{ width: 1, height: 14, background: '#4D4D4D' }}></span>
       <span style={{ fontFamily: MONO, fontSize: 8.5, letterSpacing: '0.12em', color: '#9A9A9A' }}>HUB</span>
@@ -155,8 +164,8 @@ function Portal({ me, onSignOut }) {
     </div>
   );
   const tabBtn = (t) => (
-    <button key={t} onClick={() => setTab(t)}
-      style={{ border: 'none', background: tab === t ? '#FFFFFF' : 'transparent', color: tab === t ? '#0A0A0A' : '#D4D2CC', borderRadius: 4, padding: '4px 11px', fontSize: 12, fontWeight: tab === t ? 700 : 500, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, transition: 'background 180ms, color 180ms' }}>{t}</button>
+    <button key={t.key} onClick={() => setTab(t.key)}
+      style={{ border: 'none', background: tab === t.key ? '#FFFFFF' : 'transparent', color: tab === t.key ? '#0A0A0A' : '#D4D2CC', borderRadius: 4, padding: '4px 11px', fontSize: 12, fontWeight: tab === t.key ? 700 : 500, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, transition: 'background 180ms, color 180ms' }}>{t.key}</button>
   );
   const signOutBtn = (
     <button onClick={onSignOut} style={{ border: '1px solid #4D4D4D', background: 'transparent', color: '#FFFFFF', borderRadius: 4, padding: '3px 9px', fontSize: 10.5, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>Sign out</button>
@@ -193,16 +202,16 @@ function Portal({ me, onSignOut }) {
       </div>
 
       {framed ? (
-        <iframe title={tab} src={'/' + co.id + '/' + tab.toLowerCase() + '/app'}
+        <iframe title={tab} src={'/' + co.id + '/' + slugForTab(tab) + '/app'}
           style={{ flex: '1 1 auto', width: '100%', border: 'none', display: 'block', background: '#F2EFE7' }}/>
       ) : (
         <div style={{ flex: '1 1 auto', overflowY: 'auto' }}>
           <div style={{ maxWidth: 1180, width: '100%', margin: '0 auto', padding: '30px 24px 60px', boxSizing: 'border-box' }}>
-            {tab === 'Company' && <CompanyTab me={me}/>}
+            {tab === 'Overview' && <OverviewTab me={me}/>}
+            {tab === 'Estimate' && <StatusPage eyebrow="ESTIMATE" title="Coming soon" note="Your estimate will live here. We're putting this together and will share it with you shortly."/>}
             {tab === 'Discovery' && <DiscoveryTab me={me}/>}
             {tab === 'Blueprint' && <BlueprintTab me={me}/>}
-            {tab === 'Delivery' && <StatusPage eyebrow="DELIVERY" title="Under Review" note="Your delivery plan is being prepared. It will appear here as soon as it is ready."/>}
-            {tab === 'Growth' && <StatusPage eyebrow="GROWTH" title="Under Review" note="Your growth program is being prepared. It will appear here as soon as it is ready."/>}
+            {tab === 'Onboarding' && <StatusPage eyebrow="ONBOARDING" title="Coming soon" note="Once your blueprint is approved, your kickoff details, access checklist, and project start plan will appear here."/>}
           </div>
         </div>
       )}
@@ -220,66 +229,100 @@ function StatusPage({ eyebrow, title, note }) {
   );
 }
 
-// ── Company tab ───────────────────────────────────────────────────────────
-const FILE_KIND_LABEL = { rfp: 'RFP', brief: 'Technical Brief', doc: 'Document' };
+// ── Overview (landing): sales process + company info ──────────────────────
+const DISP = 'var(--font-display, "Inter Display", Inter, sans-serif)';
+const MONO = 'var(--font-mono, "JetBrains Mono", ui-monospace, monospace)';
+const SIGNAL = '#E8FF4E';
 
-function CompanyTab({ me }) {
+// The engagement stages, in order. A stage is "done" when its position is at
+// or below the company's current furthest stage, derived from what exists:
+// signed blueprint → Onboarding, viewable blueprint → Blueprint, discovery →
+// Discovery, otherwise Alignment. (Estimate has no signal yet, so it simply
+// checks off once we've progressed past it.)
+const PROCESS_STEPS = [
+  { n: 1, label: 'Alignment',  desc: 'Goals, scope, and fit confirmed.' },
+  { n: 2, label: 'Estimate',   desc: 'Ballpark investment and timeline.' },
+  { n: 3, label: 'Discovery',  desc: 'Deep dive into your systems and requirements.' },
+  { n: 4, label: 'Blueprint',  desc: 'Your fixed-scope proposal to review and approve.' },
+  { n: 5, label: 'Onboarding', desc: 'Kickoff, access, and project start.' },
+];
+
+function InfoRow({ label, value }) {
+  return (
+    <div>
+      <div style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: '0.12em', color: '#9A9A9A' }}>{label}</div>
+      <div style={{ fontSize: 14, color: '#1A1A1A', marginTop: 3, wordBreak: 'break-word' }}>{value}</div>
+    </div>
+  );
+}
+
+function OverviewTab({ me }) {
   const co = me.company || {};
+  const narrow = useIsNarrow();
   const card = { background: '#FFFFFF', border: '1px solid #E4E1D8', borderRadius: 8, padding: 26 };
-  const eyebrow = { fontFamily: 'var(--font-mono, "JetBrains Mono", ui-monospace, monospace)', fontSize: 10.5, letterSpacing: '0.14em', color: '#9A9A9A' };
-  const chip = { display: 'inline-block', border: '1px solid #E4E1D8', background: '#FBFAF7', borderRadius: 999, padding: '5px 12px', fontSize: 12.5, fontWeight: 600, color: '#1A1A1A', marginRight: 8, marginTop: 8 };
+  const eyebrow = { fontFamily: MONO, fontSize: 10.5, letterSpacing: '0.14em', color: '#9A9A9A' };
+  const stage = me.signed ? 5 : me.blueprint ? 4 : me.discovery ? 3 : 1;
+  const site = co.storeUrl ? (/^https?:\/\//.test(co.storeUrl) ? co.storeUrl : 'https://' + co.storeUrl) : '';
 
   return (
-    <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: 20, alignItems: 'start' }}>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-        <div style={card}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 18 }}>
-            {co.hasLogo ? <img src={'/api/company/logo?id=' + encodeURIComponent(co.id)} alt="" style={{ height: 46, maxWidth: 190, objectFit: 'contain', display: 'block' }}/> : null}
-            <div>
-              <div style={{ fontFamily: 'var(--font-display, "Inter Display", Inter, sans-serif)', fontSize: 26, fontWeight: 750, letterSpacing: '-0.02em' }}>{co.name}</div>
-              {co.storeUrl ? <a href={/^https?:\/\//.test(co.storeUrl) ? co.storeUrl : 'https://' + co.storeUrl} target="_blank" rel="noreferrer" style={{ fontSize: 13.5, color: '#4D4D4D' }}>{co.storeUrl}</a> : null}
-            </div>
-          </div>
-          {co.description ? <div style={{ fontSize: 14.5, lineHeight: 1.65, color: '#4D4D4D', marginTop: 16 }}>{co.description}</div> : null}
-          <div style={{ marginTop: 10 }}>
-            {co.platform ? <span style={chip}>Platform · {co.platform}</span> : null}
-            {co.erp ? <span style={chip}>ERP · {co.erp}</span> : null}
-            {co.address ? <span style={chip}>{co.address}</span> : null}
-          </div>
-          {co.palette ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 16 }}>
-              <span style={eyebrow}>BRAND PALETTE</span>
-              <span style={{ width: 18, height: 18, borderRadius: '50%', background: co.palette.prime, border: '1px solid #E4E1D8' }}></span>
-              <span style={{ width: 18, height: 18, borderRadius: '50%', background: co.palette.accent, border: '1px solid #E4E1D8' }}></span>
-            </div>
-          ) : null}
-        </div>
-
-        <div style={card}>
-          <div style={eyebrow}>DOCUMENTS</div>
-          {(co.files || []).length === 0 ? (
-            <div style={{ fontSize: 14, color: '#707070', marginTop: 12 }}>No documents shared yet.</div>
-          ) : (
-            <div style={{ marginTop: 14 }}>
-              {co.files.map((f) => (
-                <a key={f.fid} href={'/api/portal/file?fid=' + encodeURIComponent(f.fid) + '&company=' + encodeURIComponent(co.id)}
-                  style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 0', borderBottom: '1px solid #F2EFE7', textDecoration: 'none', color: '#0A0A0A' }}>
-                  <span style={{ fontFamily: 'var(--font-mono, "JetBrains Mono", ui-monospace, monospace)', fontSize: 9.5, letterSpacing: '0.08em', background: '#0A0A0A', color: '#FFFFFF', borderRadius: 4, padding: '3px 8px', flex: '0 0 auto' }}>{(FILE_KIND_LABEL[f.kind] || 'Document').toUpperCase()}</span>
-                  <span style={{ fontSize: 14, fontWeight: 600, flex: '1 1 auto', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</span>
-                  <span style={{ fontSize: 12, color: '#9A9A9A', flex: '0 0 auto' }}>{f.size ? Math.max(1, Math.round(f.size / 1024)) + ' KB' : ''} ↓</span>
-                </a>
-              ))}
-            </div>
-          )}
+    <div style={{ display: 'grid', gridTemplateColumns: narrow ? '1fr' : '2fr 1fr', gap: 20, alignItems: 'start' }}>
+      {/* 2/3 — sales process */}
+      <div style={card}>
+        <div style={eyebrow}>YOUR ENGAGEMENT</div>
+        <div style={{ fontFamily: DISP, fontSize: 24, fontWeight: 750, letterSpacing: '-0.02em', marginTop: 8, marginBottom: 24 }}>The path to launch</div>
+        <div>
+          {PROCESS_STEPS.map((s, i) => {
+            const done = s.n <= stage;
+            const current = s.n === stage;
+            const last = i === PROCESS_STEPS.length - 1;
+            return (
+              <div key={s.n} style={{ display: 'grid', gridTemplateColumns: '32px 1fr', columnGap: 16 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <div style={{
+                    width: 32, height: 32, borderRadius: '50%', flex: '0 0 auto', boxSizing: 'border-box',
+                    background: done ? SIGNAL : '#FFFFFF', border: done ? '1px solid ' + SIGNAL : '1px solid #D9D6CD',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontFamily: MONO, fontSize: 12, fontWeight: 700, color: done ? '#0A0A0A' : '#9A9A9A'
+                  }}>
+                    {done
+                      ? <svg width="14" height="14" viewBox="0 0 12 12" fill="none"><path d="M2 6 L5 9 L10 3" stroke="#0A0A0A" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                      : s.n}
+                  </div>
+                  {!last ? <div style={{ width: 2, flex: '1 1 auto', minHeight: 24, background: s.n < stage ? SIGNAL : '#E4E1D8', marginTop: 3, marginBottom: 3 }}/> : null}
+                </div>
+                <div style={{ paddingBottom: last ? 0 : 20, paddingTop: 4 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                    <span style={{ fontFamily: DISP, fontSize: 16.5, fontWeight: 700, letterSpacing: '-0.01em', color: done ? '#0A0A0A' : '#9A9A9A' }}>{s.label}</span>
+                    {current ? <span style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', color: '#0A0A0A', background: SIGNAL, borderRadius: 3, padding: '2px 7px' }}>CURRENT</span> : null}
+                    {done && !current ? <span style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', color: '#2E7D32' }}>DONE</span> : null}
+                  </div>
+                  <div style={{ fontSize: 13.5, lineHeight: 1.5, color: done ? '#4D4D4D' : '#9A9A9A', marginTop: 3 }}>{s.desc}</div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
 
-      <div style={card}>
-        <div style={eyebrow}>YOUR TEAM</div>
-        <div style={{ marginTop: 14 }}>
-          {co.leadContact ? <Contact c={co.leadContact} lead/> : null}
-          {(co.contacts || []).map((c) => <Contact key={c.email} c={c}/>)}
-          {!co.leadContact && (co.contacts || []).length === 0 ? <div style={{ fontSize: 14, color: '#707070' }}>No contacts on file.</div> : null}
+      {/* 1/3 — company info + contacts */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div style={card}>
+          {co.hasLogo ? <img src={'/api/company/logo?id=' + encodeURIComponent(co.id)} alt="" style={{ height: 42, maxWidth: 180, objectFit: 'contain', display: 'block', marginBottom: 14 }}/> : null}
+          <div style={{ fontFamily: DISP, fontSize: 22, fontWeight: 750, letterSpacing: '-0.02em' }}>{co.name}</div>
+          <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            {site ? <InfoRow label="WEBSITE" value={<a href={site} target="_blank" rel="noreferrer" style={{ color: '#1A1A1A', textDecoration: 'underline' }}>{co.storeUrl}</a>}/> : null}
+            {co.address ? <InfoRow label="ADDRESS" value={co.address}/> : null}
+            {co.leadContact ? <InfoRow label="CONTACT" value={<span>{co.leadContact.name || co.leadContact.email}{co.leadContact.email && co.leadContact.name ? <span style={{ display: 'block', fontSize: 12.5, color: '#707070', marginTop: 1 }}>{co.leadContact.email}</span> : null}</span>}/> : null}
+          </div>
+        </div>
+
+        <div style={card}>
+          <div style={eyebrow}>CONTACTS</div>
+          <div style={{ marginTop: 14 }}>
+            {co.leadContact ? <Contact c={co.leadContact} lead/> : null}
+            {(co.contacts || []).map((c) => <Contact key={c.email} c={c}/>)}
+            {!co.leadContact && (co.contacts || []).length === 0 ? <div style={{ fontSize: 14, color: '#707070' }}>No contacts on file.</div> : null}
+          </div>
         </div>
       </div>
     </div>

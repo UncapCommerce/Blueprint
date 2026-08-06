@@ -488,7 +488,7 @@ export default {
       }
       // Tab pages always render the portal shell — the toolbar never
       // disappears; the shell embeds the experience below it.
-      const coMatch = url.pathname.match(/^\/([a-z0-9-]{2,60})(?:\/(company|discovery|blueprint|delivery|growth))?\/?$/);
+      const coMatch = url.pathname.match(/^\/([a-z0-9-]{2,60})(?:\/(company|estimate|discovery|blueprint|onboarding|delivery|growth))?\/?$/);
       if (coMatch && !PORTAL_RESERVED.has(coMatch[1])) {
         const co = await getCompany(env, coMatch[1]);
         if (co) {
@@ -4531,9 +4531,14 @@ async function handlePortalMe(request, env) {
   if (rec.blueprintId && await blueprintIsViewable(env, rec.blueprintId)) {
     blueprint = { id: rec.blueprintId, url: `/${rec.id}/blueprint` };
   }
+  // Whether this company's blueprint has been signed/approved — drives the
+  // "Onboarding" stage on the hub's sales-process checklist.
+  let signed = false;
+  if (rec.blueprintId) signed = !!(await env.BLUEPRINT_AUTH.get(`bpsigned:${rec.blueprintId}`));
   return json(200, {
     ok: true,
     preview,
+    signed,
     email: viewer.email,
     name: viewer.name || '',
     company: {
@@ -4589,7 +4594,7 @@ async function handlePortalLogout(request, env) {
 const PORTAL_RESERVED = new Set([
   'admin', 'api', 'discovery', 'blueprint', 'blueprints', 'discoveries',
   'build', 'portal', 'assets', 'vendor', 'legal', 'demo', 'companies',
-  'company', 'delivery', 'growth', 'favicon-32', 'index',
+  'company', 'estimate', 'onboarding', 'delivery', 'growth', 'favicon-32', 'index',
 ]);
 
 async function findCompanyByBlueprintId(env, bpId) {
