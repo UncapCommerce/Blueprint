@@ -207,7 +207,7 @@ function Portal({ me, onSignOut }) {
       ) : (
         <div style={{ flex: '1 1 auto', overflowY: 'auto' }}>
           <div style={{ maxWidth: 1180, width: '100%', margin: '0 auto', padding: '30px 24px 60px', boxSizing: 'border-box' }}>
-            {tab === 'Overview' && <OverviewTab me={me}/>}
+            {tab === 'Overview' && <OverviewTab me={me} onNavigate={setTab}/>}
             {tab === 'Estimate' && <StatusPage eyebrow="ESTIMATE" title="Coming soon" note="Your estimate will live here. We're putting this together and will share it with you shortly."/>}
             {tab === 'Discovery' && <DiscoveryTab me={me}/>}
             {tab === 'Blueprint' && <BlueprintTab me={me}/>}
@@ -256,13 +256,23 @@ function InfoRow({ label, value }) {
   );
 }
 
-function OverviewTab({ me }) {
+function OverviewTab({ me, onNavigate }) {
   const co = me.company || {};
   const narrow = useIsNarrow();
   const card = { background: '#FFFFFF', border: '1px solid #E4E1D8', borderRadius: 8, padding: 26 };
   const eyebrow = { fontFamily: MONO, fontSize: 10.5, letterSpacing: '0.14em', color: '#9A9A9A' };
   const stage = me.signed ? 5 : me.blueprint ? 4 : me.discovery ? 3 : 1;
   const site = co.storeUrl ? (/^https?:\/\//.test(co.storeUrl) ? co.storeUrl : 'https://' + co.storeUrl) : '';
+  // A step gets a call-to-action when it has somewhere to go.
+  const CTA = {
+    Discovery: me.discovery ? { label: 'View Discovery', tab: 'Discovery' } : null,
+    Blueprint: me.blueprint ? { label: 'View Blueprint', tab: 'Blueprint' } : null,
+  };
+  const ctaStyle = (primary) => ({
+    border: primary ? 'none' : '1px solid #D9D6CD', background: primary ? '#0A0A0A' : 'transparent',
+    color: primary ? '#FFFFFF' : '#0A0A0A', borderRadius: 6, padding: '8px 14px',
+    fontSize: 12.5, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0,
+  });
 
   return (
     <div style={{ display: 'grid', gridTemplateColumns: narrow ? '1fr' : '2fr 1fr', gap: 20, alignItems: 'start' }}>
@@ -290,13 +300,18 @@ function OverviewTab({ me }) {
                   </div>
                   {!last ? <div style={{ width: 2, flex: '1 1 auto', minHeight: 24, background: s.n < stage ? SIGNAL : '#E4E1D8', marginTop: 3, marginBottom: 3 }}/> : null}
                 </div>
-                <div style={{ paddingBottom: last ? 0 : 20, paddingTop: 4 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
-                    <span style={{ fontFamily: DISP, fontSize: 16.5, fontWeight: 700, letterSpacing: '-0.01em', color: done ? '#0A0A0A' : '#9A9A9A' }}>{s.label}</span>
-                    {current ? <span style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', color: '#0A0A0A', background: SIGNAL, borderRadius: 3, padding: '2px 7px' }}>CURRENT</span> : null}
-                    {done && !current ? <span style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', color: '#2E7D32' }}>DONE</span> : null}
+                <div style={{ paddingBottom: last ? 0 : 20, paddingTop: 4, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 14, flexWrap: 'wrap' }}>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+                      <span style={{ fontFamily: DISP, fontSize: 16.5, fontWeight: 700, letterSpacing: '-0.01em', color: done ? '#0A0A0A' : '#9A9A9A' }}>{s.label}</span>
+                      {current ? <span style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', color: '#0A0A0A', background: SIGNAL, borderRadius: 3, padding: '2px 7px' }}>CURRENT</span> : null}
+                      {done && !current ? <span style={{ fontFamily: MONO, fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', color: '#2E7D32' }}>DONE</span> : null}
+                    </div>
+                    <div style={{ fontSize: 13.5, lineHeight: 1.5, color: done ? '#4D4D4D' : '#9A9A9A', marginTop: 3 }}>{s.desc}</div>
                   </div>
-                  <div style={{ fontSize: 13.5, lineHeight: 1.5, color: done ? '#4D4D4D' : '#9A9A9A', marginTop: 3 }}>{s.desc}</div>
+                  {CTA[s.label] ? (
+                    <button type="button" onClick={() => onNavigate(CTA[s.label].tab)} style={ctaStyle(current)}>{CTA[s.label].label} →</button>
+                  ) : null}
                 </div>
               </div>
             );
