@@ -100,6 +100,7 @@
     const base = segs[0] === 'admin' ? segs.slice(1) : segs;
     if (base[0] === 'company' && base[1]) return 'company-profile';
     if (base[0] === 'blueprint' && base[1]) return 'blueprint-editor';
+    if (base[0] === 'sales') return 'sales';
     if (base[0] === 'discoveries') return 'discoveries';
     if (base[0] === 'blueprints') return 'blueprints';
     if (base[0] === 'companies') return 'companies';
@@ -332,11 +333,6 @@
     // Sub-navs per section (the second row). Sales/Services land on their first
     // sub-page; Revenues lands on its Overview page.
     const SUB = {
-      sales: [
-        { id: 'companies',   l: 'Companies',   path: '/admin/companies' },
-        { id: 'discoveries', l: 'Discoveries', path: '/admin/discoveries' },
-        { id: 'blueprints',  l: 'Blueprints',  path: '/admin/blueprints' },
-      ],
       services: [
         { id: 'projects',  l: 'Projects',  path: '/admin/projects' },
         { id: 'retainers', l: 'Retainers', path: '/admin/retainers' },
@@ -353,7 +349,7 @@
     // routes back to the owning section.
     const SECTIONS = [
       { id: 'activities', l: 'Activities', path: '/admin', match: ['home'] },
-      { id: 'sales', l: 'Sales', path: '/admin/companies', match: ['companies', 'discoveries', 'blueprints', 'company-profile', 'blueprint-editor'] },
+      { id: 'sales', l: 'Sales', path: '/admin/sales', match: ['sales', 'companies', 'discoveries', 'blueprints', 'company-profile', 'blueprint-editor'] },
       { id: 'services', l: 'Services', path: '/admin/projects', match: ['projects', 'retainers'] },
       ...(me.canDelete ? [{ id: 'revenues', l: 'Revenues', path: '/admin/revenues', match: ['revenues', 'rev-fixed', 'rev-recurring', 'rev-apps', 'rev-referrals'] }] : []),
       { id: 'dashboard', l: 'Dashboard', path: '/admin/dashboard', match: ['dashboard'] },
@@ -1641,6 +1637,92 @@
     return msg;
   }
 
+  // ── Sales pipeline (CRM kanban) ──────────────────────────────────────
+  const PIPELINE_STAGES = [
+    { key: 'opportunity', label: 'Opportunity', dot: '#9A8A5A' },
+    { key: 'estimate',    label: 'Estimate',    dot: '#E4A11B' },
+    { key: 'discovery',   label: 'Discovery',   dot: '#3A44C4' },
+    { key: 'blueprint',   label: 'Blueprint',   dot: '#0A7A3B' },
+    { key: 'signed',      label: 'Signed',      dot: '#0A0A0A' },
+  ];
+
+  function PipelineCard({ c }) {
+    const bp = c.blueprint, disc = c.discovery;
+    const linkOut = (href, text) => <a href={href} target="_blank" rel="noreferrer" style={{ color: '#2E5AAC', textDecoration: 'none', fontWeight: 600 }}>{text} ↗</a>;
+    const dash = <span style={{ color: T.fg3 }}>—</span>;
+    const metric = (label, valueEl) => (
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
+        <span style={{ fontFamily: T.mono, fontSize: 9.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.fg3, flexShrink: 0 }}>{label}</span>
+        <span style={{ fontFamily: T.sans, fontSize: 12, color: T.fg1, textAlign: 'right', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{valueEl}</span>
+      </div>
+    );
+    return (
+      <div style={{ ...S.card, padding: 14, display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+          <span style={{ width: 30, height: 30, borderRadius: 7, background: T.cream, border: `1px solid ${T.line}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
+            {c.hasLogo
+              ? <img src={'/api/company/logo?id=' + encodeURIComponent(c.id) + '&t=' + encodeURIComponent(c.updatedAt || '')} alt="" style={{ maxWidth: 26, maxHeight: 22, objectFit: 'contain' }}/>
+              : <span style={{ fontFamily: T.mono, fontSize: 12, fontWeight: 700, color: T.fg3 }}>{(c.name || '?')[0].toUpperCase()}</span>}
+          </span>
+          <div style={{ minWidth: 0 }}>
+            <div style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 14, color: T.fg1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name}</div>
+            <div style={{ fontFamily: T.mono, fontSize: 10.5, color: T.fg3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.leadContact ? (c.leadContact.name || c.leadContact.email) : 'No lead contact'}</div>
+          </div>
+        </div>
+        <div style={{ borderTop: `1px solid ${T.line}`, paddingTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {metric('Estimate', c.estimate ? linkOut('#', '#' + c.estimate.num) : dash)}
+          {metric('Discovery', disc ? linkOut(disc.url, disc.status || 'view') : dash)}
+          {metric('Blueprint', bp ? linkOut(bp.url, bp.num ? '#' + bp.num : 'view') : dash)}
+        </div>
+        <a href={'/admin/company/' + c.id} onClick={navClick('/admin/company/' + c.id)} style={{ ...S.btn, textDecoration: 'none', textAlign: 'center', padding: '8px 12px', fontSize: 12.5 }}>View company</a>
+      </div>
+    );
+  }
+
+  function SalesPipeline({ me }) {
+    const [rows, setRows] = useState(null);
+    const [error, setError] = useState('');
+    const [adding, setAdding] = useState(false);
+    const load = async () => {
+      try { setRows((await api('/api/admin/pipeline')).companies); }
+      catch (err) { setError(err.message); setRows([]); }
+    };
+    useEffect(() => { load(); }, []);
+    const inStage = (k) => (rows || []).filter((c) => c.stage === k);
+    return (
+      <Page>
+        <PageHead eyebrow="Sales" title="Pipeline" action={
+          <button type="button" style={S.btnLime} onClick={() => setAdding(true)}>+ Add company</button>
+        }/>
+        {rows === null ? (
+          <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>Loading…</div>
+        ) : (error && !rows.length) ? (
+          <div style={{ ...S.card, padding: 28, color: '#B3261E', fontFamily: T.mono, fontSize: 12 }}>{error}</div>
+        ) : (
+          <div style={{ display: 'flex', gap: 14, overflowX: 'auto', paddingBottom: 10, alignItems: 'flex-start' }}>
+            {PIPELINE_STAGES.map((st) => {
+              const cards = inStage(st.key);
+              return (
+                <div key={st.key} style={{ flex: '0 0 300px', width: 300, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '2px 2px 0' }}>
+                    <span style={{ width: 8, height: 8, borderRadius: 999, background: st.dot, flexShrink: 0 }}/>
+                    <span style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 13.5, color: T.fg1 }}>{st.label}</span>
+                    <span style={{ fontFamily: T.mono, fontSize: 11, color: T.fg3 }}>{cards.length}</span>
+                  </div>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                    {cards.map((c) => <PipelineCard key={c.id} c={c}/>)}
+                    {cards.length === 0 ? <div style={{ border: `1px dashed ${T.line}`, borderRadius: 10, padding: '18px 12px', textAlign: 'center', fontFamily: T.mono, fontSize: 10.5, color: T.fg3 }}>Empty</div> : null}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+        {adding && <AddCompanyModal onClose={() => setAdding(false)} onSaved={(co) => { setAdding(false); if (co) navigate('/admin/company/' + co.id); else load(); }}/>}
+      </Page>
+    );
+  }
+
   function Companies({ me }) {
     const [rows, setRows] = useState(null);
     const [error, setError] = useState('');
@@ -2025,9 +2107,31 @@
           <div style={{ display: 'flex', gap: 8 }}>
             {inviteList.length ? <button type="button" style={S.btnGhost} disabled={!!inviting} onClick={() => doInvite()}>{inviting === 'all' ? 'Sending…' : 'Invite all'}</button> : null}
             <a href={portalUrl} target="_blank" rel="noreferrer" style={{ ...S.btnGhost, textDecoration: 'none' }}>Open Hub ↗</a>
-            <a href="/admin/companies" onClick={navClick('/admin/companies')} style={{ ...S.btnGhost, textDecoration: 'none' }}>← Companies</a>
+            <a href="/admin/sales" onClick={navClick('/admin/sales')} style={{ ...S.btnGhost, textDecoration: 'none' }}>← Pipeline</a>
           </div>
         }/>
+        {(() => {
+          const tile = (label, has, statusText, viewHref, createHref, comingSoon) => (
+            <div style={{ ...S.card, flex: '1 1 180px', minWidth: 168, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.fg3 }}>{label}</div>
+              <div style={{ fontFamily: T.sans, fontSize: 13, fontWeight: 600, color: has ? T.fg1 : T.fg3 }}>{statusText}</div>
+              <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
+                {comingSoon
+                  ? <button type="button" disabled style={{ ...S.btnGhost, opacity: 0.5, cursor: 'default' }}>Create</button>
+                  : has
+                    ? <a href={viewHref} target="_blank" rel="noreferrer" style={{ ...S.btnGhost, textDecoration: 'none' }}>View ↗</a>
+                    : <a href={createHref} onClick={navClick(createHref)} style={{ ...S.btnLime, textDecoration: 'none' }}>Create</a>}
+              </div>
+            </div>
+          );
+          return (
+            <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
+              {tile('Estimate', false, 'Coming soon', '', '', true)}
+              {tile('Discovery', !!co.discoveryHandle, co.discoveryHandle ? 'Started' : 'Not started', '/' + co.id + '/discovery', '/admin/discoveries', false)}
+              {tile('Blueprint', !!co.blueprintId, co.blueprintId ? 'Created' : 'Not started', '/blueprint/' + co.blueprintId + '/', '/admin/blueprints', false)}
+            </div>
+          );
+        })()}
         <div style={{ ...S.card, padding: 4 }}>
         <form onSubmit={save} style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div style={{ fontFamily: T.sans, fontSize: 13, color: T.fg3, marginBottom: 2 }}>Everything here feeds the customer portal and new discoveries.</div>
@@ -3193,6 +3297,7 @@
         {route === 'users' ? (me.isSuper ? <Users/> : <Home/>)
           : route === 'company-profile' ? <CompanyProfile id={routeCompanyId()}/>
           : route === 'blueprint-editor' ? <BlueprintEditor id={routeBlueprintId()}/>
+          : route === 'sales' ? <SalesPipeline me={me}/>
           : route === 'companies' ? <Companies me={me}/>
           : route === 'discoveries' ? <Discoveries me={me}/>
           : route === 'blueprints' ? <Blueprints me={me}/>

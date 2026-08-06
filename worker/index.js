@@ -310,6 +310,9 @@ export default {
     if (url.pathname === '/api/admin/revenue/summary' && request.method === 'GET') {
       return revenueCached(request, env, ctx, () => handleAdminRevenueSummary(request, env));
     }
+    if (url.pathname === '/api/admin/pipeline' && request.method === 'GET') {
+      return handleAdminPipeline(request, env);
+    }
     if (url.pathname === '/api/admin/discoveries' && request.method === 'GET') {
       return handleAdminListDiscoveries(request, env);
     }
@@ -441,7 +444,7 @@ export default {
     // The admin dashboard lives at /admin (client-side routes /admin/
     // discoveries|blueprints|companies and the company profile page
     // /admin/company/<id> included); the root is the portal.
-    if (/^\/admin(\/(discoveries|blueprints|companies|users|projects|retainers|dashboard|revenues(\/(fixed|recurring|apps|referrals))?|company\/[a-z0-9-]+|blueprint\/[a-z0-9-]+))?\/?$/.test(url.pathname) && (request.method === 'GET' || request.method === 'HEAD')) {
+    if (/^\/admin(\/(sales|discoveries|blueprints|companies|users|projects|retainers|dashboard|revenues(\/(fixed|recurring|apps|referrals))?|company\/[a-z0-9-]+|blueprint\/[a-z0-9-]+))?\/?$/.test(url.pathname) && (request.method === 'GET' || request.method === 'HEAD')) {
       const assetUrl = new URL(url.toString());
       assetUrl.pathname = '/admin/index.html';
       return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
@@ -4214,6 +4217,42 @@ async function linkBespokeBlueprintToCompany(env, companies, blueprintId, matche
     co.blueprintId = blueprintId;
     await putCompany(env, co).catch(() => {});
   }
+}
+
+// GET /api/admin/pipeline — the Sales CRM board. Returns every company placed
+// into a stage (opportunity → estimate → discovery → blueprint → signed) with
+// the data each card shows: lead contact, discovery status, blueprint number +
+// signed state, and quick-links. Stage is the furthest artifact that exists.
+async function handleAdminPipeline(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  const companies = await listCompanies(env);
+  const out = [];
+  for (const co of companies) {
+    let discovery = null;
+    if (co.discoveryHandle) {
+      const disc = await getDiscoveryByHandle(env, co.discoveryHandle).catch(() => null);
+      if (disc) discovery = { handle: disc.handle || co.discoveryHandle, status: disc.status || 'new', url: `/${co.id}/discovery` };
+    }
+    let blueprint = null;
+    if (co.blueprintId && await blueprintIsViewable(env, co.blueprintId)) {
+      const reg = BLUEPRINT_REGISTRY.find((b) => b.id === co.blueprintId);
+      const signed = !!(await env.BLUEPRINT_AUTH.get(`bpsigned:${co.blueprintId}`));
+      blueprint = { id: co.blueprintId, num: reg ? reg.num : '', signed, url: `/blueprint/${co.blueprintId}/` };
+    }
+    const estimate = null; // Estimate functionality is not built yet.
+    const stage = (blueprint && blueprint.signed) ? 'signed'
+      : blueprint ? 'blueprint'
+      : discovery ? 'discovery'
+      : estimate ? 'estimate'
+      : 'opportunity';
+    out.push({
+      id: co.id, name: co.name || co.id, hasLogo: !!co.hasLogo, updatedAt: co.updatedAt || '',
+      leadContact: co.leadContact ? { name: co.leadContact.name || '', email: co.leadContact.email || '', title: co.leadContact.title || '' } : null,
+      stage, estimate, discovery, blueprint,
+    });
+  }
+  return json(200, { ok: true, companies: out });
 }
 
 async function handleAdminListCompanies(request, env) {
