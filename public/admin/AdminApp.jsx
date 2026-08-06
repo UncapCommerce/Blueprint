@@ -100,6 +100,7 @@
     const base = segs[0] === 'admin' ? segs.slice(1) : segs;
     if (base[0] === 'company' && base[1]) return 'company-profile';
     if (base[0] === 'blueprint' && base[1]) return 'blueprint-editor';
+    if (base[0] === 'sales' && base[1] === 'process') return 'sales-process';
     if (base[0] === 'sales') return 'sales';
     if (base[0] === 'discoveries') return 'discoveries';
     if (base[0] === 'blueprints') return 'blueprints';
@@ -333,6 +334,10 @@
     // Sub-navs per section (the second row). Sales/Services land on their first
     // sub-page; Revenues lands on its Overview page.
     const SUB = {
+      sales: [
+        { id: 'sales',         l: 'Pipeline', path: '/admin/sales' },
+        { id: 'sales-process', l: 'Process',  path: '/admin/sales/process' },
+      ],
       services: [
         { id: 'projects',  l: 'Projects',  path: '/admin/projects' },
         { id: 'retainers', l: 'Retainers', path: '/admin/retainers' },
@@ -349,7 +354,7 @@
     // routes back to the owning section.
     const SECTIONS = [
       { id: 'activities', l: 'Activities', path: '/admin', match: ['home'] },
-      { id: 'sales', l: 'Sales', path: '/admin/sales', match: ['sales', 'companies', 'discoveries', 'blueprints', 'company-profile', 'blueprint-editor'] },
+      { id: 'sales', l: 'Sales', path: '/admin/sales', match: ['sales', 'sales-process', 'companies', 'discoveries', 'blueprints', 'company-profile', 'blueprint-editor'] },
       { id: 'services', l: 'Services', path: '/admin/projects', match: ['projects', 'retainers'] },
       ...(me.canDelete ? [{ id: 'revenues', l: 'Revenues', path: '/admin/revenues', match: ['revenues', 'rev-fixed', 'rev-recurring', 'rev-apps', 'rev-referrals'] }] : []),
       { id: 'dashboard', l: 'Dashboard', path: '/admin/dashboard', match: ['dashboard'] },
@@ -1677,6 +1682,76 @@
           {metric('Blueprint', bp ? linkOut(bp.url, bp.num ? '#' + bp.num : 'view') : dash)}
         </div>
       </div>
+    );
+  }
+
+  // Internal reference: how our sales process works, stage by stage. Mirrors
+  // the Pipeline columns so the team knows what each stage means and what to do.
+  function SalesProcess() {
+    const STEPS = [
+      { n: '01', label: 'Opportunity', dot: '#9A8A5A',
+        what: 'A prospect we’ve added to the pipeline but haven’t scoped yet. Every engagement starts here.',
+        trigger: 'A company is created with “+ Add company” on the Pipeline.',
+        todo: ['Confirm the fit and that there’s a real project.', 'Set the lead contact and capture the store URL + key people.', 'Agree on next step: a quick estimate or straight to discovery.'] },
+      { n: '02', label: 'Estimate', dot: '#E4A11B',
+        what: 'A ballpark investment and timeline so the client can gut-check budget before we invest in discovery.',
+        trigger: 'An estimate is created for the company. (Estimate tooling is coming soon; for now this is shared over email.)',
+        todo: ['Rough-scope the work from what we know.', 'Send a range, not a fixed price — that comes after discovery.', 'Get a verbal go-ahead to proceed to discovery.'] },
+      { n: '03', label: 'Discovery', dot: '#3A44C4',
+        what: 'A structured deep-dive into the client’s systems, catalog, and requirements — the raw material for the blueprint.',
+        trigger: 'A discovery is started and linked to the company (its status shows on the card and in the Hub).',
+        todo: ['Send the discovery, or run it live with the client.', 'Map the current platform, ERP, and integrations.', 'Nail down scope so the blueprint holds up under scrutiny.'] },
+      { n: '04', label: 'Blueprint', dot: '#0A7A3B',
+        what: 'The fixed-scope proposal — architecture, scope, timeline, and investment — for the client to review and approve.',
+        trigger: 'A blueprint is created for the company and marked ready; it appears in the client’s Hub.',
+        todo: ['Draft and review the blueprint internally.', 'Share it through the Hub and walk the client through it.', 'Answer questions and revise until they’re ready to sign.'] },
+      { n: '05', label: 'Signed', dot: '#0A0A0A',
+        what: 'The client has approved the blueprint. The deal is won and the project is a go.',
+        trigger: 'The client signs and approves the blueprint in the Hub.',
+        todo: ['Kick off onboarding and collect access.', 'Hand off to the delivery team with the signed scope.', 'Confirm the payment schedule and start dates.'] },
+      { n: '06', label: 'Declined', dot: '#B3261E',
+        what: 'The client passed, or the opportunity went cold. Kept on record so we can re-engage later.',
+        trigger: 'The company is moved to Declined from its profile.',
+        todo: ['Their Hub access is fully disabled — no estimate, discovery, or blueprint.', 'Note why it was declined for future context.', 'Restore access from the profile if they come back.'] },
+    ];
+    return (
+      <Page>
+        <PageHead eyebrow="Sales" title="Process"/>
+        <div style={{ ...S.card, padding: 'clamp(20px, 3vw, 30px)', marginBottom: 20 }}>
+          <div style={{ fontFamily: T.sans, fontSize: 15, lineHeight: 1.65, color: T.fg2, maxWidth: 720 }}>
+            How a deal moves through Uncap, stage by stage. Each stage matches a column on the Pipeline: a company advances automatically as its estimate, discovery, and blueprint come to life. Use this as the shared playbook for what each stage means and what we do in it.
+          </div>
+        </div>
+        <div style={{ ...S.card, padding: 'clamp(20px, 3vw, 32px)' }}>
+          {STEPS.map((s, i) => {
+            const last = i === STEPS.length - 1;
+            return (
+              <div key={s.n} style={{ display: 'grid', gridTemplateColumns: '34px 1fr', columnGap: 18 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  <span style={{ width: 34, height: 34, borderRadius: '50%', flex: '0 0 auto', background: s.dot, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: T.mono, fontSize: 12, fontWeight: 700, color: '#FFFFFF' }}>{s.n}</span>
+                  {!last ? <div style={{ width: 2, flex: '1 1 auto', minHeight: 22, background: T.line, marginTop: 4, marginBottom: 4 }}/> : null}
+                </div>
+                <div style={{ paddingBottom: last ? 0 : 26, paddingTop: 4 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <span style={{ fontFamily: T.hero, fontWeight: 800, fontSize: 19, letterSpacing: '-0.02em', color: T.fg1 }}>{s.label}</span>
+                  </div>
+                  <div style={{ fontFamily: T.sans, fontSize: 14, lineHeight: 1.55, color: T.fg2, marginTop: 6, maxWidth: 680 }}>{s.what}</div>
+                  <div style={{ fontFamily: T.mono, fontSize: 11, letterSpacing: '0.04em', color: T.fg3, marginTop: 10 }}>ENTERS WHEN</div>
+                  <div style={{ fontFamily: T.sans, fontSize: 13.5, lineHeight: 1.5, color: T.fg2, marginTop: 3, maxWidth: 680 }}>{s.trigger}</div>
+                  <div style={{ fontFamily: T.mono, fontSize: 11, letterSpacing: '0.04em', color: T.fg3, marginTop: 12 }}>WHAT WE DO</div>
+                  <ul style={{ margin: '6px 0 0', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 5 }}>
+                    {s.todo.map((t, j) => (
+                      <li key={j} style={{ display: 'grid', gridTemplateColumns: '16px 1fr', gap: 8, fontFamily: T.sans, fontSize: 13.5, lineHeight: 1.5, color: T.fg2 }}>
+                        <span style={{ color: s.dot, fontWeight: 800 }}>·</span><span>{t}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </Page>
     );
   }
 
@@ -3315,6 +3390,7 @@
           : route === 'company-profile' ? <CompanyProfile id={routeCompanyId()} me={me}/>
           : route === 'blueprint-editor' ? <BlueprintEditor id={routeBlueprintId()}/>
           : route === 'sales' ? <SalesPipeline me={me}/>
+          : route === 'sales-process' ? <SalesProcess/>
           : route === 'companies' ? <Companies me={me}/>
           : route === 'discoveries' ? <Discoveries me={me}/>
           : route === 'blueprints' ? <Blueprints me={me}/>
