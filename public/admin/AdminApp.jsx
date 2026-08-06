@@ -416,9 +416,9 @@
     );
   }
 
-  function Page({ children }) {
+  function Page({ children, wide }) {
     const isMobile = useIsMobile();
-    return <main style={{ maxWidth: 1160, margin: '0 auto', padding: isMobile ? '22px 14px 64px' : '36px 20px 80px' }}>{children}</main>;
+    return <main style={{ maxWidth: wide ? 'none' : 1160, margin: '0 auto', padding: isMobile ? '22px 14px 64px' : '36px 20px 80px' }}>{children}</main>;
   }
 
   function PageHead({ eyebrow, title, action }) {
@@ -1690,7 +1690,7 @@
     useEffect(() => { load(); }, []);
     const inStage = (k) => (rows || []).filter((c) => c.stage === k);
     return (
-      <Page>
+      <Page wide>
         <PageHead eyebrow="Sales" title="Pipeline" action={
           <button type="button" style={S.btnLime} onClick={() => setAdding(true)}>+ Add company</button>
         }/>
