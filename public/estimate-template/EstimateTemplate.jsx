@@ -176,7 +176,6 @@ function EstimateTemplate() {
               </div>
               <h1 style={{ margin: 0, fontFamily: 'var(--font-hero)', fontWeight: 700, letterSpacing: '-0.05em', lineHeight: 0.88, color: 'var(--uc-paper)' }}>
                 <span style={{ display: 'block', fontSize: 'clamp(34px,4.4vw,64px)' }}>Project estimate.</span>
-                <span style={{ display: 'block', fontFamily: 'var(--font-serif)', fontWeight: 400, fontStyle: 'italic', fontSize: 'clamp(24px,3vw,42px)', letterSpacing: '-0.03em', color: 'var(--uc-stone-300)' }}>Scoped, not guessed.</span>
               </h1>
               <p style={{ margin: 'clamp(14px,1.6vw,20px) 0 0', maxWidth: 520, fontFamily: 'var(--font-serif)', fontSize: 'clamp(15px,1.2vw,17px)', lineHeight: 1.5, color: 'var(--uc-stone-300)' }}>
                 {data.note ? data.note : <>We&rsquo;ve pre-selected the modules that match what we heard from {client}. Everything else is visible and priced &mdash; toggle any of it and the number moves with you.</>}
@@ -191,7 +190,7 @@ function EstimateTemplate() {
                 <span style={{ fontSize: 'clamp(30px,3.2vw,46px)' }}>${Math.round(high / 1000)}k</span>
               </div>
               <div style={{ marginTop: 14, fontFamily: 'var(--font-mono)', fontSize: 11, lineHeight: 1.6, color: 'var(--uc-stone-500)', letterSpacing: '0.04em' }}>
-                ONE-TIME BUILD &middot; USD &middot; {hrs(low)}&ndash;{hrs(high)} HRS<br/>{weeks} WEEKS TO LAUNCH
+                ONE-TIME BUILD &middot; {hrs(low)}&ndash;{hrs(high)} HRS &middot; {weeks} WEEKS TO LAUNCH
               </div>
               <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid #1F1F1F', display: 'flex', flexDirection: 'column', gap: 10 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, fontSize: 12.5 }}>
