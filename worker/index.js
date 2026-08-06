@@ -311,7 +311,9 @@ export default {
       return revenueCached(request, env, ctx, () => handleAdminRevenueSummary(request, env));
     }
     if (url.pathname === '/api/admin/pipeline' && request.method === 'GET') {
-      return handleAdminPipeline(request, env);
+      // Cache the board (SWR, short fresh window) so it paints instantly and
+      // self-heals; ?refresh=1 forces a live rebuild after a change.
+      return revenueCached(request, env, ctx, () => handleAdminPipeline(request, env), { freshMs: 15000 });
     }
     if (url.pathname === '/api/admin/discoveries' && request.method === 'GET') {
       return handleAdminListDiscoveries(request, env);
@@ -1212,9 +1214,16 @@ function revenueCacheKey(url) {
   return `revcache:v3:${url.pathname}?${p.toString()}`;
 }
 
+// The pipeline board is cached; drop that cache whenever a company changes so
+// the board reflects adds/edits/declines/deletes immediately on next load.
+async function bustPipelineCache(env) {
+  await env.BLUEPRINT_AUTH.delete('revcache:v3:/api/admin/pipeline?').catch(() => {});
+}
+
 // Wrap a handler (which returns a Response) with the SWR cache. Only 200/ok
 // bodies are cached, so a transient failure never gets pinned.
-async function revenueCached(request, env, ctx, compute) {
+async function revenueCached(request, env, ctx, compute, opts) {
+  const freshMs = (opts && opts.freshMs) || REVENUE_CACHE_FRESH_MS;
   const url = new URL(request.url);
   const force = url.searchParams.get('refresh') === '1';
   const key = revenueCacheKey(url);
@@ -1250,7 +1259,7 @@ async function revenueCached(request, env, ctx, compute) {
   };
 
   // Fresh enough: straight from cache.
-  if (cached && age < REVENUE_CACHE_FRESH_MS) return withMeta(cached.body, cached.at, false);
+  if (cached && age < freshMs) return withMeta(cached.body, cached.at, false);
 
   // Usable but stale: serve now, refresh in the background.
   if (cached && age < REVENUE_CACHE_MAX_MS) {
@@ -4197,6 +4206,7 @@ async function getCompany(env, id) {
 async function putCompany(env, rec) {
   rec.updatedAt = new Date().toISOString();
   await env.BLUEPRINT_AUTH.put(`company:${rec.id}`, JSON.stringify(rec));
+  await bustPipelineCache(env);
   return rec;
 }
 
@@ -4382,6 +4392,7 @@ async function handleAdminDeleteCompany(request, env) {
   for (const f of rec.files || []) {
     await env.BLUEPRINT_AUTH.delete(`cofile:${rec.id}:${f.fid}`).catch(() => {});
   }
+  await bustPipelineCache(env);
   await logActivity(env, null, { type: 'deleted', entity: 'company', id: rec.id, name: rec.name, actor: sess.email, detail: 'Company removed from portal' });
   return json(200, { ok: true });
 }

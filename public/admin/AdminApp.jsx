@@ -1760,8 +1760,13 @@
     const [error, setError] = useState('');
     const [adding, setAdding] = useState(false);
     const load = async () => {
-      try { setRows((await api('/api/admin/pipeline')).companies); }
-      catch (err) { setError(err.message); setRows([]); }
+      try {
+        const d = await api('/api/admin/pipeline');
+        setRows(d.companies);
+        // Served from a stale cache? The worker is repriming in the background —
+        // pull the fresh board a moment later.
+        if (d.stale) setTimeout(load, 2500);
+      } catch (err) { setError(err.message); setRows([]); }
     };
     useEffect(() => { load(); }, []);
     const inStage = (k) => (rows || []).filter((c) => c.stage === k);
@@ -1779,8 +1784,8 @@
             {PIPELINE_STAGES.map((st) => {
               const cards = inStage(st.key);
               return (
-                <div key={st.key} style={{ flex: '1 1 0', minWidth: 220, display: 'flex', flexDirection: 'column', gap: 12 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '2px 2px 0' }}>
+                <div key={st.key} style={{ flex: '1 1 0', minWidth: 220, display: 'flex', flexDirection: 'column', gap: 12, background: 'rgba(10,10,10,0.028)', border: `1px solid ${T.line}`, borderRadius: 12, padding: '12px 12px 16px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '0 2px' }}>
                     <span style={{ width: 8, height: 8, borderRadius: 999, background: st.dot, flexShrink: 0 }}/>
                     <span style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 13.5, color: T.fg1 }}>{st.label}</span>
                     <span style={{ fontFamily: T.mono, fontSize: 11, color: T.fg3 }}>{cards.length}</span>
