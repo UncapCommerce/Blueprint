@@ -322,6 +322,9 @@ export default {
     if (url.pathname === '/api/admin/item/delete' && request.method === 'POST') {
       return handleAdminDeleteItem(request, env);
     }
+    if (url.pathname === '/api/estimate/content' && request.method === 'GET') {
+      return handleEstimateContent(request, env);
+    }
     if (url.pathname === '/api/admin/estimate' && request.method === 'GET') {
       return handleAdminGetEstimate(request, env);
     }
@@ -488,11 +491,20 @@ export default {
       // and loads the real discovery / blueprint page in a frame from
       // /<id>/<tab>/app. Relative blueprint assets resolve against
       // /<id>/blueprint/ and are mapped below.
-      const coApp = url.pathname.match(/^\/([a-z0-9-]{2,60})\/(discovery|blueprint)\/app(\/?)$/);
+      const coApp = url.pathname.match(/^\/([a-z0-9-]{2,60})\/(discovery|blueprint|estimate)\/app(\/?)$/);
       if (coApp && !PORTAL_RESERVED.has(coApp[1])) {
         if (coApp[3]) return Response.redirect(`${url.origin}/${coApp[1]}/${coApp[2]}/app`, 301);
         const co = await getCompany(env, coApp[1]);
         if (co) {
+          if (coApp[2] === 'estimate') {
+            const est = await getEstimate(env, co.id);
+            const admin = await getAdminSession(request, env);
+            if ((est && est.status === 'ready') || (admin && await adminIsApproved(env, admin.email))) {
+              const assetUrl = new URL(url.toString());
+              assetUrl.pathname = '/estimate-template/index.html';
+              return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
+            }
+          }
           if (coApp[2] === 'discovery' && co.discoveryHandle) {
             const assetUrl = new URL(url.toString());
             assetUrl.pathname = '/discovery/index.html';
@@ -4453,17 +4465,62 @@ async function handleAdminDeleteEstimate(request, env) {
   return json(200, { ok: true });
 }
 
-// Build the client-facing estimate payload (only the selected lines, grouped,
-// with totals + timeline). Returned inside the portal `me` when ready.
+// Whether the hub should show the estimate (framed one-pager at
+// /<id>/estimate/app). The full payload is served separately by
+// handleEstimateContent; the portal `me` only needs the ready signal.
 function estimateForPortal(est) {
   if (!est || est.status !== 'ready') return null;
-  const lines = (est.lines || []).filter((l) => l.selected);
+  return { ready: true };
+}
+
+// Build the full client-facing estimate payload for the one-pager renderer
+// (public/estimate-template). Dynamic data comes from the estimate record; the
+// page supplies the standard presentation scaffolding (group blurbs, foundation
+// checklist, growth plans, gantt).
+const EST_MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+function buildEstimateContent(est, co) {
+  const lines = est.lines || [];
+  const foundationLine = lines.find((l) => l.type === 'foundation');
+  const foundation = foundationLine ? { low: foundationLine.low, high: foundationLine.high } : { low: 18850, high: 26100 };
+  const groups = ITEM_GROUPS
+    .filter((g) => g.key !== 'foundation' && g.key !== 'integration')
+    .map((g) => ({
+      key: g.key, title: g.label,
+      modules: lines.filter((l) => l.group === g.key && l.type === 'module')
+        .map((l) => ({ id: l.itemId || l.name, name: l.name, desc: l.desc, low: l.low, high: l.high, preselected: !!l.selected })),
+    }))
+    .filter((g) => g.modules.length);
+  const integrations = lines.filter((l) => l.type === 'integration')
+    .map((l) => ({ id: l.itemId || l.name, name: l.name, desc: l.desc, tag: l.tag, low: l.low, high: l.high, preselected: !!l.selected }));
+  const weeks = (est.timeline || []).reduce((a, r) => a + (parseInt(r.weeks, 10) || 0), 0) || 14;
+  const valid = new Date(Date.now() + 30 * 86400000);
+  const validThrough = `${EST_MONTHS[valid.getUTCMonth()]} ${valid.getUTCDate()}, ${valid.getUTCFullYear()}`;
   return {
+    ok: true,
+    clientName: est.clientName || co.name || 'Your team',
+    estimateLabel: est.number ? `ESTIMATE ${est.number}` : 'ESTIMATE',
+    preparedBy: est.preparedBy || 'Denis Dyli, Principal',
+    validThrough,
+    foundation, groups, integrations, weeks,
     note: est.note || '',
-    totals: estimateTotals(est.lines),
-    timeline: est.timeline || [],
-    groups: ITEM_GROUPS.map((g) => ({ key: g.key, label: g.label, lines: lines.filter((l) => l.group === g.key).map((l) => ({ name: l.name, desc: l.desc, tag: l.tag, low: l.low, high: l.high })) })).filter((g) => g.lines.length),
   };
+}
+async function handleEstimateContent(request, env) {
+  const cid = (new URL(request.url).searchParams.get('company') || '').toString().trim().toLowerCase();
+  // Authorize like the hub: the company's own portal session, or an approved admin.
+  const sess = await getPortalSession(request, env);
+  let isAdmin = false;
+  if (!(sess && sess.companyId === cid)) {
+    const admin = await getAdminSession(request, env);
+    if (admin && (await adminIsApproved(env, admin.email))) isAdmin = true;
+    else return json(401, { ok: false, error: 'Not signed in' });
+  }
+  const co = await getCompany(env, cid);
+  if (!co) return json(404, { ok: false, error: 'Company not found' });
+  if (co.declined && !isAdmin) return json(403, { ok: false, error: 'Hub access is disabled.' });
+  const est = await getEstimate(env, cid);
+  if (!est || (est.status !== 'ready' && !isAdmin)) return json(404, { ok: false, error: 'No estimate yet' });
+  return json(200, buildEstimateContent(est, co));
 }
 
 // POST /api/admin/company/decline — move a company into (or out of) the

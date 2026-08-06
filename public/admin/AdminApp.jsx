@@ -2563,7 +2563,7 @@
       <Page>
         <PageHead eyebrow="Sales · estimate" title={coName} action={
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-            {status === 'ready' ? <a href={'/' + id + '/estimate'} target="_blank" rel="noreferrer" style={{ ...S.btnGhost, textDecoration: 'none' }}>View ↗</a> : null}
+            <a href={'/' + id + '/estimate/app'} target="_blank" rel="noreferrer" style={{ ...S.btnGhost, textDecoration: 'none' }}>Preview ↗</a>
             <a href={backHref} onClick={navClick(backHref)} style={{ ...S.btnGhost, textDecoration: 'none' }}>← Company</a>
           </div>
         }/>
