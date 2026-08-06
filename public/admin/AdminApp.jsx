@@ -1648,7 +1648,7 @@
     { key: 'estimate',    label: 'Estimate',    dot: '#E4A11B' },
     { key: 'discovery',   label: 'Discovery',   dot: '#3A44C4' },
     { key: 'blueprint',   label: 'Blueprint',   dot: '#0A7A3B' },
-    { key: 'signed',      label: 'Signed',      dot: '#0A0A0A' },
+    { key: 'signed',      label: 'Signed',      dot: '#16A34A' },
     { key: 'declined',    label: 'Declined',    dot: '#B3261E' },
   ];
 
@@ -1705,7 +1705,7 @@
         what: 'The fixed-scope proposal — architecture, scope, timeline, and investment — for the client to review and approve.',
         trigger: 'A blueprint is created for the company and marked ready; it appears in the client’s Hub.',
         todo: ['Draft and review the blueprint internally.', 'Share it through the Hub and walk the client through it.', 'Answer questions and revise until they’re ready to sign.'] },
-      { n: '05', label: 'Signed', dot: '#0A0A0A',
+      { n: '05', label: 'Signed', dot: '#16A34A',
         what: 'The client has approved the blueprint. The deal is won and the project is a go.',
         trigger: 'The client signs and approves the blueprint in the Hub.',
         todo: ['Kick off onboarding and collect access.', 'Hand off to the delivery team with the signed scope.', 'Confirm the payment schedule and start dates.'] },
