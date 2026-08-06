@@ -208,9 +208,11 @@ function Portal({ me, onSignOut }) {
         <div style={{ flex: '1 1 auto', overflowY: 'auto' }}>
           <div style={{ maxWidth: 1180, width: '100%', margin: '0 auto', padding: '30px 24px 60px', boxSizing: 'border-box' }}>
             {tab === 'Overview' && <OverviewTab me={me} onNavigate={setTab}/>}
-            {tab === 'Estimate' && ((me.signed || me.blueprint || me.discovery)
-              ? <StatusPage eyebrow="ESTIMATE" title="Already completed" note="Your estimate was prepared with your Uncap team and shared with you over email. There's nothing you need to do here — just reach out to your Uncap contact if you'd like it sent again."/>
-              : <StatusPage eyebrow="ESTIMATE" title="Coming soon" note="Your estimate will live here. We're putting this together and will share it with you shortly."/>)}
+            {tab === 'Estimate' && (me.estimate
+              ? <EstimateTab est={me.estimate} co={co}/>
+              : (me.signed || me.blueprint || me.discovery)
+                ? <StatusPage eyebrow="ESTIMATE" title="Already completed" note="Your estimate was prepared with your Uncap team and shared with you over email. There's nothing you need to do here — just reach out to your Uncap contact if you'd like it sent again."/>
+                : <StatusPage eyebrow="ESTIMATE" title="Coming soon" note="Your estimate will live here. We're putting this together and will share it with you shortly."/>)}
             {tab === 'Discovery' && <DiscoveryTab me={me}/>}
             {tab === 'Blueprint' && <BlueprintTab me={me}/>}
             {tab === 'Onboarding' && <StatusPage eyebrow="ONBOARDING" title="Coming soon" note="Once your blueprint is approved, your kickoff details, access checklist, and project start plan will appear here."/>}
@@ -235,6 +237,67 @@ function StatusPage({ eyebrow, title, note }) {
 const DISP = 'var(--font-display, "Inter Display", Inter, sans-serif)';
 const MONO = 'var(--font-mono, "JetBrains Mono", ui-monospace, monospace)';
 const SIGNAL = '#E8FF4E';
+
+// ── Estimate (client view): scope, investment range, timeline ─────────────
+function EstimateTab({ est, co }) {
+  const money = (n) => '$' + (n || 0).toLocaleString('en-US');
+  const range = (lo, hi) => (lo === 0 && hi === 0) ? 'Included' : (lo === hi ? money(lo) : money(lo) + ' – ' + money(hi));
+  const t = est.totals || { low: 0, high: 0 };
+  const weeks = (est.timeline || []).reduce((a, r) => a + (parseInt(r.weeks, 10) || 0), 0);
+  const card = { background: '#FFFFFF', border: '1px solid #E4E1D8', borderRadius: 8 };
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div style={{ ...card, padding: '28px 26px' }}>
+        <div style={{ fontFamily: MONO, fontSize: 11, letterSpacing: '0.14em', color: '#9A9A9A' }}>ESTIMATE</div>
+        <div style={{ fontFamily: DISP, fontSize: 30, fontWeight: 750, letterSpacing: '-0.02em', marginTop: 8 }}>Your investment estimate</div>
+        {est.note ? <div style={{ fontSize: 14.5, color: '#4D4D4D', lineHeight: 1.65, marginTop: 12, maxWidth: 680 }}>{est.note}</div> : null}
+        <div style={{ display: 'flex', gap: 28, flexWrap: 'wrap', marginTop: 22, paddingTop: 20, borderTop: '1px solid #EEEBE3' }}>
+          <div>
+            <div style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: '0.12em', color: '#9A9A9A' }}>INVESTMENT RANGE</div>
+            <div style={{ fontFamily: DISP, fontSize: 26, fontWeight: 750, letterSpacing: '-0.02em', marginTop: 4 }}>{money(t.low)} – {money(t.high)}</div>
+          </div>
+          {weeks ? (
+            <div>
+              <div style={{ fontFamily: MONO, fontSize: 9.5, letterSpacing: '0.12em', color: '#9A9A9A' }}>TIMELINE</div>
+              <div style={{ fontFamily: DISP, fontSize: 26, fontWeight: 750, letterSpacing: '-0.02em', marginTop: 4 }}>{weeks} weeks</div>
+            </div>
+          ) : null}
+        </div>
+        <div style={{ fontSize: 12, color: '#9A9A9A', marginTop: 14, lineHeight: 1.6 }}>This is a ballpark range to gut-check budget, not a fixed quote. The exact scope and price are locked in your blueprint after discovery.</div>
+      </div>
+
+      {(est.groups || []).map((g) => (
+        <div key={g.key} style={{ ...card, overflow: 'hidden' }}>
+          <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.12em', color: '#7A7A7A', textTransform: 'uppercase', padding: '13px 20px', borderBottom: '1px solid #EEEBE3', background: '#FAF9F5' }}>{g.label}</div>
+          {g.lines.map((l, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 16, padding: '14px 20px', borderBottom: i < g.lines.length - 1 ? '1px solid #F0EEE7' : 'none' }}>
+              <div style={{ flex: '1 1 auto', minWidth: 0 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <span style={{ fontWeight: 700, fontSize: 14, color: '#1A1A1A' }}>{l.name}</span>
+                  {l.tag ? <span style={{ fontFamily: MONO, fontSize: 10, color: '#7A7A7A', border: '1px solid #E4E1D8', borderRadius: 999, padding: '1px 8px' }}>{l.tag}</span> : null}
+                </div>
+                {l.desc ? <div style={{ fontSize: 12.5, color: '#6A6A6A', marginTop: 3, lineHeight: 1.55 }}>{l.desc}</div> : null}
+              </div>
+              <div style={{ fontFamily: MONO, fontSize: 13, fontWeight: 600, color: '#1A1A1A', flexShrink: 0, whiteSpace: 'nowrap' }}>{range(l.low, l.high)}</div>
+            </div>
+          ))}
+        </div>
+      ))}
+
+      {(est.timeline || []).length ? (
+        <div style={{ ...card, overflow: 'hidden' }}>
+          <div style={{ fontFamily: MONO, fontSize: 10, letterSpacing: '0.12em', color: '#7A7A7A', textTransform: 'uppercase', padding: '13px 20px', borderBottom: '1px solid #EEEBE3', background: '#FAF9F5' }}>Timeline</div>
+          {est.timeline.map((r, i) => (
+            <div key={i} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 16, padding: '12px 20px', borderBottom: i < est.timeline.length - 1 ? '1px solid #F0EEE7' : 'none' }}>
+              <span style={{ fontSize: 14, color: '#1A1A1A' }}>{r.label}</span>
+              <span style={{ fontFamily: MONO, fontSize: 12.5, color: '#6A6A6A' }}>{r.weeks} {r.weeks === 1 ? 'week' : 'weeks'}</span>
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 // The engagement stages, in order. A stage is "done" when its position is at
 // or below the company's current furthest stage, derived from what exists:

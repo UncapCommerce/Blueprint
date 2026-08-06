@@ -20,13 +20,27 @@ React, ReactDOM, and `@babel/standalone` (vendored under `/vendor/`) from
   (companyname.com → `companyname`). Tabs are sub-paths: `/company`
   (portal profile), `/discovery` (the discovery experience itself, or a
   completed-manually portal page), `/blueprint` (the blueprint proposal
-  itself, or an under-review portal page), `/delivery`, `/growth`. All
-  future portal functions extend this folder structure. Old
+  itself, or an under-review portal page), `/estimate` (the ballpark
+  investment estimate, rendered in the Hub once shared), `/delivery`,
+  `/growth`. All future portal functions extend this folder structure. Old
   `/blueprint/<id>/` and `/discovery/<handle>` document URLs 301 to the
   company folder; `PORTAL_RESERVED` in `worker/index.js` guards the
   segments that can never be company ids. `comigrate:v1` (flag-guarded,
   runs from the admin Companies list) backfilled a company for every
   pre-portal blueprint and discovery
+- **Estimates** are built from a master item catalog. **Sales → Items**
+  (`item:<id>` in KV) is the shared line-item list (name, description,
+  price range, derived hours at `ITEM_RATE`, group, type
+  module/integration/foundation, recommended flag), seeded once from the
+  estimate template (`SEED_ITEMS`, flag `items:seeded:v1`). A per-company
+  estimate (`estimate:<companyId>`) snapshots chosen lines (so later master
+  edits never change a shared estimate) plus an editable timeline + note.
+  Built in the `/admin/estimate/<companyId>` editor (recommended items
+  pre-selected, ERP integration is pick-one), saved `draft` or `ready`;
+  `ready` lights up `co.hasEstimate/estimateReady` and renders in the Hub's
+  Estimate tab (`estimateForPortal` in the portal `me`). Item CRUD:
+  `/api/admin/items`, `/api/admin/item/{update,delete}`; estimate:
+  `GET/POST /api/admin/estimate`, `/api/admin/estimate/delete`
 - Admin app lives at `/admin` (`public/admin/index.html` +
   `public/admin/AdminApp.jsx`, client routes `/admin/companies|
   discoveries|blueprints`). Google sign-in (Google Identity Services),

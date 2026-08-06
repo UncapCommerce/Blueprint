@@ -99,6 +99,7 @@
     const segs = window.location.pathname.split('/').filter(Boolean);
     const base = segs[0] === 'admin' ? segs.slice(1) : segs;
     if (base[0] === 'company' && base[1]) return 'company-profile';
+    if (base[0] === 'estimate' && base[1]) return 'estimate-editor';
     if (base[0] === 'blueprint' && base[1]) return 'blueprint-editor';
     if (base[0] === 'sales' && base[1] === 'process') return 'sales-process';
     if (base[0] === 'sales' && base[1] === 'items') return 'sales-items';
@@ -126,6 +127,11 @@
     const segs = window.location.pathname.split('/').filter(Boolean);
     const base = segs[0] === 'admin' ? segs.slice(1) : segs;
     return base[0] === 'blueprint' ? (base[1] || '') : '';
+  }
+  function routeEstimateCompanyId() {
+    const segs = window.location.pathname.split('/').filter(Boolean);
+    const base = segs[0] === 'admin' ? segs.slice(1) : segs;
+    return base[0] === 'estimate' ? (base[1] || '') : '';
   }
   // Client-side transition: pushState updates the URL without a reload,
   // then a custom event nudges every useRoute() subscriber to re-parse
@@ -356,7 +362,7 @@
     // routes back to the owning section.
     const SECTIONS = [
       { id: 'activities', l: 'Activities', path: '/admin', match: ['home'] },
-      { id: 'sales', l: 'Sales', path: '/admin/sales', match: ['sales', 'sales-process', 'sales-items', 'companies', 'discoveries', 'blueprints', 'company-profile', 'blueprint-editor'] },
+      { id: 'sales', l: 'Sales', path: '/admin/sales', match: ['sales', 'sales-process', 'sales-items', 'companies', 'discoveries', 'blueprints', 'company-profile', 'estimate-editor', 'blueprint-editor'] },
       { id: 'services', l: 'Services', path: '/admin/projects', match: ['projects', 'retainers'] },
       ...(me.canDelete ? [{ id: 'revenues', l: 'Revenues', path: '/admin/revenues', match: ['revenues', 'rev-fixed', 'rev-recurring', 'rev-apps', 'rev-referrals'] }] : []),
       { id: 'dashboard', l: 'Dashboard', path: '/admin/dashboard', match: ['dashboard'] },
@@ -2346,9 +2352,20 @@
               </div>
             </div>
           );
+          const estHref = '/admin/estimate/' + co.id;
+          const estTile = (
+            <div style={{ ...S.card, flex: '1 1 180px', minWidth: 168, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.fg3 }}>Estimate</div>
+              <div style={{ fontFamily: T.sans, fontSize: 13, fontWeight: 600, color: co.hasEstimate ? T.fg1 : T.fg3 }}>{co.hasEstimate ? (co.estimateReady ? 'Shared' : 'Draft') : 'Not started'}</div>
+              <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
+                <a href={estHref} onClick={navClick(estHref)} style={{ ...(co.hasEstimate ? S.btnGhost : S.btnLime), textDecoration: 'none' }}>{co.hasEstimate ? 'Edit' : 'Create'}</a>
+                {co.hasEstimate && co.estimateReady ? <a href={'/' + co.id + '/estimate'} target="_blank" rel="noreferrer" style={{ ...S.btnGhost, textDecoration: 'none' }}>View ↗</a> : null}
+              </div>
+            </div>
+          );
           return (
             <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
-              {tile('Estimate', false, 'Coming soon', '', '', true)}
+              {estTile}
               {tile('Discovery', !!co.discoveryHandle, co.discoveryHandle ? 'Started' : 'Not started', '/' + co.id + '/discovery', '/admin/discoveries', false)}
               {tile('Blueprint', !!co.blueprintId, co.blueprintId ? 'Created' : 'Not started', '/blueprint/' + co.blueprintId + '/', '/admin/blueprints', false)}
             </div>
@@ -2476,6 +2493,167 @@
     timeline: { weeks: '', note: '', phases: [] },
     team: [],
   };
+
+  // ── Estimate builder ( /admin/estimate/<companyId> ) ────────────────────
+  // Pick line items from the master list, tune each price, edit the timeline,
+  // then save as a draft or share it to the client's Hub. Selections snapshot
+  // the master prices, so later master edits never change a shared estimate.
+  function EstimateEditor({ id, me }) {
+    const [data, setData] = useState(null); // { master, groups, rate, company, ... }
+    const [lines, setLines] = useState([]);
+    const [timeline, setTimeline] = useState([]);
+    const [note, setNote] = useState('');
+    const [status, setStatus] = useState('draft');
+    const [error, setError] = useState('');
+    const [busy, setBusy] = useState('');
+    const [saved, setSaved] = useState('');
+
+    useEffect(() => {
+      (async () => {
+        try {
+          const d = await api('/api/admin/estimate?companyId=' + encodeURIComponent(id));
+          setData(d);
+          if (d.estimate) {
+            setLines(d.estimate.lines || []);
+            setTimeline((d.estimate.timeline && d.estimate.timeline.length) ? d.estimate.timeline : d.defaultTimeline);
+            setNote(d.estimate.note || '');
+            setStatus(d.estimate.status || 'draft');
+          } else {
+            // Seed from the master list: recommended items pre-selected.
+            setLines((d.master || []).map((m) => ({ itemId: m.id, name: m.name, desc: m.desc, group: m.group, type: m.type, tag: m.tag, low: m.low, high: m.high, selected: !!m.recommended })));
+            setTimeline(d.defaultTimeline || []);
+          }
+        } catch (e) { setError(e.message); setData({ groups: [], master: [] }); }
+      })();
+    }, [id]);
+
+    const rate = (data && data.rate) || 145;
+    const groups = (data && data.groups) || [];
+    const money = (n) => '$' + (n || 0).toLocaleString('en-US');
+    const hrs = (n) => Math.round(n / rate / 5) * 5;
+    const totals = lines.reduce((a, l) => l.selected ? { low: a.low + (l.low || 0), high: a.high + (l.high || 0) } : a, { low: 0, high: 0 });
+    const totalWeeks = timeline.reduce((a, r) => a + (parseInt(r.weeks, 10) || 0), 0);
+
+    const toggle = (idx) => setLines((ls) => {
+      const line = ls[idx];
+      if (line.type === 'integration') return ls.map((l, i) => l.type === 'integration' ? { ...l, selected: i === idx } : l);
+      return ls.map((l, i) => i === idx ? { ...l, selected: !l.selected } : l);
+    });
+    const setPrice = (idx, key, val) => setLines((ls) => ls.map((l, i) => i === idx ? { ...l, [key]: parseInt(val, 10) || 0 } : l));
+    const setTl = (idx, key, val) => setTimeline((t) => t.map((r, i) => i === idx ? { ...r, [key]: key === 'weeks' ? (parseInt(val, 10) || 0) : val } : r));
+    const addTl = () => setTimeline((t) => [...t, { label: '', weeks: 1 }]);
+    const rmTl = (idx) => setTimeline((t) => t.filter((_, i) => i !== idx));
+
+    const save = async (nextStatus) => {
+      setBusy(nextStatus); setError(''); setSaved('');
+      try {
+        const d = await api('/api/admin/estimate', { method: 'POST', body: JSON.stringify({ companyId: id, status: nextStatus, lines, timeline: timeline.filter((r) => r.label.trim()), note }) });
+        setStatus(d.estimate.status);
+        setSaved(nextStatus === 'ready' ? 'Shared to the client Hub.' : 'Draft saved.');
+      } catch (e) { setError(e.message); }
+      setBusy('');
+    };
+    const unshare = () => save('draft');
+
+    if (data === null) return <Page><div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans }}>Loading…</div></Page>;
+    const coName = (data.company && data.company.name) || id;
+    const backHref = '/admin/company/' + id;
+
+    return (
+      <Page>
+        <PageHead eyebrow="Sales · estimate" title={coName} action={
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+            {status === 'ready' ? <a href={'/' + id + '/estimate'} target="_blank" rel="noreferrer" style={{ ...S.btnGhost, textDecoration: 'none' }}>View ↗</a> : null}
+            <a href={backHref} onClick={navClick(backHref)} style={{ ...S.btnGhost, textDecoration: 'none' }}>← Company</a>
+          </div>
+        }/>
+
+        {/* Summary bar */}
+        <div style={{ ...S.card, padding: '16px 18px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 24, flexWrap: 'wrap' }}>
+          <div>
+            <div style={{ ...S.eyebrow, marginBottom: 4 }}>Investment range</div>
+            <div style={{ fontFamily: T.display || T.sans, fontSize: 26, fontWeight: 750, letterSpacing: '-0.02em', color: T.fg1 }}>{money(totals.low)} – {money(totals.high)}</div>
+          </div>
+          <div style={{ height: 34, width: 1, background: T.line }}/>
+          <div>
+            <div style={{ ...S.eyebrow, marginBottom: 4 }}>Est. hours</div>
+            <div style={{ fontFamily: T.mono, fontSize: 15, color: T.fg2 }}>{hrs(totals.low)}–{hrs(totals.high)} hrs</div>
+          </div>
+          <div style={{ height: 34, width: 1, background: T.line }}/>
+          <div>
+            <div style={{ ...S.eyebrow, marginBottom: 4 }}>Timeline</div>
+            <div style={{ fontFamily: T.mono, fontSize: 15, color: T.fg2 }}>{totalWeeks} weeks</div>
+          </div>
+          <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
+            {saved ? <span style={{ fontFamily: T.mono, fontSize: 12, color: '#2E7D32' }}>{saved}</span> : null}
+            {status === 'ready' ? <span style={{ fontFamily: T.mono, fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#0A0A0A', background: T.signal, borderRadius: 999, padding: '3px 9px' }}>Shared</span> : null}
+            <button type="button" style={S.btnGhost} disabled={!!busy} onClick={() => save('draft')}>{busy === 'draft' ? 'Saving…' : 'Save draft'}</button>
+            <button type="button" style={S.btnLime} disabled={!!busy} onClick={() => save('ready')}>{busy === 'ready' ? 'Sharing…' : (status === 'ready' ? 'Update & keep shared' : 'Save & share')}</button>
+            {status === 'ready' ? <button type="button" style={{ ...S.btnGhost, color: '#B3261E' }} disabled={!!busy} onClick={unshare}>Unshare</button> : null}
+          </div>
+        </div>
+        {error ? <div style={{ ...S.card, padding: 12, marginBottom: 16, color: '#B3261E', fontFamily: T.mono, fontSize: 12.5 }}>{error}</div> : null}
+
+        {/* Scope selector */}
+        {groups.map((g) => {
+          const rows = lines.map((l, i) => ({ l, i })).filter((x) => x.l.group === g.key);
+          if (!rows.length) return null;
+          const isInt = g.key === 'integration';
+          return (
+            <div key={g.key} style={{ marginBottom: 20 }}>
+              <div style={{ ...S.eyebrow, marginBottom: 8, display: 'flex', gap: 8, alignItems: 'center' }}>{g.label}{isInt ? <span style={{ fontFamily: T.mono, fontSize: 9, color: T.fg3, textTransform: 'none', letterSpacing: 0 }}>· pick one</span> : null}</div>
+              <div style={{ ...S.card, overflow: 'hidden' }}>
+                {rows.map(({ l, i }, ri) => (
+                  <div key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 16px', borderBottom: ri < rows.length - 1 ? `1px solid ${T.line}` : 'none', background: l.selected ? 'rgba(198,242,72,0.06)' : 'transparent' }}>
+                    <button type="button" role={isInt ? 'radio' : 'checkbox'} aria-checked={l.selected} onClick={() => toggle(i)}
+                      style={{ flexShrink: 0, marginTop: 1, width: 18, height: 18, borderRadius: isInt ? 999 : 5, border: `1.5px solid ${l.selected ? T.fg1 : T.line}`, background: l.selected ? T.fg1 : 'transparent', color: '#fff', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, lineHeight: 1, padding: 0 }}>{l.selected ? '✓' : ''}</button>
+                    <div style={{ flex: '1 1 auto', minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                        <span style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 13.5, color: T.fg1 }}>{l.name}</span>
+                        {l.tag ? <span style={{ fontFamily: T.mono, fontSize: 10, color: T.fg3, border: `1px solid ${T.line}`, borderRadius: 999, padding: '1px 8px' }}>{l.tag}</span> : null}
+                      </div>
+                      {l.desc ? <div style={{ fontFamily: T.sans, fontSize: 12, color: T.fg3, marginTop: 3, lineHeight: 1.5 }}>{l.desc}</div> : null}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+                      <span style={{ fontFamily: T.mono, fontSize: 11, color: T.fg3 }}>$</span>
+                      <input type="number" value={l.low} onChange={(e) => setPrice(i, 'low', e.target.value)} style={{ ...S.input, width: 78, padding: '6px 8px', fontSize: 12, fontFamily: T.mono }}/>
+                      <span style={{ fontFamily: T.mono, fontSize: 11, color: T.fg3 }}>–</span>
+                      <input type="number" value={l.high} onChange={(e) => setPrice(i, 'high', e.target.value)} style={{ ...S.input, width: 78, padding: '6px 8px', fontSize: 12, fontFamily: T.mono }}/>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          );
+        })}
+
+        {/* Timeline */}
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ ...S.eyebrow, marginBottom: 8 }}>Timeline</div>
+          <div style={{ ...S.card, padding: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
+            {timeline.map((r, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <input value={r.label} onChange={(e) => setTl(i, 'label', e.target.value)} placeholder="Phase" style={{ ...S.input, flex: 1, padding: '7px 10px', fontSize: 13 }}/>
+                <input type="number" value={r.weeks} onChange={(e) => setTl(i, 'weeks', e.target.value)} style={{ ...S.input, width: 70, padding: '7px 8px', fontSize: 13, fontFamily: T.mono }}/>
+                <span style={{ fontFamily: T.mono, fontSize: 11, color: T.fg3, width: 42 }}>weeks</span>
+                <button type="button" aria-label="Remove phase" onClick={() => rmTl(i)} style={{ width: 30, height: 30, borderRadius: 6, border: `1px solid ${T.line}`, background: 'transparent', color: '#B3261E', cursor: 'pointer', flexShrink: 0 }}>×</button>
+              </div>
+            ))}
+            <button type="button" style={{ ...S.btnGhost, alignSelf: 'flex-start', marginTop: 4 }} onClick={addTl}>+ Add phase</button>
+          </div>
+        </div>
+
+        {/* Note */}
+        <div style={{ marginBottom: 24 }}>
+          <div style={{ ...S.eyebrow, marginBottom: 8 }}>Note to client (optional)</div>
+          <div style={{ ...S.card, padding: 14 }}>
+            <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} placeholder="A short framing paragraph shown above the scope on the client's estimate."
+              style={{ ...S.input, resize: 'vertical', lineHeight: 1.5, width: '100%' }}/>
+          </div>
+        </div>
+      </Page>
+    );
+  }
 
   function BlueprintEditor({ id }) {
     const [name, setName] = useState('');
@@ -3518,6 +3696,7 @@
         <TopBar me={me} route={route} onLogout={logout}/>
         {route === 'users' ? (me.isSuper ? <Users/> : <Home/>)
           : route === 'company-profile' ? <CompanyProfile id={routeCompanyId()} me={me}/>
+          : route === 'estimate-editor' ? <EstimateEditor id={routeEstimateCompanyId()} me={me}/>
           : route === 'blueprint-editor' ? <BlueprintEditor id={routeBlueprintId()}/>
           : route === 'sales' ? <SalesPipeline me={me}/>
           : route === 'sales-process' ? <SalesProcess/>

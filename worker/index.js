@@ -322,6 +322,15 @@ export default {
     if (url.pathname === '/api/admin/item/delete' && request.method === 'POST') {
       return handleAdminDeleteItem(request, env);
     }
+    if (url.pathname === '/api/admin/estimate' && request.method === 'GET') {
+      return handleAdminGetEstimate(request, env);
+    }
+    if (url.pathname === '/api/admin/estimate' && request.method === 'POST') {
+      return handleAdminSaveEstimate(request, env);
+    }
+    if (url.pathname === '/api/admin/estimate/delete' && request.method === 'POST') {
+      return handleAdminDeleteEstimate(request, env);
+    }
     if (url.pathname === '/api/admin/pipeline' && request.method === 'GET') {
       // Cache the board (SWR, short fresh window) so it paints instantly and
       // self-heals; ?refresh=1 forces a live rebuild after a change.
@@ -461,7 +470,7 @@ export default {
     // The admin dashboard lives at /admin (client-side routes /admin/
     // discoveries|blueprints|companies and the company profile page
     // /admin/company/<id> included); the root is the portal.
-    if (/^\/admin(\/(sales(\/(process|items))?|discoveries|blueprints|companies|users|projects|retainers|dashboard|revenues(\/(fixed|recurring|apps|referrals))?|company\/[a-z0-9-]+|blueprint\/[a-z0-9-]+))?\/?$/.test(url.pathname) && (request.method === 'GET' || request.method === 'HEAD')) {
+    if (/^\/admin(\/(sales(\/(process|items))?|discoveries|blueprints|companies|users|projects|retainers|dashboard|revenues(\/(fixed|recurring|apps|referrals))?|company\/[a-z0-9-]+|estimate\/[a-z0-9-]+|blueprint\/[a-z0-9-]+))?\/?$/.test(url.pathname) && (request.method === 'GET' || request.method === 'HEAD')) {
       const assetUrl = new URL(url.toString());
       assetUrl.pathname = '/admin/index.html';
       return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
@@ -4352,6 +4361,111 @@ async function handleAdminDeleteItem(request, env) {
   return json(200, { ok: true });
 }
 
+// ── Per-company estimate (built from the master Items list) ───────────────
+// estimate:<companyId> — a snapshot of chosen line items (so later master-list
+// edits never change a sent estimate), an editable timeline, and a note. The
+// client sees it under the Hub's Estimate tab once status flips to 'ready'.
+const DEFAULT_TIMELINE = [
+  { label: 'Discovery & design', weeks: 3 },
+  { label: 'Build & configuration', weeks: 6 },
+  { label: 'Data migration & QA', weeks: 3 },
+  { label: 'Launch & support', weeks: 2 },
+];
+
+function estimateTotals(lines) {
+  let low = 0, high = 0;
+  for (const l of (lines || [])) if (l && l.selected) { low += parseInt(l.low, 10) || 0; high += parseInt(l.high, 10) || 0; }
+  return { low, high };
+}
+function normalizeEstimateLine(l) {
+  const low = Math.max(0, parseInt(l.low, 10) || 0);
+  const high = Math.max(low, parseInt(l.high, 10) || low);
+  return {
+    itemId: (l.itemId || '').toString().slice(0, 40),
+    name: (l.name || '').toString().slice(0, 120).trim(),
+    desc: (l.desc || '').toString().slice(0, 400).trim(),
+    group: ITEM_GROUP_KEYS.includes(l.group) ? l.group : 'growth',
+    type: ITEM_TYPES.includes(l.type) ? l.type : 'module',
+    tag: (l.tag || '').toString().slice(0, 60).trim(),
+    low, high, selected: !!l.selected,
+  };
+}
+function normalizeTimeline(t) {
+  return (Array.isArray(t) ? t : []).slice(0, 12)
+    .map((r) => ({ label: (r.label || '').toString().slice(0, 80).trim(), weeks: Math.max(0, parseInt(r.weeks, 10) || 0) }))
+    .filter((r) => r.label);
+}
+async function getEstimate(env, companyId) {
+  const raw = await env.BLUEPRINT_AUTH.get(`estimate:${companyId}`);
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch { return null; }
+}
+
+async function handleAdminGetEstimate(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  const companyId = (new URL(request.url).searchParams.get('companyId') || '').toString().trim().toLowerCase();
+  const co = await getCompany(env, companyId);
+  if (!co) return json(404, { ok: false, error: 'Company not found' });
+  try { await seedItemsV1(env); } catch (_) { /* best-effort */ }
+  return json(200, {
+    ok: true, estimate: await getEstimate(env, companyId),
+    master: await listItems(env), groups: ITEM_GROUPS, rate: ITEM_RATE,
+    defaultTimeline: DEFAULT_TIMELINE, company: { id: co.id, name: co.name },
+  });
+}
+async function handleAdminSaveEstimate(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+  let body; try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  const companyId = (body.companyId || '').toString().trim().toLowerCase();
+  const co = await getCompany(env, companyId);
+  if (!co) return json(404, { ok: false, error: 'Company not found' });
+  const status = body.status === 'ready' ? 'ready' : 'draft';
+  const prev = await getEstimate(env, companyId);
+  const rec = {
+    companyId, status,
+    lines: (Array.isArray(body.lines) ? body.lines : []).map(normalizeEstimateLine),
+    timeline: normalizeTimeline(body.timeline),
+    note: (body.note || '').toString().slice(0, 2000).trim(),
+    createdAt: (prev && prev.createdAt) || new Date().toISOString(),
+    updatedAt: new Date().toISOString(), updatedBy: sess.email,
+  };
+  await env.BLUEPRINT_AUTH.put(`estimate:${companyId}`, JSON.stringify(rec));
+  // Light up the company so the profile tile + Hub tab reflect it.
+  if (!co.hasEstimate || co.estimateReady !== (status === 'ready')) {
+    co.hasEstimate = true; co.estimateReady = status === 'ready';
+    await putCompany(env, co).catch(() => {});
+  }
+  return json(200, { ok: true, estimate: rec, totals: estimateTotals(rec.lines) });
+}
+async function handleAdminDeleteEstimate(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  if (!(await adminCanDelete(env, sess.email))) return json(403, { ok: false, error: 'Only Admin or Management can delete estimates.' });
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+  let body; try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  const companyId = (body.companyId || '').toString().trim().toLowerCase();
+  await env.BLUEPRINT_AUTH.delete(`estimate:${companyId}`).catch(() => {});
+  const co = await getCompany(env, companyId);
+  if (co && co.hasEstimate) { co.hasEstimate = false; co.estimateReady = false; await putCompany(env, co).catch(() => {}); }
+  return json(200, { ok: true });
+}
+
+// Build the client-facing estimate payload (only the selected lines, grouped,
+// with totals + timeline). Returned inside the portal `me` when ready.
+function estimateForPortal(est) {
+  if (!est || est.status !== 'ready') return null;
+  const lines = (est.lines || []).filter((l) => l.selected);
+  return {
+    note: est.note || '',
+    totals: estimateTotals(est.lines),
+    timeline: est.timeline || [],
+    groups: ITEM_GROUPS.map((g) => ({ key: g.key, label: g.label, lines: lines.filter((l) => l.group === g.key).map((l) => ({ name: l.name, desc: l.desc, tag: l.tag, low: l.low, high: l.high })) })).filter((g) => g.lines.length),
+  };
+}
+
 // POST /api/admin/company/decline — move a company into (or out of) the
 // Declined stage. Declined companies are fully cut off from the Hub: their
 // contacts can't sign in, existing sessions are denied, and estimates,
@@ -4770,10 +4884,13 @@ async function handlePortalMe(request, env) {
   // "Onboarding" stage on the hub's sales-process checklist.
   let signed = false;
   if (rec.blueprintId) signed = !!(await env.BLUEPRINT_AUTH.get(`bpsigned:${rec.blueprintId}`));
+  let estimate = null;
+  if (rec.hasEstimate) estimate = estimateForPortal(await getEstimate(env, rec.id));
   return json(200, {
     ok: true,
     preview,
     signed,
+    estimate,
     email: viewer.email,
     name: viewer.name || '',
     company: {
