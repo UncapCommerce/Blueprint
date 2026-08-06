@@ -307,8 +307,9 @@ function OverviewTab({ me }) {
       {/* 1/3 — company info + contacts */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
         <div style={card}>
-          {co.hasLogo ? <img src={'/api/company/logo?id=' + encodeURIComponent(co.id)} alt="" style={{ height: 42, maxWidth: 180, objectFit: 'contain', display: 'block', marginBottom: 14 }}/> : null}
-          <div style={{ fontFamily: DISP, fontSize: 22, fontWeight: 750, letterSpacing: '-0.02em' }}>{co.name}</div>
+          {co.hasLogo
+            ? <img src={'/api/company/logo?id=' + encodeURIComponent(co.id)} alt={co.name || ''} style={{ height: 42, maxWidth: 180, objectFit: 'contain', display: 'block' }}/>
+            : <div style={{ fontFamily: DISP, fontSize: 22, fontWeight: 750, letterSpacing: '-0.02em' }}>{co.name}</div>}
           <div style={{ marginTop: 16, display: 'flex', flexDirection: 'column', gap: 14 }}>
             {site ? <InfoRow label="WEBSITE" value={<a href={site} target="_blank" rel="noreferrer" style={{ color: '#1A1A1A', textDecoration: 'underline' }}>{co.storeUrl}</a>}/> : null}
             {co.address ? <InfoRow label="ADDRESS" value={co.address}/> : null}
