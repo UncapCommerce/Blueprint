@@ -208,7 +208,9 @@ function Portal({ me, onSignOut }) {
         <div style={{ flex: '1 1 auto', overflowY: 'auto' }}>
           <div style={{ maxWidth: 1180, width: '100%', margin: '0 auto', padding: '30px 24px 60px', boxSizing: 'border-box' }}>
             {tab === 'Overview' && <OverviewTab me={me} onNavigate={setTab}/>}
-            {tab === 'Estimate' && <StatusPage eyebrow="ESTIMATE" title="Coming soon" note="Your estimate will live here. We're putting this together and will share it with you shortly."/>}
+            {tab === 'Estimate' && ((me.signed || me.blueprint || me.discovery)
+              ? <StatusPage eyebrow="ESTIMATE" title="Already completed" note="Your estimate was prepared with your Uncap team and shared with you over email. There's nothing you need to do here — just reach out to your Uncap contact if you'd like it sent again."/>
+              : <StatusPage eyebrow="ESTIMATE" title="Coming soon" note="Your estimate will live here. We're putting this together and will share it with you shortly."/>)}
             {tab === 'Discovery' && <DiscoveryTab me={me}/>}
             {tab === 'Blueprint' && <BlueprintTab me={me}/>}
             {tab === 'Onboarding' && <StatusPage eyebrow="ONBOARDING" title="Coming soon" note="Once your blueprint is approved, your kickoff details, access checklist, and project start plan will appear here."/>}
@@ -362,6 +364,11 @@ function Contact({ c, lead }) {
 // ── Discovery / Blueprint tabs ────────────────────────────────────────────
 function DiscoveryTab({ me }) {
   if (!me.discovery) {
+    // Bypassed: the engagement moved past discovery without a hub discovery,
+    // so it was handled offline and shared over email.
+    if (me.signed || me.blueprint) {
+      return <StatusPage eyebrow="DISCOVERY" title="Already completed" note="Your discovery was completed with your Uncap team and shared with you over email. There's nothing you need to do here — just reach out to your Uncap contact if you'd like it sent again."/>;
+    }
     return <StatusPage eyebrow="DISCOVERY" title="Completed manually" note="This discovery was completed manually with your Uncap team. There is nothing you need to do here."/>;
   }
   const done = me.discovery.status === 'complete';
