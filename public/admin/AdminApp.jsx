@@ -1767,9 +1767,9 @@
     const inStage = (k) => (rows || []).filter((c) => c.stage === k);
     return (
       <Page wide>
-        <PageHead eyebrow="Sales" title="Pipeline" action={
+        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 18 }}>
           <button type="button" style={S.btnLime} onClick={() => setAdding(true)}>+ Add company</button>
-        }/>
+        </div>
         {rows === null ? (
           <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>Loading…</div>
         ) : (error && !rows.length) ? (
