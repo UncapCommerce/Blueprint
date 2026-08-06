@@ -1647,7 +1647,7 @@
     { key: 'declined',    label: 'Declined',    dot: '#B3261E' },
   ];
 
-  function PipelineCard({ c, me, onDecline, onDelete }) {
+  function PipelineCard({ c }) {
     const bp = c.blueprint, disc = c.discovery;
     const linkOut = (href, text) => <a href={href} target="_blank" rel="noreferrer" style={{ color: '#2E5AAC', textDecoration: 'none', fontWeight: 600 }}>{text} ↗</a>;
     const dash = <span style={{ color: T.fg3 }}>—</span>;
@@ -1669,21 +1669,13 @@
             <div style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 14, color: T.fg1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name}</div>
             <div style={{ fontFamily: T.mono, fontSize: 10.5, color: T.fg3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.leadContact ? (c.leadContact.name || c.leadContact.email) : 'No lead contact'}</div>
           </div>
-          {me && me.canDelete ? (
-            <button type="button" aria-label={'Delete ' + c.name} onClick={() => onDelete(c)}
-              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 26, height: 26, borderRadius: 6, border: `1px solid ${T.line}`, background: 'transparent', color: '#B3261E', cursor: 'pointer', flexShrink: 0 }}><IconTrash/></button>
-          ) : null}
+          <a href={'/admin/company/' + c.id} onClick={navClick('/admin/company/' + c.id)} style={{ ...S.btnGhost, flexShrink: 0, textDecoration: 'none', padding: '5px 11px', fontSize: 12 }}>View</a>
         </div>
         <div style={{ borderTop: `1px solid ${T.line}`, paddingTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
           {metric('Estimate', c.estimate ? linkOut('#', '#' + c.estimate.num) : dash)}
           {metric('Discovery', disc ? linkOut(disc.url, disc.status || 'view') : dash)}
           {metric('Blueprint', bp ? linkOut(bp.url, bp.num ? '#' + bp.num : 'view') : dash)}
         </div>
-        <a href={'/admin/company/' + c.id} onClick={navClick('/admin/company/' + c.id)} style={{ ...S.btn, textDecoration: 'none', textAlign: 'center', padding: '8px 12px', fontSize: 12.5 }}>View company</a>
-        <button type="button" onClick={() => onDecline(c, !c.declined)}
-          style={{ border: 'none', background: 'transparent', color: c.declined ? '#2E7D32' : '#B3261E', cursor: 'pointer', fontFamily: T.mono, fontSize: 10.5, letterSpacing: '0.04em', padding: 2, textAlign: 'center' }}>
-          {c.declined ? '↩ Restore to pipeline' : '✕ Decline'}
-        </button>
       </div>
     );
   }
@@ -1697,19 +1689,6 @@
       catch (err) { setError(err.message); setRows([]); }
     };
     useEffect(() => { load(); }, []);
-    const setDeclined = async (c, declined) => {
-      const msg = declined
-        ? 'Move ' + c.name + ' to Declined?\n\nTheir Hub access is fully disabled — they lose access to their estimate, discovery, and blueprint.'
-        : 'Restore ' + c.name + ' to the pipeline and re-enable their Hub access?';
-      if (!window.confirm(msg)) return;
-      try { await api('/api/admin/company/decline', { method: 'POST', body: JSON.stringify({ id: c.id, declined }) }); load(); }
-      catch (err) { window.alert(err.message); }
-    };
-    const removeCompany = async (c) => {
-      if (!window.confirm('Delete ' + c.name + '?\n\nThis removes the company and its Hub access, contacts, and uploaded files. Discoveries and blueprints themselves are not touched. This cannot be undone.')) return;
-      try { await api('/api/admin/company/delete', { method: 'POST', body: JSON.stringify({ id: c.id }) }); load(); }
-      catch (err) { window.alert(err.message); }
-    };
     const inStage = (k) => (rows || []).filter((c) => c.stage === k);
     return (
       <Page wide>
@@ -1732,7 +1711,7 @@
                     <span style={{ fontFamily: T.mono, fontSize: 11, color: T.fg3 }}>{cards.length}</span>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {cards.map((c) => <PipelineCard key={c.id} c={c} me={me} onDecline={setDeclined} onDelete={removeCompany}/>)}
+                    {cards.map((c) => <PipelineCard key={c.id} c={c}/>)}
                     {cards.length === 0 ? <div style={{ border: `1px dashed ${T.line}`, borderRadius: 10, padding: '18px 12px', textAlign: 'center', fontFamily: T.mono, fontSize: 10.5, color: T.fg3 }}>Empty</div> : null}
                   </div>
                 </div>
@@ -1988,7 +1967,7 @@
   // company's files live.
   // Full-page company profile (opened from the Companies list "View"
   // button). Loads the record, then renders the editable profile.
-  function CompanyProfile({ id }) {
+  function CompanyProfile({ id, me }) {
     const [initial, setInitial] = useState(null);
     const [error, setError] = useState('');
     useEffect(() => {
@@ -2005,10 +1984,10 @@
       </Page>
     );
     if (!initial) return <Page><div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>Loading…</div></Page>;
-    return <CompanyEditor key={initial.id} initial={initial}/>;
+    return <CompanyEditor key={initial.id} initial={initial} me={me}/>;
   }
 
-  function CompanyEditor({ initial }) {
+  function CompanyEditor({ initial, me }) {
     const [co, setCo] = useState(initial);
     const [saved, setSaved] = useState(false);
     const [form, setForm] = useState({
@@ -2123,12 +2102,28 @@
       } catch (err) { setInviteMsg(err.message); }
       setInviting('');
     };
+    const toggleDeclined = async () => {
+      const declined = !co.declined;
+      const msg = declined
+        ? 'Move ' + (co.name || 'this company') + ' to Declined?\n\nTheir Hub access is fully disabled — they lose access to their estimate, discovery, and blueprint.'
+        : 'Restore ' + (co.name || 'this company') + ' to the pipeline and re-enable their Hub access?';
+      if (!window.confirm(msg)) return;
+      try { await api('/api/admin/company/decline', { method: 'POST', body: JSON.stringify({ id: co.id, declined }) }); setCo((c) => ({ ...c, declined })); }
+      catch (err) { setError(err.message); }
+    };
+    const removeCompany = async () => {
+      if (!window.confirm('Delete ' + (co.name || 'this company') + '?\n\nThis removes the company and its Hub access, contacts, and uploaded files. Discoveries and blueprints themselves are not touched. This cannot be undone.')) return;
+      try { await api('/api/admin/company/delete', { method: 'POST', body: JSON.stringify({ id: co.id }) }); navigate('/admin/sales'); }
+      catch (err) { setError(err.message); }
+    };
     return (
       <Page>
-        <PageHead eyebrow="Portal · company profile" title={co.name || 'Company'} action={
-          <div style={{ display: 'flex', gap: 8 }}>
+        <PageHead eyebrow={co.declined ? 'Portal · company profile · declined' : 'Portal · company profile'} title={co.name || 'Company'} action={
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
             {inviteList.length ? <button type="button" style={S.btnGhost} disabled={!!inviting} onClick={() => doInvite()}>{inviting === 'all' ? 'Sending…' : 'Invite all'}</button> : null}
             <a href={portalUrl} target="_blank" rel="noreferrer" style={{ ...S.btnGhost, textDecoration: 'none' }}>Open Hub ↗</a>
+            <button type="button" style={{ ...S.btnGhost, color: co.declined ? '#2E7D32' : '#B3261E' }} onClick={toggleDeclined}>{co.declined ? 'Restore access' : 'Decline'}</button>
+            {me && me.canDelete ? <button type="button" style={{ ...S.btnGhost, color: '#B3261E' }} onClick={removeCompany}>Delete</button> : null}
             <a href="/admin/sales" onClick={navClick('/admin/sales')} style={{ ...S.btnGhost, textDecoration: 'none' }}>← Pipeline</a>
           </div>
         }/>
@@ -3317,7 +3312,7 @@
       <div style={{ minHeight: '100vh', background: T.cream }}>
         <TopBar me={me} route={route} onLogout={logout}/>
         {route === 'users' ? (me.isSuper ? <Users/> : <Home/>)
-          : route === 'company-profile' ? <CompanyProfile id={routeCompanyId()}/>
+          : route === 'company-profile' ? <CompanyProfile id={routeCompanyId()} me={me}/>
           : route === 'blueprint-editor' ? <BlueprintEditor id={routeBlueprintId()}/>
           : route === 'sales' ? <SalesPipeline me={me}/>
           : route === 'companies' ? <Companies me={me}/>
