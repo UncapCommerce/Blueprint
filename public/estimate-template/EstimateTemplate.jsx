@@ -392,7 +392,7 @@ function EstimateTemplate() {
             </h2>
             <p style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: 15, lineHeight: 1.5, color: 'var(--fg-2)' }}>Retainers start the month after go-live. Month-to-month after the first quarter &mdash; move up or down as the season demands.</p>
           </div>
-          <div className="est-scroll">
+          <div className="est-scroll" style={{ paddingTop: 22 }}>
             <div className="est-growth" style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.1fr) repeat(3, minmax(0,1fr))', borderTop: '1px solid var(--line-2)' }}>
               <span style={{ padding: '16px 18px 14px 0', borderBottom: '1px solid var(--line-2)', display: 'flex', alignItems: 'flex-end', fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--fg-3)' }}>Compare</span>
               {PLANS.map((pl) => {

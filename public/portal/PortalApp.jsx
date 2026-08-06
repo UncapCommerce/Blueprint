@@ -213,7 +213,9 @@ function Portal({ me, onSignOut }) {
               : <StatusPage eyebrow="ESTIMATE" title="Not started" note="Your estimate will appear here once your Uncap team has prepared it."/>)}
             {tab === 'Discovery' && <DiscoveryTab me={me}/>}
             {tab === 'Blueprint' && <BlueprintTab me={me}/>}
-            {tab === 'Onboarding' && <StatusPage eyebrow="ONBOARDING" title="Coming soon" note="Once your blueprint is approved, your kickoff details, access checklist, and project start plan will appear here."/>}
+            {tab === 'Onboarding' && (engagementStage(me) >= 5
+              ? <StatusPage eyebrow="ONBOARDING" title="Coming soon" note="Your blueprint is approved. Your kickoff details, access checklist, and project start plan will appear here shortly."/>
+              : <StatusPage eyebrow="ONBOARDING" title="Not started" note="Once your blueprint is approved, your kickoff details, access checklist, and project start plan will appear here."/>)}
           </div>
         </div>
       )}
