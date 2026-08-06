@@ -3914,20 +3914,51 @@ async function handleAdminDiscoverySubmission(request, env) {
 // fail with an error from Cloudflare's side.
 // ----------------------------------------------------------------------------
 
+// Shared branded email shell — cream canvas, Uncap wordmark + lime mark, a
+// white content card, and a muted footer. Table-based with inline styles and
+// no external images so it renders consistently across email clients (Gmail,
+// Outlook, Apple Mail). `bodyHtml` is trusted, pre-escaped markup.
+const EMAIL_SANS = "-apple-system,BlinkMacSystemFont,'Segoe UI',Inter,Helvetica,Arial,sans-serif";
+const EMAIL_MONO = "'SFMono-Regular',ui-monospace,Menlo,Consolas,monospace";
+
+function emailShell({ eyebrow, bodyHtml }) {
+  return `<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light only"><meta name="supported-color-schemes" content="light"></head>
+<body style="margin:0;padding:0;background:#F2EFE7;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#F2EFE7;">
+    <tr><td align="center" style="padding:36px 16px;">
+      <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="width:100%;max-width:524px;">
+        <tr><td style="padding:0 2px 18px;">
+          <span style="font-family:${EMAIL_SANS};font-weight:800;font-size:19px;letter-spacing:.01em;color:#0A0A0A;">Uncap</span><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#E8FF4E;margin:0 0 1px 3px;"></span>
+          ${eyebrow ? `<div style="font-family:${EMAIL_MONO};font-size:10.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#8A8578;margin-top:12px;">${escapeHtml(eyebrow)}</div>` : ''}
+        </td></tr>
+        <tr><td style="background:#FFFFFF;border:1px solid #E7E3D8;border-radius:14px;padding:34px 32px;font-family:${EMAIL_SANS};color:#1A1A17;">
+          ${bodyHtml}
+        </td></tr>
+        <tr><td style="padding:18px 2px 0;font-family:${EMAIL_MONO};font-size:10.5px;letter-spacing:.06em;color:#A19D91;">
+          Uncap · <a href="https://${GO_HOST}" style="color:#A19D91;text-decoration:none;">go.uncap.com</a>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`;
+}
+
 async function sendCodeEmail(env, { to, code, blueprintId, label }) {
   const what = label || 'Blueprint';
-  const subject = `Your Uncap ${what} passcode`;
+  const subject = `Your Uncap ${what} sign-in code`;
   const text =
-    `Your 6-digit passcode to open the Uncap ${what}:\n\n` +
-    `${code}\n\n` +
-    `Valid for 10 minutes. If you didn't request this, you can ignore the email.`;
-  const html = `
-    <div style="font-family:-apple-system,Inter,Arial,sans-serif;color:#0A0A0A;line-height:1.5;max-width:480px;margin:0 auto;padding:32px 24px;background:#F2EFE7;">
-      <div style="font-family:monospace;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#707070;margin-bottom:24px;">Uncap ${escapeHtml(what)} · Passcode</div>
-      <p style="font-size:16px;margin:0 0 16px;">Your 6-digit passcode to open the ${escapeHtml(what)}:</p>
-      <p style="font-family:monospace;font-size:34px;letter-spacing:8px;font-weight:700;margin:0 0 24px;background:#FFFFFF;border-radius:8px;padding:20px 24px;text-align:center;color:#0A0A0A;">${escapeHtml(code)}</p>
-      <p style="font-size:13px;color:#707070;margin:0;">Valid for 10 minutes. If you didn't request this, you can ignore the email.</p>
-    </div>`;
+    `Here's your Uncap ${what} sign-in code:\n\n` +
+    `    ${code}\n\n` +
+    `Enter it to sign in. For your security, it expires in 10 minutes.\n\n` +
+    `Didn't request this? You can safely ignore this email — no changes will be made.\n\n` +
+    `Uncap · go.uncap.com`;
+  const bodyHtml = `
+    <p style="font-size:18px;font-weight:700;letter-spacing:-0.01em;margin:0 0 8px;color:#0A0A0A;">Here's your sign-in code</p>
+    <p style="font-size:14.5px;line-height:1.6;margin:0 0 22px;color:#54503F;">Enter this 6-digit code to open your Uncap ${escapeHtml(what)}. For your security, it expires in 10 minutes.</p>
+    <div style="font-family:${EMAIL_MONO};font-size:30px;letter-spacing:9px;font-weight:700;text-align:center;color:#0A0A0A;background:#F7F6F1;border:1px solid #E7E3D8;border-radius:10px;padding:20px 12px;margin:0 0 22px;">${escapeHtml(code)}</div>
+    <p style="font-size:12.5px;line-height:1.6;margin:0;color:#8A8578;">Didn't request this code? You can safely ignore this email — no changes will be made to your account.</p>`;
+  const html = emailShell({ eyebrow: `${what} · Sign in`, bodyHtml });
   await sendViaCloudflareEmail(env, { to, subject, text, html });
 }
 
@@ -3940,18 +3971,18 @@ async function sendCompanyInvite(env, company, contact) {
   const subject = `Your Uncap Hub for ${co} is ready`;
   const text =
     `Hi ${hi},\n\n` +
-    `Your Uncap Hub for ${co} is ready. It's where you'll find your company details, your discovery, and your blueprint proposal.\n\n` +
-    `Open it here:\n${link}\n\n` +
-    `Sign in with this email address (${contact.email}) and we'll send you a 6-digit code. No password needed.\n\n` +
-    `See you inside,\nThe Uncap team`;
-  const html = `
-    <div style="font-family:-apple-system,Inter,Arial,sans-serif;color:#0A0A0A;line-height:1.55;max-width:480px;margin:0 auto;padding:32px 24px;background:#F2EFE7;">
-      <div style="font-family:monospace;font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#707070;margin-bottom:22px;">Uncap · Hub</div>
-      <p style="font-size:20px;font-weight:700;letter-spacing:-0.01em;margin:0 0 12px;">Your Hub is ready, ${escapeHtml(hi)}.</p>
-      <p style="font-size:15px;margin:0 0 20px;color:#1A1A1A;">Your Uncap Hub for <b>${escapeHtml(co)}</b> is where you'll find your company details, your discovery, and your blueprint proposal.</p>
-      <p style="margin:0 0 22px;"><a href="${escapeHtml(link)}" style="display:inline-block;background:#0A0A0A;color:#FFFFFF;text-decoration:none;font-size:15px;font-weight:650;border-radius:6px;padding:14px 26px;">Open your Hub</a></p>
-      <p style="font-size:13px;color:#707070;margin:0;">Sign in with this email (${escapeHtml(contact.email)}) and we'll send you a 6-digit code. No password needed.</p>
-    </div>`;
+    `We've set up your private Uncap Hub for ${co} — one place to follow your project from start to launch: your company details, estimate, discovery, and blueprint proposal, all in a single view.\n\n` +
+    `Open your Hub:\n${link}\n\n` +
+    `To sign in, enter this email address (${contact.email}) and we'll send you a secure 6-digit code. No password to remember.\n\n` +
+    `We're looking forward to working with you.\n— The Uncap team\n\n` +
+    `Uncap · go.uncap.com`;
+  const bodyHtml = `
+    <p style="font-size:20px;font-weight:800;letter-spacing:-0.015em;margin:0 0 12px;color:#0A0A0A;">Welcome, ${escapeHtml(hi)}.</p>
+    <p style="font-size:15px;line-height:1.65;margin:0 0 6px;color:#3A3730;">We've set up your private Uncap Hub for <b style="color:#0A0A0A;">${escapeHtml(co)}</b> — one place to follow your project from start to launch: your company details, estimate, discovery, and blueprint proposal, all in a single view.</p>
+    <p style="margin:24px 0 6px;"><a href="${escapeHtml(link)}" style="display:inline-block;background:#0A0A0A;color:#FFFFFF;text-decoration:none;font-size:15px;font-weight:650;border-radius:8px;padding:14px 28px;">Open your Hub &rarr;</a></p>
+    <p style="font-size:13.5px;line-height:1.6;margin:18px 0 0;color:#54503F;">To sign in, enter this email address (<b style="color:#1A1A17;">${escapeHtml(contact.email)}</b>) and we'll send you a secure 6-digit code — no password to remember.</p>
+    <p style="font-size:14.5px;line-height:1.6;margin:24px 0 0;color:#3A3730;">We're looking forward to working with you.<br><span style="color:#8A8578;">— The Uncap team</span></p>`;
+  const html = emailShell({ eyebrow: 'Hub · Invitation', bodyHtml });
   await sendViaCloudflareEmail(env, { to: contact.email, subject, text, html });
 }
 
@@ -4011,7 +4042,10 @@ function notifyRecipients(env) {
 }
 
 async function notifyAdmin(env, { subject, text }) {
-  const html = `<p>${escapeHtml(text).replace(/\n/g, '<br>')}</p>`;
+  const bodyHtml = `
+    <p style="font-size:15.5px;font-weight:700;letter-spacing:-0.01em;margin:0 0 14px;color:#0A0A0A;">${escapeHtml(subject)}</p>
+    <div style="font-family:${EMAIL_MONO};font-size:12.5px;line-height:1.7;color:#3A3730;background:#F7F6F1;border:1px solid #E7E3D8;border-radius:8px;padding:14px 16px;white-space:pre-wrap;">${escapeHtml(text)}</div>`;
+  const html = emailShell({ eyebrow: 'Internal notification', bodyHtml });
   const recipients = notifyRecipients(env);
   // Cloudflare's send_email binding delivers to one envelope recipient
   // per message, so fan out one email per recipient. Use allSettled so a
