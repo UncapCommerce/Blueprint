@@ -96,7 +96,6 @@ function CardGrid({ items, dark }) {
 
 function Proposal({ name, content, branding, accent, onAccent, token }) {
   const c = content;
-  const num = 0;
   return (
     <div>
       {/* Hero */}

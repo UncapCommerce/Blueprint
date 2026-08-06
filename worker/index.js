@@ -253,7 +253,6 @@ export default {
     // (me), sign out, and read config. bp-token is exempt — it has its own
     // dual admin/portal auth and is called by signed-in portal customers.
     if (url.pathname.startsWith('/api/admin/') && url.pathname !== '/api/admin/bp-token') {
-      await purgeRemovedAdmins(env);
       const gate = await getAdminSession(request, env);
       if (!gate) return json(401, { ok: false, error: 'Not signed in' });
       if (!(await adminIsApproved(env, gate.email))) {
@@ -1125,29 +1124,6 @@ async function seedAdminUsers(env) {
       await upsertAdminUser(env, e, { approved: true, role, approvedBy: (u && u.approvedBy) || 'system', approvedAt: (u && u.approvedAt) || new Date().toISOString() });
     }
   }
-}
-
-// Purge every REMOVED_ADMINS teammate from KV — their user record plus any live
-// admin sessions — so removal is complete, not just gated. Runs at most once per
-// isolate (the in-memory guard) and is fully idempotent, so it's safe to call on
-// every admin request; deletes still succeed even when the record is long gone.
-let _adminPurgeDone = false;
-async function purgeRemovedAdmins(env) {
-  if (_adminPurgeDone || !REMOVED_ADMINS.length) return;
-  _adminPurgeDone = true;
-  try {
-    for (const email of REMOVED_ADMINS) {
-      await env.BLUEPRINT_AUTH.delete(`adminuser:${email}`).catch(() => {});
-    }
-    // Best-effort: revoke any active sessions the removed teammates still hold.
-    const list = await env.BLUEPRINT_AUTH.list({ prefix: 'admin_session:', limit: 1000 });
-    for (const k of list.keys) {
-      const raw = await env.BLUEPRINT_AUTH.get(k.name);
-      if (!raw) continue;
-      let s; try { s = JSON.parse(raw); } catch { continue; }
-      if (isRemovedAdmin(s && s.email)) await env.BLUEPRINT_AUTH.delete(k.name).catch(() => {});
-    }
-  } catch { _adminPurgeDone = false; } // let a later request retry on failure
 }
 
 // ── Shopify integration (Revenues > Recurring) ────────────────────────────
@@ -4302,10 +4278,6 @@ const SEED_ITEMS = [
   { group: 'integration', type: 'integration', rec: true,  low: 14500, high: 26825, tag: 'No license — you own it', name: 'Uncap Connect', desc: 'Embedded Shopify app, built and deployed by Uncap. Owned software, no rental.' },
 ];
 
-function itemHours(low, high) {
-  const h = (n) => Math.round(n / ITEM_RATE / 5) * 5;
-  return { low: h(low), high: h(high) };
-}
 function normalizeItem(rec) {
   const low = Math.max(0, parseInt(rec.low, 10) || 0);
   const high = Math.max(low, parseInt(rec.high, 10) || low);

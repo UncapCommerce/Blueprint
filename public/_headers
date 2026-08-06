@@ -17,11 +17,12 @@
   Cache-Control: public, max-age=31536000, immutable
 
 /assets/*
-  Cache-Control: public, max-age=31536000
+  Cache-Control: public, max-age=31536000, immutable
 
-# CSS isn't hashed; cache for a day on the browser, longer on the edge.
+# CSS is version-busted from the HTML (?v=DEPLOY_HASH), so it's safe to treat
+# as immutable — a new deploy changes the query string.
 /colors_and_type.css
-  Cache-Control: public, max-age=86400, s-maxage=2592000
+  Cache-Control: public, max-age=31536000, immutable
 
 # JSX components are transpiled by @babel/standalone in the browser, so
 # treat them like first-party JS bytes that change with deploys.
@@ -59,6 +60,18 @@
   Cache-Control: public, max-age=0, must-revalidate
 /VIVO/components/*
   Cache-Control: public, max-age=0, must-revalidate
+/Weedoo/components/*
+  Cache-Control: public, max-age=0, must-revalidate
+/CartonCraftSupply/components/*
+  Cache-Control: public, max-age=0, must-revalidate
+/Uncap/components/*
+  Cache-Control: public, max-age=0, must-revalidate
+/HydraPower/components/*
+  Cache-Control: public, max-age=0, must-revalidate
+/TrustyCook/components/*
+  Cache-Control: public, max-age=0, must-revalidate
+/QPFeed/components/*
+  Cache-Control: public, max-age=0, must-revalidate
 /demo/blueprint/components/*
   Cache-Control: public, max-age=0, must-revalidate
 
@@ -95,6 +108,18 @@
 /ElyCattleman/
   Cache-Control: public, max-age=0, must-revalidate
 /VIVO/
+  Cache-Control: public, max-age=0, must-revalidate
+/Weedoo/
+  Cache-Control: public, max-age=0, must-revalidate
+/CartonCraftSupply/
+  Cache-Control: public, max-age=0, must-revalidate
+/Uncap/
+  Cache-Control: public, max-age=0, must-revalidate
+/HydraPower/
+  Cache-Control: public, max-age=0, must-revalidate
+/TrustyCook/
+  Cache-Control: public, max-age=0, must-revalidate
+/QPFeed/
   Cache-Control: public, max-age=0, must-revalidate
 /demo/blueprint/
   Cache-Control: public, max-age=0, must-revalidate

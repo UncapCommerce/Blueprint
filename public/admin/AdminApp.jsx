@@ -293,46 +293,6 @@
     };
   }
 
-  // A top-nav dropdown: a trigger pill that opens a dark panel of sub-links.
-  function NavMenu({ label, items, active }) {
-    const [open, setOpen] = useState(false);
-    const ref = useRef(null);
-    const on = items.some((it) => it.id === active);
-    useEffect(() => {
-      if (!open) return;
-      const onDoc = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
-      document.addEventListener('mousedown', onDoc);
-      return () => document.removeEventListener('mousedown', onDoc);
-    }, [open]);
-    // Close whenever the route changes (a sub-link was chosen).
-    useEffect(() => { setOpen(false); }, [active]);
-    return (
-      <span ref={ref} style={{ position: 'relative', flexShrink: 0 }}>
-        <button type="button" onClick={() => setOpen((o) => !o)} style={navPillStyle(on)}>
-          {label} <span style={{ opacity: 0.55, fontSize: 9 }}>▾</span>
-        </button>
-        {open && (
-          <div style={{
-            position: 'absolute', top: 'calc(100% + 6px)', left: 0, zIndex: 60,
-            background: '#141414', border: '1px solid #2A2A2A', borderRadius: 8, padding: 5,
-            minWidth: 176, display: 'flex', flexDirection: 'column', gap: 1,
-            boxShadow: '0 16px 40px -18px rgba(0,0,0,0.85)',
-          }}>
-            {items.map((it) => {
-              const sel = it.id === active;
-              return (
-                <a key={it.id} href={it.path} onClick={(e) => { setOpen(false); navClick(it.path)(e); }} style={{
-                  padding: '8px 11px', borderRadius: 5, textDecoration: 'none', whiteSpace: 'nowrap',
-                  fontFamily: T.sans, fontSize: 12.5, fontWeight: sel ? 700 : 500, lineHeight: 1,
-                  color: sel ? '#0A0A0A' : '#E6E4DE', background: sel ? T.signal : 'transparent',
-                }}>{it.l}</a>
-              );
-            })}
-          </div>
-        )}
-      </span>
-    );
-  }
 
   function TopBar({ me, route, onLogout }) {
     const MONO = 'var(--font-mono, "JetBrains Mono", ui-monospace, monospace)';
