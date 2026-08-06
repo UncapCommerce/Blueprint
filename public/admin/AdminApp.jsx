@@ -1647,7 +1647,7 @@
     { key: 'declined',    label: 'Declined',    dot: '#B3261E' },
   ];
 
-  function PipelineCard({ c, onDecline }) {
+  function PipelineCard({ c, me, onDecline, onDelete }) {
     const bp = c.blueprint, disc = c.discovery;
     const linkOut = (href, text) => <a href={href} target="_blank" rel="noreferrer" style={{ color: '#2E5AAC', textDecoration: 'none', fontWeight: 600 }}>{text} ↗</a>;
     const dash = <span style={{ color: T.fg3 }}>—</span>;
@@ -1665,10 +1665,14 @@
               ? <img src={'/api/company/logo?id=' + encodeURIComponent(c.id) + '&t=' + encodeURIComponent(c.updatedAt || '')} alt="" style={{ maxWidth: 26, maxHeight: 22, objectFit: 'contain' }}/>
               : <span style={{ fontFamily: T.mono, fontSize: 12, fontWeight: 700, color: T.fg3 }}>{(c.name || '?')[0].toUpperCase()}</span>}
           </span>
-          <div style={{ minWidth: 0 }}>
+          <div style={{ minWidth: 0, flex: '1 1 auto' }}>
             <div style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 14, color: T.fg1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name}</div>
             <div style={{ fontFamily: T.mono, fontSize: 10.5, color: T.fg3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.leadContact ? (c.leadContact.name || c.leadContact.email) : 'No lead contact'}</div>
           </div>
+          {me && me.canDelete ? (
+            <button type="button" aria-label={'Delete ' + c.name} onClick={() => onDelete(c)}
+              style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 26, height: 26, borderRadius: 6, border: `1px solid ${T.line}`, background: 'transparent', color: '#B3261E', cursor: 'pointer', flexShrink: 0 }}><IconTrash/></button>
+          ) : null}
         </div>
         <div style={{ borderTop: `1px solid ${T.line}`, paddingTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
           {metric('Estimate', c.estimate ? linkOut('#', '#' + c.estimate.num) : dash)}
@@ -1701,6 +1705,11 @@
       try { await api('/api/admin/company/decline', { method: 'POST', body: JSON.stringify({ id: c.id, declined }) }); load(); }
       catch (err) { window.alert(err.message); }
     };
+    const removeCompany = async (c) => {
+      if (!window.confirm('Delete ' + c.name + '?\n\nThis removes the company and its Hub access, contacts, and uploaded files. Discoveries and blueprints themselves are not touched. This cannot be undone.')) return;
+      try { await api('/api/admin/company/delete', { method: 'POST', body: JSON.stringify({ id: c.id }) }); load(); }
+      catch (err) { window.alert(err.message); }
+    };
     const inStage = (k) => (rows || []).filter((c) => c.stage === k);
     return (
       <Page wide>
@@ -1723,7 +1732,7 @@
                     <span style={{ fontFamily: T.mono, fontSize: 11, color: T.fg3 }}>{cards.length}</span>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {cards.map((c) => <PipelineCard key={c.id} c={c} onDecline={setDeclined}/>)}
+                    {cards.map((c) => <PipelineCard key={c.id} c={c} me={me} onDecline={setDeclined} onDelete={removeCompany}/>)}
                     {cards.length === 0 ? <div style={{ border: `1px dashed ${T.line}`, borderRadius: 10, padding: '18px 12px', textAlign: 'center', fontFamily: T.mono, fontSize: 10.5, color: T.fg3 }}>Empty</div> : null}
                   </div>
                 </div>
