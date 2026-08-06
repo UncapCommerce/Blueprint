@@ -1644,9 +1644,10 @@
     { key: 'discovery',   label: 'Discovery',   dot: '#3A44C4' },
     { key: 'blueprint',   label: 'Blueprint',   dot: '#0A7A3B' },
     { key: 'signed',      label: 'Signed',      dot: '#0A0A0A' },
+    { key: 'declined',    label: 'Declined',    dot: '#B3261E' },
   ];
 
-  function PipelineCard({ c }) {
+  function PipelineCard({ c, onDecline }) {
     const bp = c.blueprint, disc = c.discovery;
     const linkOut = (href, text) => <a href={href} target="_blank" rel="noreferrer" style={{ color: '#2E5AAC', textDecoration: 'none', fontWeight: 600 }}>{text} ↗</a>;
     const dash = <span style={{ color: T.fg3 }}>—</span>;
@@ -1675,6 +1676,10 @@
           {metric('Blueprint', bp ? linkOut(bp.url, bp.num ? '#' + bp.num : 'view') : dash)}
         </div>
         <a href={'/admin/company/' + c.id} onClick={navClick('/admin/company/' + c.id)} style={{ ...S.btn, textDecoration: 'none', textAlign: 'center', padding: '8px 12px', fontSize: 12.5 }}>View company</a>
+        <button type="button" onClick={() => onDecline(c, !c.declined)}
+          style={{ border: 'none', background: 'transparent', color: c.declined ? '#2E7D32' : '#B3261E', cursor: 'pointer', fontFamily: T.mono, fontSize: 10.5, letterSpacing: '0.04em', padding: 2, textAlign: 'center' }}>
+          {c.declined ? '↩ Restore to pipeline' : '✕ Decline'}
+        </button>
       </div>
     );
   }
@@ -1688,6 +1693,14 @@
       catch (err) { setError(err.message); setRows([]); }
     };
     useEffect(() => { load(); }, []);
+    const setDeclined = async (c, declined) => {
+      const msg = declined
+        ? 'Move ' + c.name + ' to Declined?\n\nTheir Hub access is fully disabled — they lose access to their estimate, discovery, and blueprint.'
+        : 'Restore ' + c.name + ' to the pipeline and re-enable their Hub access?';
+      if (!window.confirm(msg)) return;
+      try { await api('/api/admin/company/decline', { method: 'POST', body: JSON.stringify({ id: c.id, declined }) }); load(); }
+      catch (err) { window.alert(err.message); }
+    };
     const inStage = (k) => (rows || []).filter((c) => c.stage === k);
     return (
       <Page wide>
@@ -1703,14 +1716,14 @@
             {PIPELINE_STAGES.map((st) => {
               const cards = inStage(st.key);
               return (
-                <div key={st.key} style={{ flex: '0 0 300px', width: 300, display: 'flex', flexDirection: 'column', gap: 12 }}>
+                <div key={st.key} style={{ flex: '1 1 0', minWidth: 220, display: 'flex', flexDirection: 'column', gap: 12 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '2px 2px 0' }}>
                     <span style={{ width: 8, height: 8, borderRadius: 999, background: st.dot, flexShrink: 0 }}/>
                     <span style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 13.5, color: T.fg1 }}>{st.label}</span>
                     <span style={{ fontFamily: T.mono, fontSize: 11, color: T.fg3 }}>{cards.length}</span>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                    {cards.map((c) => <PipelineCard key={c.id} c={c}/>)}
+                    {cards.map((c) => <PipelineCard key={c.id} c={c} onDecline={setDeclined}/>)}
                     {cards.length === 0 ? <div style={{ border: `1px dashed ${T.line}`, borderRadius: 10, padding: '18px 12px', textAlign: 'center', fontFamily: T.mono, fontSize: 10.5, color: T.fg3 }}>Empty</div> : null}
                   </div>
                 </div>

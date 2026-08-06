@@ -390,6 +390,9 @@ export default {
     if (url.pathname === '/api/admin/company/delete' && request.method === 'POST') {
       return handleAdminDeleteCompany(request, env);
     }
+    if (url.pathname === '/api/admin/company/decline' && request.method === 'POST') {
+      return handleAdminCompanyDecline(request, env);
+    }
     if (url.pathname === '/api/admin/company/invite' && request.method === 'POST') {
       return handleAdminCompanyInvite(request, env);
     }
@@ -2874,7 +2877,7 @@ async function handleAdminBpToken(request, env) {
   const portal = await getPortalSession(request, env);
   if (portal) {
     const co = await getCompany(env, portal.companyId);
-    if (co && co.blueprintId === blueprintId) {
+    if (co && !co.declined && co.blueprintId === blueprintId) {
       const token = genToken();
       await env.BLUEPRINT_AUTH.put(
         `session:${token}`,
@@ -4219,6 +4222,26 @@ async function linkBespokeBlueprintToCompany(env, companies, blueprintId, matche
   }
 }
 
+// POST /api/admin/company/decline — move a company into (or out of) the
+// Declined stage. Declined companies are fully cut off from the Hub: their
+// contacts can't sign in, existing sessions are denied, and estimates,
+// discoveries, and blueprints all become unreachable (enforced in
+// findCompanyByEmail, handlePortalMe, handlePortalFile, and handleAdminBpToken).
+async function handleAdminCompanyDecline(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+  let body;
+  try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  const rec = await getCompany(env, body.id);
+  if (!rec) return json(404, { ok: false, error: 'Company not found' });
+  const declined = body.declined !== false;
+  rec.declined = declined;
+  await putCompany(env, rec);
+  await logActivity(env, null, { type: declined ? 'deleted' : 'status', entity: 'company', id: rec.id, name: rec.name, actor: sess.email, detail: declined ? 'Declined — Hub access disabled' : 'Restored to pipeline — Hub access re-enabled' });
+  return json(200, { ok: true, declined });
+}
+
 // GET /api/admin/pipeline — the Sales CRM board. Returns every company placed
 // into a stage (opportunity → estimate → discovery → blueprint → signed) with
 // the data each card shows: lead contact, discovery status, blueprint number +
@@ -4227,31 +4250,37 @@ async function handleAdminPipeline(request, env) {
   const sess = await getAdminSession(request, env);
   if (!sess) return json(401, { ok: false, error: 'Not signed in' });
   const companies = await listCompanies(env);
-  const out = [];
-  for (const co of companies) {
-    let discovery = null;
-    if (co.discoveryHandle) {
-      const disc = await getDiscoveryByHandle(env, co.discoveryHandle).catch(() => null);
-      if (disc) discovery = { handle: disc.handle || co.discoveryHandle, status: disc.status || 'new', url: `/${co.id}/discovery` };
-    }
-    let blueprint = null;
-    if (co.blueprintId && await blueprintIsViewable(env, co.blueprintId)) {
-      const reg = BLUEPRINT_REGISTRY.find((b) => b.id === co.blueprintId);
-      const signed = !!(await env.BLUEPRINT_AUTH.get(`bpsigned:${co.blueprintId}`));
-      blueprint = { id: co.blueprintId, num: reg ? reg.num : '', signed, url: `/blueprint/${co.blueprintId}/` };
-    }
+  // Enrich every company concurrently — sequential KV reads over dozens of
+  // companies is what made this page crawl.
+  const out = await Promise.all(companies.map(async (co) => {
+    const [discovery, blueprint] = await Promise.all([
+      (async () => {
+        if (!co.discoveryHandle) return null;
+        const disc = await getDiscoveryByHandle(env, co.discoveryHandle).catch(() => null);
+        // A linked handle means discovery has at least started, even if the
+        // record read hiccups.
+        return { handle: (disc && disc.handle) || co.discoveryHandle, status: (disc && disc.status) || 'new', url: `/${co.id}/discovery` };
+      })(),
+      (async () => {
+        if (!co.blueprintId || !(await blueprintIsViewable(env, co.blueprintId))) return null;
+        const reg = BLUEPRINT_REGISTRY.find((b) => b.id === co.blueprintId);
+        const signed = !!(await env.BLUEPRINT_AUTH.get(`bpsigned:${co.blueprintId}`));
+        return { id: co.blueprintId, num: reg ? reg.num : '', signed, url: `/blueprint/${co.blueprintId}/` };
+      })(),
+    ]);
     const estimate = null; // Estimate functionality is not built yet.
-    const stage = (blueprint && blueprint.signed) ? 'signed'
+    const stage = co.declined ? 'declined'
+      : (blueprint && blueprint.signed) ? 'signed'
       : blueprint ? 'blueprint'
       : discovery ? 'discovery'
       : estimate ? 'estimate'
       : 'opportunity';
-    out.push({
-      id: co.id, name: co.name || co.id, hasLogo: !!co.hasLogo, updatedAt: co.updatedAt || '',
+    return {
+      id: co.id, name: co.name || co.id, hasLogo: !!co.hasLogo, updatedAt: co.updatedAt || '', declined: !!co.declined,
       leadContact: co.leadContact ? { name: co.leadContact.name || '', email: co.leadContact.email || '', title: co.leadContact.title || '' } : null,
       stage, estimate, discovery, blueprint,
-    });
-  }
+    };
+  }));
   return json(200, { ok: true, companies: out });
 }
 
@@ -4474,7 +4503,8 @@ function companyEmails(rec) {
 
 async function findCompanyByEmail(env, email) {
   const companies = await listCompanies(env);
-  return companies.find((c) => companyEmails(c).includes(email)) || null;
+  // Declined companies are cut off from the Hub — their contacts can't sign in.
+  return companies.find((c) => !c.declined && companyEmails(c).includes(email)) || null;
 }
 
 function portalContactName(rec, email) {
@@ -4578,6 +4608,7 @@ async function handlePortalMe(request, env) {
   if (sess) {
     rec = await getCompany(env, sess.companyId);
     if (!rec) return json(401, { ok: false, error: 'No portal access' });
+    if (rec.declined) return json(403, { ok: false, error: 'Hub access is disabled.' });
     viewer = { email: sess.email, name: sess.name || '' };
   } else {
     // Admin preview: an approved Uncap admin can view any company's hub exactly
@@ -4632,6 +4663,7 @@ async function handlePortalFile(request, env) {
   let rec;
   if (sess) {
     rec = await getCompany(env, sess.companyId);
+    if (rec && rec.declined) return new Response('Hub access is disabled', { status: 403 });
   } else {
     // Admin preview: approved admins can pull files for the company they're
     // previewing (?company=<id>), matching the hub preview in handlePortalMe.
