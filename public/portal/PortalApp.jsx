@@ -29,7 +29,9 @@ function PortalApp() {
 
   const load = async () => {
     try {
-      const resp = await fetch('/api/portal/me', { credentials: 'same-origin' });
+      // Pass the URL's company slug so an Uncap admin (no portal session) can
+      // preview this company's hub exactly as the customer sees it.
+      const resp = await fetch('/api/portal/me' + (URL_SLUG ? '?company=' + encodeURIComponent(URL_SLUG) : ''), { credentials: 'same-origin' });
       const data = await resp.json();
       if (resp.ok && data.ok) {
         // Everyone lands inside their own company folder.
@@ -149,6 +151,7 @@ function Portal({ me, onSignOut }) {
       <img src="/assets/uncap-logo-white.svg" alt="Uncap" style={{ height: 13, display: 'block' }}/>
       <span style={{ width: 1, height: 14, background: '#4D4D4D' }}></span>
       <span style={{ fontFamily: MONO, fontSize: 8.5, letterSpacing: '0.12em', color: '#9A9A9A' }}>HUB</span>
+      {me.preview ? <span style={{ marginLeft: 4, fontFamily: MONO, fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', color: '#0A0A0A', background: 'var(--uc-signal, #E8FF52)', borderRadius: 3, padding: '2px 6px' }}>PREVIEW</span> : null}
     </div>
   );
   const tabBtn = (t) => (
@@ -259,7 +262,7 @@ function CompanyTab({ me }) {
           ) : (
             <div style={{ marginTop: 14 }}>
               {co.files.map((f) => (
-                <a key={f.fid} href={'/api/portal/file?fid=' + encodeURIComponent(f.fid)}
+                <a key={f.fid} href={'/api/portal/file?fid=' + encodeURIComponent(f.fid) + '&company=' + encodeURIComponent(co.id)}
                   style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 0', borderBottom: '1px solid #F2EFE7', textDecoration: 'none', color: '#0A0A0A' }}>
                   <span style={{ fontFamily: 'var(--font-mono, "JetBrains Mono", ui-monospace, monospace)', fontSize: 9.5, letterSpacing: '0.08em', background: '#0A0A0A', color: '#FFFFFF', borderRadius: 4, padding: '3px 8px', flex: '0 0 auto' }}>{(FILE_KIND_LABEL[f.kind] || 'Document').toUpperCase()}</span>
                   <span style={{ fontSize: 14, fontWeight: 600, flex: '1 1 auto', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{f.name}</span>

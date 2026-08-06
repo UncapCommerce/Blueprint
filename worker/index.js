@@ -4501,9 +4501,26 @@ async function getPortalSession(request, env) {
 // blueprint stand. View-only by design.
 async function handlePortalMe(request, env) {
   const sess = await getPortalSession(request, env);
-  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
-  const rec = await getCompany(env, sess.companyId);
-  if (!rec) return json(401, { ok: false, error: 'No portal access' });
+  let rec, viewer, preview = false;
+  if (sess) {
+    rec = await getCompany(env, sess.companyId);
+    if (!rec) return json(401, { ok: false, error: 'No portal access' });
+    viewer = { email: sess.email, name: sess.name || '' };
+  } else {
+    // Admin preview: an approved Uncap admin can view any company's hub exactly
+    // as the customer sees it, without a portal session — the same courtesy the
+    // blueprint pages already extend via /api/admin/bp-token. Requires the
+    // ?company=<id> the hub shell passes from the URL folder.
+    const admin = await getAdminSession(request, env);
+    if (!admin || !(await adminIsApproved(env, admin.email))) {
+      return json(401, { ok: false, error: 'Not signed in' });
+    }
+    const cid = (new URL(request.url).searchParams.get('company') || '').toString().trim().toLowerCase();
+    rec = await getCompany(env, cid);
+    if (!rec) return json(404, { ok: false, error: 'Company not found' });
+    viewer = { email: admin.email, name: admin.name || '' };
+    preview = true;
+  }
 
   let discovery = null;
   if (rec.discoveryHandle) {
@@ -4516,8 +4533,9 @@ async function handlePortalMe(request, env) {
   }
   return json(200, {
     ok: true,
-    email: sess.email,
-    name: sess.name || '',
+    preview,
+    email: viewer.email,
+    name: viewer.name || '',
     company: {
       id: rec.id, name: rec.name, storeUrl: rec.storeUrl, address: rec.address,
       description: rec.description, platform: rec.platform, erp: rec.erp,
@@ -4531,11 +4549,19 @@ async function handlePortalMe(request, env) {
 }
 
 async function handlePortalFile(request, env) {
-  const sess = await getPortalSession(request, env);
-  if (!sess) return new Response('Not signed in', { status: 401 });
-  const rec = await getCompany(env, sess.companyId);
-  if (!rec) return new Response('Not found', { status: 404 });
   const url = new URL(request.url);
+  const sess = await getPortalSession(request, env);
+  let rec;
+  if (sess) {
+    rec = await getCompany(env, sess.companyId);
+  } else {
+    // Admin preview: approved admins can pull files for the company they're
+    // previewing (?company=<id>), matching the hub preview in handlePortalMe.
+    const admin = await getAdminSession(request, env);
+    if (!admin || !(await adminIsApproved(env, admin.email))) return new Response('Not signed in', { status: 401 });
+    rec = await getCompany(env, (url.searchParams.get('company') || '').toString().trim().toLowerCase());
+  }
+  if (!rec) return new Response('Not found', { status: 404 });
   const fid = (url.searchParams.get('fid') || '').toString();
   if (!(rec.files || []).some((f) => f.fid === fid)) return new Response('Not found', { status: 404 });
   const stored = await env.BLUEPRINT_AUTH.get(`cofile:${rec.id}:${fid}`);
