@@ -210,9 +210,9 @@ function Portal({ me, onSignOut }) {
             {tab === 'Overview' && <OverviewTab me={me} onNavigate={setTab}/>}
             {tab === 'Estimate' && (me.estimate
               ? <EstimateTab est={me.estimate} co={co}/>
-              : (me.signed || me.blueprint || me.discovery)
-                ? <StatusPage eyebrow="ESTIMATE" title="Already completed" note="Your estimate was prepared with your Uncap team and shared with you over email. There's nothing you need to do here — just reach out to your Uncap contact if you'd like it sent again."/>
-                : <StatusPage eyebrow="ESTIMATE" title="Coming soon" note="Your estimate will live here. We're putting this together and will share it with you shortly."/>)}
+              : engagementStage(me) > 2
+                ? <StatusPage eyebrow="ESTIMATE" title="Completed manually" note="Your estimate was prepared with your Uncap team and shared over email. There's nothing you need to do here — reach out to your Uncap contact if you'd like it sent again."/>
+                : <StatusPage eyebrow="ESTIMATE" title="Not started" note="Your estimate will appear here once your Uncap team has prepared it."/>)}
             {tab === 'Discovery' && <DiscoveryTab me={me}/>}
             {tab === 'Blueprint' && <BlueprintTab me={me}/>}
             {tab === 'Onboarding' && <StatusPage eyebrow="ONBOARDING" title="Coming soon" note="Once your blueprint is approved, your kickoff details, access checklist, and project start plan will appear here."/>}
@@ -312,6 +312,15 @@ const PROCESS_STEPS = [
   { n: 5, label: 'Onboarding', desc: 'Kickoff, access, and project start.' },
 ];
 
+// How far the engagement has progressed, derived from what exists. Drives each
+// tab's empty state: a step the engagement hasn't reached yet reads "Not
+// started"; a step we've moved *past* without doing it in the Hub reads
+// "Completed manually" (it was handled offline). Estimate=2, Discovery=3,
+// Blueprint=4.
+function engagementStage(me) {
+  return me.signed ? 5 : me.blueprint ? 4 : me.discovery ? 3 : me.estimate ? 2 : 1;
+}
+
 function InfoRow({ label, value }) {
   return (
     <div>
@@ -326,7 +335,7 @@ function OverviewTab({ me, onNavigate }) {
   const narrow = useIsNarrow();
   const card = { background: '#FFFFFF', border: '1px solid #E4E1D8', borderRadius: 8, padding: 26 };
   const eyebrow = { fontFamily: MONO, fontSize: 10.5, letterSpacing: '0.14em', color: '#9A9A9A' };
-  const stage = me.signed ? 5 : me.blueprint ? 4 : me.discovery ? 3 : 1;
+  const stage = engagementStage(me);
   const site = co.storeUrl ? (/^https?:\/\//.test(co.storeUrl) ? co.storeUrl : 'https://' + co.storeUrl) : '';
   // A step gets a call-to-action when it has somewhere to go.
   const CTA = {
@@ -427,12 +436,12 @@ function Contact({ c, lead }) {
 // ── Discovery / Blueprint tabs ────────────────────────────────────────────
 function DiscoveryTab({ me }) {
   if (!me.discovery) {
-    // Bypassed: the engagement moved past discovery without a hub discovery,
-    // so it was handled offline and shared over email.
-    if (me.signed || me.blueprint) {
-      return <StatusPage eyebrow="DISCOVERY" title="Already completed" note="Your discovery was completed with your Uncap team and shared with you over email. There's nothing you need to do here — just reach out to your Uncap contact if you'd like it sent again."/>;
+    // Past discovery without a Hub discovery → it was handled offline.
+    // Not yet reached → it simply hasn't started.
+    if (engagementStage(me) > 3) {
+      return <StatusPage eyebrow="DISCOVERY" title="Completed manually" note="Your discovery was completed with your Uncap team and shared over email. There's nothing you need to do here — reach out to your Uncap contact if you'd like it sent again."/>;
     }
-    return <StatusPage eyebrow="DISCOVERY" title="Completed manually" note="This discovery was completed manually with your Uncap team. There is nothing you need to do here."/>;
+    return <StatusPage eyebrow="DISCOVERY" title="Not started" note="Your discovery will open here when it's ready to begin."/>;
   }
   const done = me.discovery.status === 'complete';
   return (
@@ -449,7 +458,12 @@ function DiscoveryTab({ me }) {
 
 function BlueprintTab({ me }) {
   if (!me.blueprint) {
-    return <StatusPage eyebrow="BLUEPRINT" title="Under Review" note="Your blueprint is being crafted from your discovery. It will unlock here the moment it is ready."/>;
+    const st = engagementStage(me);
+    // Signed but no Hub blueprint → handled offline. Discovery done → actively
+    // being built. Earlier than that → not started yet.
+    if (st > 4) return <StatusPage eyebrow="BLUEPRINT" title="Completed manually" note="Your blueprint was prepared with your Uncap team and shared over email. There's nothing you need to do here — reach out to your Uncap contact if you'd like it sent again."/>;
+    if (st === 3) return <StatusPage eyebrow="BLUEPRINT" title="Under Review" note="Your blueprint is being crafted from your discovery. It will unlock here the moment it is ready."/>;
+    return <StatusPage eyebrow="BLUEPRINT" title="Not started" note="Your blueprint will appear here after discovery."/>;
   }
   return (
     <div style={{ background: '#FFFFFF', border: '1px solid #E4E1D8', borderRadius: 8, minHeight: 420, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: 40 }}>
