@@ -310,6 +310,18 @@ export default {
     if (url.pathname === '/api/admin/revenue/summary' && request.method === 'GET') {
       return revenueCached(request, env, ctx, () => handleAdminRevenueSummary(request, env));
     }
+    if (url.pathname === '/api/admin/items' && request.method === 'GET') {
+      return handleAdminListItems(request, env);
+    }
+    if (url.pathname === '/api/admin/items' && request.method === 'POST') {
+      return handleAdminCreateItem(request, env);
+    }
+    if (url.pathname === '/api/admin/item/update' && request.method === 'POST') {
+      return handleAdminUpdateItem(request, env);
+    }
+    if (url.pathname === '/api/admin/item/delete' && request.method === 'POST') {
+      return handleAdminDeleteItem(request, env);
+    }
     if (url.pathname === '/api/admin/pipeline' && request.method === 'GET') {
       // Cache the board (SWR, short fresh window) so it paints instantly and
       // self-heals; ?refresh=1 forces a live rebuild after a change.
@@ -449,7 +461,7 @@ export default {
     // The admin dashboard lives at /admin (client-side routes /admin/
     // discoveries|blueprints|companies and the company profile page
     // /admin/company/<id> included); the root is the portal.
-    if (/^\/admin(\/(sales(\/process)?|discoveries|blueprints|companies|users|projects|retainers|dashboard|revenues(\/(fixed|recurring|apps|referrals))?|company\/[a-z0-9-]+|blueprint\/[a-z0-9-]+))?\/?$/.test(url.pathname) && (request.method === 'GET' || request.method === 'HEAD')) {
+    if (/^\/admin(\/(sales(\/(process|items))?|discoveries|blueprints|companies|users|projects|retainers|dashboard|revenues(\/(fixed|recurring|apps|referrals))?|company\/[a-z0-9-]+|blueprint\/[a-z0-9-]+))?\/?$/.test(url.pathname) && (request.method === 'GET' || request.method === 'HEAD')) {
       const assetUrl = new URL(url.toString());
       assetUrl.pathname = '/admin/index.html';
       return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
@@ -4230,6 +4242,114 @@ async function linkBespokeBlueprintToCompany(env, companies, blueprintId, matche
     co.blueprintId = blueprintId;
     await putCompany(env, co).catch(() => {});
   }
+}
+
+// ── Items master list (Sales → Items) ────────────────────────────────────
+// The catalog of line items an estimate is built from. Stored one per KV row
+// (item:<id>); the team grows this list over time. Prices are USD ranges;
+// hours are derived from a blended rate. Seeded once from the estimate template.
+const ITEM_RATE = 145;
+const ITEM_GROUPS = [
+  { key: 'foundation',  label: 'Base build' },
+  { key: 'growth',      label: 'Growth & experience' },
+  { key: 'b2b',         label: 'Unified commerce' },
+  { key: 'data',        label: 'Complex data migration' },
+  { key: 'sys',         label: 'System integration' },
+  { key: 'integration', label: 'ERP integration' },
+];
+const ITEM_GROUP_KEYS = ITEM_GROUPS.map((g) => g.key);
+const ITEM_TYPES = ['foundation', 'module', 'integration'];
+
+const SEED_ITEMS = [
+  { group: 'foundation', type: 'foundation', rec: true, low: 18850, high: 26100, name: 'Shopify Build', desc: 'Discovery, implementation, theme styling & config, product/content migration (up to 1,000 products), app setup, QA/UAT, training & SOPs, launch + support.' },
+  { group: 'growth', type: 'module', rec: true,  low: 7250, high: 10150, name: 'Tailored experience design', desc: 'Custom-designed core pages and components beyond the essential template set.' },
+  { group: 'growth', type: 'module', rec: true,  low: 8700, high: 11600, name: 'Streamlined merchandising', desc: 'Large-catalog navigation, filtering, search, and discovery built for 40k+ SKUs.' },
+  { group: 'growth', type: 'module', rec: false, low: 8700, high: 15950, name: 'Revenue optimization', desc: 'Conversion work, bundles, upsells, and retention mechanics wired into the theme.' },
+  { group: 'growth', type: 'module', rec: true,  low: 5800, high: 8700,  name: 'SEO / GEO optimization', desc: '301 map, internal linking, schema, and structured answers for AI discovery.' },
+  { group: 'b2b', type: 'module', rec: true,  low: 8700, high: 15950, name: 'B2B / B2C unified storefront', desc: 'Company accounts, catalogs, price lists, locations, net terms, and B2B checkout.' },
+  { group: 'b2b', type: 'module', rec: true,  low: 4350, high: 8700,  name: 'Quote management & workflow', desc: 'Request-a-quote, sales-assisted draft orders, and approval routing.' },
+  { group: 'b2b', type: 'module', rec: false, low: 5800, high: 11600, name: 'POS & counter sales', desc: 'Shopify POS at the counter, sharing one inventory and customer record.' },
+  { group: 'data', type: 'module', rec: true,  low: 5800, high: 13050, name: 'Full customer & order history', desc: 'Historical customers, orders, and transactions mapped into Shopify.' },
+  { group: 'data', type: 'module', rec: true,  low: 4350, high: 10150, name: 'B2B catalogs, price lists & companies', desc: 'Company profiles, contacts, locations, and per-company pricing.' },
+  { group: 'data', type: 'module', rec: false, low: 6525, high: 11600, name: 'Subscription migration', desc: 'Active subscriptions, billing schedules, and payment tokens moved intact.' },
+  { group: 'sys', type: 'module', rec: false, low: 7250, high: 14500, name: 'PIM integration', desc: 'Sync product data from Akeneo, Salsify, inriver, or Plytix.' },
+  { group: 'sys', type: 'module', rec: false, low: 5800, high: 11600, name: 'CRM integration', desc: 'Connect Salesforce, HubSpot, or your existing CRM to storefront activity.' },
+  { group: 'sys', type: 'module', rec: false, low: 8700, high: 17400, name: 'YMM fitment search', desc: 'Year / make / model fitment filtering for parts catalogs.' },
+  { group: 'integration', type: 'integration', rec: false, low: 0,     high: 0,     tag: 'Manual ops',                name: 'No ERP integration', desc: 'Orders and inventory stay a manual reconciliation. Cheapest today, costliest at volume.' },
+  { group: 'integration', type: 'integration', rec: false, low: 5800,  high: 11600, tag: 'Limited capability',       name: 'Native connector', desc: 'Off-the-shelf connector app configured to your data model.' },
+  { group: 'integration', type: 'integration', rec: false, low: 8700,  high: 14500, tag: '$500–$2,000/mo license', name: 'iPaaS integration', desc: 'Middleware platform with prebuilt flows between Shopify and the ERP.' },
+  { group: 'integration', type: 'integration', rec: true,  low: 14500, high: 26825, tag: 'No license — you own it', name: 'Uncap Connect', desc: 'Embedded Shopify app, built and deployed by Uncap. Owned software, no rental.' },
+];
+
+function itemHours(low, high) {
+  const h = (n) => Math.round(n / ITEM_RATE / 5) * 5;
+  return { low: h(low), high: h(high) };
+}
+function normalizeItem(rec) {
+  const low = Math.max(0, parseInt(rec.low, 10) || 0);
+  const high = Math.max(low, parseInt(rec.high, 10) || low);
+  const group = ITEM_GROUP_KEYS.includes(rec.group) ? rec.group : 'growth';
+  const type = ITEM_TYPES.includes(rec.type) ? rec.type : 'module';
+  return {
+    id: rec.id, name: (rec.name || '').toString().slice(0, 120).trim(),
+    desc: (rec.desc || '').toString().slice(0, 400).trim(),
+    group, type, low, high, recommended: !!rec.recommended,
+    tag: (rec.tag || '').toString().slice(0, 60).trim(),
+  };
+}
+async function listItems(env) {
+  const list = await env.BLUEPRINT_AUTH.list({ prefix: 'item:', limit: 500 });
+  const rows = await Promise.all(list.keys.map((k) => env.BLUEPRINT_AUTH.get(k.name).then((v) => { try { return JSON.parse(v); } catch { return null; } }).catch(() => null)));
+  const gi = (g) => { const i = ITEM_GROUP_KEYS.indexOf(g); return i === -1 ? 99 : i; };
+  return rows.filter(Boolean).sort((a, b) => (gi(a.group) - gi(b.group)) || (a.name || '').localeCompare(b.name || ''));
+}
+async function seedItemsV1(env) {
+  if (await env.BLUEPRINT_AUTH.get('items:seeded:v1')) return;
+  await env.BLUEPRINT_AUTH.put('items:seeded:v1', new Date().toISOString());
+  for (const s of SEED_ITEMS) {
+    const id = 'itm_' + crypto.randomUUID().slice(0, 8);
+    const rec = { ...normalizeItem({ ...s, recommended: s.rec }), id, createdAt: new Date().toISOString(), createdBy: 'seed' };
+    await env.BLUEPRINT_AUTH.put(`item:${id}`, JSON.stringify(rec)).catch(() => {});
+  }
+}
+
+async function handleAdminListItems(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  try { await seedItemsV1(env); } catch (_) { /* best-effort seed */ }
+  return json(200, { ok: true, rate: ITEM_RATE, groups: ITEM_GROUPS, items: await listItems(env) });
+}
+async function handleAdminCreateItem(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+  let body; try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  if (!(body.name || '').toString().trim()) return json(400, { ok: false, error: 'Name is required' });
+  const id = 'itm_' + crypto.randomUUID().slice(0, 8);
+  const rec = { ...normalizeItem({ ...body, id }), createdAt: new Date().toISOString(), createdBy: sess.email };
+  await env.BLUEPRINT_AUTH.put(`item:${id}`, JSON.stringify(rec));
+  return json(200, { ok: true, item: rec });
+}
+async function handleAdminUpdateItem(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+  let body; try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  const raw = await env.BLUEPRINT_AUTH.get(`item:${(body.id || '').toString()}`);
+  if (!raw) return json(404, { ok: false, error: 'Item not found' });
+  let cur; try { cur = JSON.parse(raw); } catch { return json(404, { ok: false, error: 'Item not found' }); }
+  const rec = { ...cur, ...normalizeItem({ ...cur, ...body, id: cur.id }), updatedAt: new Date().toISOString(), updatedBy: sess.email };
+  await env.BLUEPRINT_AUTH.put(`item:${cur.id}`, JSON.stringify(rec));
+  return json(200, { ok: true, item: rec });
+}
+async function handleAdminDeleteItem(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  if (!(await adminCanDelete(env, sess.email))) return json(403, { ok: false, error: 'Only Admin or Management can delete items.' });
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+  let body; try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  await env.BLUEPRINT_AUTH.delete(`item:${(body.id || '').toString()}`).catch(() => {});
+  return json(200, { ok: true });
 }
 
 // POST /api/admin/company/decline — move a company into (or out of) the

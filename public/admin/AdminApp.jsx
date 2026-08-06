@@ -101,6 +101,7 @@
     if (base[0] === 'company' && base[1]) return 'company-profile';
     if (base[0] === 'blueprint' && base[1]) return 'blueprint-editor';
     if (base[0] === 'sales' && base[1] === 'process') return 'sales-process';
+    if (base[0] === 'sales' && base[1] === 'items') return 'sales-items';
     if (base[0] === 'sales') return 'sales';
     if (base[0] === 'discoveries') return 'discoveries';
     if (base[0] === 'blueprints') return 'blueprints';
@@ -337,6 +338,7 @@
       sales: [
         { id: 'sales',         l: 'Pipeline', path: '/admin/sales' },
         { id: 'sales-process', l: 'Process',  path: '/admin/sales/process' },
+        { id: 'sales-items',   l: 'Items',    path: '/admin/sales/items' },
       ],
       services: [
         { id: 'projects',  l: 'Projects',  path: '/admin/projects' },
@@ -354,7 +356,7 @@
     // routes back to the owning section.
     const SECTIONS = [
       { id: 'activities', l: 'Activities', path: '/admin', match: ['home'] },
-      { id: 'sales', l: 'Sales', path: '/admin/sales', match: ['sales', 'sales-process', 'companies', 'discoveries', 'blueprints', 'company-profile', 'blueprint-editor'] },
+      { id: 'sales', l: 'Sales', path: '/admin/sales', match: ['sales', 'sales-process', 'sales-items', 'companies', 'discoveries', 'blueprints', 'company-profile', 'blueprint-editor'] },
       { id: 'services', l: 'Services', path: '/admin/projects', match: ['projects', 'retainers'] },
       ...(me.canDelete ? [{ id: 'revenues', l: 'Revenues', path: '/admin/revenues', match: ['revenues', 'rev-fixed', 'rev-recurring', 'rev-apps', 'rev-referrals'] }] : []),
       { id: 'dashboard', l: 'Dashboard', path: '/admin/dashboard', match: ['dashboard'] },
@@ -1682,6 +1684,129 @@
           {metric('Blueprint', bp ? linkOut(bp.url, bp.num ? '#' + bp.num : 'view') : dash)}
         </div>
       </div>
+    );
+  }
+
+  // ── Sales → Items (master line-item catalog the estimate is built from) ──
+  function ItemEditor({ initial, groups, onClose, onSaved }) {
+    const [f, setF] = useState(() => ({
+      name: (initial && initial.name) || '', desc: (initial && initial.desc) || '',
+      group: (initial && initial.group) || 'growth', type: (initial && initial.type) || 'module',
+      low: (initial && initial.low) || 0, high: (initial && initial.high) || 0,
+      recommended: !!(initial && initial.recommended), tag: (initial && initial.tag) || '',
+    }));
+    const [busy, setBusy] = useState(false);
+    const [err, setErr] = useState('');
+    const set = (k) => (v) => setF((s) => ({ ...s, [k]: v }));
+    const save = async () => {
+      if (!f.name.trim()) { setErr('Name is required'); return; }
+      setBusy(true); setErr('');
+      try {
+        const body = { ...f, low: parseInt(f.low, 10) || 0, high: parseInt(f.high, 10) || 0 };
+        if (initial) body.id = initial.id;
+        const d = await api(initial ? '/api/admin/item/update' : '/api/admin/items', { method: 'POST', body: JSON.stringify(body) });
+        onSaved(d.item);
+      } catch (e) { setErr(e.message); setBusy(false); }
+    };
+    return (
+      <Modal title={initial ? 'Edit item' : 'New item'} sub="Master item list" onClose={onClose} width={540}>
+        <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <Field label="Name" value={f.name} onChange={set('name')} autoFocus/>
+          <div>
+            <label style={S.label}>Description</label>
+            <textarea value={f.desc} onChange={(e) => set('desc')(e.target.value)} rows={3} style={{ ...S.input, resize: 'vertical', lineHeight: 1.5 }}/>
+          </div>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <div style={{ flex: 1 }}>
+              <label style={S.label}>Group</label>
+              <select value={f.group} onChange={(e) => set('group')(e.target.value)} style={S.input}>
+                {(groups || []).map((g) => <option key={g.key} value={g.key}>{g.label}</option>)}
+              </select>
+            </div>
+            <div style={{ flex: 1 }}>
+              <label style={S.label}>Type</label>
+              <select value={f.type} onChange={(e) => set('type')(e.target.value)} style={S.input}>
+                <option value="module">Module (toggle)</option>
+                <option value="integration">Integration (pick one)</option>
+                <option value="foundation">Foundation (always in)</option>
+              </select>
+            </div>
+          </div>
+          <div style={{ display: 'flex', gap: 12 }}>
+            <div style={{ flex: 1 }}><Field label="Price low ($)" value={String(f.low)} onChange={set('low')} type="number"/></div>
+            <div style={{ flex: 1 }}><Field label="Price high ($)" value={String(f.high)} onChange={set('high')} type="number"/></div>
+            <div style={{ flex: 1 }}><Field label="Tag (optional)" value={f.tag} onChange={set('tag')} placeholder="e.g. Pick one"/></div>
+          </div>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: T.sans, fontSize: 13.5, color: T.fg2, cursor: 'pointer' }}>
+            <input type="checkbox" checked={f.recommended} onChange={(e) => set('recommended')(e.target.checked)}/> Recommended by default (pre-selected on new estimates)
+          </label>
+          {err ? <div style={{ color: '#B3261E', fontFamily: T.mono, fontSize: 12 }}>{err}</div> : null}
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8 }}>
+            <button type="button" style={S.btnGhost} onClick={onClose}>Cancel</button>
+            <button type="button" style={S.btnLime} disabled={busy} onClick={save}>{busy ? 'Saving…' : 'Save item'}</button>
+          </div>
+        </div>
+      </Modal>
+    );
+  }
+
+  function SalesItems({ me }) {
+    const [data, setData] = useState(null);
+    const [error, setError] = useState('');
+    const [editing, setEditing] = useState(undefined); // undefined = closed, null = new, obj = edit
+    const load = async () => { try { setData(await api('/api/admin/items')); } catch (e) { setError(e.message); setData({ items: [], groups: [] }); } };
+    useEffect(() => { load(); }, []);
+    const rate = (data && data.rate) || 145;
+    const money = (n) => '$' + (n || 0).toLocaleString('en-US');
+    const hrs = (n) => Math.round(n / rate / 5) * 5;
+    const priceLabel = (it) => (it.low === 0 && it.high === 0) ? 'Included' : (it.low === it.high ? money(it.low) : money(it.low) + ' – ' + money(it.high));
+    const hoursLabel = (it) => (it.low === 0 && it.high === 0) ? '—' : (it.low === it.high ? hrs(it.low) + ' hrs' : hrs(it.low) + '–' + hrs(it.high) + ' hrs');
+    const del = async (it) => { if (!window.confirm('Delete "' + it.name + '" from the master item list?')) return; try { await api('/api/admin/item/delete', { method: 'POST', body: JSON.stringify({ id: it.id }) }); load(); } catch (e) { window.alert(e.message); } };
+    const groups = (data && data.groups) || [];
+    const items = (data && data.items) || [];
+    return (
+      <Page>
+        <PageHead eyebrow="Sales" title="Items" action={<button type="button" style={S.btnLime} onClick={() => setEditing(null)}>+ Add item</button>}/>
+        {data === null ? (
+          <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>Loading…</div>
+        ) : items.length === 0 ? (
+          <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>{error || 'No items yet. Add the first line item to the master list.'}</div>
+        ) : (
+          groups.map((g) => {
+            const rows = items.filter((it) => it.group === g.key);
+            if (!rows.length) return null;
+            return (
+              <div key={g.key} style={{ marginBottom: 22 }}>
+                <div style={{ ...S.eyebrow, marginBottom: 10 }}>{g.label}</div>
+                <div style={{ ...S.card, overflow: 'hidden' }}>
+                  {rows.map((it, i) => (
+                    <div key={it.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 14, padding: '13px 16px', borderBottom: i < rows.length - 1 ? `1px solid ${T.line}` : 'none' }}>
+                      <div style={{ flex: '1 1 auto', minWidth: 0 }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                          <span style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 14, color: T.fg1 }}>{it.name}</span>
+                          {it.recommended ? <span style={{ fontFamily: T.mono, fontSize: 9, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#0A0A0A', background: T.signal, borderRadius: 999, padding: '2px 7px' }}>In quote</span> : null}
+                          {it.tag ? <span style={{ fontFamily: T.mono, fontSize: 10, color: T.fg3, border: `1px solid ${T.line}`, borderRadius: 999, padding: '1px 8px' }}>{it.tag}</span> : null}
+                        </div>
+                        {it.desc ? <div style={{ fontFamily: T.sans, fontSize: 12.5, color: T.fg3, marginTop: 3, lineHeight: 1.5 }}>{it.desc}</div> : null}
+                      </div>
+                      <div style={{ textAlign: 'right', flexShrink: 0, minWidth: 116 }}>
+                        <div style={{ fontFamily: T.mono, fontSize: 12.5, fontWeight: 600, color: T.fg1 }}>{priceLabel(it)}</div>
+                        <div style={{ fontFamily: T.mono, fontSize: 11, color: T.fg3, marginTop: 2 }}>{hoursLabel(it)}</div>
+                      </div>
+                      <button type="button" style={{ ...S.btnGhost, flexShrink: 0, padding: '5px 11px', fontSize: 12 }} onClick={() => setEditing(it)}>Edit</button>
+                      {me.canDelete ? (
+                        <button type="button" aria-label={'Delete ' + it.name} onClick={() => del(it)}
+                          style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: 30, height: 30, borderRadius: 6, border: `1px solid ${T.line}`, background: 'transparent', color: '#B3261E', cursor: 'pointer', flexShrink: 0 }}><IconTrash/></button>
+                      ) : null}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })
+        )}
+        {editing !== undefined && <ItemEditor initial={editing} groups={groups} onClose={() => setEditing(undefined)} onSaved={() => { setEditing(undefined); load(); }}/>}
+      </Page>
     );
   }
 
@@ -3396,6 +3521,7 @@
           : route === 'blueprint-editor' ? <BlueprintEditor id={routeBlueprintId()}/>
           : route === 'sales' ? <SalesPipeline me={me}/>
           : route === 'sales-process' ? <SalesProcess/>
+          : route === 'sales-items' ? <SalesItems me={me}/>
           : route === 'companies' ? <Companies me={me}/>
           : route === 'discoveries' ? <Discoveries me={me}/>
           : route === 'blueprints' ? <Blueprints me={me}/>
