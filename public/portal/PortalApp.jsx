@@ -172,7 +172,7 @@ function Portal({ me, onSignOut }) {
   );
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ flex: '0 0 auto', background: '#0A0A0A', zIndex: 50 }}>
+      <div style={{ flex: '0 0 auto', background: '#0A0A0A', borderBottom: '1px solid rgba(255,255,255,0.12)', zIndex: 50 }}>
         {isMobile ? (
           <>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, height: 44, padding: '0 14px' }}>
