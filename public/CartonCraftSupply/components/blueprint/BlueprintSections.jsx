@@ -2189,11 +2189,11 @@ function BPRiskAssessment() {
 // ── 07 TEAM ─────────────────────────────────────────────────────────────────
 function BPTeam() {
   const team = [
-    { n: 'Denis Dyli', r: 'CEO, Principal', img: 'assets/team-denis.png' },
+    { n: 'Denis Dyli', r: 'CEO, Principal', img: 'assets/team-denis.webp' },
     { n: 'Ryan Muir', r: 'Managing Director', img: 'assets/team-ryan.png' },
     { n: 'Mike Gojcaj', r: 'Head of Solutions', img: 'assets/team-mike.png' },
     { n: 'Michael Johnson', r: 'Head of Delivery', img: 'assets/team-michael.png' },
-    { n: 'Jo Tan', r: 'Head of Design', img: 'assets/team-jo.png' }
+    { n: 'Jo Tan', r: 'Head of Design', img: 'assets/team-jo.webp' }
   ];
   return (
     <BPSection id="team" n="16" label="Team" tail="WHO DOES THE WORK">
@@ -2538,7 +2538,7 @@ function BPWhy() {
           &ldquo;We earned Platinum Partner status along the way, but the thing we&rsquo;re proudest of is the trust. An unchallengeable reputation as a partner that delivers. And customers who came to us for one project and stayed for over ten years.&rdquo;
         </blockquote>
         <div style={{ marginTop: 18, display: 'flex', alignItems: 'center', gap: 14 }}>
-          <img src="assets/team-denis.png" alt="Denis Dyli" style={{ width: 44, height: 44, borderRadius: 999, objectFit: 'cover', flexShrink: 0, border: '1px solid #2B2B2B' }}/>
+          <img src="assets/team-denis.webp" alt="Denis Dyli" style={{ width: 44, height: 44, borderRadius: 999, objectFit: 'cover', flexShrink: 0, border: '1px solid #2B2B2B' }}/>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 3, fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.06em' }}>
             <span style={{ color: 'var(--uc-paper)', fontWeight: 700 }}>Denis Dyli</span>
             <span style={{ color: 'var(--uc-stone-500)' }}>Founder</span>

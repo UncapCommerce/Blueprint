@@ -1996,11 +1996,11 @@ function BPDelivery() {
 // ── 07 TEAM ─────────────────────────────────────────────────────────────────
 function BPTeam() {
   const team = [
-    { n: 'Denis Dyli', r: 'Principal', img: 'assets/team-denis.png' },
+    { n: 'Denis Dyli', r: 'Principal', img: 'assets/team-denis.webp' },
     { n: 'Ryan Muir', r: 'Managing Director', img: 'assets/team-ryan.png' },
     { n: 'Mike Gojcaj', r: 'Head of Solutions', img: 'assets/team-mike.png' },
     { n: 'Michael Johnson', r: 'Head of Delivery', img: 'assets/team-michael.png' },
-    { n: 'Jo Tan', r: 'Head of Design', img: 'assets/team-jo.png' }
+    { n: 'Jo Tan', r: 'Head of Design', img: 'assets/team-jo.webp' }
   ];
   return (
     <BPSection id="team" n="14" label="Team" tail="WHO DOES THE WORK">
