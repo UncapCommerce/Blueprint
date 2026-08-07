@@ -412,6 +412,9 @@ export default {
     if (url.pathname === '/api/admin/companies' && request.method === 'POST') {
       return handleAdminCreateCompany(request, env);
     }
+    if (url.pathname === '/api/admin/company' && request.method === 'GET') {
+      return handleAdminGetCompany(request, env);
+    }
     if (url.pathname === '/api/admin/company/update' && request.method === 'POST') {
       return handleAdminUpdateCompany(request, env);
     }
@@ -4756,6 +4759,19 @@ async function handleAdminCreateCompany(request, env) {
   }
   await putCompany(env, rec);
   await logActivity(env, null, { type: 'created', entity: 'company', id, name: rec.name, actor: sess.email, detail: 'Company added to portal' });
+  return json(200, { ok: true, company: rec });
+}
+
+// GET /api/admin/company?id=<id> — one company, read straight from its KV key.
+// The profile page uses this instead of scanning the (few-second cached) list,
+// so a just-created company resolves immediately rather than 404ing on stale
+// cache before it propagates.
+async function handleAdminGetCompany(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  const id = new URL(request.url).searchParams.get('id') || '';
+  const rec = await getCompany(env, id);
+  if (!rec) return json(404, { ok: false, error: 'Company not found' });
   return json(200, { ok: true, company: rec });
 }
 

@@ -2234,9 +2234,20 @@
     const [error, setError] = useState('');
     useEffect(() => {
       let dead = false;
-      api('/api/admin/companies')
-        .then((d) => { if (dead) return; const co = (d.companies || []).find((c) => c.id === id); if (co) setInitial(co); else setError('Company not found.'); })
-        .catch((e) => { if (!dead) setError(e.message); });
+      // Read the record directly by id (not the few-second cached list), so a
+      // just-created company resolves right away. A brand-new key can still lag
+      // KV propagation by a moment, so retry a 404 once before giving up.
+      const load = async (attempt) => {
+        try {
+          const d = await api('/api/admin/company?id=' + encodeURIComponent(id));
+          if (!dead) setInitial(d.company);
+        } catch (e) {
+          if (dead) return;
+          if (e.status === 404 && attempt < 1) { setTimeout(() => { if (!dead) load(attempt + 1); }, 700); return; }
+          setError(e.message);
+        }
+      };
+      load(0);
       return () => { dead = true; };
     }, [id]);
     if (error) return (
