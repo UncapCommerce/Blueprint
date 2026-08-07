@@ -4252,6 +4252,44 @@ async function listCompanies(env) {
   return rows;
 }
 
+// ── Company number (the unified ID) ──────────────────────────────────────
+// Each company carries a stable sequential `no`, shown after its name and used
+// as the shared number for its estimate, discovery, and blueprint. Shipped
+// blueprints keep their historical number: a company linked to a
+// BLUEPRINT_REGISTRY page is anchored to that page's num; everyone else
+// continues the sequence by creation order. Backfilled once (conum:v1).
+function highestCompanyNo(companies) {
+  return (companies || []).reduce((m, c) => Math.max(m, parseInt(c.no, 10) || 0), 0);
+}
+function padCompanyNo(n) {
+  const v = parseInt(n, 10) || 0;
+  return v > 0 ? String(v).padStart(3, '0') : '';
+}
+async function nextCompanyNo(env) {
+  return highestCompanyNo(await listCompanies(env)) + 1;
+}
+async function assignCompanyNumbersV1(env) {
+  if (await env.BLUEPRINT_AUTH.get('conum:v1')) return;
+  const companies = await listCompanies(env);
+  const used = new Set();
+  for (const co of companies) { const n = parseInt(co.no, 10); if (n > 0) used.add(n); }
+  const rest = [];
+  for (const co of companies) {
+    if (parseInt(co.no, 10) > 0) continue;
+    const reg = co.blueprintId ? BLUEPRINT_REGISTRY.find((b) => b.id === co.blueprintId) : null;
+    const regNo = reg && /^\d+$/.test(reg.num) ? parseInt(reg.num, 10) : 0;
+    if (regNo && !used.has(regNo)) { co.no = regNo; used.add(regNo); await putCompany(env, co).catch(() => {}); }
+    else rest.push(co);
+  }
+  rest.sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+  let n = 1;
+  for (const co of rest) {
+    while (used.has(n)) n++;
+    co.no = n; used.add(n); await putCompany(env, co).catch(() => {});
+  }
+  await env.BLUEPRINT_AUTH.put('conum:v1', new Date().toISOString());
+}
+
 // Link a shipped bespoke blueprint to its portal company when the company was
 // created without going through the draft flow (which sets the link itself).
 // Idempotent: only writes when the link is missing/different. Matched by id,
@@ -4495,7 +4533,7 @@ function buildEstimateContent(est, co) {
   return {
     ok: true,
     clientName: est.clientName || co.name || 'Your team',
-    estimateLabel: est.number ? `ESTIMATE ${est.number}` : 'ESTIMATE',
+    estimateLabel: padCompanyNo(co.no) ? `ESTIMATE ${padCompanyNo(co.no)}` : 'ESTIMATE',
     preparedBy: est.preparedBy || 'Denis Dyli, Principal',
     validThrough,
     foundation, groups, integrations, weeks,
@@ -4547,6 +4585,7 @@ async function handleAdminCompanyDecline(request, env) {
 async function handleAdminPipeline(request, env) {
   const sess = await getAdminSession(request, env);
   if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  try { await assignCompanyNumbersV1(env); } catch (_) { /* numbering is best-effort */ }
   const companies = await listCompanies(env);
   // Enrich every company concurrently — sequential KV reads over dozens of
   // companies is what made this page crawl.
@@ -4566,7 +4605,7 @@ async function handleAdminPipeline(request, env) {
         return { id: co.blueprintId, num: reg ? reg.num : '', signed, url: `/blueprint/${co.blueprintId}/` };
       })(),
     ]);
-    const estimate = null; // Estimate functionality is not built yet.
+    const estimate = co.hasEstimate ? { sent: !!co.estimateReady } : null;
     const stage = co.declined ? 'declined'
       : (blueprint && blueprint.signed) ? 'signed'
       : blueprint ? 'blueprint'
@@ -4574,7 +4613,7 @@ async function handleAdminPipeline(request, env) {
       : estimate ? 'estimate'
       : 'opportunity';
     return {
-      id: co.id, name: co.name || co.id, hasLogo: !!co.hasLogo, updatedAt: co.updatedAt || '', declined: !!co.declined,
+      id: co.id, no: parseInt(co.no, 10) || null, name: co.name || co.id, hasLogo: !!co.hasLogo, updatedAt: co.updatedAt || '', declined: !!co.declined,
       leadContact: co.leadContact ? { name: co.leadContact.name || '', email: co.leadContact.email || '', title: co.leadContact.title || '' } : null,
       stage, estimate, discovery, blueprint,
     };
@@ -4586,6 +4625,7 @@ async function handleAdminListCompanies(request, env) {
   const sess = await getAdminSession(request, env);
   if (!sess) return json(401, { ok: false, error: 'Not signed in' });
   try { await migrateCompaniesV1(env); } catch (_) { /* migration is best-effort */ }
+  try { await assignCompanyNumbersV1(env); } catch (_) { /* numbering is best-effort */ }
   const companies = await listCompanies(env);
   try {
     await linkBespokeBlueprintToCompany(env, companies, 'trusty-cook', [
@@ -4620,6 +4660,7 @@ async function handleAdminCreateCompany(request, env) {
   const id = await uniqueCompanyId(env, base);
   const rec = {
     id, ...fields,
+    no: await nextCompanyNo(env),
     hasLogo: false, files: [],
     discoveryHandle: '', blueprintId: '',
     createdAt: new Date().toISOString(), createdBy: sess.email,

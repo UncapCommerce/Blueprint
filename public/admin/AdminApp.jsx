@@ -1622,6 +1622,7 @@
 
   function PipelineCard({ c }) {
     const bp = c.blueprint, disc = c.discovery;
+    const pad = (n) => String(n).padStart(3, '0');
     const linkOut = (href, text) => <a href={href} target="_blank" rel="noreferrer" style={{ color: '#2E5AAC', textDecoration: 'none', fontWeight: 600 }}>{text} ↗</a>;
     const dash = <span style={{ color: T.fg3 }}>—</span>;
     const metric = (label, valueEl) => (
@@ -1639,15 +1640,22 @@
               : <span style={{ fontFamily: T.mono, fontSize: 12, fontWeight: 700, color: T.fg3 }}>{(c.name || '?')[0].toUpperCase()}</span>}
           </span>
           <div style={{ minWidth: 0, flex: '1 1 auto' }}>
-            <div style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 14, color: T.fg1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name}</div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 7, minWidth: 0 }}>
+              <span style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 14, color: T.fg1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name}</span>
+              {c.no ? <span style={{ fontFamily: T.mono, fontSize: 11, fontWeight: 600, color: T.fg3, flexShrink: 0 }}>{pad(c.no)}</span> : null}
+            </div>
             <div style={{ fontFamily: T.mono, fontSize: 10.5, color: T.fg3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.leadContact ? (c.leadContact.name || c.leadContact.email) : 'No lead contact'}</div>
           </div>
           <a href={'/admin/company/' + c.id} onClick={navClick('/admin/company/' + c.id)} style={{ ...S.btnGhost, flexShrink: 0, textDecoration: 'none', padding: '5px 11px', fontSize: 12 }}>View</a>
         </div>
         <div style={{ borderTop: `1px solid ${T.line}`, paddingTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {metric('Estimate', c.estimate ? linkOut('#', '#' + c.estimate.num) : dash)}
+          {metric('Estimate', c.estimate
+            ? (c.estimate.sent
+              ? <a href={'/' + c.id + '/estimate/app'} target="_blank" rel="noreferrer" style={{ color: '#2E7D32', textDecoration: 'none', fontWeight: 700 }}>Sent ↗</a>
+              : <span style={{ color: T.fg2, fontWeight: 600 }}>Draft</span>)
+            : dash)}
           {metric('Discovery', disc ? linkOut(disc.url, disc.status || 'view') : dash)}
-          {metric('Blueprint', bp ? linkOut(bp.url, bp.num ? '#' + bp.num : 'view') : dash)}
+          {metric('Blueprint', bp ? linkOut(bp.url, (c.no ? '#' + pad(c.no) : 'view') + (bp.signed ? ' ✓' : '')) : dash)}
         </div>
       </div>
     );
@@ -1940,7 +1948,7 @@
                     : <span style={{ fontFamily: T.mono, fontSize: 14, fontWeight: 700, color: T.fg3 }}>{(co.name || '?')[0].toUpperCase()}</span>}
                 </span>
                 <div style={{ flex: '1 1 200px', minWidth: 0 }}>
-                  <div style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 14.5, color: T.fg1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{co.name}</div>
+                  <div style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 14.5, color: T.fg1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{co.name}{co.no ? <span style={{ fontFamily: T.mono, fontSize: 11, fontWeight: 600, color: T.fg3, marginLeft: 8 }}>{String(co.no).padStart(3, '0')}</span> : null}</div>
                   <div style={{ fontFamily: T.mono, fontSize: 11, color: T.fg3, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {[co.storeUrl, co.leadContact && (co.leadContact.name || co.leadContact.email), (co.files || []).length ? (co.files.length + ' file' + (co.files.length > 1 ? 's' : '')) : ''].filter(Boolean).join(' · ')}
                   </div>
@@ -2289,7 +2297,7 @@
     };
     return (
       <Page>
-        <PageHead eyebrow={co.declined ? 'Portal · company profile · declined' : 'Portal · company profile'} title={co.name || 'Company'} action={
+        <PageHead eyebrow={(co.declined ? 'Portal · company profile · declined' : 'Portal · company profile') + (co.no ? ' · ' + String(co.no).padStart(3, '0') : '')} title={co.name || 'Company'} action={
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
             {inviteList.length ? <button type="button" style={S.btnGhost} disabled={!!inviting} onClick={() => doInvite()}>{inviting === 'all' ? 'Sending…' : 'Invite all'}</button> : null}
             <a href={portalUrl} target="_blank" rel="noreferrer" style={{ ...S.btnGhost, textDecoration: 'none' }}>Open Hub ↗</a>

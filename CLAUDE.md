@@ -3,6 +3,25 @@
 This file tells Claude how Denis prefers to work on this repo. Treat it as
 durable instruction across sessions.
 
+## Engineering defaults (always, without being asked)
+
+Every change — new feature, fix, or refactor — must be built to these
+standards by default. Denis should never have to ask for them.
+
+- **Performance & speed first.** Fewest network/KV round-trips (batch with
+  `Promise.all`, cache hot reads, avoid N+1 and redundant `list()` scans);
+  ship the least JS/CSS/image weight to the client; keep the critical path
+  fast. Measure when it matters.
+- **Clean, minimal code.** Reuse existing helpers and patterns instead of
+  adding new ones; no dead code, no duplication, no needless dependencies.
+  Match the surrounding style. Delete more than you add when you can.
+- **Light database.** KV is the store — keep records small, avoid write-only
+  or orphaned keys, don't add a prefix without a reader, and clean up after
+  migrations. No unbounded growth on hot paths.
+- **Mobile experience is not optional.** Design every page and screen for a
+  ~390px phone as well as desktop: no horizontal overflow, layouts stack,
+  tap targets ≥ ~40px, inputs ≥ 16px (no iOS zoom). Test at phone width.
+
 ## Architecture in 30 seconds
 
 Single Cloudflare Worker (`worker/index.js`) backed by Workers Static
