@@ -4590,7 +4590,7 @@ async function handleAdminPipeline(request, env) {
   // Enrich every company concurrently — sequential KV reads over dozens of
   // companies is what made this page crawl.
   const out = await Promise.all(companies.map(async (co) => {
-    const [discovery, blueprint] = await Promise.all([
+    const [discovery, blueprint, estimate] = await Promise.all([
       (async () => {
         if (!co.discoveryHandle) return null;
         const disc = await getDiscoveryByHandle(env, co.discoveryHandle).catch(() => null);
@@ -4599,13 +4599,28 @@ async function handleAdminPipeline(request, env) {
         return { handle: (disc && disc.handle) || co.discoveryHandle, status: (disc && disc.status) || 'new', url: `/${co.id}/discovery` };
       })(),
       (async () => {
-        if (!co.blueprintId || !(await blueprintIsViewable(env, co.blueprintId))) return null;
-        const reg = BLUEPRINT_REGISTRY.find((b) => b.id === co.blueprintId);
-        const signed = !!(await env.BLUEPRINT_AUTH.get(`bpsigned:${co.blueprintId}`));
-        return { id: co.blueprintId, num: reg ? reg.num : '', signed, url: `/blueprint/${co.blueprintId}/` };
+        if (!co.blueprintId) return null;
+        const clean = normalizeBlueprintId(co.blueprintId);
+        const reg = BLUEPRINT_REGISTRY.find((b) => b.id === clean);
+        // Templated blueprints carry a dollar value on their draft content;
+        // read it from the same record the viewability check needs (registry
+        // pages are always viewable and have no machine-readable value).
+        let value = '';
+        if (!reg) {
+          const draft = await blueprintDraft(env, clean).catch(() => null);
+          if (!(draft && draft.content && draft.content.status === 'ready')) return null;
+          value = (draft.content.investment && draft.content.investment.total) || '';
+        }
+        const signed = !!(await env.BLUEPRINT_AUTH.get(`bpsigned:${clean}`));
+        return { id: co.blueprintId, num: reg ? reg.num : '', signed, value, url: `/blueprint/${co.blueprintId}/` };
+      })(),
+      (async () => {
+        if (!co.hasEstimate) return null;
+        const est = await getEstimate(env, co.id).catch(() => null);
+        const t = est ? estimateTotals(est.lines) : { low: 0, high: 0 };
+        return { sent: !!co.estimateReady, low: t.low, high: t.high };
       })(),
     ]);
-    const estimate = co.hasEstimate ? { sent: !!co.estimateReady } : null;
     const stage = co.declined ? 'declined'
       : (blueprint && blueprint.signed) ? 'signed'
       : blueprint ? 'blueprint'

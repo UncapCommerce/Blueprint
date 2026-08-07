@@ -1621,8 +1621,11 @@
   ];
 
   function PipelineCard({ c }) {
-    const bp = c.blueprint, disc = c.discovery;
+    const bp = c.blueprint, disc = c.discovery, est = c.estimate;
     const pad = (n) => String(n).padStart(3, '0');
+    // Compact money for the narrow card: $26k for thousands, else full dollars.
+    const money = (n) => (n >= 1000 ? '$' + Math.round(n / 1000) + 'k' : '$' + (n || 0).toLocaleString('en-US'));
+    const estRange = est && (est.low || est.high) ? money(est.low) + ' – ' + money(est.high) : '';
     const linkOut = (href, text) => <a href={href} target="_blank" rel="noreferrer" style={{ color: '#2E5AAC', textDecoration: 'none', fontWeight: 600 }}>{text} ↗</a>;
     const dash = <span style={{ color: T.fg3 }}>—</span>;
     const metric = (label, valueEl) => (
@@ -1649,13 +1652,13 @@
           <a href={'/admin/company/' + c.id} onClick={navClick('/admin/company/' + c.id)} style={{ ...S.btnGhost, flexShrink: 0, textDecoration: 'none', padding: '5px 11px', fontSize: 12 }}>View</a>
         </div>
         <div style={{ borderTop: `1px solid ${T.line}`, paddingTop: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
-          {metric('Estimate', c.estimate
-            ? (c.estimate.sent
-              ? <a href={'/' + c.id + '/estimate/app'} target="_blank" rel="noreferrer" style={{ color: '#2E7D32', textDecoration: 'none', fontWeight: 700 }}>Sent ↗</a>
-              : <span style={{ color: T.fg2, fontWeight: 600 }}>Draft</span>)
+          {metric('Estimate', estRange
+            ? <a href={'/' + c.id + '/estimate/app'} target="_blank" rel="noreferrer" style={{ color: est.sent ? '#2E7D32' : '#2E5AAC', textDecoration: 'none', fontWeight: 700 }}>{estRange} ↗</a>
             : dash)}
           {metric('Discovery', disc ? linkOut(disc.url, disc.status || 'view') : dash)}
-          {metric('Blueprint', bp ? linkOut(bp.url, (c.no ? '#' + pad(c.no) : 'view') + (bp.signed ? ' ✓' : '')) : dash)}
+          {metric('Blueprint', bp
+            ? linkOut(bp.url, (bp.value ? bp.value : 'View') + (bp.signed ? ' ✓' : ''))
+            : dash)}
         </div>
       </div>
     );
