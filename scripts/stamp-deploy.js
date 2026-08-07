@@ -13,6 +13,7 @@
 
 const fs = require('fs');
 const { execSync } = require('child_process');
+const { precompileTree } = require('./precompile-jsx.js');
 
 function resolveSha() {
   if (process.env.WORKERS_CI_COMMIT_SHA) return process.env.WORKERS_CI_COMMIT_SHA;
@@ -61,3 +62,18 @@ for (const f of files) {
   }
 }
 console.log(`[stamp-deploy] sha=${sha} files-rewritten=${touched}`);
+
+// Precompile JSX → JS on real deploys only (Cloudflare Workers Builds sets
+// WORKERS_CI_COMMIT_SHA). Locally we leave the source as .jsx + in-browser
+// Babel so `wrangler dev` and direct editing keep working. In CI we transpile
+// ahead of time and drop the 3MB Babel runtime from the deployed bundle, so
+// production pages ship plain .js with no in-browser transpile.
+const isCI = !!(process.env.WORKERS_CI_COMMIT_SHA || process.env.GITHUB_SHA || process.env.PRECOMPILE_JSX);
+if (isCI) {
+  const { pages, files } = precompileTree('public');
+  let droppedBabel = false;
+  try { fs.unlinkSync('public/vendor/babel.min.js'); droppedBabel = true; } catch (_) {}
+  console.log(`[stamp-deploy] precompiled pages=${pages} jsx-files=${files} dropped-babel=${droppedBabel}`);
+} else {
+  console.log('[stamp-deploy] precompile skipped (not a CI deploy)');
+}
