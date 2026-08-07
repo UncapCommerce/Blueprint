@@ -284,7 +284,7 @@
   function navPillStyle(on) {
     return {
       display: 'inline-flex', alignItems: 'center', gap: 5,
-      padding: '4px 11px', borderRadius: 4, border: 'none', cursor: 'pointer',
+      padding: '9px 12px', borderRadius: 4, border: 'none', cursor: 'pointer',
       textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
       fontFamily: T.sans, fontSize: 12, fontWeight: on ? 700 : 500, lineHeight: 1,
       color: on ? '#0A0A0A' : '#D4D2CC',
@@ -336,7 +336,7 @@
     );
     const subPill = (it) => (
       <a key={it.id} href={it.path} onClick={navClick(it.path)} style={{
-        padding: '4px 11px', borderRadius: 4, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
+        display: 'inline-flex', alignItems: 'center', padding: '9px 12px', borderRadius: 4, textDecoration: 'none', whiteSpace: 'nowrap', flexShrink: 0,
         fontFamily: T.sans, fontSize: 12, fontWeight: route === it.id ? 700 : 500, lineHeight: 1,
         color: route === it.id ? '#0A0A0A' : T.fg2, background: route === it.id ? T.signal : 'transparent',
       }}>{it.l}</a>
@@ -355,7 +355,7 @@
           ? <img src={me.picture} alt="" referrerPolicy="no-referrer" style={{ width: 22, height: 22, borderRadius: 999, border: '1px solid #4D4D4D' }}/>
           : <span style={{ width: 22, height: 22, borderRadius: 999, background: T.signal, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontFamily: MONO, fontSize: 10, fontWeight: 700, color: '#0A0A0A' }}>{(me.email || '?')[0].toUpperCase()}</span>}
         {!isMobile && <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.04em', color: '#9A9A9A', whiteSpace: 'nowrap' }}>{me.email}</span>}
-        <button type="button" onClick={onLogout} style={{ border: '1px solid #4D4D4D', background: 'transparent', color: '#FFFFFF', borderRadius: 4, padding: '3px 9px', fontSize: 10.5, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>Sign out</button>
+        <button type="button" onClick={onLogout} style={{ border: '1px solid #4D4D4D', background: 'transparent', color: '#FFFFFF', borderRadius: 4, padding: '6px 11px', fontSize: 11, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>Sign out</button>
       </div>
     );
     const scroll = { overflowX: 'auto', WebkitOverflowScrolling: 'touch' };
@@ -1682,14 +1682,14 @@
             <label style={S.label}>Description</label>
             <textarea value={f.desc} onChange={(e) => set('desc')(e.target.value)} rows={3} style={{ ...S.input, resize: 'vertical', lineHeight: 1.5 }}/>
           </div>
-          <div style={{ display: 'flex', gap: 12 }}>
-            <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            <div style={{ flex: '1 1 200px' }}>
               <label style={S.label}>Group</label>
               <select value={f.group} onChange={(e) => set('group')(e.target.value)} style={S.input}>
                 {(groups || []).map((g) => <option key={g.key} value={g.key}>{g.label}</option>)}
               </select>
             </div>
-            <div style={{ flex: 1 }}>
+            <div style={{ flex: '1 1 200px' }}>
               <label style={S.label}>Type</label>
               <select value={f.type} onChange={(e) => set('type')(e.target.value)} style={S.input}>
                 <option value="module">Module (toggle)</option>
@@ -1698,10 +1698,10 @@
               </select>
             </div>
           </div>
-          <div style={{ display: 'flex', gap: 12 }}>
-            <div style={{ flex: 1 }}><Field label="Price low ($)" value={String(f.low)} onChange={set('low')} type="number"/></div>
-            <div style={{ flex: 1 }}><Field label="Price high ($)" value={String(f.high)} onChange={set('high')} type="number"/></div>
-            <div style={{ flex: 1 }}><Field label="Tag (optional)" value={f.tag} onChange={set('tag')} placeholder="e.g. Pick one"/></div>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            <div style={{ flex: '1 1 140px' }}><Field label="Price low ($)" value={String(f.low)} onChange={set('low')} type="number"/></div>
+            <div style={{ flex: '1 1 140px' }}><Field label="Price high ($)" value={String(f.high)} onChange={set('high')} type="number"/></div>
+            <div style={{ flex: '1 1 140px' }}><Field label="Tag (optional)" value={f.tag} onChange={set('tag')} placeholder="e.g. Pick one"/></div>
           </div>
           <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: T.sans, fontSize: 13.5, color: T.fg2, cursor: 'pointer' }}>
             <input type="checkbox" checked={f.recommended} onChange={(e) => set('recommended')(e.target.checked)}/> Recommended by default (pre-selected on new estimates)
@@ -1933,13 +1933,13 @@
         ) : (
           <div style={{ ...S.card, overflow: 'hidden' }}>
             {rows.map((co, i) => (
-              <div key={co.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', borderBottom: i < rows.length - 1 ? `1px solid ${T.line}` : 'none' }}>
+              <div key={co.id} style={{ display: 'flex', alignItems: 'center', gap: 14, rowGap: 10, flexWrap: 'wrap', padding: '12px 16px', borderBottom: i < rows.length - 1 ? `1px solid ${T.line}` : 'none' }}>
                 <span style={{ width: 40, height: 40, borderRadius: 8, background: T.cream, border: `1px solid ${T.line}`, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', flexShrink: 0 }}>
                   {co.hasLogo
                     ? <img src={'/api/company/logo?id=' + encodeURIComponent(co.id) + '&t=' + encodeURIComponent(co.updatedAt || '')} alt="" style={{ maxWidth: 34, maxHeight: 30, objectFit: 'contain' }}/>
                     : <span style={{ fontFamily: T.mono, fontSize: 14, fontWeight: 700, color: T.fg3 }}>{(co.name || '?')[0].toUpperCase()}</span>}
                 </span>
-                <div style={{ flex: '1 1 auto', minWidth: 0 }}>
+                <div style={{ flex: '1 1 200px', minWidth: 0 }}>
                   <div style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 14.5, color: T.fg1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{co.name}</div>
                   <div style={{ fontFamily: T.mono, fontSize: 11, color: T.fg3, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                     {[co.storeUrl, co.leadContact && (co.leadContact.name || co.leadContact.email), (co.files || []).length ? (co.files.length + ' file' + (co.files.length > 1 ? 's' : '')) : ''].filter(Boolean).join(' · ')}
@@ -2335,18 +2335,18 @@
         <form onSubmit={save} style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
           <div style={{ fontFamily: T.sans, fontSize: 13, color: T.fg3, marginBottom: 2 }}>Everything here feeds the customer portal and new discoveries.</div>
           <Field label="Company name" value={form.name} onChange={set('name')}/>
-          <div style={{ display: 'flex', gap: 12 }}>
-            <div style={{ flex: 1 }}><Field label="Store URL" value={form.storeUrl} onChange={set('storeUrl')} placeholder="acme.com"/></div>
-            <div style={{ flex: 1 }}><Field label="Address" value={form.address} onChange={set('address')} placeholder="100 Main St, Chicago, IL"/></div>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            <div style={{ flex: '1 1 200px' }}><Field label="Store URL" value={form.storeUrl} onChange={set('storeUrl')} placeholder="acme.com"/></div>
+            <div style={{ flex: '1 1 200px' }}><Field label="Address" value={form.address} onChange={set('address')} placeholder="100 Main St, Chicago, IL"/></div>
           </div>
           <div>
             <label style={S.label}>Description</label>
             <textarea value={form.description} onChange={(e) => set('description')(e.target.value)} rows={3}
               style={{ ...S.input, resize: 'vertical', lineHeight: 1.5 }}/>
           </div>
-          <div style={{ display: 'flex', gap: 12 }}>
-            <div style={{ flex: 1 }}><Field label="Current platform" value={form.platform} onChange={set('platform')} placeholder="e.g. Magento Open Source"/></div>
-            <div style={{ flex: 1 }}><Field label="Current ERP" value={form.erp} onChange={set('erp')} placeholder="e.g. Sage X3"/></div>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            <div style={{ flex: '1 1 200px' }}><Field label="Current platform" value={form.platform} onChange={set('platform')} placeholder="e.g. Magento Open Source"/></div>
+            <div style={{ flex: '1 1 200px' }}><Field label="Current ERP" value={form.erp} onChange={set('erp')} placeholder="e.g. Sage X3"/></div>
           </div>
           <ContactsEditor contacts={contacts} state="done" onRole={setRole}
             onRemove={(email) => setContacts((l) => l.filter((c) => c.email !== email))}
@@ -2426,9 +2426,9 @@
               </div>
             );
           })}
-          <div style={{ display: 'flex', gap: 12 }}>
-            <div style={{ flex: 1 }}><Field label="Discovery handle · powers the portal Discovery tab" value={form.discoveryHandle} onChange={set('discoveryHandle')} placeholder="e.g. cartoncraft"/></div>
-            <div style={{ flex: 1 }}><Field label="Blueprint ID · powers the portal Blueprint tab" value={form.blueprintId} onChange={set('blueprintId')} placeholder="e.g. cartoncraftsupply"/></div>
+          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+            <div style={{ flex: '1 1 200px' }}><Field label="Discovery handle · powers the portal Discovery tab" value={form.discoveryHandle} onChange={set('discoveryHandle')} placeholder="e.g. cartoncraft"/></div>
+            <div style={{ flex: '1 1 200px' }}><Field label="Blueprint ID · powers the portal Blueprint tab" value={form.blueprintId} onChange={set('blueprintId')} placeholder="e.g. cartoncraftsupply"/></div>
           </div>
           {error && <div style={{ color: '#B3261E', fontFamily: T.sans, fontSize: 13 }}>{error}</div>}
           <div style={{ display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'flex-end', paddingTop: 4 }}>
@@ -2576,9 +2576,9 @@
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
                       <span style={{ fontFamily: T.mono, fontSize: 11, color: T.fg3 }}>$</span>
-                      <input type="number" value={l.low} onChange={(e) => setPrice(i, 'low', e.target.value)} style={{ ...S.input, width: 78, padding: '6px 8px', fontSize: 12, fontFamily: T.mono }}/>
+                      <input type="number" value={l.low} onChange={(e) => setPrice(i, 'low', e.target.value)} style={{ ...S.input, width: 82, padding: '6px 8px', fontSize: 16, fontFamily: T.mono }}/>
                       <span style={{ fontFamily: T.mono, fontSize: 11, color: T.fg3 }}>–</span>
-                      <input type="number" value={l.high} onChange={(e) => setPrice(i, 'high', e.target.value)} style={{ ...S.input, width: 78, padding: '6px 8px', fontSize: 12, fontFamily: T.mono }}/>
+                      <input type="number" value={l.high} onChange={(e) => setPrice(i, 'high', e.target.value)} style={{ ...S.input, width: 82, padding: '6px 8px', fontSize: 16, fontFamily: T.mono }}/>
                     </div>
                   </div>
                 ))}
@@ -2593,8 +2593,8 @@
           <div style={{ ...S.card, padding: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
             {timeline.map((r, i) => (
               <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <input value={r.label} onChange={(e) => setTl(i, 'label', e.target.value)} placeholder="Phase" style={{ ...S.input, flex: 1, padding: '7px 10px', fontSize: 13 }}/>
-                <input type="number" value={r.weeks} onChange={(e) => setTl(i, 'weeks', e.target.value)} style={{ ...S.input, width: 70, padding: '7px 8px', fontSize: 13, fontFamily: T.mono }}/>
+                <input value={r.label} onChange={(e) => setTl(i, 'label', e.target.value)} placeholder="Phase" style={{ ...S.input, flex: '1 1 120px', padding: '8px 10px', fontSize: 16 }}/>
+                <input type="number" value={r.weeks} onChange={(e) => setTl(i, 'weeks', e.target.value)} style={{ ...S.input, width: 72, padding: '8px 8px', fontSize: 16, fontFamily: T.mono }}/>
                 <span style={{ fontFamily: T.mono, fontSize: 11, color: T.fg3, width: 42 }}>weeks</span>
                 <button type="button" aria-label="Remove phase" onClick={() => rmTl(i)} style={{ width: 30, height: 30, borderRadius: 6, border: `1px solid ${T.line}`, background: 'transparent', color: '#B3261E', cursor: 'pointer', flexShrink: 0 }}>×</button>
               </div>
@@ -3685,7 +3685,7 @@
           <div style={{ height: 40, display: 'flex', alignItems: 'center', gap: 12, padding: '0 16px' }}>
             <img src="/assets/uncap-logo-white.svg" alt="Uncap" style={{ height: 14, display: 'block' }}/>
             <span style={{ fontFamily: T.mono, fontSize: 8.5, letterSpacing: '0.12em', color: '#9A9A9A' }}>ADMIN</span>
-            <button type="button" onClick={onLogout} style={{ marginLeft: 'auto', border: '1px solid #4D4D4D', background: 'transparent', color: '#FFFFFF', borderRadius: 4, padding: '3px 9px', fontSize: 10.5, fontWeight: 600, cursor: 'pointer' }}>Sign out</button>
+            <button type="button" onClick={onLogout} style={{ marginLeft: 'auto', border: '1px solid #4D4D4D', background: 'transparent', color: '#FFFFFF', borderRadius: 4, padding: '6px 11px', fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Sign out</button>
           </div>
         </div>
         <div style={{ flex: '1 1 auto', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
