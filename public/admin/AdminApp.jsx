@@ -377,12 +377,18 @@
             {SECTIONS.map(sectionPill)}
           </nav>
         )}
-        {/* Row 2 — sub-navs of the active section */}
+        {/* Row 2 — sub-navs of the active section (+ the Sales quick action) */}
         {subs.length > 0 && (
           <div style={{ background: T.paper, borderBottom: `1px solid ${T.line}` }}>
-            <nav style={{ display: 'flex', alignItems: 'center', gap: 4, padding: isMobile ? '7px 10px' : '7px 16px', ...scroll }}>
-              {subs.map(subPill)}
-            </nav>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: isMobile ? '6px 10px' : '6px 16px' }}>
+              <nav style={{ display: 'flex', alignItems: 'center', gap: 4, flex: '1 1 auto', minWidth: 0, ...scroll }}>
+                {subs.map(subPill)}
+              </nav>
+              {activeSection.id === 'sales' && (
+                <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('os:add-company'))}
+                  style={{ ...S.btnLime, flexShrink: 0, padding: '7px 13px', fontSize: 12.5 }}>+ Add company</button>
+              )}
+            </div>
           </div>
         )}
       </header>
@@ -1921,7 +1927,6 @@
   function SalesPipeline({ me }) {
     const [rows, setRows] = useState(null);
     const [error, setError] = useState('');
-    const [adding, setAdding] = useState(false);
     const load = async () => {
       try {
         const d = await api('/api/admin/pipeline');
@@ -1935,9 +1940,6 @@
     const inStage = (k) => (rows || []).filter((c) => c.stage === k);
     return (
       <Page wide>
-        <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 18 }}>
-          <button type="button" style={S.btnLime} onClick={() => setAdding(true)}>+ Add company</button>
-        </div>
         {rows === null ? (
           <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>Loading…</div>
         ) : (error && !rows.length) ? (
@@ -1962,7 +1964,6 @@
             })}
           </div>
         )}
-        {adding && <AddCompanyModal onClose={() => setAdding(false)} onSaved={(co) => { setAdding(false); if (co) navigate('/admin/company/' + co.id); else load(); }}/>}
       </Page>
     );
   }
@@ -1970,7 +1971,6 @@
   function Companies({ me }) {
     const [rows, setRows] = useState(null);
     const [error, setError] = useState('');
-    const [adding, setAdding] = useState(false);
 
     const load = async () => {
       try { setRows((await api('/api/admin/companies')).companies); }
@@ -1993,9 +1993,7 @@
 
     return (
       <Page>
-        <PageHead eyebrow="Hub" title="Companies" action={
-          <button type="button" style={S.btnLime} onClick={() => setAdding(true)}>+ Add company</button>
-        }/>
+        <PageHead eyebrow="Hub" title="Companies"/>
         {rows === null ? (
           <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>Loading…</div>
         ) : rows.length === 0 ? (
@@ -2031,7 +2029,6 @@
             ))}
           </div>
         )}
-        {adding && <AddCompanyModal onClose={() => setAdding(false)} onSaved={(co) => { setAdding(false); if (co) navigate('/admin/company/' + co.id); else load(); }}/>}
       </Page>
     );
   }
@@ -3723,6 +3720,7 @@
   function AdminApp() {
     const [me, setMe] = useState(undefined); // undefined = checking, null = signed out
     const [viewer, setViewer] = useState(null); // { url, title } — framed preview
+    const [adding, setAdding] = useState(false); // Add-company modal (opened from the sub toolbar)
     const route = useRoute();
 
     const check = useCallback(async () => {
@@ -3742,6 +3740,14 @@
       window.addEventListener('bp:preview', onPreview);
       window.addEventListener('keydown', onKey);
       return () => { window.removeEventListener('bp:preview', onPreview); window.removeEventListener('keydown', onKey); };
+    }, []);
+
+    // The "+ Add company" button on the sub toolbar dispatches os:add-company;
+    // host the modal here so it works from any Sales sub-page.
+    useEffect(() => {
+      const onAdd = () => setAdding(true);
+      window.addEventListener('os:add-company', onAdd);
+      return () => window.removeEventListener('os:add-company', onAdd);
     }, []);
 
     const logout = async () => {
@@ -3795,6 +3801,7 @@
           : route === 'rev-referrals' ? (me.canDelete ? <ReferralsRevenue/> : <Home/>)
           : route === 'dashboard' ? <SectionStub eyebrow="Overview" title="Dashboard" note="A cross-section overview of activity, sales, services, and revenue. We’ll design this in the next steps."/>
           : <Home/>}
+        {adding && <AddCompanyModal onClose={() => setAdding(false)} onSaved={(co) => { setAdding(false); if (co) navigate('/admin/company/' + co.id); }}/>}
       </div>
     );
   }
