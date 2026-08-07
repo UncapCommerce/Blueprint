@@ -1713,7 +1713,9 @@
             : dash)}
           {metric('Discovery', disc ? linkOut(disc.url, disc.status || 'view') : dash)}
           {metric('Blueprint', bp
-            ? linkOut(bp.url, (bp.value ? bp.value : 'View') + (bp.signed ? ' ✓' : ''))
+            ? (bp.value
+                ? <a href={bp.url} target="_blank" rel="noreferrer" style={{ color: bp.signed ? '#2E7D32' : '#2E5AAC', textDecoration: 'none', fontWeight: 700 }}>{bp.value}{bp.signed ? ' ✓' : ''} ↗</a>
+                : linkOut(bp.url, 'View' + (bp.signed ? ' ✓' : '')))
             : dash)}
         </div>
       </div>

@@ -4673,15 +4673,13 @@ async function handleAdminPipeline(request, env) {
         if (!co.blueprintId) return null;
         const clean = normalizeBlueprintId(co.blueprintId);
         const reg = BLUEPRINT_REGISTRY.find((b) => b.id === clean);
-        // Templated blueprints carry a dollar value on their draft content;
-        // read it from the same record the viewability check needs (registry
-        // pages are always viewable and have no machine-readable value).
-        let value = '';
-        if (!reg) {
-          const draft = await blueprintDraft(env, clean).catch(() => null);
-          if (!(draft && draft.content && draft.content.status === 'ready')) return null;
-          value = (draft.content.investment && draft.content.investment.total) || '';
-        }
+        // Surface the blueprint's assigned dollar value (content.investment.total)
+        // on the card. Templated blueprints must be ready to count; registry
+        // (bespoke) pages are always viewable, but still show a value if their
+        // content record carries one.
+        const draft = await blueprintDraft(env, clean).catch(() => null);
+        if (!reg && !(draft && draft.content && draft.content.status === 'ready')) return null;
+        const value = (draft && draft.content && draft.content.investment && draft.content.investment.total) || '';
         const signed = !!(await env.BLUEPRINT_AUTH.get(`bpsigned:${clean}`));
         return { id: co.blueprintId, num: reg ? reg.num : '', signed, value, url: `/blueprint/${co.blueprintId}/` };
       })(),
