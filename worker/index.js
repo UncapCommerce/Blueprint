@@ -333,6 +333,9 @@ export default {
     if (url.pathname === '/api/admin/estimate/delete' && request.method === 'POST') {
       return handleAdminDeleteEstimate(request, env);
     }
+    if (url.pathname === '/api/estimate/approve' && request.method === 'POST') {
+      return handleEstimateApprove(request, env, ctx);
+    }
     if (url.pathname === '/api/admin/pipeline' && request.method === 'GET') {
       // Cache the board (SWR, short fresh window) so it paints instantly and
       // self-heals; ?refresh=1 forces a live rebuild after a change.
@@ -4481,6 +4484,7 @@ async function handleAdminSaveEstimate(request, env) {
     timeline: normalizeTimeline(body.timeline),
     weeks: ESTIMATE_WEEKS.includes(parseInt(body.weeks, 10)) ? parseInt(body.weeks, 10) : 16,
     growthPlan: GROWTH_PLANS.includes(body.growthPlan) ? body.growthPlan : 'optimize',
+    title: (body.title || '').toString().slice(0, 120).trim(),
     note: (body.note || '').toString().slice(0, 2000).trim(),
     createdAt: (prev && prev.createdAt) || new Date().toISOString(),
     updatedAt: new Date().toISOString(), updatedBy: sess.email,
@@ -4544,7 +4548,9 @@ function buildEstimateContent(est, co) {
     validThrough,
     foundation, groups, integrations, weeks,
     growthPlan: est.growthPlan || 'optimize',
+    title: est.title || '',
     note: est.note || '',
+    approved: !!co.estimateApproved,
   };
 }
 async function handleEstimateContent(request, env) {
@@ -4563,6 +4569,64 @@ async function handleEstimateContent(request, env) {
   const est = await getEstimate(env, cid);
   if (!est || (est.status !== 'ready' && !isAdmin)) return json(404, { ok: false, error: 'No estimate yet' });
   return json(200, buildEstimateContent(est, co));
+}
+
+// POST /api/estimate/approve — the client approves the estimate and asks to
+// schedule discovery. Records the approval on the company (so the CRM board
+// reflects it) and emails the Uncap team. Authorized like handleEstimateContent:
+// the company's own portal session, or an approved admin acting on its behalf.
+async function handleEstimateApprove(request, env, ctx) {
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+  let body = {}; try { body = await request.json(); } catch { /* body optional */ }
+  const sess = await getPortalSession(request, env);
+  let cid = '', who = '', email = '', isAdmin = false;
+  if (sess && sess.companyId) {
+    cid = sess.companyId; email = sess.email || ''; who = sess.name || email || 'A contact';
+  } else {
+    const admin = await getAdminSession(request, env);
+    if (admin && (await adminIsApproved(env, admin.email))) {
+      isAdmin = true; cid = (body.company || '').toString().trim().toLowerCase();
+      email = admin.email; who = admin.email;
+    } else {
+      return json(401, { ok: false, error: 'Not signed in' });
+    }
+  }
+  const co = await getCompany(env, cid);
+  if (!co) return json(404, { ok: false, error: 'Company not found' });
+  if (co.declined && !isAdmin) return json(403, { ok: false, error: 'Hub access is disabled.' });
+  const est = await getEstimate(env, cid);
+  if (!est || est.status !== 'ready') return json(404, { ok: false, error: 'No estimate yet' });
+
+  const approvedAt = new Date().toISOString();
+  co.estimateApproved = true;
+  co.estimateApprovedAt = approvedAt;
+  co.estimateApprovedBy = email || who;
+  await putCompany(env, co).catch(() => {});
+
+  // Best-effort rollup, mirroring bpsigned: — cheap single-key read for lists.
+  const rollup = env.BLUEPRINT_AUTH.put(`estapproved:${cid}`, JSON.stringify({ at: approvedAt, by: email || who })).catch(() => {});
+  if (ctx && ctx.waitUntil) ctx.waitUntil(rollup);
+
+  try { await logActivity(env, ctx, { type: 'approved', entity: 'estimate', id: cid, name: co.name || cid, actor: email || who, detail: 'Wants to schedule discovery' }); } catch (_) { /* best-effort */ }
+
+  const totals = estimateTotals(est.lines);
+  const safeWho = stripHeaderValue(who).slice(0, 200);
+  const subject = `[Estimate] ${stripHeaderValue(co.name || cid).slice(0, 120)} APPROVED by ${safeWho} - wants to schedule discovery`;
+  const text =
+    `Estimate approved for ${co.name || cid} (/${cid}/estimate).\n\n` +
+    `Approved by: ${who}\n` +
+    `Email:       ${email}\n` +
+    `Range:       $${(totals.low || 0).toLocaleString('en-US')} - $${(totals.high || 0).toLocaleString('en-US')}\n` +
+    `Time:        ${approvedAt}\n\n` +
+    `Next step: reach out to schedule the Discovery Deep Dive.\n`;
+
+  try {
+    await notifyAdmin(env, { subject, text });
+    return json(200, { ok: true });
+  } catch (err) {
+    // Approval is already persisted; a failed email is a soft warning.
+    return json(200, { ok: true, emailError: err.message || 'send failed' });
+  }
 }
 
 // POST /api/admin/company/decline — move a company into (or out of) the

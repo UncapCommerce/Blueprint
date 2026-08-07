@@ -82,6 +82,17 @@ const Check = ({ w = 13 }) => (
   <svg width={w} height={w} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
 );
 
+// Shown in place of the CTA once the client approves.
+const APPROVE_MSG = 'Uncap team has been notified and will get back to you with the instructions of the next step.';
+function ApprovedNote() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, padding: '16px 18px', background: 'var(--uc-bone)', border: '1px solid var(--uc-black)', borderRadius: 12 }}>
+      <span style={{ flex: '0 0 auto', width: 24, height: 24, borderRadius: 999, background: 'var(--uc-signal)', color: 'var(--uc-black)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><Check w={13}/></span>
+      <span style={{ fontFamily: 'var(--font-serif)', fontSize: 14.5, lineHeight: 1.5, color: 'var(--fg-1)' }}>{APPROVE_MSG}</span>
+    </div>
+  );
+}
+
 function Eyebrow({ n, label, right, dark }) {
   const line = dark ? '#1F1F1F' : 'var(--line-1)';
   const fg = dark ? 'var(--uc-paper)' : 'var(--fg-1)';
@@ -104,10 +115,12 @@ function EstimateTemplate() {
   const [integration, setIntegration] = useState('');
   const [plan, setPlan] = useState('optimize');
   const [baseline, setBaseline] = useState({ sel: {}, integ: '' });
+  const [approve, setApprove] = useState('idle'); // idle | sending | done | error
+  const [approveErr, setApproveErr] = useState('');
+
+  const cid = (window.location.pathname.match(/^\/([a-z0-9-]+)\/estimate/) || [])[1] || '';
 
   useEffect(() => {
-    const m = window.location.pathname.match(/^\/([a-z0-9-]+)\/estimate/);
-    const cid = m ? m[1] : '';
     fetch('/api/estimate/content?company=' + encodeURIComponent(cid), { credentials: 'include' })
       .then((r) => r.json().then((j) => (r.ok ? j : Promise.reject(j))))
       .then((d) => {
@@ -117,10 +130,22 @@ function EstimateTemplate() {
         const integ = ((d.integrations || []).find((i) => i.preselected) || (d.integrations || []).find((i) => i.low === 0) || (d.integrations || [])[0] || {}).id || '';
         setSelected(sel); setIntegration(integ);
         if (d.growthPlan) setPlan(d.growthPlan);
+        if (d.approved) setApprove('done');
         setBaseline({ sel: { ...sel }, integ });
       })
       .catch((e) => setErr((e && e.error) || 'Unable to load your estimate.'));
   }, []);
+
+  // Approve the estimate + ask to schedule discovery. Notifies the Uncap team;
+  // both CTAs share this one state so approving from either flips both.
+  const approveNow = () => {
+    if (approve === 'sending' || approve === 'done') return;
+    setApprove('sending'); setApproveErr('');
+    fetch('/api/estimate/approve', { method: 'POST', credentials: 'include', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ company: cid }) })
+      .then((r) => r.json().then((j) => (r.ok && j.ok ? j : Promise.reject(j))))
+      .then(() => setApprove('done'))
+      .catch((e) => { setApprove('error'); setApproveErr((e && e.error) || 'Could not submit right now. Please try again.'); });
+  };
 
   if (err) {
     return <div style={{ maxWidth: 520, margin: '80px auto', textAlign: 'center', fontFamily: 'var(--font-serif)', fontSize: 16, color: 'var(--fg-2)', padding: 24 }}>{err}</div>;
@@ -200,7 +225,7 @@ function EstimateTemplate() {
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--uc-stone-500)' }}>Prepared for {client}</span>
               </div>
               <h1 style={{ margin: 0, fontFamily: 'var(--font-hero)', fontWeight: 700, letterSpacing: '-0.05em', lineHeight: 0.88, color: 'var(--uc-paper)' }}>
-                <span style={{ display: 'block', fontSize: 'clamp(34px,4.4vw,64px)' }}>Project estimate.</span>
+                <span style={{ display: 'block', fontSize: 'clamp(34px,4.4vw,64px)' }}>{data.title ? data.title : 'Project estimate.'}</span>
               </h1>
               <p style={{ margin: 'clamp(14px,1.6vw,20px) 0 0', maxWidth: 520, fontFamily: 'var(--font-serif)', fontSize: 'clamp(15px,1.2vw,17px)', lineHeight: 1.5, color: 'var(--uc-stone-300)' }}>
                 {data.note ? data.note : <>We&rsquo;ve pre-selected the modules that match what we heard from {client}. Everything else is visible and priced &mdash; toggle any of it and the number moves with you.</>}
@@ -367,8 +392,13 @@ function EstimateTemplate() {
                   </div>
                 ) : null}
                 <div style={{ padding: '18px 24px 22px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-                  <a href="mailto:hello@uncap.com" style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: 14, background: 'var(--uc-black)', color: 'var(--uc-paper)', border: '1px solid var(--uc-black)', borderRadius: 999, fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: 15 }}>Approve this scope <span>&rarr;</span></a>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, lineHeight: 1.6, color: 'var(--fg-3)', letterSpacing: '0.04em', textAlign: 'center' }}>NON-BINDING &middot; VALID 30 DAYS</span>
+                  {approve === 'done' ? <ApprovedNote/> : (
+                    <button type="button" onClick={approveNow} disabled={approve === 'sending'} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: 14, background: 'var(--uc-black)', color: 'var(--uc-paper)', border: '1px solid var(--uc-black)', borderRadius: 999, fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: 15, cursor: approve === 'sending' ? 'default' : 'pointer', opacity: approve === 'sending' ? 0.7 : 1 }}>
+                      {approve === 'sending' ? 'Sending…' : <>Approve &amp; Schedule Discovery <span>&rarr;</span></>}
+                    </button>
+                  )}
+                  {approve === 'error' ? <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, lineHeight: 1.5, color: '#B3261E', textAlign: 'center' }}>{approveErr}</span> : null}
+                  {approve !== 'done' ? <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, lineHeight: 1.6, color: 'var(--fg-3)', letterSpacing: '0.04em', textAlign: 'center' }}>NON-BINDING &middot; VALID 30 DAYS</span> : null}
                 </div>
               </div>
             </aside>
@@ -472,8 +502,13 @@ function EstimateTemplate() {
               </h2>
               <p style={{ margin: '18px 0 0', maxWidth: 520, fontFamily: 'var(--font-serif)', fontSize: 'clamp(15px,1.3vw,18px)', lineHeight: 1.5, color: 'var(--fg-2)' }}>A working session with your operators to pressure-test scope, data, and integration reality &mdash; then we set the fixed price.</p>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 14, alignItems: 'flex-start' }}>
-              <a href="mailto:hello@uncap.com" style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '15px 26px', background: 'var(--uc-black)', color: 'var(--uc-paper)', border: '1px solid var(--uc-black)', borderRadius: 999, fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: 15 }}>Book the deep dive <span>&rarr;</span></a>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'flex-start' }}>
+              {approve === 'done' ? <ApprovedNote/> : (
+                <button type="button" onClick={approveNow} disabled={approve === 'sending'} style={{ display: 'inline-flex', alignItems: 'center', gap: 10, padding: '15px 26px', background: 'var(--uc-black)', color: 'var(--uc-paper)', border: '1px solid var(--uc-black)', borderRadius: 999, fontFamily: 'var(--font-sans)', fontWeight: 600, fontSize: 15, cursor: approve === 'sending' ? 'default' : 'pointer', opacity: approve === 'sending' ? 0.7 : 1 }}>
+                  {approve === 'sending' ? 'Sending…' : <>Approve &amp; Schedule Discovery <span>&rarr;</span></>}
+                </button>
+              )}
+              {approve === 'error' ? <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, lineHeight: 1.5, color: '#B3261E' }}>{approveErr}</span> : null}
             </div>
           </div>
           <div style={{ marginTop: 'clamp(36px,4.4vw,60px)', paddingTop: 22, borderTop: '1px solid var(--line-1)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, flexWrap: 'wrap' }}>

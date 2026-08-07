@@ -2547,6 +2547,7 @@
     const [lines, setLines] = useState([]);
     const [weeks, setWeeks] = useState(16);
     const [growthPlan, setGrowthPlan] = useState('optimize');
+    const [title, setTitle] = useState('');
     const [note, setNote] = useState('');
     const [status, setStatus] = useState('draft');
     const [error, setError] = useState('');
@@ -2562,6 +2563,7 @@
             setLines(d.estimate.lines || []);
             setWeeks(d.estimate.weeks || 16);
             setGrowthPlan(d.estimate.growthPlan || 'optimize');
+            setTitle(d.estimate.title || '');
             setNote(d.estimate.note || '');
             setStatus(d.estimate.status || 'draft');
           } else {
@@ -2591,7 +2593,7 @@
     const save = async (nextStatus) => {
       setBusy(nextStatus); setError(''); setSaved('');
       try {
-        const d = await api('/api/admin/estimate', { method: 'POST', body: JSON.stringify({ companyId: id, status: nextStatus, lines, weeks, growthPlan, note }) });
+        const d = await api('/api/admin/estimate', { method: 'POST', body: JSON.stringify({ companyId: id, status: nextStatus, lines, weeks, growthPlan, title, note }) });
         setStatus(d.estimate.status);
         setSaved(nextStatus === 'ready' ? 'Shared to the client Hub.' : 'Draft saved.');
       } catch (e) { setError(e.message); }
@@ -2657,6 +2659,20 @@
           </div>
         </div>
 
+        {/* Estimate header — title + description shown atop the client one-pager.
+            Inline click-to-edit; persisted with the Save buttons above. */}
+        <div style={{ ...S.card, padding: 16, marginBottom: 16 }}>
+          <div style={{ ...S.eyebrow, marginBottom: 10 }}>Estimate header</div>
+          <div>
+            <label style={S.label}>Title</label>
+            <InlineEdit value={title} placeholder="Project estimate." big onSave={(v) => setTitle((v || '').trim())}/>
+          </div>
+          <div style={{ marginTop: 14 }}>
+            <label style={S.label}>Description</label>
+            <InlineEdit value={note} placeholder="A short framing paragraph shown under the title on the client's estimate." multiline onSave={(v) => setNote(v || '')}/>
+          </div>
+        </div>
+
         {/* Scope selector */}
         {groups.map((g) => {
           const rows = lines.map((l, i) => ({ l, i })).filter((x) => x.l.group === g.key);
@@ -2692,15 +2708,6 @@
             </div>
           );
         })}
-
-        {/* Note */}
-        <div style={{ marginBottom: 24 }}>
-          <div style={{ ...S.eyebrow, marginBottom: 8 }}>Note to client (optional)</div>
-          <div style={{ ...S.card, padding: 14 }}>
-            <textarea value={note} onChange={(e) => setNote(e.target.value)} rows={3} placeholder="A short framing paragraph shown above the scope on the client's estimate."
-              style={{ ...S.input, resize: 'vertical', lineHeight: 1.5, width: '100%' }}/>
-          </div>
-        </div>
       </Page>
     );
   }
