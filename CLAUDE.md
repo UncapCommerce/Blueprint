@@ -176,7 +176,10 @@ contract — match this when adding a new one:
   inside the modal. Do NOT iframe a standalone HTML — the MSA component
   is the single source of truth for legal terms
 - **Cache-bust** the new `public/<Brand>/index.html` by adding it to the
-  `files` array in `scripts/stamp-deploy.js`
+  `files` array in `scripts/stamp-deploy.js`. The `_headers` per-brand cache
+  rules are now auto-generated at deploy (stamp-deploy scans for dirs with
+  `index.html` + `components/`), so no manual `_headers` edits are needed for a
+  new blueprint
 
 ## Default workflow for every change
 
