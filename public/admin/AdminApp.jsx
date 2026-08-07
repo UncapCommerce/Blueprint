@@ -2589,6 +2589,7 @@
       return ls.map((l, i) => i === idx ? { ...l, selected: !l.selected } : l);
     });
     const setHours = (idx, key, val) => setLines((ls) => ls.map((l, i) => i === idx ? { ...l, [key]: (Math.max(0, parseInt(val, 10) || 0)) * rate } : l));
+    const setLine = (idx, key, val) => setLines((ls) => ls.map((l, i) => i === idx ? { ...l, [key]: val } : l));
 
     const save = async (nextStatus) => {
       setBusy(nextStatus); setError(''); setSaved('');
@@ -2688,10 +2689,14 @@
                       style={{ flexShrink: 0, marginTop: 1, width: 18, height: 18, borderRadius: isInt ? 999 : 5, border: `1.5px solid ${l.selected ? T.fg1 : T.line}`, background: l.selected ? T.fg1 : 'transparent', color: '#fff', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, lineHeight: 1, padding: 0 }}>{l.selected ? '✓' : ''}</button>
                     <div style={{ flex: '1 1 auto', minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                        <span style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 13.5, color: T.fg1 }}>{l.name}</span>
+                        <div style={{ minWidth: 160, flex: '1 1 auto' }}>
+                          <InlineEdit value={l.name} placeholder="Item name" onSave={(v) => setLine(i, 'name', (v || '').trim())} textStyle={{ fontFamily: T.sans, fontWeight: 700, fontSize: 13.5, color: T.fg1 }}/>
+                        </div>
                         {l.tag ? <span style={{ fontFamily: T.mono, fontSize: 10, color: T.fg3, border: `1px solid ${T.line}`, borderRadius: 999, padding: '1px 8px' }}>{l.tag}</span> : null}
                       </div>
-                      {l.desc ? <div style={{ fontFamily: T.sans, fontSize: 12, color: T.fg3, marginTop: 3, lineHeight: 1.5 }}>{l.desc}</div> : null}
+                      <div style={{ marginTop: 3 }}>
+                        <InlineEdit value={l.desc} multiline placeholder="Add a description" onSave={(v) => setLine(i, 'desc', v || '')} textStyle={{ fontFamily: T.sans, fontSize: 12, color: T.fg3, lineHeight: 1.5, whiteSpace: 'pre-wrap' }}/>
+                      </div>
                     </div>
                     <div style={{ flexShrink: 0, textAlign: 'right' }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end' }}>
