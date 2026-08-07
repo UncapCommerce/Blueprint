@@ -23,7 +23,7 @@ const Babel = require(path.resolve(__dirname, '..', 'public', 'vendor', 'babel.m
 function transpile(code, filename) {
   return Babel.transform(code, {
     presets: ['react'],           // JSX only; modern JS passes through untouched
-    compact: false,
+    compact: true,                // strip whitespace: ~30% smaller, faster client parse
     comments: false,
     filename,
   }).code;
@@ -77,8 +77,9 @@ function precompileTree(publicDir) {
     html = html.replace(/<script type="text\/babel">([\s\S]*?)<\/script>/g,
       (_m, body) => `<script>${transpile(body, htmlAbs)}</script>`);
 
-    // 3) Drop the now-unused in-browser transpiler.
-    html = html.replace(/[ \t]*<script src="\/vendor\/babel\.min\.js"><\/script>\r?\n?/g, '');
+    // 3) Drop the now-unused in-browser transpiler, wherever it's loaded from
+    //    (vendored `/vendor/babel.min.js` or a CDN `@babel/standalone` tag).
+    html = html.replace(/[ \t]*<script\b[^>]*\bbabel(?:\.min)?\.js[^>]*><\/script>\r?\n?/gi, '');
 
     fs.writeFileSync(htmlAbs, html);
     pages++;
