@@ -1223,9 +1223,19 @@ function revenueCacheKey(url) {
   return `revcache:v3:${url.pathname}?${p.toString()}`;
 }
 
-// The pipeline board is cached; drop that cache whenever a company changes so
-// the board reflects adds/edits/declines/deletes immediately on next load.
+// Per-isolate short-TTL memo of the full company list (see listCompanies).
+// Every admin list endpoint scans company: + N gets; caching that for a few
+// seconds turns repeated per-request scans into one. Held as a serialized
+// string so each read re-parses into a fresh copy (callers mutate results).
+let _coCacheAt = 0;
+let _coCacheJson = null;
+const CO_CACHE_MS = 5000;
+
+// The pipeline board + company-list memo are cached; drop them whenever a
+// company changes so every admin view reflects adds/edits/declines/deletes
+// immediately on next load.
 async function bustPipelineCache(env) {
+  _coCacheAt = 0; _coCacheJson = null;
   await env.BLUEPRINT_AUTH.delete('revcache:v3:/api/admin/pipeline?').catch(() => {});
 }
 
@@ -2524,6 +2534,10 @@ async function handleAdminBlueprints(request, env) {
   const sess = await getAdminSession(request, env);
   if (!sess) return json(401, { ok: false, error: 'Not signed in' });
 
+  // The company list (for owner links) is independent of the blueprint scan and
+  // per-item enrichment below — start it now so it overlaps that work.
+  const companiesPromise = listCompanies(env);
+
   const items = BLUEPRINT_REGISTRY.map((bp) => ({ ...bp, kind: 'live', signature: null }));
 
   // Once a draft has been promoted to a shipped (live) blueprint, its KV
@@ -2579,7 +2593,7 @@ async function handleAdminBlueprints(request, env) {
 
   // Attach each blueprint's owning portal company so the admin can link to
   // the new /<companyId>/blueprint URL instead of the legacy path.
-  const companies = await listCompanies(env);
+  const companies = await companiesPromise;
   const byBp = new Map(companies.filter((c) => c.blueprintId).map((c) => [c.blueprintId, c.id]));
   for (const i of items) i.companyId = byBp.get(i.id) || '';
 
@@ -3057,35 +3071,41 @@ async function handleAdminListDiscoveries(request, env) {
   const sess = await getAdminSession(request, env);
   if (!sess) return json(401, { ok: false, error: 'Not signed in' });
 
+  // The discovery scan and the company list are independent — run them
+  // concurrently instead of one after the other.
   // discovery:<inverted-ts>:<rand> — the inverted timestamp makes a plain
   // prefix scan return newest-first.
-  const list = await env.BLUEPRINT_AUTH.list({ prefix: 'discovery:', limit: 200 });
-  const discoveries = (await Promise.all(list.keys.map(async (k) => {
-    const raw = await env.BLUEPRINT_AUTH.get(k.name);
-    if (!raw) return null;
-    try {
-      const id = k.name.slice('discovery:'.length);
-      const rec = JSON.parse(raw);
-      // Backfill a handle for discoveries created before the experience
-      // shipped, so their View/Transcript links work. Expiration was
-      // removed from discoveries entirely; purge it from old records the
-      // same lazy way.
-      const dirty = ('expiresAt' in rec);
-      if (dirty) delete rec.expiresAt;
-      if (!rec.handle) {
-        rec.handle = await uniqueDiscoveryHandle(env, discoveryHandleFromWebsite(rec.website, rec.company));
-        await env.BLUEPRINT_AUTH.put(k.name, JSON.stringify(rec)).catch(() => {});
-        await env.BLUEPRINT_AUTH.put(`dischandle:${rec.handle}`, id).catch(() => {});
-      } else if (dirty) {
-        await env.BLUEPRINT_AUTH.put(k.name, JSON.stringify(rec)).catch(() => {});
-      }
-      return { id, ...rec };
-    } catch { return null; }
-  }))).filter(Boolean);
+  const [discoveries, companies] = await Promise.all([
+    (async () => {
+      const list = await env.BLUEPRINT_AUTH.list({ prefix: 'discovery:', limit: 200 });
+      return (await Promise.all(list.keys.map(async (k) => {
+        const raw = await env.BLUEPRINT_AUTH.get(k.name);
+        if (!raw) return null;
+        try {
+          const id = k.name.slice('discovery:'.length);
+          const rec = JSON.parse(raw);
+          // Backfill a handle for discoveries created before the experience
+          // shipped, so their View/Transcript links work. Expiration was
+          // removed from discoveries entirely; purge it from old records the
+          // same lazy way.
+          const dirty = ('expiresAt' in rec);
+          if (dirty) delete rec.expiresAt;
+          if (!rec.handle) {
+            rec.handle = await uniqueDiscoveryHandle(env, discoveryHandleFromWebsite(rec.website, rec.company));
+            await env.BLUEPRINT_AUTH.put(k.name, JSON.stringify(rec)).catch(() => {});
+            await env.BLUEPRINT_AUTH.put(`dischandle:${rec.handle}`, id).catch(() => {});
+          } else if (dirty) {
+            await env.BLUEPRINT_AUTH.put(k.name, JSON.stringify(rec)).catch(() => {});
+          }
+          return { id, ...rec };
+        } catch { return null; }
+      }))).filter(Boolean);
+    })(),
+    listCompanies(env),
+  ]);
 
   // Attach each discovery's owning portal company so the admin links to the
   // new /<companyId>/discovery URL instead of the legacy /discovery/<handle>.
-  const companies = await listCompanies(env);
   const byHandle = new Map(companies.filter((c) => c.discoveryHandle).map((c) => [c.discoveryHandle, c.id]));
   for (const d of discoveries) d.companyId = d.companyId || byHandle.get(d.handle) || '';
 
@@ -4220,11 +4240,16 @@ async function putCompany(env, rec) {
 }
 
 async function listCompanies(env) {
+  if (_coCacheJson && (Date.now() - _coCacheAt) < CO_CACHE_MS) {
+    return JSON.parse(_coCacheJson); // fresh copy; callers may mutate
+  }
   const list = await env.BLUEPRINT_AUTH.list({ prefix: 'company:', limit: 500 });
-  const rows = await Promise.all(list.keys.map((k) => env.BLUEPRINT_AUTH.get(k.name).then((v) => {
+  const rows = (await Promise.all(list.keys.map((k) => env.BLUEPRINT_AUTH.get(k.name).then((v) => {
     try { return JSON.parse(v); } catch { return null; }
-  }).catch(() => null)));
-  return rows.filter(Boolean).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  }).catch(() => null)))).filter(Boolean).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  _coCacheAt = Date.now();
+  _coCacheJson = JSON.stringify(rows);
+  return rows;
 }
 
 // Link a shipped bespoke blueprint to its portal company when the company was
@@ -4900,21 +4925,20 @@ async function handlePortalMe(request, env) {
     preview = true;
   }
 
-  let discovery = null;
-  if (rec.discoveryHandle) {
-    const disc = await getDiscoveryByHandle(env, rec.discoveryHandle);
-    if (disc) discovery = { handle: disc.handle, status: disc.status || 'new', url: `/${rec.id}/discovery` };
-  }
-  let blueprint = null;
-  if (rec.blueprintId && await blueprintIsViewable(env, rec.blueprintId)) {
-    blueprint = { id: rec.blueprintId, url: `/${rec.id}/blueprint` };
-  }
-  // Whether this company's blueprint has been signed/approved — drives the
-  // "Onboarding" stage on the hub's sales-process checklist.
-  let signed = false;
-  if (rec.blueprintId) signed = !!(await env.BLUEPRINT_AUTH.get(`bpsigned:${rec.blueprintId}`));
-  let estimate = null;
-  if (rec.hasEstimate) estimate = estimateForPortal(await getEstimate(env, rec.id));
+  // These four reads depend only on `rec`, not on each other, so fetch them in
+  // one parallel batch instead of four serial KV round-trips (this is the
+  // highest-traffic customer request).
+  const [disc, bpViewable, signedRaw, estRec] = await Promise.all([
+    rec.discoveryHandle ? getDiscoveryByHandle(env, rec.discoveryHandle) : Promise.resolve(null),
+    rec.blueprintId ? blueprintIsViewable(env, rec.blueprintId) : Promise.resolve(false),
+    rec.blueprintId ? env.BLUEPRINT_AUTH.get(`bpsigned:${rec.blueprintId}`) : Promise.resolve(null),
+    rec.hasEstimate ? getEstimate(env, rec.id) : Promise.resolve(null),
+  ]);
+  const discovery = disc ? { handle: disc.handle, status: disc.status || 'new', url: `/${rec.id}/discovery` } : null;
+  const blueprint = (rec.blueprintId && bpViewable) ? { id: rec.blueprintId, url: `/${rec.id}/blueprint` } : null;
+  // `signed` drives the hub's "Onboarding" sales-process stage.
+  const signed = !!signedRaw;
+  const estimate = rec.hasEstimate ? estimateForPortal(estRec) : null;
   return json(200, {
     ok: true,
     preview,
