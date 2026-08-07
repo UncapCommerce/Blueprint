@@ -2049,6 +2049,10 @@
     const [accent, setAccent] = useState('#B8741F');
     const [busy, setBusy] = useState(false);
     const [error, setError] = useState('');
+    // Manual fallback: add a company by name when it isn't in Attio (or Attio
+    // isn't reachable). The backend only requires a name, so this always works.
+    const [manual, setManual] = useState(false);
+    const [manualName, setManualName] = useState('');
 
     const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
     const readFile = (file, cb) => {
@@ -2084,14 +2088,15 @@
 
     const save = async (e) => {
       e.preventDefault();
-      if (!company) { setError('Pick a company from Attio'); return; }
+      const name = manual ? manualName.trim() : (company && company.name);
+      if (!name) { setError(manual ? 'Enter a company name' : 'Pick a company from Attio'); return; }
       const lead = contacts.find((c) => c.role === 'lead') || null;
       setBusy(true); setError('');
       try {
         const d = await api('/api/admin/companies', {
           method: 'POST',
           body: JSON.stringify({
-            name: company.name, attioCompanyId: company.attioId,
+            name, attioCompanyId: (company && !manual) ? company.attioId : '',
             storeUrl: form.storeUrl.trim(), address: form.address.trim(),
             description: form.description.trim(), platform: form.platform.trim(), erp: form.erp.trim(),
             leadContact: lead,
@@ -2107,8 +2112,23 @@
     return (
       <Modal title="Add company" sub="Pull the info from Attio CRM" onClose={onClose}>
         <form onSubmit={save} style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <CompanyPicker company={company} onPick={pickCompany} onClear={() => { setCompany(null); setContacts([]); setContactsState('idle'); }}/>
-          {company && (
+          {manual ? (
+            <div>
+              <label style={S.label}>Company name</label>
+              <input value={manualName} onChange={(e) => setManualName(e.target.value)} autoFocus placeholder="Acme Inc" style={S.input}/>
+              <button type="button" onClick={() => { setManual(false); setManualName(''); }}
+                style={{ marginTop: 8, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: T.sans, fontSize: 12.5, fontWeight: 600, color: T.fg3, textDecoration: 'underline' }}>Search Attio instead</button>
+            </div>
+          ) : (
+            <div>
+              <CompanyPicker company={company} onPick={pickCompany} onClear={() => { setCompany(null); setContacts([]); setContactsState('idle'); }}/>
+              {!company ? (
+                <button type="button" onClick={() => { setManual(true); setCompany(null); }}
+                  style={{ marginTop: 8, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: T.sans, fontSize: 12.5, fontWeight: 600, color: T.fg3, textDecoration: 'underline' }}>Not in Attio? Add manually</button>
+              ) : null}
+            </div>
+          )}
+          {(company || manual) && (
             <>
               <Field label="Store URL" value={form.storeUrl} onChange={set('storeUrl')} placeholder="acme.com"/>
               <Field label="Address" value={form.address} onChange={set('address')} placeholder="100 Main St, Chicago, IL"/>
