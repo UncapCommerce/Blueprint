@@ -293,6 +293,8 @@
     const [saveState, setSaveState] = useState(''); // '', 'saving', 'saved'
     const [submitState, setSubmitState] = useState('');
     const [done, setDone] = useState(false); // completion modal only after an explicit finish
+    // Below ~720px the stage + form stack vertically (side-by-side crushes both).
+    const [isMobile, setIsMobile] = useState(() => (typeof window !== 'undefined' && window.matchMedia('(max-width: 720px)').matches));
 
     const stageElRef = useRef(null);
     const formElRef = useRef(null);
@@ -333,6 +335,12 @@
       }
     }, [measure]);
 
+    useEffect(() => {
+      const mq = window.matchMedia('(max-width: 720px)');
+      const on = () => setIsMobile(mq.matches);
+      mq.addEventListener ? mq.addEventListener('change', on) : mq.addListener(on);
+      return () => { mq.removeEventListener ? mq.removeEventListener('change', on) : mq.removeListener(on); };
+    }, []);
     useEffect(() => () => { if (roRef.current) roRef.current.disconnect(); }, []);
     // Web fonts change layout after load — re-measure once they're ready.
     useEffect(() => {
@@ -634,7 +642,7 @@
     if (isRich) sceneHtml = applyPalette(sceneHtml, palette);
 
     return (
-      <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: '#F2EFE7', color: '#0A0A0A' }}>
+      <div style={{ height: isMobile ? 'auto' : '100vh', minHeight: isMobile ? '100dvh' : undefined, display: 'flex', flexDirection: 'column', background: '#F2EFE7', color: '#0A0A0A' }}>
         {/* TOP BAR */}
         <div style={{ height: 60, flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 24, padding: '0 24px', background: 'rgba(242,239,231,0.92)', borderBottom: '1px solid #C9C7C0', zIndex: 100 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 14, flex: '0 0 auto' }}>
@@ -656,12 +664,13 @@
           </div>
         </div>
 
-        {/* MAIN ROW */}
-        <div style={{ flex: '1 1 auto', display: 'flex', minHeight: 0 }}>
-          {/* STAGE — every step fits to width and scrolls inside the viewport */}
-          <div ref={stageRef} style={{ flex: '1 1 auto', minWidth: 0, display: 'flex', alignItems: 'stretch', justifyContent: 'center', position: 'relative', padding: 20, boxSizing: 'border-box' }}>
-            <div style={{ position: 'relative', width: Math.round(1440 * scale), height: '100%', borderRadius: 6, overflow: 'hidden', border: '1px solid #C9C7C0', background: '#FFFFFF', boxShadow: '0 12px 32px rgba(10,10,10,0.10), 0 2px 4px rgba(10,10,10,0.05)' }}>
-              <div style={{ width: '100%', height: '100%', overflowY: 'auto', overflowX: 'hidden' }}
+        {/* MAIN ROW — side-by-side on desktop, stacked (stage over form) on mobile */}
+        <div style={{ flex: '1 1 auto', display: 'flex', flexDirection: isMobile ? 'column' : 'row', minHeight: 0 }}>
+          {/* STAGE — fits to width; scrolls inside the viewport on desktop, and
+              flows at natural height on mobile so the page scrolls once. */}
+          <div ref={stageRef} style={{ flex: isMobile ? '0 0 auto' : '1 1 auto', minWidth: 0, display: 'flex', alignItems: isMobile ? 'flex-start' : 'stretch', justifyContent: 'center', position: 'relative', padding: isMobile ? 10 : 20, boxSizing: 'border-box' }}>
+            <div style={{ position: 'relative', width: Math.round(1440 * scale), height: isMobile ? Math.round((isRich ? contentH : 900) * scale) : '100%', borderRadius: 6, overflow: 'hidden', border: '1px solid #C9C7C0', background: '#FFFFFF', boxShadow: '0 12px 32px rgba(10,10,10,0.10), 0 2px 4px rgba(10,10,10,0.05)' }}>
+              <div style={{ width: '100%', height: isMobile ? 'auto' : '100%', overflowY: isMobile ? 'visible' : 'auto', overflowX: 'hidden' }}
                 onScroll={() => { if (infoCard) setInfoCard(null); }}>
                 <div style={{ position: 'relative', width: Math.round(1440 * scale), height: Math.round((isRich ? contentH : 900) * scale) }}>
                   {isRich ? (
@@ -727,7 +736,7 @@
           </div>
 
           {/* FORM PANEL */}
-          <div style={{ flex: '0 0 clamp(360px, 27vw, 470px)', display: 'flex', flexDirection: 'column', background: '#FFFFFF', borderLeft: '1px solid #C9C7C0', minHeight: 0 }}>
+          <div style={{ flex: isMobile ? '1 1 auto' : '0 0 clamp(360px, 27vw, 470px)', display: 'flex', flexDirection: 'column', background: '#FFFFFF', borderLeft: isMobile ? 'none' : '1px solid #C9C7C0', borderTop: isMobile ? '1px solid #C9C7C0' : 'none', minHeight: 0 }}>
             <div style={{ flex: '0 0 auto', padding: '22px 24px 16px' }}>
               <div style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, letterSpacing: '0.14em', color: '#707070' }}>STEP {String(activeStepIdx + 1).padStart(2, '0')} OF 10</div>
               <div style={{ fontSize: 27, fontWeight: 750, letterSpacing: '-0.03em', marginTop: 6 }}>{step.label}</div>
@@ -739,7 +748,7 @@
                 <span style={{ fontFamily: "'JetBrains Mono',monospace", fontSize: 10, color: '#707070', flex: '0 0 auto' }}>{answeredCount}/{questionCount}</span>
               </div>
             </div>
-            <div ref={formElRef} style={{ flex: '1 1 auto', overflowY: 'auto', padding: '4px 24px 24px', position: 'relative', minHeight: 0 }}>
+            <div ref={formElRef} style={{ flex: '1 1 auto', overflowY: isMobile ? 'visible' : 'auto', padding: '4px 24px 24px', position: 'relative', minHeight: 0 }}>
               {step.groups.map((g, gi) => {
                 let gDone = 0;
                 g.questions.forEach((q) => { if (answered(answers[q.id])) gDone++; });
