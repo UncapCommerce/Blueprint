@@ -1826,7 +1826,7 @@ function BPIntegrations() {
             <span style={{ fontFamily: pFont, fontSize: 11, color: '#9A9A9A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>businesscentral.dynamics.com</span>
           </span>
         </div>
-        <img src={window.__resources && window.__resources.businessCentral || 'assets/business-central.png'} alt="Dynamics 365 Business Central dashboard" loading="lazy" decoding="async" width="1600" height="900" style={{ display: 'block', width: '100%', height: 'auto' }} />
+        <img src={window.__resources && window.__resources.businessCentral || 'assets/business-central.webp'} alt="Dynamics 365 Business Central dashboard" loading="lazy" decoding="async" width="1600" height="900" style={{ display: 'block', width: '100%', height: 'auto' }} />
       </div>
 
       <div style={{ marginTop: 20, fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--fg-3)', letterSpacing: '0.06em' }}>
@@ -2001,9 +2001,9 @@ function BPDelivery() {
 function BPTeam() {
   const team = [
   { n: 'Denis Dyli', r: 'CEO, Principal', img: 'assets/team-denis.webp' },
-  { n: 'Ryan Muir', r: 'Managing Director', img: 'assets/team-ryan.png' },
-  { n: 'Mike Gojcaj', r: 'Head of Solutions', img: 'assets/team-mike.png' },
-  { n: 'Michael Johnson', r: 'Head of Delivery', img: 'assets/team-michael.png' },
+  { n: 'Ryan Muir', r: 'Managing Director', img: 'assets/team-ryan.webp' },
+  { n: 'Mike Gojcaj', r: 'Head of Solutions', img: 'assets/team-mike.webp' },
+  { n: 'Michael Johnson', r: 'Head of Delivery', img: 'assets/team-michael.webp' },
   { n: 'Jo Tan', r: 'Head of Design', img: 'assets/team-jo.webp' }];
 
   return (

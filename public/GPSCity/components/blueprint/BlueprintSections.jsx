@@ -2263,9 +2263,9 @@ function BPRiskAssessment() {
 function BPTeam() {
   const team = [
     { n: 'Denis Dyli', r: 'CEO, Principal', img: 'assets/team-denis.webp' },
-    { n: 'Ryan Muir', r: 'Managing Director', img: 'assets/team-ryan.png' },
-    { n: 'Mike Gojcaj', r: 'Head of Solutions', img: 'assets/team-mike.png' },
-    { n: 'Michael Johnson', r: 'Head of Delivery', img: 'assets/team-michael.png' },
+    { n: 'Ryan Muir', r: 'Managing Director', img: 'assets/team-ryan.webp' },
+    { n: 'Mike Gojcaj', r: 'Head of Solutions', img: 'assets/team-mike.webp' },
+    { n: 'Michael Johnson', r: 'Head of Delivery', img: 'assets/team-michael.webp' },
     { n: 'Jo Tan', r: 'Head of Design', img: 'assets/team-jo.webp' }
   ];
   return (
