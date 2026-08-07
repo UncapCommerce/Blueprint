@@ -6,9 +6,17 @@ durable instruction across sessions.
 ## Architecture in 30 seconds
 
 Single Cloudflare Worker (`worker/index.js`) backed by Workers Static
-Assets in `public/`. There is **no build step** — `index.html` loads
-React, ReactDOM, and `@babel/standalone` (vendored under `/vendor/`) from
-`<script>` tags, and Babel transpiles `.jsx` files in the browser.
+Assets in `public/`. **No build tooling to install** — you edit `.jsx`
+directly and locally (`wrangler dev`) `index.html` loads React, ReactDOM,
+and `@babel/standalone` (vendored under `/vendor/`) from `<script>` tags
+and Babel transpiles the `.jsx` in the browser. On real Cloudflare deploys
+a precompile step (`scripts/precompile-jsx.js`, invoked from
+`scripts/stamp-deploy.js` when `WORKERS_CI_COMMIT_SHA` is set) transpiles
+every `.jsx` to a sibling `.js`, rewrites the `type="text/babel"` script
+tags to plain scripts, and drops the 3MB Babel runtime — so production
+ships plain `.js` with no in-browser transpile. Source stays `.jsx`; the
+`.js` is generated in CI only, never committed. Keep validating changed
+JSX with a `babel.transform` (that's exactly what the deploy runs).
 
 - Root page (`/` on `go.uncap.com`): the **customer portal** login
   (`public/index.html` + `public/portal/PortalApp.jsx`). Passwordless
