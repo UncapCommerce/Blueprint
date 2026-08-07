@@ -2260,6 +2260,63 @@
     return <CompanyEditor key={initial.id} initial={initial} me={me}/>;
   }
 
+  // Everything the company's invited portal team has done, shown at the end of
+  // the company page. Backed by /api/admin/company/activity (activity-log events
+  // whose actor is one of the company's contacts).
+  function PortalActivity({ companyId, contacts }) {
+    const isMobile = useIsMobile();
+    const [events, setEvents] = useState(null);
+    const [error, setError] = useState('');
+    useEffect(() => {
+      let dead = false;
+      api('/api/admin/company/activity?id=' + encodeURIComponent(companyId))
+        .then((d) => { if (!dead) setEvents(d.events || []); })
+        .catch((e) => { if (!dead) { setError(e.message); setEvents([]); } });
+      return () => { dead = true; };
+    }, [companyId]);
+
+    const nameFor = (email) => {
+      const e = (email || '').trim().toLowerCase();
+      const c = (contacts || []).find((x) => (x.email || '').trim().toLowerCase() === e);
+      return (c && c.name) ? `${c.name} · ${email}` : (email || '');
+    };
+    const actionText = (ev) => {
+      if (ev.detail) return ev.detail;
+      const verb = { created: 'Created', edited: 'Edited', signed: 'Signed', status: 'Status change', view: 'Viewed', 'disc-update': 'Updated', deleted: 'Deleted', approved: 'Approved' }[ev.type] || 'Activity';
+      return ev.name ? `${verb} · ${ev.name}` : verb;
+    };
+
+    return (
+      <div style={{ ...S.card, marginTop: 16, overflow: 'hidden' }}>
+        <div style={{ padding: isMobile ? '14px 14px' : '14px 18px', borderBottom: `1px solid ${T.line}` }}>
+          <div style={{ fontFamily: T.sans, fontWeight: 800, fontSize: 15, color: T.fg1 }}>Portal activity</div>
+          <div style={{ fontFamily: T.sans, fontSize: 12.5, color: T.fg3, marginTop: 2 }}>Everything the invited team has done in their portal: sign-ins, discovery, estimate, and signatures.</div>
+        </div>
+        {events === null ? (
+          <div style={{ padding: 28, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 13.5 }}>Loading…</div>
+        ) : error ? (
+          <div style={{ padding: 20, color: '#B3261E', fontFamily: T.sans, fontSize: 13.5 }}>{error}</div>
+        ) : events.length === 0 ? (
+          <div style={{ padding: 28, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 13.5 }}>No portal activity yet. Once a contact signs in or acts on their portal, it shows up here.</div>
+        ) : (
+          events.map((ev, i) => {
+            const a = actBadge(ev.type);
+            return (
+              <div key={i} style={{ display: 'flex', gap: 10, alignItems: 'center', padding: isMobile ? '9px 14px' : '9px 18px', borderBottom: i < events.length - 1 ? `1px solid ${T.line}` : 'none' }}>
+                <span style={{ flexShrink: 0, display: 'inline-block', padding: '2px 7px', borderRadius: 999, fontFamily: T.mono, fontSize: 8.5, fontWeight: 700, letterSpacing: '0.07em', textTransform: 'uppercase', background: a.bg, color: a.fg, border: `1px solid ${a.bd}`, minWidth: 52, textAlign: 'center' }}>{a.l}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: T.sans, fontSize: 13, fontWeight: 650, color: T.fg1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{actionText(ev)}</div>
+                  <div style={{ fontFamily: T.mono, fontSize: 10.5, color: T.fg3, marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nameFor(ev.actor)}</div>
+                </div>
+                <div style={{ flexShrink: 0, fontFamily: T.mono, fontSize: 10, color: T.fg3, textAlign: 'right' }}>{fmtWhen(ev.ts)}</div>
+              </div>
+            );
+          })
+        )}
+      </div>
+    );
+  }
+
   function CompanyEditor({ initial, me }) {
     const [co, setCo] = useState(initial);
     const [saved, setSaved] = useState(false);
@@ -2546,10 +2603,12 @@
 
           <Row label="Discovery handle" hint="Powers the portal Discovery tab"><InlineEdit value={form.discoveryHandle} onSave={commitField('discoveryHandle')} placeholder="e.g. cartoncraft"/></Row>
           <Row label="Blueprint ID" hint="Powers the portal Blueprint tab" last><InlineEdit value={form.blueprintId} onSave={commitField('blueprintId')} placeholder="e.g. cartoncraftsupply"/></Row>
+        </div>
 
-          <div style={{ paddingTop: 14 }}>
-            <a href="/admin/companies" onClick={navClick('/admin/companies')} style={{ ...S.btnGhost, textDecoration: 'none' }}>← Back to companies</a>
-          </div>
+        <PortalActivity companyId={co.id} contacts={contacts}/>
+
+        <div style={{ paddingTop: 14 }}>
+          <a href="/admin/companies" onClick={navClick('/admin/companies')} style={{ ...S.btnGhost, textDecoration: 'none' }}>← Back to companies</a>
         </div>
       </Page>
     );
@@ -3592,6 +3651,22 @@
   // ── root ─────────────────────────────────────────────────────────────
   // Dashboard landing page: a cross-entity recent-activity feed (created,
   // edited, signed, status changed) across both Discoveries and Blueprints.
+  // Shared badge palette for activity events (the dashboard feed and the
+  // per-company portal-activity section).
+  function actBadge(type) {
+    switch (type) {
+      case 'created':     return { l: 'Created',  bg: '#EEF0FE', fg: '#3A44C4', bd: '#C3C9F5' };
+      case 'signed':      return { l: 'Signed',   bg: '#DFFCE6', fg: '#064E2E', bd: '#9BDDB0' };
+      case 'approved':    return { l: 'Approved', bg: '#DFFCE6', fg: '#064E2E', bd: '#9BDDB0' };
+      case 'edited':      return { l: 'Edited',   bg: '#FFF6E0', fg: '#6A4E00', bd: '#E8C36A' };
+      case 'status':      return { l: 'Status',   bg: T.black,   fg: '#fff',    bd: T.black };
+      case 'view':        return { l: 'Viewed',   bg: T.cream,   fg: T.fg2,     bd: T.line };
+      case 'disc-update': return { l: 'Updated',  bg: '#E8FF52', fg: '#0A0A0A', bd: T.black };
+      case 'deleted':     return { l: 'Deleted',  bg: '#FDE8E8', fg: '#8A1C1C', bd: '#F0A9A9' };
+      default:            return { l: type || 'Event', bg: T.cream, fg: T.fg2, bd: T.line };
+    }
+  }
+
   // Backed by /api/admin/activity. This is what the logo and first login land on.
   const ACT_PAGE_SIZE = 50;
   function Home() {
@@ -3608,18 +3683,7 @@
       return () => { dead = true; };
     }, []);
 
-    const actStyle = (type) => {
-      switch (type) {
-        case 'created':     return { l: 'Created', bg: '#EEF0FE', fg: '#3A44C4', bd: '#C3C9F5' };
-        case 'signed':      return { l: 'Signed',  bg: '#DFFCE6', fg: '#064E2E', bd: '#9BDDB0' };
-        case 'edited':      return { l: 'Edited',  bg: '#FFF6E0', fg: '#6A4E00', bd: '#E8C36A' };
-        case 'status':      return { l: 'Status',  bg: T.black,   fg: '#fff',    bd: T.black };
-        case 'view':        return { l: 'Viewed',  bg: T.cream,   fg: T.fg2,     bd: T.line };
-        case 'disc-update': return { l: 'Updated', bg: '#E8FF52', fg: '#0A0A0A', bd: T.black };
-        case 'deleted':     return { l: 'Deleted', bg: '#FDE8E8', fg: '#8A1C1C', bd: '#F0A9A9' };
-        default:            return { l: type || 'Event', bg: T.cream, fg: T.fg2, bd: T.line };
-      }
-    };
+    const actStyle = actBadge;
 
     const totalPages = events ? Math.max(1, Math.ceil(events.length / ACT_PAGE_SIZE)) : 1;
     const pageSafe = Math.min(page, totalPages);

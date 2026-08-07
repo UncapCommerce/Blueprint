@@ -415,6 +415,9 @@ export default {
     if (url.pathname === '/api/admin/company' && request.method === 'GET') {
       return handleAdminGetCompany(request, env);
     }
+    if (url.pathname === '/api/admin/company/activity' && request.method === 'GET') {
+      return handleAdminCompanyActivity(request, env);
+    }
     if (url.pathname === '/api/admin/company/update' && request.method === 'POST') {
       return handleAdminUpdateCompany(request, env);
     }
@@ -4773,6 +4776,37 @@ async function handleAdminGetCompany(request, env) {
   const rec = await getCompany(env, id);
   if (!rec) return json(404, { ok: false, error: 'Company not found' });
   return json(200, { ok: true, company: rec });
+}
+
+// GET /api/admin/company/activity?id=<companyId> — everything the company's
+// invited portal team (its contacts) has done, pulled from the shared activity
+// log by matching the actor email to a contact email. Portal sign-ins, discovery
+// progress, estimate approvals, and blueprint signatures all land here.
+async function handleAdminCompanyActivity(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  const co = await getCompany(env, new URL(request.url).searchParams.get('id') || '');
+  if (!co) return json(404, { ok: false, error: 'Company not found' });
+
+  const emails = new Set(
+    [co.leadContact, ...(co.contacts || [])]
+      .map((c) => ((c && c.email) || '').trim().toLowerCase())
+      .filter(Boolean)
+  );
+  if (!emails.size) return json(200, { ok: true, events: [] });
+
+  const list = await env.BLUEPRINT_AUTH.list({ prefix: 'activity:', limit: 1000 });
+  const vals = await Promise.all(list.keys.map((k) => env.BLUEPRINT_AUTH.get(k.name)));
+  const events = [];
+  for (const v of vals) {
+    if (!v) continue;
+    try {
+      const e = JSON.parse(v);
+      if (emails.has((e.actor || '').trim().toLowerCase())) events.push(e);
+    } catch { /* skip unparseable */ }
+  }
+  events.sort((a, b) => new Date(b.ts || 0) - new Date(a.ts || 0));
+  return json(200, { ok: true, events: events.slice(0, 200) });
 }
 
 async function handleAdminUpdateCompany(request, env) {
