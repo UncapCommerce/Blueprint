@@ -30,9 +30,9 @@ const FOUNDATION_ITEMS = [
 
 // Post-launch managed-growth retainers (separate from the build estimate).
 const PLANS = [
-  { id: 'core', name: 'Core', sub: 'Advisory + essentials', price: '$2,500', badge: '' },
-  { id: 'optimize', name: 'Optimize', sub: 'Most popular', price: '$5,000', badge: 'Recommended' },
-  { id: 'accelerate', name: 'Accelerate', sub: 'Embedded partner', price: '$7,500+', badge: '' },
+  { id: 'core', name: 'Core', sub: 'Advisory + essentials', price: '$2,500' },
+  { id: 'optimize', name: 'Optimize', sub: 'Most popular', price: '$5,000' },
+  { id: 'accelerate', name: 'Accelerate', sub: 'Embedded partner', price: '$7,500+' },
 ];
 const GROWTH_ROWS = [
   { label: 'Engagement model', v: ['Advisory-first support & essential execution', 'Operational optimization & execution', 'Embedded growth partnership'] },
@@ -116,6 +116,7 @@ function EstimateTemplate() {
         (d.groups || []).forEach((g) => g.modules.forEach((mo) => { if (mo.preselected) sel[mo.id] = true; }));
         const integ = ((d.integrations || []).find((i) => i.preselected) || (d.integrations || []).find((i) => i.low === 0) || (d.integrations || [])[0] || {}).id || '';
         setSelected(sel); setIntegration(integ);
+        if (d.growthPlan) setPlan(d.growthPlan);
         setBaseline({ sel: { ...sel }, integ });
       })
       .catch((e) => setErr((e && e.error) || 'Unable to load your estimate.'));
@@ -424,7 +425,7 @@ function EstimateTemplate() {
                   <span key={pl.id} onClick={() => setPlan(pl.id)} style={{ display: 'flex', flexDirection: 'column', gap: 6, justifyContent: 'flex-end', cursor: 'pointer', position: 'relative', zIndex: on ? 1 : 0, padding: on ? '20px 18px 14px' : '16px 18px 14px', marginTop: on ? -18 : 0, borderBottom: '1px solid var(--line-2)', borderTop: '2px solid ' + (on ? 'var(--uc-black)' : 'transparent'), borderLeft: '2px solid ' + (on ? 'var(--uc-black)' : 'transparent'), borderRight: '2px solid ' + (on ? 'var(--uc-black)' : 'transparent'), borderRadius: on ? '10px 10px 0 0' : 0, background: on ? 'var(--uc-paper)' : 'transparent', boxShadow: on ? '0 -3px 0 var(--uc-signal) inset' : 'none' }}>
                     <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                       <span style={{ fontFamily: 'var(--font-hero)', fontWeight: 700, fontSize: 'clamp(19px,1.9vw,26px)', letterSpacing: '-0.035em' }}>{pl.name}</span>
-                      {pl.badge ? <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', background: 'var(--uc-signal)', color: 'var(--uc-black)', borderRadius: 999, padding: '3px 7px' }}>{pl.badge}</span> : null}
+                      {pl.id === (data.growthPlan || 'optimize') ? <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', background: 'var(--uc-signal)', color: 'var(--uc-black)', borderRadius: 999, padding: '3px 7px' }}>Recommended</span> : null}
                     </span>
                     <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, color: 'var(--fg-3)' }}>{pl.sub}</span>
                   </span>

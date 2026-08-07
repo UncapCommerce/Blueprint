@@ -4418,6 +4418,10 @@ const DEFAULT_TIMELINE = [
   { label: 'Data migration & QA', weeks: 3 },
   { label: 'Launch & support', weeks: 2 },
 ];
+// Timeline is picked as a single total (weeks to launch); the recommended
+// post-launch retainer is one of the managed-growth plans.
+const ESTIMATE_WEEKS = [8, 12, 16, 20, 24, 28];
+const GROWTH_PLANS = ['core', 'optimize', 'accelerate'];
 
 function estimateTotals(lines) {
   let low = 0, high = 0;
@@ -4475,6 +4479,8 @@ async function handleAdminSaveEstimate(request, env) {
     companyId, status,
     lines: (Array.isArray(body.lines) ? body.lines : []).map(normalizeEstimateLine),
     timeline: normalizeTimeline(body.timeline),
+    weeks: ESTIMATE_WEEKS.includes(parseInt(body.weeks, 10)) ? parseInt(body.weeks, 10) : 16,
+    growthPlan: GROWTH_PLANS.includes(body.growthPlan) ? body.growthPlan : 'optimize',
     note: (body.note || '').toString().slice(0, 2000).trim(),
     createdAt: (prev && prev.createdAt) || new Date().toISOString(),
     updatedAt: new Date().toISOString(), updatedBy: sess.email,
@@ -4527,7 +4533,7 @@ function buildEstimateContent(est, co) {
     .filter((g) => g.modules.length);
   const integrations = lines.filter((l) => l.type === 'integration')
     .map((l) => ({ id: l.itemId || l.name, name: l.name, desc: l.desc, tag: l.tag, low: l.low, high: l.high, preselected: !!l.selected }));
-  const weeks = (est.timeline || []).reduce((a, r) => a + (parseInt(r.weeks, 10) || 0), 0) || 14;
+  const weeks = est.weeks || (est.timeline || []).reduce((a, r) => a + (parseInt(r.weeks, 10) || 0), 0) || 14;
   const valid = new Date(Date.now() + 30 * 86400000);
   const validThrough = `${EST_MONTHS[valid.getUTCMonth()]} ${valid.getUTCDate()}, ${valid.getUTCFullYear()}`;
   return {
@@ -4537,6 +4543,7 @@ function buildEstimateContent(est, co) {
     preparedBy: est.preparedBy || 'Denis Dyli, Principal',
     validThrough,
     foundation, groups, integrations, weeks,
+    growthPlan: est.growthPlan || 'optimize',
     note: est.note || '',
   };
 }

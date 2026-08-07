@@ -1715,7 +1715,7 @@
   }
 
   // ── Sales → Items (master line-item catalog the estimate is built from) ──
-  function ItemEditor({ initial, groups, onClose, onSaved }) {
+  function ItemEditor({ initial, groups, rate, onClose, onSaved }) {
     const [f, setF] = useState(() => ({
       name: (initial && initial.name) || '', desc: (initial && initial.desc) || '',
       group: (initial && initial.group) || 'growth', type: (initial && initial.type) || 'module',
@@ -1725,6 +1725,9 @@
     const [busy, setBusy] = useState(false);
     const [err, setErr] = useState('');
     const set = (k) => (v) => setF((s) => ({ ...s, [k]: v }));
+    // Hours are the input; price is derived (hours × rate) and stored as dollars.
+    const money = (n) => '$' + (n || 0).toLocaleString('en-US');
+    const setHours = (k) => (e) => set(k)((Math.max(0, parseInt(e.target.value, 10) || 0)) * rate);
     const save = async () => {
       if (!f.name.trim()) { setErr('Name is required'); return; }
       setBusy(true); setErr('');
@@ -1760,8 +1763,16 @@
             </div>
           </div>
           <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <div style={{ flex: '1 1 140px' }}><Field label="Price low ($)" value={String(f.low)} onChange={set('low')} type="number"/></div>
-            <div style={{ flex: '1 1 140px' }}><Field label="Price high ($)" value={String(f.high)} onChange={set('high')} type="number"/></div>
+            <div style={{ flex: '1 1 140px' }}>
+              <label style={S.label}>Service hours (low)</label>
+              <input type="number" min="0" step="5" value={Math.round((parseInt(f.low, 10) || 0) / rate)} onChange={setHours('low')} style={{ ...S.input, fontFamily: T.mono }}/>
+              <div style={{ fontFamily: T.mono, fontSize: 11, color: T.fg3, marginTop: 4 }}>{money(parseInt(f.low, 10) || 0)} · ${rate}/hr</div>
+            </div>
+            <div style={{ flex: '1 1 140px' }}>
+              <label style={S.label}>Service hours (high)</label>
+              <input type="number" min="0" step="5" value={Math.round((parseInt(f.high, 10) || 0) / rate)} onChange={setHours('high')} style={{ ...S.input, fontFamily: T.mono }}/>
+              <div style={{ fontFamily: T.mono, fontSize: 11, color: T.fg3, marginTop: 4 }}>{money(parseInt(f.high, 10) || 0)} · ${rate}/hr</div>
+            </div>
             <div style={{ flex: '1 1 140px' }}><Field label="Tag (optional)" value={f.tag} onChange={set('tag')} placeholder="e.g. Pick one"/></div>
           </div>
           <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: T.sans, fontSize: 13.5, color: T.fg2, cursor: 'pointer' }}>
@@ -1832,7 +1843,7 @@
             );
           })
         )}
-        {editing !== undefined && <ItemEditor initial={editing} groups={groups} onClose={() => setEditing(undefined)} onSaved={() => { setEditing(undefined); load(); }}/>}
+        {editing !== undefined && <ItemEditor initial={editing} groups={groups} rate={rate} onClose={() => setEditing(undefined)} onSaved={() => { setEditing(undefined); load(); }}/>}
       </Page>
     );
   }
@@ -2527,13 +2538,15 @@
   };
 
   // ── Estimate builder ( /admin/estimate/<companyId> ) ────────────────────
-  // Pick line items from the master list, tune each price, edit the timeline,
-  // then save as a draft or share it to the client's Hub. Selections snapshot
+  // Pick line items from the master list, tune each item's hours, set the
+  // timeline (weeks to launch) and recommended managed-service plan, then save
+  // as a draft or share it to the client's Hub. Selections snapshot
   // the master prices, so later master edits never change a shared estimate.
   function EstimateEditor({ id, me }) {
     const [data, setData] = useState(null); // { master, groups, rate, company, ... }
     const [lines, setLines] = useState([]);
-    const [timeline, setTimeline] = useState([]);
+    const [weeks, setWeeks] = useState(16);
+    const [growthPlan, setGrowthPlan] = useState('optimize');
     const [note, setNote] = useState('');
     const [status, setStatus] = useState('draft');
     const [error, setError] = useState('');
@@ -2547,13 +2560,13 @@
           setData(d);
           if (d.estimate) {
             setLines(d.estimate.lines || []);
-            setTimeline((d.estimate.timeline && d.estimate.timeline.length) ? d.estimate.timeline : d.defaultTimeline);
+            setWeeks(d.estimate.weeks || 16);
+            setGrowthPlan(d.estimate.growthPlan || 'optimize');
             setNote(d.estimate.note || '');
             setStatus(d.estimate.status || 'draft');
           } else {
             // Seed from the master list: recommended items pre-selected.
             setLines((d.master || []).map((m) => ({ itemId: m.id, name: m.name, desc: m.desc, group: m.group, type: m.type, tag: m.tag, low: m.low, high: m.high, selected: !!m.recommended })));
-            setTimeline(d.defaultTimeline || []);
           }
         } catch (e) { setError(e.message); setData({ groups: [], master: [] }); }
       })();
@@ -2564,22 +2577,21 @@
     const money = (n) => '$' + (n || 0).toLocaleString('en-US');
     const hrs = (n) => Math.round(n / rate / 5) * 5;
     const totals = lines.reduce((a, l) => l.selected ? { low: a.low + (l.low || 0), high: a.high + (l.high || 0) } : a, { low: 0, high: 0 });
-    const totalWeeks = timeline.reduce((a, r) => a + (parseInt(r.weeks, 10) || 0), 0);
 
+    // Hours are the editable input; price is derived (hours × rate) and stored on
+    // the line as dollars, so nothing downstream (totals, client one-pager) changes.
+    const toHours = (price) => Math.round((price || 0) / rate);
     const toggle = (idx) => setLines((ls) => {
       const line = ls[idx];
       if (line.type === 'integration') return ls.map((l, i) => l.type === 'integration' ? { ...l, selected: i === idx } : l);
       return ls.map((l, i) => i === idx ? { ...l, selected: !l.selected } : l);
     });
-    const setPrice = (idx, key, val) => setLines((ls) => ls.map((l, i) => i === idx ? { ...l, [key]: parseInt(val, 10) || 0 } : l));
-    const setTl = (idx, key, val) => setTimeline((t) => t.map((r, i) => i === idx ? { ...r, [key]: key === 'weeks' ? (parseInt(val, 10) || 0) : val } : r));
-    const addTl = () => setTimeline((t) => [...t, { label: '', weeks: 1 }]);
-    const rmTl = (idx) => setTimeline((t) => t.filter((_, i) => i !== idx));
+    const setHours = (idx, key, val) => setLines((ls) => ls.map((l, i) => i === idx ? { ...l, [key]: (Math.max(0, parseInt(val, 10) || 0)) * rate } : l));
 
     const save = async (nextStatus) => {
       setBusy(nextStatus); setError(''); setSaved('');
       try {
-        const d = await api('/api/admin/estimate', { method: 'POST', body: JSON.stringify({ companyId: id, status: nextStatus, lines, timeline: timeline.filter((r) => r.label.trim()), note }) });
+        const d = await api('/api/admin/estimate', { method: 'POST', body: JSON.stringify({ companyId: id, status: nextStatus, lines, weeks, growthPlan, note }) });
         setStatus(d.estimate.status);
         setSaved(nextStatus === 'ready' ? 'Shared to the client Hub.' : 'Draft saved.');
       } catch (e) { setError(e.message); }
@@ -2614,7 +2626,10 @@
           <div style={{ height: 34, width: 1, background: T.line }}/>
           <div>
             <div style={{ ...S.eyebrow, marginBottom: 4 }}>Timeline</div>
-            <div style={{ fontFamily: T.mono, fontSize: 15, color: T.fg2 }}>{totalWeeks} weeks</div>
+            <select value={weeks} onChange={(e) => setWeeks(parseInt(e.target.value, 10))}
+              style={{ ...S.input, padding: '6px 10px', fontSize: 15, fontFamily: T.mono, width: 'auto' }}>
+              {[8, 12, 16, 20, 24, 28].map((w) => <option key={w} value={w}>{w} weeks</option>)}
+            </select>
           </div>
           <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 10 }}>
             {saved ? <span style={{ fontFamily: T.mono, fontSize: 12, color: '#2E7D32' }}>{saved}</span> : null}
@@ -2625,6 +2640,22 @@
           </div>
         </div>
         {error ? <div style={{ ...S.card, padding: 12, marginBottom: 16, color: '#B3261E', fontFamily: T.mono, fontSize: 12.5 }}>{error}</div> : null}
+
+        {/* Recommended managed service (post-launch retainer) */}
+        <div style={{ ...S.card, padding: '14px 16px', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 14, flexWrap: 'wrap' }}>
+          <div style={{ ...S.eyebrow, margin: 0 }}>Recommended managed service</div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+            {[{ id: 'core', label: 'Core' }, { id: 'optimize', label: 'Optimize' }, { id: 'accelerate', label: 'Accelerate' }].map((p) => {
+              const on = growthPlan === p.id;
+              return (
+                <button key={p.id} type="button" onClick={() => setGrowthPlan(p.id)} aria-pressed={on}
+                  style={{ minHeight: 40, padding: '9px 16px', borderRadius: 999, cursor: 'pointer', fontFamily: T.sans, fontWeight: 700, fontSize: 13, border: `1.5px solid ${on ? T.fg1 : T.line}`, background: on ? T.signal : 'transparent', color: T.fg1 }}>
+                  {p.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
         {/* Scope selector */}
         {groups.map((g) => {
@@ -2646,11 +2677,14 @@
                       </div>
                       {l.desc ? <div style={{ fontFamily: T.sans, fontSize: 12, color: T.fg3, marginTop: 3, lineHeight: 1.5 }}>{l.desc}</div> : null}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
-                      <span style={{ fontFamily: T.mono, fontSize: 11, color: T.fg3 }}>$</span>
-                      <input type="number" value={l.low} onChange={(e) => setPrice(i, 'low', e.target.value)} style={{ ...S.input, width: 82, padding: '6px 8px', fontSize: 16, fontFamily: T.mono }}/>
-                      <span style={{ fontFamily: T.mono, fontSize: 11, color: T.fg3 }}>–</span>
-                      <input type="number" value={l.high} onChange={(e) => setPrice(i, 'high', e.target.value)} style={{ ...S.input, width: 82, padding: '6px 8px', fontSize: 16, fontFamily: T.mono }}/>
+                    <div style={{ flexShrink: 0, textAlign: 'right' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end' }}>
+                        <input type="number" min="0" step="5" value={toHours(l.low)} onChange={(e) => setHours(i, 'low', e.target.value)} style={{ ...S.input, width: 64, padding: '6px 8px', fontSize: 16, fontFamily: T.mono, textAlign: 'right' }}/>
+                        <span style={{ fontFamily: T.mono, fontSize: 11, color: T.fg3 }}>–</span>
+                        <input type="number" min="0" step="5" value={toHours(l.high)} onChange={(e) => setHours(i, 'high', e.target.value)} style={{ ...S.input, width: 64, padding: '6px 8px', fontSize: 16, fontFamily: T.mono, textAlign: 'right' }}/>
+                        <span style={{ fontFamily: T.mono, fontSize: 11, color: T.fg3, width: 24 }}>hrs</span>
+                      </div>
+                      <div style={{ fontFamily: T.mono, fontSize: 11, color: T.fg3, marginTop: 4 }}>{money(l.low)} – {money(l.high)}</div>
                     </div>
                   </div>
                 ))}
@@ -2658,22 +2692,6 @@
             </div>
           );
         })}
-
-        {/* Timeline */}
-        <div style={{ marginBottom: 20 }}>
-          <div style={{ ...S.eyebrow, marginBottom: 8 }}>Timeline</div>
-          <div style={{ ...S.card, padding: 14, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {timeline.map((r, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <input value={r.label} onChange={(e) => setTl(i, 'label', e.target.value)} placeholder="Phase" style={{ ...S.input, flex: '1 1 120px', padding: '8px 10px', fontSize: 16 }}/>
-                <input type="number" value={r.weeks} onChange={(e) => setTl(i, 'weeks', e.target.value)} style={{ ...S.input, width: 72, padding: '8px 8px', fontSize: 16, fontFamily: T.mono }}/>
-                <span style={{ fontFamily: T.mono, fontSize: 11, color: T.fg3, width: 42 }}>weeks</span>
-                <button type="button" aria-label="Remove phase" onClick={() => rmTl(i)} style={{ width: 30, height: 30, borderRadius: 6, border: `1px solid ${T.line}`, background: 'transparent', color: '#B3261E', cursor: 'pointer', flexShrink: 0 }}>×</button>
-              </div>
-            ))}
-            <button type="button" style={{ ...S.btnGhost, alignSelf: 'flex-start', marginTop: 4 }} onClick={addTl}>+ Add phase</button>
-          </div>
-        </div>
 
         {/* Note */}
         <div style={{ marginBottom: 24 }}>
