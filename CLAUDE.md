@@ -243,6 +243,11 @@ anything that rewrites already-pushed commits).
 
 - Components are inline-styled React with no Tailwind / CSS modules.
   Match that pattern; don't introduce a CSS-in-JS lib
+- **Inline editing is the standard**: for editable fields, use the `InlineEdit`
+  component in `AdminApp.jsx` (read-as-text, click to edit, auto-save on
+  blur/Enter, Esc cancels) instead of a bare `<input>` + Save button. The
+  company profile is the reference implementation; new editable surfaces should
+  read as a normal page, not a form
 - Mobile/tablet rules are written as `[style*="..."]` attribute
   selectors in the per-page `<style>` block. Ugly but intentional —
   it keeps responsive overrides next to the page they affect

@@ -1195,6 +1195,56 @@
     );
   }
 
+  // Standard inline click-to-edit field (ClickUp/Asana style): the value reads as
+  // plain text; hovering shows it's editable; clicking swaps to an input that
+  // auto-saves on blur or Enter (Esc cancels). `onSave(value)` returns a promise;
+  // resolving false or throwing reverts the field. Use this everywhere inline
+  // editing is needed instead of a bare <input> + Save button.
+  function InlineEdit({ value, onSave, placeholder, multiline, type, display, textStyle, big }) {
+    const [editing, setEditing] = useState(false);
+    const [draft, setDraft] = useState(value == null ? '' : value);
+    const [saving, setSaving] = useState(false);
+    const [hover, setHover] = useState(false);
+    const val = value == null ? '' : value;
+    useEffect(() => { if (!editing) setDraft(val); }, [val, editing]);
+    const commit = async () => {
+      if (saving) return;
+      if ((draft || '') === (val || '')) { setEditing(false); return; }
+      setSaving(true);
+      let ok = true;
+      try { ok = (await onSave(draft)) !== false; } catch (_) { ok = false; }
+      setSaving(false);
+      setEditing(false);
+      if (!ok) setDraft(val);
+    };
+    if (editing) {
+      const common = {
+        value: draft, autoFocus: true, disabled: saving,
+        onChange: (e) => setDraft(e.target.value),
+        onBlur: commit,
+        onKeyDown: (e) => {
+          if (e.key === 'Escape') { e.preventDefault(); setDraft(val); setEditing(false); }
+          else if (e.key === 'Enter' && (!multiline || e.metaKey || e.ctrlKey)) { e.preventDefault(); e.target.blur(); }
+        },
+        style: { ...S.input, ...(multiline ? { resize: 'vertical', lineHeight: 1.5, minHeight: 84 } : null), ...(big ? { fontSize: 18, fontWeight: 700 } : null) },
+      };
+      return multiline ? <textarea rows={3} {...common}/> : <input type={type || 'text'} {...common}/>;
+    }
+    const empty = val === '';
+    return (
+      <div role="button" tabIndex={0}
+        onClick={() => { setDraft(val); setEditing(true); }}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setDraft(val); setEditing(true); } }}
+        onMouseEnter={() => setHover(true)} onMouseLeave={() => setHover(false)}
+        style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'text', borderRadius: 6, padding: '7px 9px', margin: '-7px -9px', background: hover ? T.cream : 'transparent', boxShadow: hover ? `inset 0 0 0 1px ${T.line}` : 'none', transition: 'background 120ms' }}>
+        <span style={{ flex: '1 1 auto', minWidth: 0, color: empty ? T.fg3 : T.fg1, fontFamily: T.sans, fontSize: 14.5, whiteSpace: multiline ? 'pre-wrap' : 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', ...(big ? { fontSize: 19, fontWeight: 750, letterSpacing: '-0.01em' } : null), ...textStyle }}>
+          {saving ? '…' : empty ? (placeholder || 'Add…') : (display ? display(val) : val)}
+        </span>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke={T.fg3} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0, opacity: hover ? 0.85 : 0, transition: 'opacity 120ms' }}><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+      </div>
+    );
+  }
+
   // Search-as-you-type against Attio (kind: 'companies' | 'people'), via
   // the worker's admin-authenticated proxy — the Attio token never
   // reaches the browser. Picking a result hands the raw Attio record back
@@ -2188,11 +2238,9 @@
     const [inviting, setInviting] = useState('');
     const [prime, setPrime] = useState((initial.palette && initial.palette.prime) || '#2F7A47');
     const [accent, setAccent] = useState((initial.palette && initial.palette.accent) || '#B8741F');
-    const [busy, setBusy] = useState(false);
+    const [saving, setSaving] = useState(false);
     const [fileBusy, setFileBusy] = useState('');
     const [error, setError] = useState('');
-
-    const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
     const readFile = (file, cb) => {
       const r = new FileReader();
       r.onload = () => { const b64 = (r.result || '').toString().split(',')[1] || ''; cb(b64, r.result); };
@@ -2204,12 +2252,8 @@
       const type = file.type === 'image/jpg' ? 'image/jpeg' : file.type;
       if (!LOGO_TYPES[type]) { setError('Logo must be an SVG, PNG, or JPG'); return; }
       if (file.size > 1_400_000) { setError('Logo must be under 1.4 MB'); return; }
-      readFile(file, (b64, dataUrl) => { setLogoAction({ type, data: b64, preview: dataUrl }); setError(''); });
+      readFile(file, (b64, dataUrl) => { const la = { type, data: b64, preview: dataUrl }; setLogoAction(la); setError(''); persist({ logoAction: la }); });
     };
-    const setRole = (email, role) => setContacts((list) => list.map((c) =>
-      c.email === email ? { ...c, role } : (role === 'lead' && c.role === 'lead' ? { ...c, role: 'associated' } : c)
-    ));
-
     const uploadFile = (kind) => (e) => {
       const file = e.target.files && e.target.files[0];
       e.target.value = '';
@@ -2234,33 +2278,53 @@
       } catch (err) { setError(err.message); }
     };
 
-    const save = async (e) => {
-      e.preventDefault();
-      const lead = contacts.find((c) => c.role === 'lead') || null;
-      setBusy(true); setError(''); setSaved(false);
+    // Auto-save: every inline edit sends the full company payload (merged with
+    // the change) so no field is blanked — the update endpoint rebuilds the whole
+    // record. `ov` overrides the current state for the field that just changed.
+    const persist = async (ov = {}) => {
+      const f = { ...form, ...(ov.form || {}) };
+      if (!f.name.trim()) { setError('Company name is required'); return false; }
+      const cs = ov.contacts || contacts;
+      const pal = ov.palette || { prime, accent };
+      const la = ('logoAction' in ov) ? ov.logoAction : logoAction;
+      const lead = cs.find((c) => c.role === 'lead') || null;
+      setSaving(true); setError(''); setSaved(false);
       try {
         const d = await api('/api/admin/company/update', {
           method: 'POST',
           body: JSON.stringify({
             id: co.id,
-            name: form.name.trim(), storeUrl: form.storeUrl.trim(), address: form.address.trim(),
-            description: form.description.trim(), platform: form.platform.trim(), erp: form.erp.trim(),
+            name: f.name.trim(), storeUrl: f.storeUrl.trim(), address: f.address.trim(),
+            description: f.description.trim(), platform: f.platform.trim(), erp: f.erp.trim(),
             attioCompanyId: co.attioCompanyId || '',
             leadContact: lead,
-            contacts: contacts.filter((c) => c.role !== 'lead'),
-            palette: { prime, accent },
-            logo: logoAction && logoAction !== 'remove' ? { type: logoAction.type, data: logoAction.data } : null,
-            removeLogo: logoAction === 'remove',
-            discoveryHandle: form.discoveryHandle.trim(), blueprintId: form.blueprintId.trim(),
+            contacts: cs.filter((c) => c.role !== 'lead'),
+            palette: pal,
+            logo: la && la !== 'remove' ? { type: la.type, data: la.data } : null,
+            removeLogo: la === 'remove',
+            discoveryHandle: f.discoveryHandle.trim(), blueprintId: f.blueprintId.trim(),
           }),
         });
         if (d.company) setCo(d.company);
-        setLogoAction(null);
-        setSaved(true);
-        setBusy(false);
-        setTimeout(() => setSaved(false), 2600);
-      } catch (err) { setError(err.message); setBusy(false); }
+        if (la) setLogoAction(null);
+        setSaving(false); setSaved(true); setTimeout(() => setSaved(false), 2200);
+        return true;
+      } catch (err) { setError(err.message); setSaving(false); return false; }
     };
+    // One inline text field committed → update state + save. Returning false
+    // reverts the field (InlineEdit restores the prior value).
+    const commitField = (key) => async (value) => {
+      if (key === 'name' && !value.trim()) { setError('Company name is required'); return false; }
+      setForm((f) => ({ ...f, [key]: value }));
+      return persist({ form: { [key]: value } });
+    };
+    const applyContacts = (next) => { setContacts(next); return persist({ contacts: next }); };
+    const setRole = (email, role) => applyContacts(contacts.map((c) =>
+      c.email === email ? { ...c, role } : (role === 'lead' && c.role === 'lead' ? { ...c, role: 'associated' } : c)
+    ));
+    const removeContact = (email) => applyContacts(contacts.filter((c) => c.email !== email));
+    const addContact = (c) => { if (!contacts.some((x) => x.email === c.email)) applyContacts([...contacts, c]); };
+    const removeLogo = () => { setLogoAction('remove'); persist({ logoAction: 'remove' }); };
 
     const fileRow = (f) => (
       <div key={f.fid} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: T.cream, border: `1px solid ${T.line}`, borderRadius: 8 }}>
@@ -2298,6 +2362,18 @@
       try { await api('/api/admin/company/delete', { method: 'POST', body: JSON.stringify({ id: co.id }) }); navigate('/admin/sales'); }
       catch (err) { setError(err.message); }
     };
+    const savePalette = () => persist({ palette: { prime, accent } });
+    // A page row: mono label on the left, the (inline-editable) value on the
+    // right; stacks on mobile.
+    const Row = ({ label, hint, children, last }) => (
+      <div style={{ display: 'flex', gap: 16, padding: '13px 2px', borderBottom: last ? 'none' : `1px solid ${T.line}`, alignItems: 'flex-start', flexWrap: 'wrap' }}>
+        <div style={{ flex: '0 0 160px', minWidth: 120, paddingTop: 7 }}>
+          <div style={S.label}>{label}</div>
+          {hint ? <div style={{ fontFamily: T.sans, fontSize: 11, color: T.fg3, marginTop: 4, lineHeight: 1.4 }}>{hint}</div> : null}
+        </div>
+        <div style={{ flex: '1 1 300px', minWidth: 0 }}>{children}</div>
+      </div>
+    );
     return (
       <Page>
         <PageHead eyebrow={(co.declined ? 'Portal · company profile · declined' : 'Portal · company profile') + (co.no ? ' · ' + String(co.no).padStart(3, '0') : '')} title={co.name || 'Company'} action={
@@ -2342,29 +2418,28 @@
             </div>
           );
         })()}
-        <div style={{ ...S.card, padding: 4 }}>
-        <form onSubmit={save} style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 16 }}>
-          <div style={{ fontFamily: T.sans, fontSize: 13, color: T.fg3, marginBottom: 2 }}>Everything here feeds the customer portal and new discoveries.</div>
-          <Field label="Company name" value={form.name} onChange={set('name')}/>
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <div style={{ flex: '1 1 200px' }}><Field label="Store URL" value={form.storeUrl} onChange={set('storeUrl')} placeholder="acme.com"/></div>
-            <div style={{ flex: '1 1 200px' }}><Field label="Address" value={form.address} onChange={set('address')} placeholder="100 Main St, Chicago, IL"/></div>
+        <div style={{ ...S.card, padding: '4px 22px 16px' }}>
+          {/* Save status — every field auto-saves on blur/Enter, no button. */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, minHeight: 22, paddingTop: 12 }}>
+            <span style={{ fontFamily: T.sans, fontSize: 12.5, color: T.fg3 }}>Click any field to edit — changes save automatically.</span>
+            <span style={{ fontFamily: T.sans, fontSize: 12.5, fontWeight: 600, color: error ? '#B3261E' : saving ? T.fg3 : saved ? '#2F7A47' : 'transparent' }}>
+              {error ? error : saving ? 'Saving…' : saved ? 'Saved ✓' : '·'}
+            </span>
           </div>
-          <div>
-            <label style={S.label}>Description</label>
-            <textarea value={form.description} onChange={(e) => set('description')(e.target.value)} rows={3}
-              style={{ ...S.input, resize: 'vertical', lineHeight: 1.5 }}/>
-          </div>
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <div style={{ flex: '1 1 200px' }}><Field label="Current platform" value={form.platform} onChange={set('platform')} placeholder="e.g. Magento Open Source"/></div>
-            <div style={{ flex: '1 1 200px' }}><Field label="Current ERP" value={form.erp} onChange={set('erp')} placeholder="e.g. Sage X3"/></div>
-          </div>
-          <ContactsEditor contacts={contacts} state="done" onRole={setRole}
-            onRemove={(email) => setContacts((l) => l.filter((c) => c.email !== email))}
-            onAdd={(c) => setContacts((l) => l.some((x) => x.email === c.email) ? l : [...l, c])}/>
+
+          <Row label="Company name"><InlineEdit big value={form.name} onSave={commitField('name')} placeholder="Company name"/></Row>
+          <Row label="Store URL"><InlineEdit value={form.storeUrl} onSave={commitField('storeUrl')} placeholder="acme.com"/></Row>
+          <Row label="Address"><InlineEdit value={form.address} onSave={commitField('address')} placeholder="100 Main St, Chicago, IL"/></Row>
+          <Row label="Description"><InlineEdit multiline value={form.description} onSave={commitField('description')} placeholder="What this company does"/></Row>
+          <Row label="Current platform"><InlineEdit value={form.platform} onSave={commitField('platform')} placeholder="e.g. Magento Open Source"/></Row>
+          <Row label="Current ERP"><InlineEdit value={form.erp} onSave={commitField('erp')} placeholder="e.g. Sage X3"/></Row>
+
+          <Row label="Contacts">
+            <ContactsEditor contacts={contacts} state="done" onRole={setRole} onRemove={removeContact} onAdd={addContact}/>
+          </Row>
+
           {inviteList.length ? (
-            <div>
-              <label style={S.label}>Invite to Hub · sends the Hub link; the address must be a verified Cloudflare destination</label>
+            <Row label="Invite to Hub" hint="Sends the Hub link; the address must be a verified Cloudflare destination">
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {inviteList.map((c) => {
                   const inv = invites[c.email.toLowerCase()];
@@ -2380,74 +2455,60 @@
                 })}
               </div>
               {inviteMsg ? <div style={{ fontFamily: T.sans, fontSize: 12.5, color: T.fg2, marginTop: 8, whiteSpace: 'pre-wrap' }}>{inviteMsg}</div> : null}
-            </div>
+            </Row>
           ) : null}
-          <div>
-            <label style={S.label}>Company logo</label>
-            {logoAction && logoAction !== 'remove' ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: T.cream, border: `1px solid ${T.line}`, borderRadius: 8 }}>
-                <img src={logoAction.preview} alt="" style={{ height: 34, maxWidth: 140, objectFit: 'contain', display: 'block' }}/>
-                <span style={{ flex: 1, fontFamily: T.mono, fontSize: 11, color: T.fg3 }}>New logo (saved on Save)</span>
-                <button type="button" onClick={() => setLogoAction(null)} style={{ ...S.btnGhost, padding: '6px 10px' }}>Undo</button>
-              </div>
-            ) : co.hasLogo && logoAction !== 'remove' ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: T.cream, border: `1px solid ${T.line}`, borderRadius: 8 }}>
+
+          <Row label="Company logo">
+            {co.hasLogo && logoAction !== 'remove' ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: T.cream, border: `1px solid ${T.line}`, borderRadius: 8, flexWrap: 'wrap' }}>
                 <img src={'/api/company/logo?id=' + encodeURIComponent(co.id) + '&t=' + encodeURIComponent(co.updatedAt || '')} alt="" style={{ height: 34, maxWidth: 140, objectFit: 'contain', display: 'block' }}/>
                 <span style={{ flex: 1 }}></span>
                 <label style={{ ...S.btnGhost, padding: '6px 10px', cursor: 'pointer' }}>Replace<input type="file" accept=".svg,.png,.jpg,.jpeg" style={{ display: 'none' }} onChange={(e) => onLogoFile(e.target.files && e.target.files[0])}/></label>
-                <button type="button" onClick={() => setLogoAction('remove')} style={{ ...S.btnGhost, padding: '6px 10px', color: '#B3261E' }}>Remove</button>
+                <button type="button" onClick={removeLogo} style={{ ...S.btnGhost, padding: '6px 10px', color: '#B3261E' }}>Remove</button>
               </div>
             ) : (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                {logoAction === 'remove' ? <span style={{ fontFamily: T.sans, fontSize: 13, color: T.fg3 }}>Logo will be removed.</span> : null}
-                <input type="file" accept=".svg,.png,.jpg,.jpeg,image/svg+xml,image/png,image/jpeg"
-                  onChange={(e) => onLogoFile(e.target.files && e.target.files[0])}
-                  style={{ ...S.input, padding: '10px 12px', fontSize: 13, cursor: 'pointer' }}/>
-              </div>
+              <label style={{ ...S.input, padding: '10px 12px', fontSize: 13, cursor: 'pointer', color: T.fg3, display: 'block' }}>
+                {saving ? 'Uploading…' : 'Upload a logo (SVG, PNG, or JPG)…'}
+                <input type="file" accept=".svg,.png,.jpg,.jpeg,image/svg+xml,image/png,image/jpeg" style={{ display: 'none' }} onChange={(e) => onLogoFile(e.target.files && e.target.files[0])}/>
+              </label>
             )}
-          </div>
-          <div>
-            <label style={S.label}>Color palette</label>
-            <div style={{ display: 'flex', gap: 16 }}>
+          </Row>
+
+          <Row label="Color palette">
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
               {[['Prime', prime, setPrime], ['Accent', accent, setAccent]].map(([l, v, setC]) => (
-                <label key={l} style={{ flex: 1, display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: T.cream, border: `1px solid ${T.line}`, borderRadius: 8, cursor: 'pointer' }}>
-                  <input type="color" value={v} onChange={(e) => setC(e.target.value)}
+                <label key={l} style={{ flex: '1 1 160px', display: 'flex', alignItems: 'center', gap: 10, padding: '8px 12px', background: T.cream, border: `1px solid ${T.line}`, borderRadius: 8, cursor: 'pointer' }}>
+                  <input type="color" value={v} onChange={(e) => setC(e.target.value)} onBlur={savePalette}
                     style={{ width: 34, height: 34, padding: 0, border: 'none', background: 'transparent', cursor: 'pointer' }}/>
                   <span style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 13, color: T.fg1 }}>{l}</span>
                   <span style={{ marginLeft: 'auto', fontFamily: T.mono, fontSize: 11, color: T.fg3 }}>{v.toUpperCase()}</span>
                 </label>
               ))}
             </div>
-          </div>
+          </Row>
+
           {CO_FILE_KINDS.map(([kind, label]) => {
             const files = (co.files || []).filter((f) => f.kind === kind);
             const single = kind !== 'doc';
             return (
-              <div key={kind}>
-                <label style={S.label}>{label}{single ? ' · one file, a new upload replaces it' : ''}</label>
+              <Row key={kind} label={label} hint={single ? 'One file — a new upload replaces it' : null}>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {files.map(fileRow)}
-                  {(!single || files.length === 0 || true) && (
-                    <label style={{ ...S.input, padding: '10px 12px', fontSize: 13, cursor: 'pointer', color: T.fg3 }}>
-                      {fileBusy === kind ? 'Uploading…' : (single && files.length ? 'Replace ' + label.toLowerCase() + '…' : 'Upload ' + (single ? label.toLowerCase() : 'a document') + '…')}
-                      <input type="file" style={{ display: 'none' }} disabled={!!fileBusy} onChange={uploadFile(kind)}/>
-                    </label>
-                  )}
+                  <label style={{ ...S.input, padding: '10px 12px', fontSize: 13, cursor: 'pointer', color: T.fg3, display: 'block' }}>
+                    {fileBusy === kind ? 'Uploading…' : (single && files.length ? 'Replace ' + label.toLowerCase() + '…' : 'Upload ' + (single ? label.toLowerCase() : 'a document') + '…')}
+                    <input type="file" style={{ display: 'none' }} disabled={!!fileBusy} onChange={uploadFile(kind)}/>
+                  </label>
                 </div>
-              </div>
+              </Row>
             );
           })}
-          <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-            <div style={{ flex: '1 1 200px' }}><Field label="Discovery handle · powers the portal Discovery tab" value={form.discoveryHandle} onChange={set('discoveryHandle')} placeholder="e.g. cartoncraft"/></div>
-            <div style={{ flex: '1 1 200px' }}><Field label="Blueprint ID · powers the portal Blueprint tab" value={form.blueprintId} onChange={set('blueprintId')} placeholder="e.g. cartoncraftsupply"/></div>
+
+          <Row label="Discovery handle" hint="Powers the portal Discovery tab"><InlineEdit value={form.discoveryHandle} onSave={commitField('discoveryHandle')} placeholder="e.g. cartoncraft"/></Row>
+          <Row label="Blueprint ID" hint="Powers the portal Blueprint tab" last><InlineEdit value={form.blueprintId} onSave={commitField('blueprintId')} placeholder="e.g. cartoncraftsupply"/></Row>
+
+          <div style={{ paddingTop: 14 }}>
+            <a href="/admin/companies" onClick={navClick('/admin/companies')} style={{ ...S.btnGhost, textDecoration: 'none' }}>← Back to companies</a>
           </div>
-          {error && <div style={{ color: '#B3261E', fontFamily: T.sans, fontSize: 13 }}>{error}</div>}
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center', justifyContent: 'flex-end', paddingTop: 4 }}>
-            {saved && <span style={{ marginRight: 'auto', fontFamily: T.sans, fontSize: 13, fontWeight: 600, color: '#2F7A47' }}>Saved ✓</span>}
-            <a href="/admin/companies" onClick={navClick('/admin/companies')} style={{ ...S.btnGhost, textDecoration: 'none' }}>Back</a>
-            <button type="submit" style={{ ...S.btn, opacity: busy ? 0.7 : 1 }} disabled={busy}>{busy ? 'Saving…' : 'Save company'}</button>
-          </div>
-        </form>
         </div>
       </Page>
     );
