@@ -125,7 +125,31 @@ function EstimateTemplate() {
     return <div style={{ maxWidth: 520, margin: '80px auto', textAlign: 'center', fontFamily: 'var(--font-serif)', fontSize: 16, color: 'var(--fg-2)', padding: 24 }}>{err}</div>;
   }
   if (!data) {
-    return <div style={{ maxWidth: 520, margin: '80px auto', textAlign: 'center', fontFamily: 'var(--font-mono)', fontSize: 12, letterSpacing: '0.1em', color: 'var(--fg-3)' }}>LOADING…</div>;
+    // On-brand skeleton (dark header + range card + scope rows) so the page has
+    // shape immediately instead of a bare "LOADING…" flash.
+    const blk = (w, h, r, bg) => ({ width: w, height: h, borderRadius: r || 8, background: bg || 'rgba(0,0,0,0.06)' });
+    return (
+      <div style={{ background: 'var(--uc-cream)', minHeight: '100vh' }}>
+        <style>{'@keyframes uSkPulse{0%,100%{opacity:.5}50%{opacity:.9}} .uSk>*{animation:uSkPulse 1.3s ease-in-out infinite}'}</style>
+        <div style={{ background: 'var(--uc-black)', padding: 'clamp(28px,3vw,44px) clamp(24px,5vw,72px)' }}>
+          <div className="uSk" style={{ maxWidth: 1200, margin: '0 auto', display: 'grid', gridTemplateColumns: 'minmax(0,1.25fr) minmax(0,1fr)', gap: 'clamp(32px,5vw,72px)' }}>
+            <div>
+              <div style={blk('180px', '11px', 999, '#1F1F1F')}/>
+              <div style={{ ...blk('62%', '46px', 10, '#1F1F1F'), marginTop: 18 }}/>
+              <div style={{ ...blk('82%', '15px', 6, '#1F1F1F'), marginTop: 16 }}/>
+            </div>
+            <div style={{ border: '1px solid #1F1F1F', borderRadius: 10, padding: 22 }}>
+              <div style={blk('120px', '11px', 999, '#1F1F1F')}/>
+              <div style={{ ...blk('70%', '40px', 8, '#1F1F1F'), marginTop: 16 }}/>
+              <div style={{ ...blk('50%', '12px', 6, '#1F1F1F'), marginTop: 16 }}/>
+            </div>
+          </div>
+        </div>
+        <div className="uSk" style={{ maxWidth: 1200, margin: '40px auto', padding: '0 clamp(24px,5vw,72px)', display: 'flex', flexDirection: 'column', gap: 14 }}>
+          {[0, 1, 2, 3].map((i) => <div key={i} style={{ ...blk('100%', '70px', 10), border: '1px solid var(--line-1)' }}/>)}
+        </div>
+      </div>
+    );
   }
 
   const client = data.clientName || 'Your team';

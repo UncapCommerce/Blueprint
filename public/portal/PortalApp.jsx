@@ -163,8 +163,24 @@ function Portal({ me, onSignOut }) {
       {me.preview ? <span style={{ marginLeft: 4, fontFamily: MONO, fontSize: 8, fontWeight: 700, letterSpacing: '0.1em', color: '#0A0A0A', background: 'var(--uc-signal, #E8FF52)', borderRadius: 3, padding: '2px 6px' }}>PREVIEW</span> : null}
     </div>
   );
+  // Warm the framed experiences (discovery/blueprint/estimate) on hover so the
+  // iframe is already fetched by the time the customer clicks — instant switch.
+  const framedAvail = { Discovery: !!me.discovery, Blueprint: !!me.blueprint, Estimate: !!me.estimate };
+  const prefetchedRef = React.useRef({});
+  const prefetchTab = (key) => {
+    if (!framedAvail[key]) return;
+    const slug = slugForTab(key);
+    if (prefetchedRef.current[slug]) return;
+    prefetchedRef.current[slug] = true;
+    try {
+      const l = document.createElement('link');
+      l.rel = 'prefetch';
+      l.href = '/' + co.id + '/' + slug + '/app';
+      document.head.appendChild(l);
+    } catch (_) { /* prefetch is best-effort */ }
+  };
   const tabBtn = (t) => (
-    <button key={t.key} onClick={() => setTab(t.key)}
+    <button key={t.key} onClick={() => setTab(t.key)} onMouseEnter={() => prefetchTab(t.key)} onFocus={() => prefetchTab(t.key)}
       style={{ border: 'none', background: tab === t.key ? '#FFFFFF' : 'transparent', color: tab === t.key ? '#0A0A0A' : '#D4D2CC', borderRadius: 4, padding: '4px 11px', fontSize: 12, fontWeight: tab === t.key ? 700 : 500, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0, transition: 'background 180ms, color 180ms' }}>{t.key}</button>
   );
   const signOutBtn = (
