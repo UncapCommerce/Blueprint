@@ -84,8 +84,12 @@ JSX with a `babel.transform` (that's exactly what the deploy runs).
   `collectRevenueItems` fan-out over Shopify/Stripe/QuickBooks/Partner), minus
   manual expense lines. Expenses are KV records (`pnlexp:<id>`, editable via
   `POST /api/admin/pnl/expense{,/delete}`) with a `recurring` monthly flag or a
-  one-off `month`. Payroll will fill its line once Gusto is connected. The `/pnl`
-  routes are gated on `isSuperAdmin` in the worker; the P&L endpoint uses the
+  one-off `month`. Payroll will fill its line once Gusto is connected. A third
+  **5-year plan** view (toggle beside Year/Month) is a growth-% projection: one
+  KV record (`pnlplan:v1`) of revenue + expense lines, each with a Year-1 base
+  and annual growth, projected as base * (1 + growth/100)^(N-1) across five
+  years (`GET/POST /api/admin/pnl/plan`, edited inline). The `/pnl` routes are
+  gated on `isSuperAdmin` in the worker; the month/year P&L endpoint uses the
   same `revenueCached` SWR wrapper as the revenue endpoints
 - **Admin hierarchy (4 roles)**: any `@uncap.com` Google account can sign
   in but is **Pending** (no access) until the Admin approves them into a

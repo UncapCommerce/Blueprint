@@ -322,6 +322,12 @@ export default {
     if (url.pathname === '/api/admin/pnl/expense/delete' && request.method === 'POST') {
       return handleAdminPnlExpenseDelete(request, env);
     }
+    if (url.pathname === '/api/admin/pnl/plan' && request.method === 'GET') {
+      return handleAdminPnlPlanGet(request, env);
+    }
+    if (url.pathname === '/api/admin/pnl/plan' && request.method === 'POST') {
+      return handleAdminPnlPlanSave(request, env);
+    }
     if (url.pathname === '/api/admin/items' && request.method === 'GET') {
       return handleAdminListItems(request, env);
     }
@@ -2204,6 +2210,54 @@ async function handleAdminPnlExpenseDelete(request, env) {
   if (!/^[a-z0-9]{6,}$/.test(id)) return json(400, { ok: false, error: 'Bad id' });
   await env.BLUEPRINT_AUTH.delete(`pnlexp:${id}`).catch(() => {});
   return json(200, { ok: true });
+}
+
+// ── 5-year plan (projection) ─────────────────────────────────────────────
+// One KV record. Each line carries a Year-1 base and an annual growth %; the
+// client projects year N = base * (1 + growth/100)^(N-1). Owner-only (same
+// /api/admin/pnl gate).
+const PNL_PLAN_KEY = 'pnlplan:v1';
+function defaultPnlPlan(startYear) {
+  return {
+    startYear,
+    revenue: [
+      { id: 'r_retainers', label: 'Retainers', base: 0, growth: 0 },
+      { id: 'r_projects', label: 'Projects', base: 0, growth: 0 },
+      { id: 'r_apps', label: 'Apps', base: 0, growth: 0 },
+      { id: 'r_referrals', label: 'Referrals', base: 0, growth: 0 },
+    ],
+    expenses: [
+      { id: 'e_payroll', label: 'Payroll', base: 0, growth: 0 },
+    ],
+  };
+}
+function sanitizePlanLine(l) {
+  return {
+    id: /^[a-z0-9_]{2,40}$/.test(l && l.id || '') ? l.id : ('l_' + genRandSlug()),
+    label: ((l && l.label) || '').toString().trim().slice(0, 80) || 'Line',
+    base: Math.round((Number(l && l.base) || 0) * 100) / 100,
+    growth: Math.max(-100, Math.min(1000, Number(l && l.growth) || 0)),
+  };
+}
+async function handleAdminPnlPlanGet(request, env) {
+  const raw = await env.BLUEPRINT_AUTH.get(PNL_PLAN_KEY);
+  let plan = null;
+  if (raw) { try { plan = JSON.parse(raw); } catch { plan = null; } }
+  if (!plan) plan = defaultPnlPlan(new Date().getUTCFullYear());
+  return json(200, { ok: true, plan });
+}
+async function handleAdminPnlPlanSave(request, env) {
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+  let body;
+  try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  const sy = parseInt(body.startYear, 10);
+  const plan = {
+    startYear: (sy >= 2000 && sy <= 2100) ? sy : new Date().getUTCFullYear(),
+    revenue: Array.isArray(body.revenue) ? body.revenue.slice(0, 40).map(sanitizePlanLine) : [],
+    expenses: Array.isArray(body.expenses) ? body.expenses.slice(0, 40).map(sanitizePlanLine) : [],
+  };
+  await env.BLUEPRINT_AUTH.put(PNL_PLAN_KEY, JSON.stringify(plan));
+  return json(200, { ok: true, plan });
 }
 
 // ── Stripe integration (Services > Retainers) ────────────────────────────

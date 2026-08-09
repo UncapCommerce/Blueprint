@@ -1230,6 +1230,123 @@
     );
   }
 
+  // 5-year projection. Each line has a Year-1 base + annual growth %; year N =
+  // base * (1 + growth/100)^(N-1). Base and growth are edited inline and saved
+  // on blur; adds/removes/start-year save immediately.
+  function PnLPlan() {
+    const isMobile = useIsMobile();
+    const [plan, setPlan] = useState(null);
+    const [error, setError] = useState('');
+    const [saving, setSaving] = useState(false);
+    const [saved, setSaved] = useState(false);
+    useEffect(() => {
+      let dead = false;
+      api('/api/admin/pnl/plan').then((d) => { if (!dead) setPlan(d.plan); }).catch((e) => { if (!dead) setError(e.message); });
+      return () => { dead = true; };
+    }, []);
+
+    const money = (n) => { const v = Math.round(n || 0); const neg = v < 0; try { return (neg ? '-' : '') + new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(Math.abs(v)); } catch (_) { return (neg ? '-' : '') + '$' + Math.abs(v); } };
+    const rand = () => 'l_' + Math.random().toString(36).slice(2, 8);
+    const savePlan = async (next) => {
+      setPlan(next); setSaving(true); setSaved(false); setError('');
+      try { const d = await api('/api/admin/pnl/plan', { method: 'POST', body: JSON.stringify(next) }); setPlan(d.plan); setSaved(true); setTimeout(() => setSaved(false), 1200); }
+      catch (e) { setError(e.message); }
+      finally { setSaving(false); }
+    };
+    const patchLine = (kind, id, patch) => setPlan((p) => ({ ...p, [kind]: p[kind].map((l) => (l.id === id ? { ...l, ...patch } : l)) }));
+    const addLine = (kind) => savePlan({ ...plan, [kind]: [...plan[kind], { id: rand(), label: kind === 'revenue' ? 'New revenue' : 'New expense', base: 0, growth: 0 }] });
+    const removeLine = (kind, id) => savePlan({ ...plan, [kind]: plan[kind].filter((l) => l.id !== id) });
+
+    if (error && !plan) return <div style={{ ...S.card, padding: 28, fontFamily: T.mono, fontSize: 12, color: '#B3261E' }}>{error}</div>;
+    if (!plan) return <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>Loading…</div>;
+
+    const years = Array.from({ length: 5 }, (_, i) => plan.startYear + i);
+    const proj = (l, i) => (Number(l.base) || 0) * Math.pow(1 + (Number(l.growth) || 0) / 100, i);
+    const totalAt = (kind, i) => plan[kind].reduce((s, l) => s + proj(l, i), 0);
+
+    const cellR = { padding: isMobile ? '8px 10px' : '9px 14px', textAlign: 'right', fontFamily: T.mono, fontSize: 12.5, whiteSpace: 'nowrap' };
+    const cellL = { padding: isMobile ? '8px 10px' : '9px 14px', textAlign: 'left', fontFamily: T.sans, fontSize: 13 };
+    const numInput = { width: 92, textAlign: 'right', padding: '5px 7px', border: `1px solid ${T.line}`, borderRadius: 6, fontFamily: T.mono, fontSize: 12.5, background: T.paper, color: T.fg1 };
+    const growthInput = { ...numInput, width: 56 };
+    const nCols = 3 + years.length; // label, growth, base(Y1) + Y2..Y5 computed → base is Y1 col
+    const sectionRow = (label, extra) => (
+      <tr><td colSpan={nCols} style={{ padding: isMobile ? '10px 10px 4px' : '13px 14px 6px', borderTop: `1px solid ${T.line}` }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+          <span style={{ ...S.eyebrow }}>{label}</span>{extra}
+        </div>
+      </td></tr>
+    );
+    const lineRows = (kind) => plan[kind].map((l) => (
+      <tr key={l.id}>
+        <td style={cellL}>
+          <input value={l.label} onChange={(e) => patchLine(kind, l.id, { label: e.target.value })} onBlur={() => savePlan(plan)}
+            style={{ width: isMobile ? 110 : 150, padding: '5px 7px', border: `1px solid ${T.line}`, borderRadius: 6, fontFamily: T.sans, fontSize: 13, background: T.paper, color: T.fg1 }}/>
+          <button type="button" onClick={() => removeLine(kind, l.id)} title="Remove line"
+            style={{ marginLeft: 8, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: T.mono, fontSize: 13, color: '#B3261E' }}>✕</button>
+        </td>
+        <td style={{ ...cellR }}>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: 3 }}>
+            <input type="number" value={l.growth} onChange={(e) => patchLine(kind, l.id, { growth: e.target.value })} onBlur={() => savePlan(plan)} style={growthInput}/>
+            <span style={{ fontFamily: T.mono, fontSize: 11, color: T.fg3 }}>%</span>
+          </span>
+        </td>
+        <td style={cellR}>
+          <input type="number" value={l.base} onChange={(e) => patchLine(kind, l.id, { base: e.target.value })} onBlur={() => savePlan(plan)} style={numInput}/>
+        </td>
+        {years.slice(1).map((y, i) => <td key={y} style={{ ...cellR, color: T.fg2 }}>{money(proj(l, i + 1))}</td>)}
+      </tr>
+    ));
+
+    return (
+      <>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14, flexWrap: 'wrap' }}>
+          <span style={{ ...S.eyebrow }}>Plan start</span>
+          <button type="button" style={{ ...S.btnGhost, padding: '5px 10px' }} onClick={() => savePlan({ ...plan, startYear: plan.startYear - 1 })}>←</button>
+          <span style={{ fontFamily: T.hero, fontWeight: 800, fontSize: 16, color: T.fg1 }}>{plan.startYear}–{plan.startYear + 4}</span>
+          <button type="button" style={{ ...S.btnGhost, padding: '5px 10px' }} onClick={() => savePlan({ ...plan, startYear: plan.startYear + 1 })}>→</button>
+          <span style={{ fontFamily: T.sans, fontSize: 12.5, fontWeight: 600, color: error ? '#B3261E' : saving ? T.fg3 : saved ? '#2F7A47' : 'transparent', marginLeft: 6 }}>{error ? error : saving ? 'Saving…' : saved ? 'Saved ✓' : '·'}</span>
+        </div>
+        <div style={{ ...S.card, overflow: 'hidden' }}>
+          <div style={{ overflowX: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 560 }}>
+              <thead><tr>
+                <th style={{ ...S.th, textAlign: 'left' }}>Line</th>
+                <th style={{ ...S.th, textAlign: 'right' }}>Growth</th>
+                {years.map((y, i) => <th key={y} style={{ ...S.th, textAlign: 'right' }}>{y}{i === 0 ? ' (base)' : ''}</th>)}
+              </tr></thead>
+              <tbody>
+                {sectionRow('Revenue', <button type="button" style={{ ...S.btnGhost, padding: '4px 10px', fontSize: 12 }} onClick={() => addLine('revenue')}>+ Add line</button>)}
+                {lineRows('revenue')}
+                <tr>
+                  <td style={{ ...cellL, fontWeight: 700 }}>Total revenue</td>
+                  <td style={cellR}/>
+                  {years.map((y, i) => <td key={y} style={{ ...cellR, fontWeight: 700 }}>{money(totalAt('revenue', i))}</td>)}
+                </tr>
+
+                {sectionRow('Expenses', <button type="button" style={{ ...S.btnGhost, padding: '4px 10px', fontSize: 12 }} onClick={() => addLine('expenses')}>+ Add line</button>)}
+                {lineRows('expenses')}
+                <tr>
+                  <td style={{ ...cellL, fontWeight: 700 }}>Total expenses</td>
+                  <td style={cellR}/>
+                  {years.map((y, i) => <td key={y} style={{ ...cellR, fontWeight: 700, color: '#B3261E' }}>-{money(totalAt('expenses', i))}</td>)}
+                </tr>
+
+                <tr>
+                  <td style={{ ...cellL, fontWeight: 800, fontSize: 14, borderTop: `2px solid ${T.fg1}` }}>Net profit</td>
+                  <td style={{ ...cellR, borderTop: `2px solid ${T.fg1}` }}/>
+                  {years.map((y, i) => { const n = totalAt('revenue', i) - totalAt('expenses', i); return <td key={y} style={{ ...cellR, fontWeight: 800, fontSize: 13.5, borderTop: `2px solid ${T.fg1}`, color: n >= 0 ? '#0A7A3B' : '#B3261E' }}>{money(n)}</td>; })}
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div style={{ marginTop: 12, fontFamily: T.sans, fontSize: 12.5, color: T.fg3 }}>
+          Enter each line&rsquo;s Year-1 base and an annual growth rate; later years compound automatically. Edit a base or growth and it saves when you click away.
+        </div>
+      </>
+    );
+  }
+
   function PnL() {
     const isMobile = useIsMobile();
     const now = new Date();
@@ -1253,7 +1370,7 @@
         .catch((e) => { setError(e.message); setData((p) => p || {}); })
         .finally(() => { if (force) setRefreshing(false); });
     };
-    useEffect(() => { setPartialTries(0); load(false); /* eslint-disable-next-line */ }, [view, year, month]);
+    useEffect(() => { if (view === 'plan') return; setPartialTries(0); load(false); /* eslint-disable-next-line */ }, [view, year, month]);
     useEffect(() => {
       if (data && data.stale) { const t = setTimeout(() => load(false, true), 6000); return () => clearTimeout(t); }
       // eslint-disable-next-line
@@ -1304,7 +1421,7 @@
     return (
       <Page>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 4, marginBottom: 16, flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', gap: 6 }}>{toggleBtn('year', 'Year')}{toggleBtn('month', 'Month')}</div>
+          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{toggleBtn('year', 'Year')}{toggleBtn('month', 'Month')}{toggleBtn('plan', '5-year plan')}</div>
           <span style={{ flex: '1 1 auto' }}/>
           {view === 'year' ? (
             <>
@@ -1312,17 +1429,17 @@
               <span style={{ fontFamily: T.hero, fontWeight: 800, fontSize: 18, color: T.fg1, minWidth: 56, textAlign: 'center' }}>{year}</span>
               <button type="button" style={{ ...S.btnGhost, padding: '7px 12px', opacity: atCurrentYear ? 0.5 : 1 }} disabled={atCurrentYear} onClick={() => setYear(String(parseInt(year, 10) + 1))}>{parseInt(year, 10) + 1} →</button>
             </>
-          ) : (
+          ) : view === 'month' ? (
             <>
               <button type="button" style={{ ...S.btnGhost, padding: '7px 12px' }} onClick={() => shiftMonth(-1)}>← Prev</button>
               <input type="month" value={month} max={curMonth()} onChange={(e) => e.target.value && setMonth(e.target.value)}
                 style={{ ...S.input, width: 'auto', padding: '7px 10px', fontFamily: T.mono, fontSize: 13 }}/>
               <button type="button" style={{ ...S.btnGhost, padding: '7px 12px', opacity: atCurrentMonth ? 0.5 : 1 }} disabled={atCurrentMonth} onClick={() => shiftMonth(1)}>Next →</button>
             </>
-          )}
+          ) : null}
         </div>
 
-        {data === null ? (
+        {view === 'plan' ? <PnLPlan/> : data === null ? (
           <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>Loading…</div>
         ) : (error || data.ok === false) ? (
           <div style={{ ...S.card, padding: 28 }}>
