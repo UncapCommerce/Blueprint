@@ -326,8 +326,8 @@
       { id: 'sales', l: 'Sales', path: '/admin/sales', match: ['sales', 'sales-process', 'sales-items', 'companies', 'discoveries', 'blueprints', 'company-profile', 'estimate-editor', 'blueprint-editor'] },
       { id: 'services', l: 'Services', path: '/admin/projects', match: ['projects', 'retainers'] },
       ...(me.canDelete ? [{ id: 'revenues', l: 'Revenues', path: '/admin/revenues', match: ['revenues', 'rev-fixed', 'rev-recurring', 'rev-apps', 'rev-referrals'] }] : []),
-      { id: 'dashboard', l: 'Dashboard', path: '/admin/dashboard', match: ['dashboard'] },
       ...(me.isSuper ? [{ id: 'pnl', l: 'P&L', path: '/admin/pnl', match: ['pnl'] }] : []),
+      { id: 'dashboard', l: 'Dashboard', path: '/admin/dashboard', match: ['dashboard'] },
       ...(me.isSuper ? [{ id: 'users', l: 'Users', path: '/admin/users', match: ['users'] }] : []),
     ];
     const activeSection = SECTIONS.find((s) => s.match.includes(route)) || SECTIONS[0];
