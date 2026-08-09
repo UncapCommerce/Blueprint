@@ -2078,71 +2078,93 @@ async function listPnlExpenses(env) {
   return rows.filter(Boolean);
 }
 
-// GET /api/admin/pnl?month=YYYY-MM — a P&L statement for the selected month plus
-// year-to-date (Jan 1 through the end of that month, never past today).
+// GET /api/admin/pnl — a P&L statement. Two modes:
+//   ?year=YYYY   → the whole year (one "year" column). This is the default view.
+//   ?month=YYYY-MM → that month plus year-to-date (two columns: month, ytd).
+// Values are keyed by column so the client renders either shape generically.
+// The window never runs past today.
 async function handleAdminPnl(request, env) {
   const url = new URL(request.url);
-  const month = (url.searchParams.get('month') || '').slice(0, 7);
-  if (!/^\d{4}-\d{2}$/.test(month)) return json(400, { ok: false, error: 'month must be YYYY-MM' });
-  const year = month.slice(0, 4);
-  const mNum = parseInt(month.slice(5, 7), 10);
-  if (mNum < 1 || mNum > 12) return json(400, { ok: false, error: 'invalid month' });
+  const monthParam = (url.searchParams.get('month') || '').slice(0, 7);
+  const yearParam = (url.searchParams.get('year') || '').slice(0, 4);
   const pad = (n) => String(n).padStart(2, '0');
-  const yearFrom = `${year}-01-01`;
-  const monthFrom = `${month}-01`;
-  const lastDay = new Date(Date.UTC(parseInt(year, 10), mNum, 0)).getUTCDate();
-  const monthEnd = `${month}-${pad(lastDay)}`;
   const todayISO = new Date().toISOString().slice(0, 10);
-  // Never fetch the future: cap the window at today.
-  const to = monthEnd < todayISO ? monthEnd : todayISO;
 
-  const revenue = { month: {}, ytd: {}, monthTotal: 0, ytdTotal: 0 };
+  const monthMode = /^\d{4}-\d{2}$/.test(monthParam);
+  if (!monthMode && !/^\d{4}$/.test(yearParam)) return json(400, { ok: false, error: 'month=YYYY-MM or year=YYYY required' });
+  const year = monthMode ? monthParam.slice(0, 4) : yearParam;
+  const mNum = monthMode ? parseInt(monthParam.slice(5, 7), 10) : 12;
+  if (monthMode && (mNum < 1 || mNum > 12)) return json(400, { ok: false, error: 'invalid month' });
+
+  const yearFrom = `${year}-01-01`;
+  const yearEnd = `${year}-12-31`;
+  const monthFrom = monthMode ? `${monthParam}-01` : null;
+  const rawEnd = monthMode ? `${monthParam}-${pad(new Date(Date.UTC(parseInt(year, 10), mNum, 0)).getUTCDate())}` : yearEnd;
+  const to = rawEnd < todayISO ? rawEnd : todayISO; // never fetch the future
+
+  // Months of the year elapsed through `to` — how many times a recurring
+  // expense has been incurred year-to-date.
+  const monthsElapsed = to < yearFrom ? 0 : (to >= yearEnd ? 12 : parseInt(to.slice(5, 7), 10));
+
+  const CH = ['recurring', 'fixed', 'apps', 'referrals'];
+  const revYear = {}; const revMonth = {};
+  CH.forEach((c) => { revYear[c] = 0; revMonth[c] = 0; });
   let currency = 'USD';
   let sources = {};
-  // A month entirely in the future has nothing to fetch.
   if (to >= yearFrom) {
     const r = await collectRevenueItems(env, `${yearFrom}T00:00:00Z`, `${to}T23:59:59Z`);
     sources = r.sources;
     if (r.currency) currency = r.currency;
-    const monthLo = monthFrom <= to ? monthFrom : to;
-    const sum = (from, toD, src) => r.items.reduce((s, it) => (it.date && it.date >= from && it.date <= toD && it.src === src) ? s + it.amount : s, 0);
-    for (const c of ['recurring', 'fixed', 'apps', 'referrals']) {
-      revenue.month[c] = monthFrom <= to ? sum(monthLo, to, c) : 0;
-      revenue.ytd[c] = sum(yearFrom, to, c);
+    for (const it of r.items) {
+      if (!it.date || it.date < yearFrom || it.date > to || !(it.src in revYear)) continue;
+      revYear[it.src] += it.amount;
+      if (monthMode && monthFrom <= to && it.date >= monthFrom) revMonth[it.src] += it.amount;
     }
-    revenue.monthTotal = Object.values(revenue.month).reduce((s, n) => s + n, 0);
-    revenue.ytdTotal = Object.values(revenue.ytd).reduce((s, n) => s + n, 0);
-  } else {
-    for (const c of ['recurring', 'fixed', 'apps', 'referrals']) { revenue.month[c] = 0; revenue.ytd[c] = 0; }
   }
 
-  // Expenses. Recurring lines apply to the selected month and to each of the
-  // mNum months year-to-date; one-off lines apply to their own month only.
   const all = await listPnlExpenses(env);
-  const lines = all
-    .filter((e) => e.recurring || e.month === month)
-    .sort((a, b) => (b.amount || 0) - (a.amount || 0));
-  let expMonthTotal = 0;
-  let expYtdTotal = 0;
-  for (const e of all) {
-    const amt = Number(e.amount) || 0;
-    if (e.recurring) { expMonthTotal += amt; expYtdTotal += amt * mNum; }
-    else if (e.month === month) { expMonthTotal += amt; expYtdTotal += amt; }
-    else if (e.month && e.month.slice(0, 4) === year && parseInt(e.month.slice(5, 7), 10) < mNum) { expYtdTotal += amt; }
+  const partial = Object.keys(sources).some((k) => sources[k] && sources[k].connected && sources[k].ok === false);
+  const base = { ok: true, partial, year, currency, sources, payroll: { connected: false, provider: 'Gusto' } };
+
+  if (!monthMode) {
+    // Year view — recurring lines counted once per elapsed month; one-offs in
+    // this year counted once.
+    const amt = (e) => Number(e.amount) || 0;
+    const lines = all
+      .filter((e) => e.recurring || (e.month && e.month.slice(0, 4) === year))
+      .map((e) => ({ id: e.id, label: e.label, category: e.category, recurring: !!e.recurring, year: e.recurring ? amt(e) * monthsElapsed : amt(e) }))
+      .sort((a, b) => b.year - a.year);
+    const expYear = lines.reduce((s, e) => s + e.year, 0);
+    const revTotal = CH.reduce((s, c) => s + revYear[c], 0);
+    return json(200, {
+      ...base, mode: 'year',
+      revenue: { channels: Object.fromEntries(CH.map((c) => [c, { year: revYear[c] }])), total: { year: revTotal } },
+      expenses: { lines, total: { year: expYear } },
+      net: { year: revTotal - expYear },
+      windows: { yearFrom, to },
+    });
   }
 
-  const partial = Object.keys(sources).some((k) => sources[k] && sources[k].connected && sources[k].ok === false);
+  // Month view — this month + year-to-date columns.
+  const lines = all
+    .filter((e) => e.recurring || e.month === monthParam)
+    .map((e) => { const a = Number(e.amount) || 0; return { id: e.id, label: e.label, category: e.category, recurring: !!e.recurring, month: a, ytd: e.recurring ? a * mNum : a }; })
+    .sort((a, b) => b.month - a.month);
+  let em = 0; let ey = 0;
+  for (const e of all) {
+    const a = Number(e.amount) || 0;
+    if (e.recurring) { em += a; ey += a * mNum; }
+    else if (e.month === monthParam) { em += a; ey += a; }
+    else if (e.month && e.month.slice(0, 4) === year && parseInt(e.month.slice(5, 7), 10) < mNum) { ey += a; }
+  }
+  const revMonthTotal = CH.reduce((s, c) => s + revMonth[c], 0);
+  const revYtdTotal = CH.reduce((s, c) => s + revYear[c], 0);
   return json(200, {
-    ok: true,
-    partial,
-    month,
-    currency,
-    revenue,
-    expenses: { lines, monthTotal: expMonthTotal, ytdTotal: expYtdTotal },
-    net: { month: revenue.monthTotal - expMonthTotal, ytd: revenue.ytdTotal - expYtdTotal },
-    sources,
-    payroll: { connected: false, provider: 'Gusto' },
-    windows: { monthFrom, monthEnd: to, yearFrom },
+    ...base, mode: 'month', month: monthParam,
+    revenue: { channels: Object.fromEntries(CH.map((c) => [c, { month: revMonth[c], ytd: revYear[c] }])), total: { month: revMonthTotal, ytd: revYtdTotal } },
+    expenses: { lines, total: { month: em, ytd: ey } },
+    net: { month: revMonthTotal - em, ytd: revYtdTotal - ey },
+    windows: { monthFrom, to, yearFrom },
   });
 }
 

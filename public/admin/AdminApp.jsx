@@ -1172,31 +1172,34 @@
   // year-to-date, net profit at the bottom.
   const PNL_CATEGORIES = ['Payroll', 'Software & tools', 'Contractors', 'Marketing', 'Office & admin', 'Taxes & fees', 'Other'];
 
-  function PnLExpenseModal({ initial, month, onClose, onSaved }) {
+  const monthLabelOf = (m) => { const [y, mm] = (m || '').split('-').map(Number); return (y && mm) ? new Date(Date.UTC(y, mm - 1, 1)).toLocaleDateString(undefined, { month: 'long', year: 'numeric' }) : (m || ''); };
+
+  function PnLExpenseModal({ initial, defaultMonth, onClose, onSaved }) {
     const [f, setF] = useState(() => ({
       id: (initial && initial.id) || '',
       label: (initial && initial.label) || '',
       category: (initial && initial.category) || 'Payroll',
       amount: initial ? String(initial.amount) : '',
       recurring: initial ? !!initial.recurring : true,
+      month: (initial && initial.month) || defaultMonth,
     }));
     const [busy, setBusy] = useState(false);
     const [err, setErr] = useState('');
     const set = (k) => (v) => setF((s) => ({ ...s, [k]: v }));
-    const monthLabel = (() => { const [y, m] = month.split('-').map(Number); return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString(undefined, { month: 'long', year: 'numeric' }); })();
     const save = async () => {
       if (!f.label.trim()) { setErr('Add a label'); return; }
+      if (!f.recurring && !/^\d{4}-\d{2}$/.test(f.month)) { setErr('Pick a month for this one-off'); return; }
       setBusy(true); setErr('');
       try {
         const d = await api('/api/admin/pnl/expense', { method: 'POST', body: JSON.stringify({
           id: f.id || undefined, label: f.label.trim(), category: f.category,
-          amount: parseFloat(f.amount) || 0, recurring: f.recurring, month: f.recurring ? '' : month,
+          amount: parseFloat(f.amount) || 0, recurring: f.recurring, month: f.recurring ? '' : f.month,
         }) });
         onSaved(d.expense);
       } catch (e) { setErr(e.message); setBusy(false); }
     };
     return (
-      <Modal title={initial ? 'Edit expense' : 'Add expense'} sub={f.recurring ? 'Applies every month' : monthLabel} onClose={onClose} width={460}>
+      <Modal title={initial ? 'Edit expense' : 'Add expense'} sub={f.recurring ? 'Applies every month' : monthLabelOf(f.month)} onClose={onClose} width={460}>
         <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
           <Field label="Label" value={f.label} onChange={set('label')} placeholder="e.g. Payroll, Figma, AWS" autoFocus/>
           <div>
@@ -1210,7 +1213,13 @@
             <input type="checkbox" checked={f.recurring} onChange={(e) => set('recurring')(e.target.checked)} style={{ width: 16, height: 16 }}/>
             Recurring monthly cost (applies to every month)
           </label>
-          {!f.recurring ? <div style={{ fontFamily: T.sans, fontSize: 12, color: T.fg3, marginTop: -4 }}>One-off — counts only toward {monthLabel}.</div> : null}
+          {!f.recurring ? (
+            <div>
+              <label style={S.label}>Month</label>
+              <input type="month" value={f.month} onChange={(e) => set('month')(e.target.value)} style={{ ...S.input, width: 'auto', fontFamily: T.mono, fontSize: 13 }}/>
+              <div style={{ fontFamily: T.sans, fontSize: 12, color: T.fg3, marginTop: 6 }}>One-off — counts only toward that month.</div>
+            </div>
+          ) : null}
           {err ? <div style={{ fontFamily: T.sans, fontSize: 12.5, color: '#B3261E' }}>{err}</div> : null}
           <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', paddingTop: 4 }}>
             <button type="button" style={S.btnGhost} onClick={onClose}>Cancel</button>
@@ -1223,7 +1232,11 @@
 
   function PnL() {
     const isMobile = useIsMobile();
-    const curMonth = () => { const d = new Date(); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`; };
+    const now = new Date();
+    const curMonth = () => `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    const curYear = String(now.getFullYear());
+    const [view, setView] = useState('year'); // 'year' (default) | 'month'
+    const [year, setYear] = useState(curYear);
     const [month, setMonth] = useState(curMonth);
     const [data, setData] = useState(null);
     const [error, setError] = useState('');
@@ -1231,15 +1244,16 @@
     const [partialTries, setPartialTries] = useState(0);
     const [editing, setEditing] = useState(null); // null | {} (new) | line
 
+    const query = () => (view === 'year' ? 'year=' + year : 'month=' + month);
     const load = (force, silent) => {
       if (force) setRefreshing(true); else if (!silent) setData(null);
       setError('');
-      return api('/api/admin/pnl?month=' + month + (force ? '&refresh=1' : ''))
+      return api('/api/admin/pnl?' + query() + (force ? '&refresh=1' : ''))
         .then((r) => setData(r))
         .catch((e) => { setError(e.message); setData((p) => p || {}); })
         .finally(() => { if (force) setRefreshing(false); });
     };
-    useEffect(() => { setPartialTries(0); load(false); /* eslint-disable-next-line */ }, [month]);
+    useEffect(() => { setPartialTries(0); load(false); /* eslint-disable-next-line */ }, [view, year, month]);
     useEffect(() => {
       if (data && data.stale) { const t = setTimeout(() => load(false, true), 6000); return () => clearTimeout(t); }
       // eslint-disable-next-line
@@ -1254,16 +1268,21 @@
 
     const money = (n, cur) => { const neg = (n || 0) < 0; try { return (neg ? '-' : '') + new Intl.NumberFormat(undefined, { style: 'currency', currency: cur || 'USD', maximumFractionDigits: 0 }).format(Math.abs(n || 0)); } catch (_) { return (neg ? '-' : '') + '$' + Math.round(Math.abs(n || 0)); } };
     const shiftMonth = (delta) => { const [y, m] = month.split('-').map(Number); const d = new Date(Date.UTC(y, m - 1 + delta, 1)); setMonth(`${d.getUTCFullYear()}-${String(d.getUTCMonth() + 1).padStart(2, '0')}`); };
-    const monthLabel = (() => { const [y, m] = month.split('-').map(Number); return new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString(undefined, { month: 'long', year: 'numeric' }); })();
-    const atCurrent = month >= curMonth();
+    const atCurrentMonth = month >= curMonth();
+    const atCurrentYear = year >= curYear;
 
     const REVROWS = [['recurring', 'Retainers'], ['fixed', 'Projects'], ['apps', 'Apps'], ['referrals', 'Referrals']];
-    const SRC = [['recurring', 'Retainers'], ['fixed', 'Projects'], ['apps', 'Apps'], ['referrals', 'Referrals']];
+    const SRC = REVROWS;
     const cur = data && data.currency;
+    // Columns depend on which view the loaded data represents.
+    const cols = data && data.mode === 'month'
+      ? [{ key: 'month', label: monthLabelOf(data.month) }, { key: 'ytd', label: 'Year to date' }]
+      : [{ key: 'year', label: (data && data.year) || year }];
+    const nCols = cols.length + 1;
     const cellR = { padding: isMobile ? '9px 12px' : '10px 16px', textAlign: 'right', fontFamily: T.mono, fontSize: 13, whiteSpace: 'nowrap', color: T.fg1 };
     const cellL = { padding: isMobile ? '9px 12px' : '10px 16px', textAlign: 'left', fontFamily: T.sans, fontSize: 13, color: T.fg1 };
     const sectionRow = (label, extra) => (
-      <tr><td colSpan={3} style={{ padding: isMobile ? '10px 12px 4px' : '14px 16px 6px', borderTop: `1px solid ${T.line}` }}>
+      <tr><td colSpan={nCols} style={{ padding: isMobile ? '10px 12px 4px' : '14px 16px 6px', borderTop: `1px solid ${T.line}` }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
           <span style={{ ...S.eyebrow }}>{label}</span>{extra}
         </div>
@@ -1277,15 +1296,30 @@
       catch (e) { window.alert(e.message); }
     };
 
+    const toggleBtn = (v, l) => (
+      <button type="button" onClick={() => setView(v)}
+        style={{ border: `1px solid ${view === v ? T.fg1 : T.line}`, background: view === v ? T.fg1 : 'transparent', color: view === v ? '#fff' : T.fg2, borderRadius: 6, padding: '6px 14px', fontFamily: T.sans, fontSize: 12.5, fontWeight: 700, cursor: 'pointer' }}>{l}</button>
+    );
+
     return (
       <Page>
-        <PageHead eyebrow="Owner" title="P&L"/>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, flexWrap: 'wrap' }}>
-          <button type="button" style={{ ...S.btnGhost, padding: '7px 12px' }} onClick={() => shiftMonth(-1)}>← Prev</button>
-          <input type="month" value={month} max={curMonth()} onChange={(e) => e.target.value && setMonth(e.target.value)}
-            style={{ ...S.input, width: 'auto', padding: '7px 10px', fontFamily: T.mono, fontSize: 13 }}/>
-          <button type="button" style={{ ...S.btnGhost, padding: '7px 12px', opacity: atCurrent ? 0.5 : 1 }} disabled={atCurrent} onClick={() => shiftMonth(1)}>Next →</button>
-          <span style={{ fontFamily: T.sans, fontSize: 13, color: T.fg3 }}>{monthLabel}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 4, marginBottom: 16, flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: 6 }}>{toggleBtn('year', 'Year')}{toggleBtn('month', 'Month')}</div>
+          <span style={{ flex: '1 1 auto' }}/>
+          {view === 'year' ? (
+            <>
+              <button type="button" style={{ ...S.btnGhost, padding: '7px 12px' }} onClick={() => setYear(String(parseInt(year, 10) - 1))}>← {parseInt(year, 10) - 1}</button>
+              <span style={{ fontFamily: T.hero, fontWeight: 800, fontSize: 18, color: T.fg1, minWidth: 56, textAlign: 'center' }}>{year}</span>
+              <button type="button" style={{ ...S.btnGhost, padding: '7px 12px', opacity: atCurrentYear ? 0.5 : 1 }} disabled={atCurrentYear} onClick={() => setYear(String(parseInt(year, 10) + 1))}>{parseInt(year, 10) + 1} →</button>
+            </>
+          ) : (
+            <>
+              <button type="button" style={{ ...S.btnGhost, padding: '7px 12px' }} onClick={() => shiftMonth(-1)}>← Prev</button>
+              <input type="month" value={month} max={curMonth()} onChange={(e) => e.target.value && setMonth(e.target.value)}
+                style={{ ...S.input, width: 'auto', padding: '7px 10px', fontFamily: T.mono, fontSize: 13 }}/>
+              <button type="button" style={{ ...S.btnGhost, padding: '7px 12px', opacity: atCurrentMonth ? 0.5 : 1 }} disabled={atCurrentMonth} onClick={() => shiftMonth(1)}>Next →</button>
+            </>
+          )}
         </div>
 
         {data === null ? (
@@ -1305,30 +1339,27 @@
             )}
             <div style={{ ...S.card, overflow: 'hidden' }}>
               <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 380 }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: cols.length > 1 ? 380 : 300 }}>
                   <thead><tr>
                     <th style={{ ...S.th, textAlign: 'left' }}>&nbsp;</th>
-                    <th style={{ ...S.th, textAlign: 'right' }}>{monthLabel}</th>
-                    <th style={{ ...S.th, textAlign: 'right' }}>Year to date</th>
+                    {cols.map((c) => <th key={c.key} style={{ ...S.th, textAlign: 'right' }}>{c.label}</th>)}
                   </tr></thead>
                   <tbody>
                     {sectionRow('Revenue')}
                     {REVROWS.map(([k, l]) => (
                       <tr key={k}>
                         <td style={cellL}>{l}</td>
-                        <td style={cellR}>{money(data.revenue.month[k], cur)}</td>
-                        <td style={{ ...cellR, color: T.fg2 }}>{money(data.revenue.ytd[k], cur)}</td>
+                        {cols.map((c, i) => <td key={c.key} style={{ ...cellR, color: i === 0 ? T.fg1 : T.fg2 }}>{money(data.revenue.channels[k][c.key], cur)}</td>)}
                       </tr>
                     ))}
                     <tr>
                       <td style={{ ...cellL, fontWeight: 700 }}>Total revenue</td>
-                      <td style={{ ...cellR, fontWeight: 700 }}>{money(data.revenue.monthTotal, cur)}</td>
-                      <td style={{ ...cellR, fontWeight: 700, color: T.fg1 }}>{money(data.revenue.ytdTotal, cur)}</td>
+                      {cols.map((c) => <td key={c.key} style={{ ...cellR, fontWeight: 700 }}>{money(data.revenue.total[c.key], cur)}</td>)}
                     </tr>
 
                     {sectionRow('Expenses', <button type="button" style={{ ...S.btnGhost, padding: '4px 10px', fontSize: 12 }} onClick={() => setEditing({})}>+ Add expense</button>)}
                     {data.expenses.lines.length === 0 ? (
-                      <tr><td colSpan={3} style={{ ...cellL, color: T.fg3, fontSize: 12.5 }}>No expenses yet. Add payroll and tool costs, or connect Gusto for payroll.</td></tr>
+                      <tr><td colSpan={nCols} style={{ ...cellL, color: T.fg3, fontSize: 12.5 }}>No expenses yet. Add payroll and tool costs, or connect Gusto for payroll.</td></tr>
                     ) : data.expenses.lines.map((e) => (
                       <tr key={e.id}>
                         <td style={cellL}>
@@ -1337,20 +1368,17 @@
                           <button type="button" onClick={() => setEditing(e)} style={{ marginLeft: 10, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: T.mono, fontSize: 11, color: T.fg3, textDecoration: 'underline' }}>edit</button>
                           <button type="button" onClick={() => delExpense(e.id)} style={{ marginLeft: 8, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: T.mono, fontSize: 11, color: '#B3261E', textDecoration: 'underline' }}>delete</button>
                         </td>
-                        <td style={{ ...cellR, color: '#B3261E' }}>-{money(e.amount, cur)}</td>
-                        <td style={{ ...cellR, color: T.fg3 }}>{e.recurring ? '-' + money(e.amount * parseInt(month.slice(5, 7), 10), cur) : ''}</td>
+                        {cols.map((c, i) => { const v = e[c.key]; return <td key={c.key} style={{ ...cellR, color: i === 0 ? '#B3261E' : T.fg3 }}>{(v || v === 0) ? '-' + money(v, cur) : ''}</td>; })}
                       </tr>
                     ))}
                     <tr>
                       <td style={{ ...cellL, fontWeight: 700 }}>Total expenses</td>
-                      <td style={{ ...cellR, fontWeight: 700, color: '#B3261E' }}>-{money(data.expenses.monthTotal, cur)}</td>
-                      <td style={{ ...cellR, fontWeight: 700, color: '#B3261E' }}>-{money(data.expenses.ytdTotal, cur)}</td>
+                      {cols.map((c) => <td key={c.key} style={{ ...cellR, fontWeight: 700, color: '#B3261E' }}>-{money(data.expenses.total[c.key], cur)}</td>)}
                     </tr>
 
                     <tr>
                       <td style={{ ...cellL, fontWeight: 800, fontSize: 14, borderTop: `2px solid ${T.fg1}` }}>Net profit</td>
-                      <td style={{ ...cellR, fontWeight: 800, fontSize: 14, borderTop: `2px solid ${T.fg1}`, color: data.net.month >= 0 ? '#0A7A3B' : '#B3261E' }}>{money(data.net.month, cur)}</td>
-                      <td style={{ ...cellR, fontWeight: 800, fontSize: 14, borderTop: `2px solid ${T.fg1}`, color: data.net.ytd >= 0 ? '#0A7A3B' : '#B3261E' }}>{money(data.net.ytd, cur)}</td>
+                      {cols.map((c) => <td key={c.key} style={{ ...cellR, fontWeight: 800, fontSize: 14, borderTop: `2px solid ${T.fg1}`, color: data.net[c.key] >= 0 ? '#0A7A3B' : '#B3261E' }}>{money(data.net[c.key], cur)}</td>)}
                     </tr>
                   </tbody>
                 </table>
@@ -1379,7 +1407,7 @@
             </div>
           </>
         )}
-        {editing !== null && <PnLExpenseModal initial={editing.id ? editing : null} month={month} onClose={() => setEditing(null)} onSaved={onSaved}/>}
+        {editing !== null && <PnLExpenseModal initial={editing.id ? editing : null} defaultMonth={view === 'month' ? month : curMonth()} onClose={() => setEditing(null)} onSaved={onSaved}/>}
       </Page>
     );
   }

@@ -76,8 +76,10 @@ JSX with a `babel.transform` (that's exactly what the deploy runs).
   Sections: Companies / Discoveries / Blueprints (+ Users for the super
   admin)
 - **P&L (owner-only)**: a top-level tab visible only to the super admin
-  (`isSuper`, denis@uncap.com). `GET /api/admin/pnl?month=YYYY-MM` returns a
-  profit & loss statement for the selected month + year-to-date: revenue reuses
+  (`isSuper`, denis@uncap.com). `GET /api/admin/pnl?year=YYYY` (the default
+  whole-year view) or `?month=YYYY-MM` (that month + year-to-date) returns a
+  profit & loss statement, values keyed by column so the client renders either
+  shape: revenue reuses
   the same integrated sources as the Revenues section (via the shared
   `collectRevenueItems` fan-out over Shopify/Stripe/QuickBooks/Partner), minus
   manual expense lines. Expenses are KV records (`pnlexp:<id>`, editable via
