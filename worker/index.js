@@ -262,6 +262,10 @@ export default {
       if (url.pathname.startsWith('/api/admin/revenue/') && !(await adminCanDelete(env, gate.email))) {
         return json(403, { ok: false, error: 'Revenue is restricted to Admin and Management.' });
       }
+      // P&L (revenue net of payroll/expenses) is the owner's private view.
+      if (url.pathname.startsWith('/api/admin/pnl') && !isSuperAdmin(gate.email)) {
+        return json(403, { ok: false, error: 'P&L is restricted to the Admin.' });
+      }
     }
 
     if (url.pathname === '/api/admin/users' && request.method === 'GET') {
@@ -308,6 +312,15 @@ export default {
     }
     if (url.pathname === '/api/admin/revenue/summary' && request.method === 'GET') {
       return revenueCached(request, env, ctx, () => handleAdminRevenueSummary(request, env));
+    }
+    if (url.pathname === '/api/admin/pnl' && request.method === 'GET') {
+      return revenueCached(request, env, ctx, () => handleAdminPnl(request, env));
+    }
+    if (url.pathname === '/api/admin/pnl/expense' && request.method === 'POST') {
+      return handleAdminPnlExpenseSave(request, env);
+    }
+    if (url.pathname === '/api/admin/pnl/expense/delete' && request.method === 'POST') {
+      return handleAdminPnlExpenseDelete(request, env);
     }
     if (url.pathname === '/api/admin/items' && request.method === 'GET') {
       return handleAdminListItems(request, env);
@@ -481,7 +494,7 @@ export default {
     // The admin dashboard lives at /admin (client-side routes /admin/
     // discoveries|blueprints|companies and the company profile page
     // /admin/company/<id> included); the root is the portal.
-    if (/^\/admin(\/(sales(\/(process|items))?|discoveries|blueprints|companies|users|projects|retainers|dashboard|revenues(\/(fixed|recurring|apps|referrals))?|company\/[a-z0-9-]+|estimate\/[a-z0-9-]+|blueprint\/[a-z0-9-]+))?\/?$/.test(url.pathname) && (request.method === 'GET' || request.method === 'HEAD')) {
+    if (/^\/admin(\/(sales(\/(process|items))?|discoveries|blueprints|companies|users|projects|retainers|dashboard|pnl|revenues(\/(fixed|recurring|apps|referrals))?|company\/[a-z0-9-]+|estimate\/[a-z0-9-]+|blueprint\/[a-z0-9-]+))?\/?$/.test(url.pathname) && (request.method === 'GET' || request.method === 'HEAD')) {
       const assetUrl = new URL(url.toString());
       assetUrl.pathname = '/admin/index.html';
       return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
@@ -1931,26 +1944,18 @@ async function handleAdminReferralsRevenue(request, env) {
 // Combined revenue totals across all sources for this month / quarter / year.
 // Fetches the full year window once per source, then buckets by date (month
 // and quarter are subsets of the year). Per-source failures degrade to 0.
-async function handleAdminRevenueSummary(request, env) {
-  const url = new URL(request.url);
-  const today = (url.searchParams.get('today') || '').slice(0, 10);
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(today)) return json(400, { ok: false, error: 'today must be YYYY-MM-DD' });
-  const y = today.slice(0, 4);
-  const mm = parseInt(today.slice(5, 7), 10);
-  const pad = (n) => String(n).padStart(2, '0');
-  const monthFrom = `${y}-${pad(mm)}-01`;
-  const quarterFrom = `${y}-${pad(Math.floor((mm - 1) / 3) * 3 + 1)}-01`;
-  const yearFrom = `${y}-01-01`;
-  const minISO = `${yearFrom}T00:00:00Z`;
-  const maxISO = `${today}T23:59:59Z`;
-
-  const items = []; // { date:'YYYY-MM-DD', amount:Number }
+// Fans out every connected revenue source over [minISO, maxISO] and returns a
+// flat list of { src, date:'YYYY-MM-DD', amount } items, per-source status, and
+// the detected currency. Shared by the revenue summary and the P&L so both read
+// the same numbers from one pass. Sources hit independent external APIs, so they
+// run concurrently — a cold recompute costs the max latency, not the sum.
+async function collectRevenueItems(env, minISO, maxISO) {
+  const items = [];
   const sources = {};
   let currency = '';
   const setCur = (c) => { if (!currency && c) currency = c; };
-
-  // Every source group runs concurrently — they hit independent external APIs,
-  // so fanning out cuts a cold recompute from the sum of latencies to the max.
+  const fromDate = minISO.slice(0, 10);
+  const toDate = maxISO.slice(0, 10);
   const stripe = stripeConfig(env);
   await Promise.all([
     // Retainers — Shopify paid orders + Stripe payments (blended)
@@ -1980,7 +1985,7 @@ async function handleAdminRevenueSummary(request, env) {
       if (!qauth) { sources.fixed = { connected: false }; return; }
       sources.fixed = { connected: true, ok: true };
       try {
-        const where = `where TxnDate >= '${yearFrom}' and TxnDate <= '${today}'`;
+        const where = `where TxnDate >= '${fromDate}' and TxnDate <= '${toDate}'`;
         const [pay, sr] = await Promise.all([qboQueryAll(env, qauth, 'Payment', where), qboQueryAll(env, qauth, 'SalesReceipt', where)]);
         for (const r of [...pay.rows, ...sr.rows]) { items.push({ src: 'fixed', date: r.TxnDate || '', amount: parseFloat(r.TotalAmt || 0) || 0 }); setCur(r.CurrencyRef && r.CurrencyRef.value); }
       } catch (e) { sources.fixed = { connected: true, ok: false, error: e.message }; }
@@ -2007,6 +2012,23 @@ async function handleAdminRevenueSummary(request, env) {
       ]);
     })(),
   ]);
+  return { items, sources, currency };
+}
+
+async function handleAdminRevenueSummary(request, env) {
+  const url = new URL(request.url);
+  const today = (url.searchParams.get('today') || '').slice(0, 10);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(today)) return json(400, { ok: false, error: 'today must be YYYY-MM-DD' });
+  const y = today.slice(0, 4);
+  const mm = parseInt(today.slice(5, 7), 10);
+  const pad = (n) => String(n).padStart(2, '0');
+  const monthFrom = `${y}-${pad(mm)}-01`;
+  const quarterFrom = `${y}-${pad(Math.floor((mm - 1) / 3) * 3 + 1)}-01`;
+  const yearFrom = `${y}-01-01`;
+  const minISO = `${yearFrom}T00:00:00Z`;
+  const maxISO = `${today}T23:59:59Z`;
+
+  const { items, sources, currency } = await collectRevenueItems(env, minISO, maxISO);
 
   // YYYY-MM-DD compares lexicographically = chronologically. `srcs` null means
   // all sources (grand total); otherwise restrict to the named categories.
@@ -2041,6 +2063,125 @@ async function handleAdminRevenueSummary(request, env) {
     windows: { month: monthFrom, quarter: quarterFrom, year: yearFrom, to: today },
     sources,
   });
+}
+
+// ── P&L (owner-only) ─────────────────────────────────────────────────────
+// Revenue is reused from the same integrated sources as the Revenues section;
+// expenses are manual line items in KV (pnlexp:<id>) until payroll (Gusto) and
+// other cost feeds are wired. A recurring expense line applies to every month;
+// a one-off carries the YYYY-MM month it belongs to.
+async function listPnlExpenses(env) {
+  const list = await env.BLUEPRINT_AUTH.list({ prefix: 'pnlexp:', limit: 500 });
+  const rows = await Promise.all(list.keys.map((k) => env.BLUEPRINT_AUTH.get(k.name).then((v) => {
+    try { return JSON.parse(v); } catch { return null; }
+  }).catch(() => null)));
+  return rows.filter(Boolean);
+}
+
+// GET /api/admin/pnl?month=YYYY-MM — a P&L statement for the selected month plus
+// year-to-date (Jan 1 through the end of that month, never past today).
+async function handleAdminPnl(request, env) {
+  const url = new URL(request.url);
+  const month = (url.searchParams.get('month') || '').slice(0, 7);
+  if (!/^\d{4}-\d{2}$/.test(month)) return json(400, { ok: false, error: 'month must be YYYY-MM' });
+  const year = month.slice(0, 4);
+  const mNum = parseInt(month.slice(5, 7), 10);
+  if (mNum < 1 || mNum > 12) return json(400, { ok: false, error: 'invalid month' });
+  const pad = (n) => String(n).padStart(2, '0');
+  const yearFrom = `${year}-01-01`;
+  const monthFrom = `${month}-01`;
+  const lastDay = new Date(Date.UTC(parseInt(year, 10), mNum, 0)).getUTCDate();
+  const monthEnd = `${month}-${pad(lastDay)}`;
+  const todayISO = new Date().toISOString().slice(0, 10);
+  // Never fetch the future: cap the window at today.
+  const to = monthEnd < todayISO ? monthEnd : todayISO;
+
+  const revenue = { month: {}, ytd: {}, monthTotal: 0, ytdTotal: 0 };
+  let currency = 'USD';
+  let sources = {};
+  // A month entirely in the future has nothing to fetch.
+  if (to >= yearFrom) {
+    const r = await collectRevenueItems(env, `${yearFrom}T00:00:00Z`, `${to}T23:59:59Z`);
+    sources = r.sources;
+    if (r.currency) currency = r.currency;
+    const monthLo = monthFrom <= to ? monthFrom : to;
+    const sum = (from, toD, src) => r.items.reduce((s, it) => (it.date && it.date >= from && it.date <= toD && it.src === src) ? s + it.amount : s, 0);
+    for (const c of ['recurring', 'fixed', 'apps', 'referrals']) {
+      revenue.month[c] = monthFrom <= to ? sum(monthLo, to, c) : 0;
+      revenue.ytd[c] = sum(yearFrom, to, c);
+    }
+    revenue.monthTotal = Object.values(revenue.month).reduce((s, n) => s + n, 0);
+    revenue.ytdTotal = Object.values(revenue.ytd).reduce((s, n) => s + n, 0);
+  } else {
+    for (const c of ['recurring', 'fixed', 'apps', 'referrals']) { revenue.month[c] = 0; revenue.ytd[c] = 0; }
+  }
+
+  // Expenses. Recurring lines apply to the selected month and to each of the
+  // mNum months year-to-date; one-off lines apply to their own month only.
+  const all = await listPnlExpenses(env);
+  const lines = all
+    .filter((e) => e.recurring || e.month === month)
+    .sort((a, b) => (b.amount || 0) - (a.amount || 0));
+  let expMonthTotal = 0;
+  let expYtdTotal = 0;
+  for (const e of all) {
+    const amt = Number(e.amount) || 0;
+    if (e.recurring) { expMonthTotal += amt; expYtdTotal += amt * mNum; }
+    else if (e.month === month) { expMonthTotal += amt; expYtdTotal += amt; }
+    else if (e.month && e.month.slice(0, 4) === year && parseInt(e.month.slice(5, 7), 10) < mNum) { expYtdTotal += amt; }
+  }
+
+  const partial = Object.keys(sources).some((k) => sources[k] && sources[k].connected && sources[k].ok === false);
+  return json(200, {
+    ok: true,
+    partial,
+    month,
+    currency,
+    revenue,
+    expenses: { lines, monthTotal: expMonthTotal, ytdTotal: expYtdTotal },
+    net: { month: revenue.monthTotal - expMonthTotal, ytd: revenue.ytdTotal - expYtdTotal },
+    sources,
+    payroll: { connected: false, provider: 'Gusto' },
+    windows: { monthFrom, monthEnd: to, yearFrom },
+  });
+}
+
+// POST /api/admin/pnl/expense — create or update one expense line.
+async function handleAdminPnlExpenseSave(request, env) {
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+  let body;
+  try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  const label = (body.label || '').toString().trim().slice(0, 120);
+  if (!label) return json(400, { ok: false, error: 'A label is required' });
+  const amount = Math.round((Number(body.amount) || 0) * 100) / 100;
+  const recurring = body.recurring === true;
+  const month = /^\d{4}-\d{2}$/.test(body.month || '') ? body.month : '';
+  if (!recurring && !month) return json(400, { ok: false, error: 'A one-off expense needs a month' });
+  const id = /^[a-z0-9]{6,}$/.test(body.id || '') ? body.id : genRandSlug();
+  const existing = body.id ? await env.BLUEPRINT_AUTH.get(`pnlexp:${id}`).then((v) => { try { return JSON.parse(v); } catch { return null; } }) : null;
+  const rec = {
+    id,
+    label,
+    category: (body.category || '').toString().trim().slice(0, 60) || 'Other',
+    amount,
+    recurring,
+    month: recurring ? '' : month,
+    createdAt: (existing && existing.createdAt) || new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  };
+  await env.BLUEPRINT_AUTH.put(`pnlexp:${id}`, JSON.stringify(rec));
+  return json(200, { ok: true, expense: rec });
+}
+
+// POST /api/admin/pnl/expense/delete — remove one expense line.
+async function handleAdminPnlExpenseDelete(request, env) {
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+  let body;
+  try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  const id = (body.id || '').toString();
+  if (!/^[a-z0-9]{6,}$/.test(id)) return json(400, { ok: false, error: 'Bad id' });
+  await env.BLUEPRINT_AUTH.delete(`pnlexp:${id}`).catch(() => {});
+  return json(200, { ok: true });
 }
 
 // ── Stripe integration (Services > Retainers) ────────────────────────────

@@ -75,6 +75,16 @@ JSX with a `babel.transform` (that's exactly what the deploy runs).
   (`admin_session:<token>`) behind an HttpOnly `__Host-bp_admin` cookie.
   Sections: Companies / Discoveries / Blueprints (+ Users for the super
   admin)
+- **P&L (owner-only)**: a top-level tab visible only to the super admin
+  (`isSuper`, denis@uncap.com). `GET /api/admin/pnl?month=YYYY-MM` returns a
+  profit & loss statement for the selected month + year-to-date: revenue reuses
+  the same integrated sources as the Revenues section (via the shared
+  `collectRevenueItems` fan-out over Shopify/Stripe/QuickBooks/Partner), minus
+  manual expense lines. Expenses are KV records (`pnlexp:<id>`, editable via
+  `POST /api/admin/pnl/expense{,/delete}`) with a `recurring` monthly flag or a
+  one-off `month`. Payroll will fill its line once Gusto is connected. The `/pnl`
+  routes are gated on `isSuperAdmin` in the worker; the P&L endpoint uses the
+  same `revenueCached` SWR wrapper as the revenue endpoints
 - **Admin hierarchy (4 roles)**: any `@uncap.com` Google account can sign
   in but is **Pending** (no access) until the Admin approves them into a
   role. Roles, most to least privileged: **Admin** (`SUPER_ADMIN_EMAIL` =
