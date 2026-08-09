@@ -365,7 +365,7 @@
     return (
       <header style={{ position: 'sticky', top: 0, zIndex: 50, background: '#0A0A0A' }}>
         {/* Row 1 — sections */}
-        <div style={{ boxSizing: 'border-box', minHeight: isMobile ? 46 : 40, display: 'flex', alignItems: 'center', gap: isMobile ? 12 : 16, padding: isMobile ? '0 14px' : '0 16px' }}>
+        <div style={{ boxSizing: 'border-box', minHeight: isMobile ? 46 : 40, display: 'flex', alignItems: 'center', justifyContent: isMobile ? 'space-between' : 'flex-start', gap: isMobile ? 12 : 16, padding: isMobile ? '0 14px' : '0 16px' }}>
           {brand}
           {!isMobile && (
             <nav style={{ flex: '1 1 auto', display: 'flex', alignItems: 'center', gap: 4, overflow: 'visible' }}>
