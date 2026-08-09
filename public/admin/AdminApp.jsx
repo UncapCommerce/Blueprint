@@ -1425,9 +1425,9 @@
           <span style={{ flex: '1 1 auto' }}/>
           {view === 'year' ? (
             <>
-              <button type="button" style={{ ...S.btnGhost, padding: '7px 12px' }} onClick={() => setYear(String(parseInt(year, 10) - 1))}>← {parseInt(year, 10) - 1}</button>
+              <button type="button" style={{ ...S.btnGhost, padding: '7px 12px' }} onClick={() => setYear(String(parseInt(year, 10) - 1))}>{isMobile ? '←' : '← ' + (parseInt(year, 10) - 1)}</button>
               <span style={{ fontFamily: T.hero, fontWeight: 800, fontSize: 18, color: T.fg1, minWidth: 56, textAlign: 'center' }}>{year}</span>
-              <button type="button" style={{ ...S.btnGhost, padding: '7px 12px', opacity: atCurrentYear ? 0.5 : 1 }} disabled={atCurrentYear} onClick={() => setYear(String(parseInt(year, 10) + 1))}>{parseInt(year, 10) + 1} →</button>
+              <button type="button" style={{ ...S.btnGhost, padding: '7px 12px', opacity: atCurrentYear ? 0.5 : 1 }} disabled={atCurrentYear} onClick={() => setYear(String(parseInt(year, 10) + 1))}>{isMobile ? '→' : (parseInt(year, 10) + 1) + ' →'}</button>
             </>
           ) : view === 'month' ? (
             <>
