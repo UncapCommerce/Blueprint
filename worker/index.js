@@ -437,6 +437,9 @@ export default {
     if (url.pathname === '/api/admin/company/activity' && request.method === 'GET') {
       return handleAdminCompanyActivity(request, env);
     }
+    if (url.pathname === '/api/admin/company/artifact-delete' && request.method === 'POST') {
+      return handleAdminCompanyArtifactDelete(request, env);
+    }
     if (url.pathname === '/api/admin/company/update' && request.method === 'POST') {
       return handleAdminUpdateCompany(request, env);
     }
@@ -3061,6 +3064,44 @@ async function handleAdminGenerateBlueprint(request, env) {
 // BLUEPRINT_REGISTRY are static pages in the repo and can't be removed at
 // runtime — only KV drafts are deletable here. Purges the draft record and
 // all its KV side-data, and unlinks it from its portal company.
+// Purge a discovery record + all its per-discovery side-data. Shared by the
+// list-view delete and the company-profile artifact delete. Returns the parsed
+// record (for handle/name), or {} if it was already gone.
+async function purgeDiscoveryById(env, id) {
+  const raw = await env.BLUEPRINT_AUTH.get(`discovery:${id}`);
+  let rec = {};
+  if (raw) { try { rec = JSON.parse(raw); } catch {} }
+  const deletes = [
+    env.BLUEPRINT_AUTH.delete(`discovery:${id}`),
+    env.BLUEPRINT_AUTH.delete(`discans:${id}`),
+    env.BLUEPRINT_AUTH.delete(`disclogo:${id}`),
+  ];
+  if (rec.handle) deletes.push(env.BLUEPRINT_AUTH.delete(`dischandle:${rec.handle}`));
+  const subs = await env.BLUEPRINT_AUTH.list({ prefix: `discsub:${id}:`, limit: 100 }).catch(() => null);
+  if (subs) for (const k of subs.keys) deletes.push(env.BLUEPRINT_AUTH.delete(k.name));
+  await Promise.all(deletes.map((p) => p.catch(() => {})));
+  return rec;
+}
+
+// Purge a templated blueprint draft + all its per-blueprint side-data. Shared by
+// the list-view delete and the company-profile artifact delete. Returns the
+// parsed record, or {} if already gone. Does NOT guard the registry — callers
+// decide whether a shipped page may be purged.
+async function purgeBlueprintDraft(env, id) {
+  const raw = await env.BLUEPRINT_AUTH.get(`bp:${id}`);
+  let rec = {};
+  if (raw) { try { rec = JSON.parse(raw); } catch {} }
+  await env.BLUEPRINT_AUTH.delete(`bp:${id}`).catch(() => {});
+  for (const k of [`bpmeta:${id}`, `bpallow:${id}`, `bptos:${id}`, `bpsigned:${id}`]) {
+    await env.BLUEPRINT_AUTH.delete(k).catch(() => {});
+  }
+  for (const prefix of [`signature:${id}:`, `access:${id}:`]) {
+    const list = await env.BLUEPRINT_AUTH.list({ prefix, limit: 1000 });
+    await Promise.all(list.keys.map((k) => env.BLUEPRINT_AUTH.delete(k.name).catch(() => {})));
+  }
+  return rec;
+}
+
 async function handleAdminDeleteBlueprint(request, env) {
   const sess = await getAdminSession(request, env);
   if (!sess) return json(401, { ok: false, error: 'Not signed in' });
@@ -3078,21 +3119,54 @@ async function handleAdminDeleteBlueprint(request, env) {
   let rec = {};
   try { rec = JSON.parse(raw); } catch {}
 
-  // Core record + all per-blueprint side-data.
-  await env.BLUEPRINT_AUTH.delete(`bp:${id}`).catch(() => {});
-  for (const k of [`bpmeta:${id}`, `bpallow:${id}`, `bptos:${id}`, `bpsigned:${id}`]) {
-    await env.BLUEPRINT_AUTH.delete(k).catch(() => {});
-  }
-  for (const prefix of [`signature:${id}:`, `access:${id}:`]) {
-    const list = await env.BLUEPRINT_AUTH.list({ prefix, limit: 1000 });
-    await Promise.all(list.keys.map((k) => env.BLUEPRINT_AUTH.delete(k.name).catch(() => {})));
-  }
+  await purgeBlueprintDraft(env, id);
   // Unlink from any portal company that pointed at it.
   const owner = await findCompanyByBlueprintId(env, id);
   if (owner) { owner.blueprintId = ''; await putCompany(env, owner).catch(() => {}); }
 
   await logActivity(env, null, { type: 'deleted', entity: 'blueprint', id, name: rec.name || id, actor: sess.email, detail: 'Blueprint draft deleted' });
   return json(200, { ok: true });
+}
+
+// POST /api/admin/company/artifact-delete { id, what } — remove one artifact
+// (estimate | discovery | blueprint) from a company: delete its record(s) and
+// clear the company's link so the pipeline stage + portal tabs reflect reality.
+// Shipped (registry) blueprints are only unlinked, never purged.
+async function handleAdminCompanyArtifactDelete(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  if (!(await adminCanDelete(env, sess.email))) return json(403, { ok: false, error: 'Only Admin or Management can delete.' });
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+  let body;
+  try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  const co = await getCompany(env, (body.id || '').toString().trim().toLowerCase());
+  if (!co) return json(404, { ok: false, error: 'Company not found' });
+  const what = (body.what || '').toString();
+
+  if (what === 'estimate') {
+    await env.BLUEPRINT_AUTH.delete(`estimate:${co.id}`).catch(() => {});
+    co.hasEstimate = false; co.estimateReady = false;
+    await logActivity(env, null, { type: 'deleted', entity: 'company', id: co.id, name: co.name, actor: sess.email, detail: 'Estimate deleted' });
+  } else if (what === 'discovery') {
+    if (co.discoveryHandle) {
+      const discId = (await env.BLUEPRINT_AUTH.get(`dischandle:${co.discoveryHandle}`)) || co.discoveryHandle;
+      await purgeDiscoveryById(env, discId).catch(() => {});
+    }
+    co.discoveryHandle = '';
+    await logActivity(env, null, { type: 'deleted', entity: 'company', id: co.id, name: co.name, actor: sess.email, detail: 'Discovery deleted' });
+  } else if (what === 'blueprint') {
+    if (co.blueprintId) {
+      const clean = normalizeBlueprintId(co.blueprintId);
+      // Shipped/registry pages live in the repo — only unlink; purge real drafts.
+      if (!BLUEPRINT_REGISTRY.some((b) => b.id === clean)) await purgeBlueprintDraft(env, clean).catch(() => {});
+    }
+    co.blueprintId = '';
+    await logActivity(env, null, { type: 'deleted', entity: 'company', id: co.id, name: co.name, actor: sess.email, detail: 'Blueprint removed' });
+  } else {
+    return json(400, { ok: false, error: 'Unknown artifact' });
+  }
+  await putCompany(env, co);
+  return json(200, { ok: true, company: co });
 }
 
 // Cookie-authenticated variant of the access log for the admin app.
@@ -3556,18 +3630,14 @@ async function handleAdminDeleteDiscovery(request, env) {
 
   const raw = await env.BLUEPRINT_AUTH.get(`discovery:${id}`);
   if (!raw) return json(404, { ok: false, error: 'Discovery not found' });
-  let rec = {};
-  try { rec = JSON.parse(raw); } catch {}
+  const rec = await purgeDiscoveryById(env, id);
 
-  const deletes = [
-    env.BLUEPRINT_AUTH.delete(`discovery:${id}`),
-    env.BLUEPRINT_AUTH.delete(`discans:${id}`),
-    env.BLUEPRINT_AUTH.delete(`disclogo:${id}`),
-  ];
-  if (rec.handle) deletes.push(env.BLUEPRINT_AUTH.delete(`dischandle:${rec.handle}`));
-  const subs = await env.BLUEPRINT_AUTH.list({ prefix: `discsub:${id}:`, limit: 100 }).catch(() => null);
-  if (subs) for (const k of subs.keys) deletes.push(env.BLUEPRINT_AUTH.delete(k.name));
-  await Promise.all(deletes.map((p) => p.catch(() => {})));
+  // Unlink from any portal company that pointed at it, so its Discovery tab +
+  // pipeline stage stop counting a deleted discovery.
+  if (rec.handle) {
+    const owner = await findCompanyByDiscoveryHandle(env, rec.handle);
+    if (owner) { owner.discoveryHandle = ''; await putCompany(env, owner).catch(() => {}); }
+  }
 
   await logActivity(env, null, { type: 'deleted', entity: 'discovery', id, name: rec.company || id, actor: sess.email, detail: 'Discovery deleted' });
   return json(200, { ok: true });

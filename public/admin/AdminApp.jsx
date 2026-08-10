@@ -2825,6 +2825,16 @@
       try { await api('/api/admin/company/delete', { method: 'POST', body: JSON.stringify({ id: co.id }) }); navigate('/admin/sales'); }
       catch (err) { setError(err.message); }
     };
+    // Remove an artifact (estimate | discovery | blueprint) from this company:
+    // deletes its record(s) and clears the link, so the stage/tabs update. A
+    // shipped (registry) blueprint is only unlinked, not deleted from the repo.
+    const deleteArtifact = async (what, label) => {
+      if (!window.confirm('Delete the ' + label + ' for ' + (co.name || 'this company') + '?\n\nIt is removed from the company and this cannot be undone.')) return;
+      try {
+        const d = await api('/api/admin/company/artifact-delete', { method: 'POST', body: JSON.stringify({ id: co.id, what }) });
+        if (d.company) setCo(d.company);
+      } catch (err) { window.alert(err.message); }
+    };
     const savePalette = () => persist({ palette: { prime, accent } });
     // A page row: mono label on the left, the (inline-editable) value on the
     // right; stacks on mobile.
@@ -2849,16 +2859,21 @@
           </div>
         }/>
         {(() => {
-          const tile = (label, has, statusText, viewHref, createHref, comingSoon) => (
+          const canDelete = !!(me && me.canDelete);
+          const delBtn = (what, label) => (canDelete ? (
+            <button type="button" onClick={() => deleteArtifact(what, label)} style={{ ...S.btnGhost, color: '#B3261E' }}>Delete</button>
+          ) : null);
+          const tile = (label, has, statusText, viewHref, createHref, comingSoon, whatKey) => (
             <div style={{ ...S.card, flex: '1 1 180px', minWidth: 168, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
               <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.fg3 }}>{label}</div>
               <div style={{ fontFamily: T.sans, fontSize: 13, fontWeight: 600, color: has ? T.fg1 : T.fg3 }}>{statusText}</div>
-              <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
+              <div style={{ display: 'flex', gap: 8, marginTop: 'auto', flexWrap: 'wrap' }}>
                 {comingSoon
                   ? <button type="button" disabled style={{ ...S.btnGhost, opacity: 0.5, cursor: 'default' }}>Create</button>
                   : has
                     ? <a href={viewHref} target="_blank" rel="noreferrer" style={{ ...S.btnGhost, textDecoration: 'none' }}>View ↗</a>
                     : <a href={createHref} onClick={navClick(createHref)} style={{ ...S.btnLime, textDecoration: 'none' }}>Create</a>}
+                {has ? delBtn(whatKey, label.toLowerCase()) : null}
               </div>
             </div>
           );
@@ -2867,17 +2882,18 @@
             <div style={{ ...S.card, flex: '1 1 180px', minWidth: 168, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
               <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.fg3 }}>Estimate</div>
               <div style={{ fontFamily: T.sans, fontSize: 13, fontWeight: 600, color: co.hasEstimate ? T.fg1 : T.fg3 }}>{co.hasEstimate ? (co.estimateReady ? 'Shared' : 'Draft') : 'Not started'}</div>
-              <div style={{ display: 'flex', gap: 8, marginTop: 'auto' }}>
+              <div style={{ display: 'flex', gap: 8, marginTop: 'auto', flexWrap: 'wrap' }}>
                 <a href={estHref} onClick={navClick(estHref)} style={{ ...(co.hasEstimate ? S.btnGhost : S.btnLime), textDecoration: 'none' }}>{co.hasEstimate ? 'Edit' : 'Create'}</a>
                 {co.hasEstimate && co.estimateReady ? <a href={'/' + co.id + '/estimate'} target="_blank" rel="noreferrer" style={{ ...S.btnGhost, textDecoration: 'none' }}>View ↗</a> : null}
+                {co.hasEstimate ? delBtn('estimate', 'estimate') : null}
               </div>
             </div>
           );
           return (
             <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
               {estTile}
-              {tile('Discovery', !!co.discoveryHandle, co.discoveryHandle ? 'Started' : 'Not started', '/' + co.id + '/discovery', '/admin/discoveries', false)}
-              {tile('Blueprint', !!co.blueprintId, co.blueprintId ? 'Created' : 'Not started', '/blueprint/' + co.blueprintId + '/', '/admin/blueprints', false)}
+              {tile('Discovery', !!co.discoveryHandle, co.discoveryHandle ? 'Started' : 'Not started', '/' + co.id + '/discovery', '/admin/discoveries', false, 'discovery')}
+              {tile('Blueprint', !!co.blueprintId, co.blueprintId ? 'Created' : 'Not started', '/blueprint/' + co.blueprintId + '/', '/admin/blueprints', false, 'blueprint')}
             </div>
           );
         })()}
