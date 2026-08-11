@@ -322,12 +322,6 @@ export default {
     if (url.pathname === '/api/admin/pnl/expense/delete' && request.method === 'POST') {
       return handleAdminPnlExpenseDelete(request, env);
     }
-    if (url.pathname === '/api/admin/pnl/plan' && request.method === 'GET') {
-      return handleAdminPnlPlanGet(request, env);
-    }
-    if (url.pathname === '/api/admin/pnl/plan' && request.method === 'POST') {
-      return handleAdminPnlPlanSave(request, env);
-    }
     if (url.pathname === '/api/admin/items' && request.method === 'GET') {
       return handleAdminListItems(request, env);
     }
@@ -2094,30 +2088,22 @@ async function listPnlExpenses(env) {
 // The window never runs past today.
 async function handleAdminPnl(request, env) {
   const url = new URL(request.url);
-  const monthParam = (url.searchParams.get('month') || '').slice(0, 7);
   const yearParam = (url.searchParams.get('year') || '').slice(0, 4);
-  const pad = (n) => String(n).padStart(2, '0');
   const todayISO = new Date().toISOString().slice(0, 10);
-
-  const monthMode = /^\d{4}-\d{2}$/.test(monthParam);
-  if (!monthMode && !/^\d{4}$/.test(yearParam)) return json(400, { ok: false, error: 'month=YYYY-MM or year=YYYY required' });
-  const year = monthMode ? monthParam.slice(0, 4) : yearParam;
-  const mNum = monthMode ? parseInt(monthParam.slice(5, 7), 10) : 12;
-  if (monthMode && (mNum < 1 || mNum > 12)) return json(400, { ok: false, error: 'invalid month' });
+  if (!/^\d{4}$/.test(yearParam)) return json(400, { ok: false, error: 'year=YYYY required' });
+  const year = yearParam;
 
   const yearFrom = `${year}-01-01`;
   const yearEnd = `${year}-12-31`;
-  const monthFrom = monthMode ? `${monthParam}-01` : null;
-  const rawEnd = monthMode ? `${monthParam}-${pad(new Date(Date.UTC(parseInt(year, 10), mNum, 0)).getUTCDate())}` : yearEnd;
-  const to = rawEnd < todayISO ? rawEnd : todayISO; // never fetch the future
+  const to = yearEnd < todayISO ? yearEnd : todayISO; // never fetch the future
 
   // Months of the year elapsed through `to` — how many times a recurring
   // expense has been incurred year-to-date.
   const monthsElapsed = to < yearFrom ? 0 : (to >= yearEnd ? 12 : parseInt(to.slice(5, 7), 10));
 
   const CH = ['recurring', 'fixed', 'apps', 'referrals'];
-  const revYear = {}; const revMonth = {}; const revM = {}; // revM[ch][1..12]
-  CH.forEach((c) => { revYear[c] = 0; revMonth[c] = 0; revM[c] = {}; });
+  const revM = {}; // revM[ch][1..12]
+  CH.forEach((c) => { revM[c] = {}; });
   let currency = 'USD';
   let sources = {};
   if (to >= yearFrom) {
@@ -2125,11 +2111,9 @@ async function handleAdminPnl(request, env) {
     sources = r.sources;
     if (r.currency) currency = r.currency;
     for (const it of r.items) {
-      if (!it.date || it.date < yearFrom || it.date > to || !(it.src in revYear)) continue;
-      revYear[it.src] += it.amount;
+      if (!it.date || it.date < yearFrom || it.date > to || !(it.src in revM)) continue;
       const m = parseInt(it.date.slice(5, 7), 10);
       revM[it.src][m] = (revM[it.src][m] || 0) + it.amount;
-      if (monthMode && monthFrom <= to && it.date >= monthFrom) revMonth[it.src] += it.amount;
     }
   }
 
@@ -2137,14 +2121,16 @@ async function handleAdminPnl(request, env) {
   const partial = Object.keys(sources).some((k) => sources[k] && sources[k].connected && sources[k].ok === false);
   const base = { ok: true, partial, year, currency, sources, payroll: { connected: false, provider: 'Gusto' } };
 
-  if (!monthMode) {
-    // Year view — a column per elapsed month, a quarter column once its three
-    // months complete (Q1 after Mar … Q4 after Dec), and a Year total. Values
-    // are keyed by column so the client renders them generically.
+  {
+    // A column per month, a quarter column once its three months complete
+    // (Q1 after Mar … Q4 after Dec), and a Year total. Values are keyed by
+    // column so the client renders them generically.
     const cols = [];
-    for (let m = 1; m <= monthsElapsed; m++) {
+    for (let m = 1; m <= 12; m++) {
       cols.push({ key: `m${m}`, label: EST_MONTHS[m - 1], kind: 'month' });
-      if (m % 3 === 0) cols.push({ key: `q${m / 3}`, label: `Q${m / 3}`, kind: 'quarter' });
+      // Quarter subtotal once its three months are complete (future months show
+      // blank, so a not-yet-finished quarter gets no rollup column).
+      if (m % 3 === 0 && m <= monthsElapsed) cols.push({ key: `q${m / 3}`, label: `Q${m / 3}`, kind: 'quarter' });
     }
     cols.push({ key: 'year', label: String(year), kind: 'year' });
     const monthsOf = (key) => {
@@ -2160,7 +2146,9 @@ async function handleAdminPnl(request, env) {
       const oneMonth = (!e.recurring && e.month && e.month.slice(0, 4) === year) ? parseInt(e.month.slice(5, 7), 10) : 0;
       return Object.fromEntries(cols.map((col) => {
         const ms = monthsOf(col.key);
-        return [col.key, e.recurring ? amt(e) * ms.length : ((oneMonth && ms.includes(oneMonth)) ? amt(e) : 0)];
+        // Recurring costs only count for months that have actually elapsed, so
+        // future month columns stay blank.
+        return [col.key, e.recurring ? amt(e) * ms.filter((m) => m <= monthsElapsed).length : ((oneMonth && ms.includes(oneMonth)) ? amt(e) : 0)];
       }));
     };
     const lines = all
@@ -2177,28 +2165,6 @@ async function handleAdminPnl(request, env) {
       windows: { yearFrom, to },
     });
   }
-
-  // Month view — this month + year-to-date columns.
-  const lines = all
-    .filter((e) => e.recurring || e.month === monthParam)
-    .map((e) => { const a = Number(e.amount) || 0; return { id: e.id, label: e.label, category: e.category, recurring: !!e.recurring, month: a, ytd: e.recurring ? a * mNum : a }; })
-    .sort((a, b) => b.month - a.month);
-  let em = 0; let ey = 0;
-  for (const e of all) {
-    const a = Number(e.amount) || 0;
-    if (e.recurring) { em += a; ey += a * mNum; }
-    else if (e.month === monthParam) { em += a; ey += a; }
-    else if (e.month && e.month.slice(0, 4) === year && parseInt(e.month.slice(5, 7), 10) < mNum) { ey += a; }
-  }
-  const revMonthTotal = CH.reduce((s, c) => s + revMonth[c], 0);
-  const revYtdTotal = CH.reduce((s, c) => s + revYear[c], 0);
-  return json(200, {
-    ...base, mode: 'month', month: monthParam,
-    revenue: { channels: Object.fromEntries(CH.map((c) => [c, { month: revMonth[c], ytd: revYear[c] }])), total: { month: revMonthTotal, ytd: revYtdTotal } },
-    expenses: { lines, total: { month: em, ytd: ey } },
-    net: { month: revMonthTotal - em, ytd: revYtdTotal - ey },
-    windows: { monthFrom, to, yearFrom },
-  });
 }
 
 // POST /api/admin/pnl/expense — create or update one expense line.
@@ -2237,54 +2203,6 @@ async function handleAdminPnlExpenseDelete(request, env) {
   if (!/^[a-z0-9]{6,}$/.test(id)) return json(400, { ok: false, error: 'Bad id' });
   await env.BLUEPRINT_AUTH.delete(`pnlexp:${id}`).catch(() => {});
   return json(200, { ok: true });
-}
-
-// ── 5-year plan (projection) ─────────────────────────────────────────────
-// One KV record. Each line carries a Year-1 base and an annual growth %; the
-// client projects year N = base * (1 + growth/100)^(N-1). Owner-only (same
-// /api/admin/pnl gate).
-const PNL_PLAN_KEY = 'pnlplan:v1';
-function defaultPnlPlan(startYear) {
-  return {
-    startYear,
-    revenue: [
-      { id: 'r_retainers', label: 'Retainers', base: 0, growth: 0 },
-      { id: 'r_projects', label: 'Projects', base: 0, growth: 0 },
-      { id: 'r_apps', label: 'Apps', base: 0, growth: 0 },
-      { id: 'r_referrals', label: 'Referrals', base: 0, growth: 0 },
-    ],
-    expenses: [
-      { id: 'e_payroll', label: 'Payroll', base: 0, growth: 0 },
-    ],
-  };
-}
-function sanitizePlanLine(l) {
-  return {
-    id: /^[a-z0-9_]{2,40}$/.test(l && l.id || '') ? l.id : ('l_' + genRandSlug()),
-    label: ((l && l.label) || '').toString().trim().slice(0, 80) || 'Line',
-    base: Math.round((Number(l && l.base) || 0) * 100) / 100,
-    growth: Math.max(-100, Math.min(1000, Number(l && l.growth) || 0)),
-  };
-}
-async function handleAdminPnlPlanGet(request, env) {
-  const raw = await env.BLUEPRINT_AUTH.get(PNL_PLAN_KEY);
-  let plan = null;
-  if (raw) { try { plan = JSON.parse(raw); } catch { plan = null; } }
-  if (!plan) plan = defaultPnlPlan(new Date().getUTCFullYear());
-  return json(200, { ok: true, plan });
-}
-async function handleAdminPnlPlanSave(request, env) {
-  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
-  let body;
-  try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
-  const sy = parseInt(body.startYear, 10);
-  const plan = {
-    startYear: (sy >= 2000 && sy <= 2100) ? sy : new Date().getUTCFullYear(),
-    revenue: Array.isArray(body.revenue) ? body.revenue.slice(0, 40).map(sanitizePlanLine) : [],
-    expenses: Array.isArray(body.expenses) ? body.expenses.slice(0, 40).map(sanitizePlanLine) : [],
-  };
-  await env.BLUEPRINT_AUTH.put(PNL_PLAN_KEY, JSON.stringify(plan));
-  return json(200, { ok: true, plan });
 }
 
 // ── Stripe integration (Services > Retainers) ────────────────────────────
