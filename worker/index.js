@@ -2116,8 +2116,8 @@ async function handleAdminPnl(request, env) {
   const monthsElapsed = to < yearFrom ? 0 : (to >= yearEnd ? 12 : parseInt(to.slice(5, 7), 10));
 
   const CH = ['recurring', 'fixed', 'apps', 'referrals'];
-  const revYear = {}; const revMonth = {};
-  CH.forEach((c) => { revYear[c] = 0; revMonth[c] = 0; });
+  const revYear = {}; const revMonth = {}; const revM = {}; // revM[ch][1..12]
+  CH.forEach((c) => { revYear[c] = 0; revMonth[c] = 0; revM[c] = {}; });
   let currency = 'USD';
   let sources = {};
   if (to >= yearFrom) {
@@ -2127,6 +2127,8 @@ async function handleAdminPnl(request, env) {
     for (const it of r.items) {
       if (!it.date || it.date < yearFrom || it.date > to || !(it.src in revYear)) continue;
       revYear[it.src] += it.amount;
+      const m = parseInt(it.date.slice(5, 7), 10);
+      revM[it.src][m] = (revM[it.src][m] || 0) + it.amount;
       if (monthMode && monthFrom <= to && it.date >= monthFrom) revMonth[it.src] += it.amount;
     }
   }
@@ -2136,20 +2138,42 @@ async function handleAdminPnl(request, env) {
   const base = { ok: true, partial, year, currency, sources, payroll: { connected: false, provider: 'Gusto' } };
 
   if (!monthMode) {
-    // Year view — recurring lines counted once per elapsed month; one-offs in
-    // this year counted once.
+    // Year view — a column per elapsed month, a quarter column once its three
+    // months complete (Q1 after Mar … Q4 after Dec), and a Year total. Values
+    // are keyed by column so the client renders them generically.
+    const cols = [];
+    for (let m = 1; m <= monthsElapsed; m++) {
+      cols.push({ key: `m${m}`, label: EST_MONTHS[m - 1], kind: 'month' });
+      if (m % 3 === 0) cols.push({ key: `q${m / 3}`, label: `Q${m / 3}`, kind: 'quarter' });
+    }
+    cols.push({ key: 'year', label: String(year), kind: 'year' });
+    const monthsOf = (key) => {
+      if (key === 'year') { const a = []; for (let m = 1; m <= monthsElapsed; m++) a.push(m); return a; }
+      if (key[0] === 'q') { const q = parseInt(key.slice(1), 10); return [q * 3 - 2, q * 3 - 1, q * 3]; }
+      return [parseInt(key.slice(1), 10)];
+    };
     const amt = (e) => Number(e.amount) || 0;
+    const channels = {};
+    for (const c of CH) channels[c] = Object.fromEntries(cols.map((col) => [col.key, monthsOf(col.key).reduce((s, m) => s + (revM[c][m] || 0), 0)]));
+    const total = Object.fromEntries(cols.map((col) => [col.key, CH.reduce((s, c) => s + channels[c][col.key], 0)]));
+    const lineVals = (e) => {
+      const oneMonth = (!e.recurring && e.month && e.month.slice(0, 4) === year) ? parseInt(e.month.slice(5, 7), 10) : 0;
+      return Object.fromEntries(cols.map((col) => {
+        const ms = monthsOf(col.key);
+        return [col.key, e.recurring ? amt(e) * ms.length : ((oneMonth && ms.includes(oneMonth)) ? amt(e) : 0)];
+      }));
+    };
     const lines = all
       .filter((e) => e.recurring || (e.month && e.month.slice(0, 4) === year))
-      .map((e) => ({ id: e.id, label: e.label, category: e.category, recurring: !!e.recurring, year: e.recurring ? amt(e) * monthsElapsed : amt(e) }))
-      .sort((a, b) => b.year - a.year);
-    const expYear = lines.reduce((s, e) => s + e.year, 0);
-    const revTotal = CH.reduce((s, c) => s + revYear[c], 0);
+      .map((e) => ({ id: e.id, label: e.label, category: e.category, recurring: !!e.recurring, ...lineVals(e) }))
+      .sort((a, b) => (b.year || 0) - (a.year || 0));
+    const expTotal = Object.fromEntries(cols.map((col) => [col.key, lines.reduce((s, e) => s + (e[col.key] || 0), 0)]));
+    const net = Object.fromEntries(cols.map((col) => [col.key, total[col.key] - expTotal[col.key]]));
     return json(200, {
-      ...base, mode: 'year',
-      revenue: { channels: Object.fromEntries(CH.map((c) => [c, { year: revYear[c] }])), total: { year: revTotal } },
-      expenses: { lines, total: { year: expYear } },
-      net: { year: revTotal - expYear },
+      ...base, mode: 'year', columns: cols,
+      revenue: { channels, total },
+      expenses: { lines, total: expTotal },
+      net,
       windows: { yearFrom, to },
     });
   }

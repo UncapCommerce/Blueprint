@@ -1391,11 +1391,16 @@
     const REVROWS = [['recurring', 'Retainers'], ['fixed', 'Projects'], ['apps', 'Apps'], ['referrals', 'Referrals']];
     const SRC = REVROWS;
     const cur = data && data.currency;
-    // Columns depend on which view the loaded data represents.
-    const cols = data && data.mode === 'month'
-      ? [{ key: 'month', label: monthLabelOf(data.month) }, { key: 'ytd', label: 'Year to date' }]
+    // Columns depend on which view the loaded data represents. The year view now
+    // ships its own column list (month/quarter/year); month view is fixed.
+    const cols = data && data.columns ? data.columns
+      : data && data.mode === 'month' ? [{ key: 'month', label: monthLabelOf(data.month) }, { key: 'ytd', label: 'Year to date' }]
       : [{ key: 'year', label: (data && data.year) || year }];
     const nCols = cols.length + 1;
+    // Subtotal/total columns (quarters + year) get a faint tint so they read as
+    // rollups amid the month columns.
+    const colBg = (c) => (c && c.kind === 'year') ? 'rgba(10,10,10,0.06)' : (c && c.kind === 'quarter') ? 'rgba(10,10,10,0.03)' : 'transparent';
+    const tableMinW = Math.max(320, 150 + cols.length * 78);
     const cellR = { padding: isMobile ? '9px 12px' : '10px 16px', textAlign: 'right', fontFamily: T.mono, fontSize: 13, whiteSpace: 'nowrap', color: T.fg1 };
     const cellL = { padding: isMobile ? '9px 12px' : '10px 16px', textAlign: 'left', fontFamily: T.sans, fontSize: 13, color: T.fg1 };
     const sectionRow = (label, extra) => (
@@ -1456,22 +1461,22 @@
             )}
             <div style={{ ...S.card, overflow: 'hidden' }}>
               <div style={{ overflowX: 'auto' }}>
-                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: cols.length > 1 ? 380 : 300 }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: tableMinW }}>
                   <thead><tr>
                     <th style={{ ...S.th, textAlign: 'left' }}>&nbsp;</th>
-                    {cols.map((c) => <th key={c.key} style={{ ...S.th, textAlign: 'right' }}>{c.label}</th>)}
+                    {cols.map((c) => <th key={c.key} style={{ ...S.th, textAlign: 'right', background: colBg(c), color: (c.kind === 'quarter' || c.kind === 'year') ? T.fg1 : undefined }}>{c.label}</th>)}
                   </tr></thead>
                   <tbody>
                     {sectionRow('Revenue')}
                     {REVROWS.map(([k, l]) => (
                       <tr key={k}>
                         <td style={cellL}>{l}</td>
-                        {cols.map((c, i) => <td key={c.key} style={{ ...cellR, color: i === 0 ? T.fg1 : T.fg2 }}>{money(data.revenue.channels[k][c.key], cur)}</td>)}
+                        {cols.map((c) => <td key={c.key} style={{ ...cellR, background: colBg(c), color: c.kind === 'year' ? T.fg1 : T.fg2 }}>{money(data.revenue.channels[k][c.key], cur)}</td>)}
                       </tr>
                     ))}
                     <tr>
                       <td style={{ ...cellL, fontWeight: 700 }}>Total revenue</td>
-                      {cols.map((c) => <td key={c.key} style={{ ...cellR, fontWeight: 700 }}>{money(data.revenue.total[c.key], cur)}</td>)}
+                      {cols.map((c) => <td key={c.key} style={{ ...cellR, fontWeight: 700, background: colBg(c) }}>{money(data.revenue.total[c.key], cur)}</td>)}
                     </tr>
 
                     {sectionRow('Expenses', <button type="button" style={{ ...S.btnGhost, padding: '4px 10px', fontSize: 12 }} onClick={() => setEditing({})}>+ Add expense</button>)}
@@ -1485,17 +1490,17 @@
                           <button type="button" onClick={() => setEditing(e)} style={{ marginLeft: 10, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: T.mono, fontSize: 11, color: T.fg3, textDecoration: 'underline' }}>edit</button>
                           <button type="button" onClick={() => delExpense(e.id)} style={{ marginLeft: 8, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: T.mono, fontSize: 11, color: '#B3261E', textDecoration: 'underline' }}>delete</button>
                         </td>
-                        {cols.map((c, i) => { const v = e[c.key]; return <td key={c.key} style={{ ...cellR, color: i === 0 ? '#B3261E' : T.fg3 }}>{(v || v === 0) ? '-' + money(v, cur) : ''}</td>; })}
+                        {cols.map((c) => { const v = e[c.key]; return <td key={c.key} style={{ ...cellR, background: colBg(c), color: c.kind === 'year' ? '#B3261E' : T.fg3 }}>{(v || v === 0) ? '-' + money(v, cur) : ''}</td>; })}
                       </tr>
                     ))}
                     <tr>
                       <td style={{ ...cellL, fontWeight: 700 }}>Total expenses</td>
-                      {cols.map((c) => <td key={c.key} style={{ ...cellR, fontWeight: 700, color: '#B3261E' }}>-{money(data.expenses.total[c.key], cur)}</td>)}
+                      {cols.map((c) => <td key={c.key} style={{ ...cellR, fontWeight: 700, color: '#B3261E', background: colBg(c) }}>-{money(data.expenses.total[c.key], cur)}</td>)}
                     </tr>
 
                     <tr>
                       <td style={{ ...cellL, fontWeight: 800, fontSize: 14, borderTop: `2px solid ${T.fg1}` }}>Net profit</td>
-                      {cols.map((c) => <td key={c.key} style={{ ...cellR, fontWeight: 800, fontSize: 14, borderTop: `2px solid ${T.fg1}`, color: data.net[c.key] >= 0 ? '#0A7A3B' : '#B3261E' }}>{money(data.net[c.key], cur)}</td>)}
+                      {cols.map((c) => <td key={c.key} style={{ ...cellR, fontWeight: 800, fontSize: 14, borderTop: `2px solid ${T.fg1}`, background: colBg(c), color: data.net[c.key] >= 0 ? '#0A7A3B' : '#B3261E' }}>{money(data.net[c.key], cur)}</td>)}
                     </tr>
                   </tbody>
                 </table>
