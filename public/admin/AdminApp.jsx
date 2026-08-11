@@ -1424,7 +1424,7 @@
     );
 
     return (
-      <Page>
+      <Page wide>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 4, marginBottom: 16, flexWrap: 'wrap' }}>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>{toggleBtn('year', 'Year')}{toggleBtn('month', 'Month')}{toggleBtn('plan', '5-year plan')}</div>
           <span style={{ flex: '1 1 auto' }}/>
