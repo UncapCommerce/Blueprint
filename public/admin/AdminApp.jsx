@@ -2567,6 +2567,7 @@
     const [accent, setAccent] = useState((initial.palette && initial.palette.accent) || '#B8741F');
     const [saving, setSaving] = useState(false);
     const [fileBusy, setFileBusy] = useState('');
+    const [discBusy, setDiscBusy] = useState('');
     const [error, setError] = useState('');
     const readFile = (file, cb) => {
       const r = new FileReader();
@@ -2699,6 +2700,26 @@
         if (d.company) setCo(d.company);
       } catch (err) { window.alert(err.message); }
     };
+    // Create the discovery for THIS company in place — no jump to the
+    // discoveries list, no re-picking the company. Mirrors NewDiscoveryModal:
+    // everything (contacts, palette, logo) pulls from the company server-side,
+    // and an RFP/brief on file is analyzed by Claude right after.
+    const createDiscovery = async () => {
+      if (!co.leadContact && !(co.contacts || []).length) { window.alert('This company has no contacts. Add them above first.'); return; }
+      setDiscBusy('Creating…');
+      try {
+        const d = await api('/api/admin/discoveries', { method: 'POST', body: JSON.stringify({ companyId: co.id }) });
+        const doc = (co.files || []).find((f) => f.kind === 'rfp') || (co.files || []).find((f) => f.kind === 'brief');
+        if (doc && d.discovery) {
+          setDiscBusy('Analyzing ' + (doc.kind === 'rfp' ? 'RFP' : 'brief') + '…');
+          try { await api('/api/admin/discovery/prefill', { method: 'POST', body: JSON.stringify({ id: d.discovery.id, companyId: co.id, fid: doc.fid }) }); }
+          catch (err) { window.alert('The discovery was created, but document analysis failed:\n\n' + err.message); }
+        }
+        const fresh = await api('/api/admin/company?id=' + encodeURIComponent(co.id));
+        if (fresh.company) setCo(fresh.company);
+      } catch (err) { window.alert(err.message); }
+      finally { setDiscBusy(''); }
+    };
     const savePalette = () => persist({ palette: { prime, accent } });
     // A page row: mono label on the left, the (inline-editable) value on the
     // right; stacks on mobile.
@@ -2727,16 +2748,20 @@
           const delBtn = (what, label) => (canDelete ? (
             <button type="button" onClick={() => deleteArtifact(what, label)} style={{ ...S.btnGhost, color: '#B3261E' }}>Delete</button>
           ) : null);
-          const tile = (label, has, statusText, viewHref, createHref, comingSoon, whatKey) => (
+          // onCreate (+ busy label) makes "Create" an in-place action instead of
+          // a link — used for Discovery so it creates for THIS company directly.
+          const tile = (label, has, statusText, viewHref, createHref, comingSoon, whatKey, onCreate, busy) => (
             <div style={{ ...S.card, flex: '1 1 180px', minWidth: 168, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
               <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.fg3 }}>{label}</div>
-              <div style={{ fontFamily: T.sans, fontSize: 13, fontWeight: 600, color: has ? T.fg1 : T.fg3 }}>{statusText}</div>
+              <div style={{ fontFamily: T.sans, fontSize: 13, fontWeight: 600, color: has ? T.fg1 : T.fg3 }}>{busy || statusText}</div>
               <div style={{ display: 'flex', gap: 8, marginTop: 'auto', flexWrap: 'wrap' }}>
                 {comingSoon
                   ? <button type="button" disabled style={{ ...S.btnGhost, opacity: 0.5, cursor: 'default' }}>Create</button>
                   : has
                     ? <a href={viewHref} target="_blank" rel="noreferrer" style={{ ...S.btnGhost, textDecoration: 'none' }}>View ↗</a>
-                    : <a href={createHref} onClick={navClick(createHref)} style={{ ...S.btnLime, textDecoration: 'none' }}>Create</a>}
+                    : onCreate
+                      ? <button type="button" style={{ ...S.btnLime, opacity: busy ? 0.7 : 1 }} disabled={!!busy} onClick={onCreate}>{busy ? 'Working…' : 'Create'}</button>
+                      : <a href={createHref} onClick={navClick(createHref)} style={{ ...S.btnLime, textDecoration: 'none' }}>Create</a>}
                 {has ? delBtn(whatKey, label.toLowerCase()) : null}
               </div>
             </div>
@@ -2756,7 +2781,7 @@
           return (
             <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
               {estTile}
-              {tile('Discovery', !!co.discoveryHandle, co.discoveryHandle ? 'Started' : 'Not started', '/' + co.id + '/discovery', '/admin/discoveries', false, 'discovery')}
+              {tile('Discovery', !!co.discoveryHandle, co.discoveryHandle ? 'Started' : 'Not started', '/' + co.id + '/discovery', '/admin/discoveries', false, 'discovery', createDiscovery, discBusy)}
               {tile('Blueprint', !!co.blueprintId, co.blueprintId ? 'Created' : 'Not started', '/blueprint/' + co.blueprintId + '/', '/admin/blueprints', false, 'blueprint')}
             </div>
           );
