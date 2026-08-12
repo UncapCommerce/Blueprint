@@ -155,8 +155,14 @@ function Portal({ me, onSignOut }) {
 
   const MONO = 'var(--font-mono, "JetBrains Mono", ui-monospace, monospace)';
   const isMobile = useIsNarrow();
+  // For a real client the logo returns to the hub's Overview. When an admin is
+  // previewing the hub, it instead exits back to the OS (this company's profile)
+  // rather than dropping them on the Overview tab.
+  const onLogo = me.preview
+    ? () => { window.location.href = '/admin/company/' + co.id; }
+    : () => setTab('Overview');
   const logo = (
-    <div onClick={() => setTab('Overview')} style={{ display: 'flex', alignItems: 'center', gap: 10, flex: '0 0 auto', cursor: 'pointer' }}>
+    <div onClick={onLogo} title={me.preview ? 'Back to the OS' : ''} style={{ display: 'flex', alignItems: 'center', gap: 10, flex: '0 0 auto', cursor: 'pointer' }}>
       <img src="/assets/uncap-logo-white.svg" alt="Uncap" style={{ height: 13, display: 'block' }}/>
       <span style={{ width: 1, height: 14, background: '#4D4D4D' }}></span>
       <span style={{ fontFamily: MONO, fontSize: 8.5, letterSpacing: '0.12em', color: '#9A9A9A' }}>HUB</span>
