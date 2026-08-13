@@ -85,9 +85,16 @@ JSX with a `babel.transform` (that's exactly what the deploy runs).
   `collectRevenueItems` fan-out over Shopify/Stripe/QuickBooks/Partner), minus
   manual expense lines. Expenses are KV records (`pnlexp:<id>`, editable via
   `POST /api/admin/pnl/expense{,/delete}`) with a `recurring` monthly flag or a
-  one-off `month`. Payroll will fill its line once Gusto is connected. The `/pnl`
-  routes are gated on `isSuperAdmin` in the worker; the P&L endpoint uses the
-  same `revenueCached` SWR wrapper as the revenue endpoints
+  one-off `month`. **Payroll** fills automatically from **Gusto** once connected:
+  OAuth 2.0 at `/api/gusto/{install,callback}` (owner-only), tokens in
+  `gusto:tokens` (refresh tokens ROTATE — persist both on every refresh);
+  `gustoPayrollByMonth` reads processed payrolls and sums each one's
+  `gross_pay + employer_taxes + benefits` bucketed by `check_date` month into a
+  read-only `source:'gusto'` expense line. Creds are Cloudflare dashboard
+  vars/secrets: `GUSTO_CLIENT_ID`, `GUSTO_CLIENT_SECRET`, `GUSTO_ENVIRONMENT`
+  (`demo`|`production` — new apps are demo-only until Gusto approves prod). The
+  `/pnl` routes are gated on `isSuperAdmin` in the worker; the P&L endpoint uses
+  the same `revenueCached` SWR wrapper as the revenue endpoints
 - **Admin hierarchy (4 roles)**: any `@uncap.com` Google account can sign
   in but is **Pending** (no access) until the Admin approves them into a
   role. Roles, most to least privileged: **Admin** (`SUPER_ADMIN_EMAIL` =

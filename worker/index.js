@@ -247,6 +247,12 @@ export default {
     if (url.pathname === '/api/qbo/callback' && (request.method === 'GET' || request.method === 'HEAD')) {
       return handleQboCallback(request, env);
     }
+    if (url.pathname === '/api/gusto/install' && (request.method === 'GET' || request.method === 'HEAD')) {
+      return handleGustoInstall(request, env);
+    }
+    if (url.pathname === '/api/gusto/callback' && (request.method === 'GET' || request.method === 'HEAD')) {
+      return handleGustoCallback(request, env);
+    }
 
     // Admin approval gate: every other /api/admin/* endpoint requires an
     // APPROVED @uncap.com user. Unapproved users can only check their status
@@ -1753,6 +1759,198 @@ async function handleQboCallback(request, env) {
   return finish('Fixed revenue is now syncing invoices and payments from QuickBooks.', true);
 }
 
+// ── Gusto payroll integration (P&L → payroll expense line) ────────────────
+// Connects Uncap's own Gusto account via OAuth 2.0 and reads processed payroll
+// runs, so the owner P&L can show real employer payroll cost per month instead
+// of a manual estimate. Single-tenant: one token record, one company (mirrors
+// the QuickBooks connection). Creds are Cloudflare vars/secrets (NOT
+// wrangler.toml — --keep-vars means toml var edits never reach the worker):
+//   GUSTO_CLIENT_ID     — Gusto app Client ID     [var]
+//   GUSTO_CLIENT_SECRET — Gusto app Client Secret [secret]
+//   GUSTO_ENVIRONMENT   — 'demo' (default, api.gusto-demo.com) or 'production'
+// New Gusto apps are demo-only until Gusto approves production access.
+const GUSTO_TOKENS_KEY = 'gusto:tokens';
+const GUSTO_API_VERSION = '2024-04-01'; // pin so the payroll `totals` schema is stable
+
+function gustoConfig(env) {
+  const environment = ((env.GUSTO_ENVIRONMENT || 'demo').toString().trim().toLowerCase() === 'production') ? 'production' : 'demo';
+  return {
+    clientId: (env.GUSTO_CLIENT_ID || '').toString().trim(),
+    clientSecret: (env.GUSTO_CLIENT_SECRET || '').toString().trim(),
+    environment,
+    // Gusto uses the same host for OAuth and the REST API.
+    apiBase: environment === 'production' ? 'https://api.gusto.com' : 'https://api.gusto-demo.com',
+  };
+}
+
+async function gustoGetTokens(env) {
+  const raw = await env.BLUEPRINT_AUTH.get(GUSTO_TOKENS_KEY);
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch { return null; }
+}
+
+// Exchange an authorization_code or refresh_token grant and persist the result.
+// Gusto ROTATES the refresh token and revokes the old one once the new access
+// token is used, so we must save both new tokens before any further API call.
+async function gustoTokenGrant(env, params, prev) {
+  const cfg = gustoConfig(env);
+  const body = new URLSearchParams({ ...params, client_id: cfg.clientId, client_secret: cfg.clientSecret });
+  const resp = await fetch(`${cfg.apiBase}/oauth/token`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/x-www-form-urlencoded', 'accept': 'application/json' },
+    body: body.toString(),
+  });
+  if (!resp.ok) {
+    const t = await resp.text().catch(() => '');
+    throw new Error(`Gusto token ${resp.status}: ${t.slice(0, 160)}`);
+  }
+  const d = await resp.json().catch(() => ({}));
+  if (!d.access_token) throw new Error('Gusto returned no access token');
+  const next = {
+    ...(prev || {}),
+    accessToken: d.access_token,
+    refreshToken: d.refresh_token || (prev && prev.refreshToken) || '',
+    expiresAt: Date.now() + ((d.expires_in || 7200) * 1000),
+  };
+  await env.BLUEPRINT_AUTH.put(GUSTO_TOKENS_KEY, JSON.stringify(next));
+  return next;
+}
+
+async function gustoRefresh(env, tokens) {
+  return gustoTokenGrant(env, { grant_type: 'refresh_token', refresh_token: tokens.refreshToken }, tokens);
+}
+
+// Valid access token (refreshing within 2 min of the 2h expiry) or null.
+async function gustoValidToken(env) {
+  let tokens = await gustoGetTokens(env);
+  if (!tokens || !tokens.accessToken || !tokens.companyId) return null;
+  if (!tokens.expiresAt || Date.now() > tokens.expiresAt - 120000) {
+    tokens = await gustoRefresh(env, tokens);
+  }
+  return { accessToken: tokens.accessToken, companyId: tokens.companyId };
+}
+
+async function gustoFetch(env, auth, path) {
+  const cfg = gustoConfig(env);
+  const resp = await fetch(`${cfg.apiBase}${path}`, {
+    headers: { 'authorization': 'Bearer ' + auth.accessToken, 'accept': 'application/json', 'x-gusto-api-version': GUSTO_API_VERSION },
+  });
+  if (!resp.ok) {
+    const t = await resp.text().catch(() => '');
+    throw new Error(`Gusto ${resp.status}: ${t.slice(0, 160)}`);
+  }
+  return resp.json();
+}
+
+// GET /api/gusto/install — owner-only. Redirects to Gusto's OAuth screen.
+async function handleGustoInstall(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess || !(await adminIsApproved(env, sess.email)) || !isSuperAdmin(sess.email)) {
+    return new Response('Sign in to the Uncap admin as the owner first, then retry.', { status: 401 });
+  }
+  const cfg = gustoConfig(env);
+  if (!cfg.clientId || !cfg.clientSecret) {
+    return new Response('Gusto is not configured: set GUSTO_CLIENT_ID and GUSTO_CLIENT_SECRET.', { status: 400 });
+  }
+  const state = genToken();
+  await env.BLUEPRINT_AUTH.put(`gusto_oauth_state:${state}`, '1', { expirationTtl: 600 });
+  const redirect = `${new URL(request.url).origin}/api/gusto/callback`;
+  const authorize = `${cfg.apiBase}/oauth/authorize?client_id=` + encodeURIComponent(cfg.clientId)
+    + '&response_type=code'
+    + '&redirect_uri=' + encodeURIComponent(redirect)
+    + '&state=' + encodeURIComponent(state);
+  return Response.redirect(authorize, 302);
+}
+
+// GET /api/gusto/callback — Gusto redirects with ?code&state.
+async function handleGustoCallback(request, env) {
+  const url = new URL(request.url);
+  const code = (url.searchParams.get('code') || '').toString();
+  const state = (url.searchParams.get('state') || '').toString();
+
+  const finish = (msg, okFlag) => new Response(
+    `<!doctype html><meta charset="utf-8"><body style="font-family:system-ui;max-width:520px;margin:80px auto;padding:0 20px;color:#0A0A0A">`
+    + `<h2 style="margin:0 0 8px">${okFlag ? 'Gusto connected' : 'Gusto connection failed'}</h2>`
+    + `<p style="color:#555;line-height:1.5">${escapeHtml(msg)}</p>`
+    + `<p><a href="/admin/pnl" style="color:#0A0A0A;font-weight:700">Back to the P&amp;L &rarr;</a></p></body>`,
+    { status: okFlag ? 200 : 400, headers: { 'content-type': 'text/html; charset=utf-8' } }
+  );
+
+  const stateVal = await env.BLUEPRINT_AUTH.get(`gusto_oauth_state:${state}`);
+  if (!stateVal) return finish('Expired or invalid install state. Start the connect flow again.', false);
+  await env.BLUEPRINT_AUTH.delete(`gusto_oauth_state:${state}`);
+  if (!code) return finish('Missing authorization code.', false);
+
+  const redirect = `${url.origin}/api/gusto/callback`;
+  let tokens;
+  try {
+    tokens = await gustoTokenGrant(env, { grant_type: 'authorization_code', code, redirect_uri: redirect }, null);
+  } catch (err) {
+    return finish('Token exchange failed: ' + (err.message || err), false);
+  }
+
+  // Resolve the company the user administers so we can pull its payrolls.
+  let companyId = '';
+  try {
+    const me = await gustoFetch(env, { accessToken: tokens.accessToken }, '/v1/me');
+    const admin = me && me.roles && me.roles.payroll_admin;
+    const companies = (admin && admin.companies) || [];
+    companyId = (companies[0] && (companies[0].uuid || companies[0].id)) || '';
+  } catch (err) {
+    return finish('Connected, but could not read your Gusto company: ' + (err.message || err), false);
+  }
+  if (!companyId) return finish('No payroll-admin company found on this Gusto account.', false);
+
+  await env.BLUEPRINT_AUTH.put(GUSTO_TOKENS_KEY, JSON.stringify({ ...tokens, companyId }));
+  await logActivity(env, null, { type: 'status', entity: 'company', id: 'gusto', name: 'Gusto', actor: 'system', detail: `Gusto connected (OAuth) — company ${companyId}` });
+  return finish('Payroll is now pulling from Gusto onto the P&L.', true);
+}
+
+// Employer payroll cost per calendar month for a year, from processed Gusto
+// payrolls. Cost per payroll = gross_pay + employer_taxes + benefits (employer
+// contributions), attributed to the month of check_date. Returns
+// { connected, ok, byMonth:{1..12}, error? } — never throws.
+async function gustoPayrollByMonth(env, year) {
+  const cfg = gustoConfig(env);
+  const auth = await gustoValidToken(env).catch(() => null);
+  if (!auth) {
+    return { connected: false, canConnect: !!(cfg.clientId && cfg.clientSecret), have: { clientId: !!cfg.clientId, clientSecret: !!cfg.clientSecret }, environment: cfg.environment };
+  }
+  const todayISO = new Date().toISOString().slice(0, 10);
+  const end = `${year}-12-31` < todayISO ? `${year}-12-31` : todayISO;
+  try {
+    const num = (v) => (parseFloat(v) || 0);
+    const byMonth = {};
+    // Paginate the processed-payrolls list for the year (25/page default).
+    const list = [];
+    for (let page = 1; page <= 40; page++) {
+      const batch = await gustoFetch(env, auth, `/v1/companies/${auth.companyId}/payrolls?processing_statuses=processed&start_date=${year}-01-01&end_date=${end}&page=${page}&per=100`);
+      const rows = Array.isArray(batch) ? batch : (batch.payrolls || []);
+      list.push(...rows);
+      if (rows.length < 100) break;
+    }
+    // Bucket by check_date month. The list summary may already carry `totals`;
+    // fetch payroll detail only when it doesn't, to keep round-trips (and the
+    // 200 req/min limit) down.
+    for (const p of list) {
+      const checkDate = p.check_date || (p.pay_period && p.pay_period.check_date) || '';
+      const m = /^\d{4}-(\d{2})/.test(checkDate) ? parseInt(checkDate.slice(5, 7), 10) : 0;
+      if (m < 1 || m > 12) continue;
+      let totals = p.totals;
+      if (!totals && (p.payroll_uuid || p.uuid || p.id)) {
+        const detail = await gustoFetch(env, auth, `/v1/companies/${auth.companyId}/payrolls/${p.payroll_uuid || p.uuid || p.id}`);
+        totals = detail && detail.totals;
+      }
+      if (!totals) continue;
+      const cost = num(totals.gross_pay) + num(totals.employer_taxes) + num(totals.benefits);
+      byMonth[m] = (byMonth[m] || 0) + cost;
+    }
+    return { connected: true, ok: true, byMonth };
+  } catch (err) {
+    return { connected: true, ok: false, error: err.message || String(err) };
+  }
+}
+
 // ── Shopify Partner API (Revenues > Apps) ─────────────────────────────────
 // App earnings from the Shopify Partner Dashboard (subscription/one-time/usage
 // sales, net of Shopify's cut). Uses a static Partner API token (no OAuth).
@@ -2118,8 +2316,14 @@ async function handleAdminPnl(request, env) {
   }
 
   const all = await listPnlExpenses(env);
-  const partial = Object.keys(sources).some((k) => sources[k] && sources[k].connected && sources[k].ok === false);
-  const base = { ok: true, partial, year, currency, sources, payroll: { connected: false, provider: 'Gusto' } };
+  // Real payroll cost per month from Gusto (empty/unconnected → manual only).
+  const payroll = await gustoPayrollByMonth(env, year);
+  const payrollErrored = payroll.connected === true && payroll.ok === false;
+  const partial = payrollErrored || Object.keys(sources).some((k) => sources[k] && sources[k].connected && sources[k].ok === false);
+  const base = {
+    ok: true, partial, year, currency, sources,
+    payroll: { connected: !!payroll.connected, ok: payroll.ok !== false, provider: 'Gusto', canConnect: payroll.canConnect, have: payroll.have, environment: payroll.environment },
+  };
 
   {
     // A column per month, a quarter column once its three months complete
@@ -2151,10 +2355,16 @@ async function handleAdminPnl(request, env) {
         return [col.key, e.recurring ? amt(e) * ms.filter((m) => m <= monthsElapsed).length : ((oneMonth && ms.includes(oneMonth)) ? amt(e) : 0)];
       }));
     };
-    const lines = all
+    const manualLines = all
       .filter((e) => e.recurring || (e.month && e.month.slice(0, 4) === year))
       .map((e) => ({ id: e.id, label: e.label, category: e.category, recurring: !!e.recurring, ...lineVals(e) }))
       .sort((a, b) => (b.year || 0) - (a.year || 0));
+    // Gusto-sourced payroll: a read-only line (source:'gusto', no edit/delete),
+    // its months bucketed by check_date and rolled into quarter/year via monthsOf.
+    const payrollLine = (payroll.connected && payroll.ok && payroll.byMonth)
+      ? { id: 'gusto-payroll', label: 'Payroll', category: 'Payroll', source: 'gusto', ...Object.fromEntries(cols.map((col) => [col.key, monthsOf(col.key).reduce((s, m) => s + (payroll.byMonth[m] || 0), 0)])) }
+      : null;
+    const lines = payrollLine ? [payrollLine, ...manualLines] : manualLines;
     const expTotal = Object.fromEntries(cols.map((col) => [col.key, lines.reduce((s, e) => s + (e[col.key] || 0), 0)]));
     const net = Object.fromEntries(cols.map((col) => [col.key, total[col.key] - expTotal[col.key]]));
     return json(200, {

@@ -1345,9 +1345,13 @@
                       <tr key={e.id}>
                         <td style={cellL}>
                           <span style={{ fontWeight: 600 }}>{e.label}</span>
-                          <span style={{ fontFamily: T.mono, fontSize: 9.5, letterSpacing: '0.05em', textTransform: 'uppercase', color: T.fg3, marginLeft: 8 }}>{e.category}{e.recurring ? ' · monthly' : ''}</span>
-                          <button type="button" onClick={() => setEditing(e)} style={{ marginLeft: 10, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: T.mono, fontSize: 11, color: T.fg3, textDecoration: 'underline' }}>edit</button>
-                          <button type="button" onClick={() => delExpense(e.id)} style={{ marginLeft: 8, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: T.mono, fontSize: 11, color: '#B3261E', textDecoration: 'underline' }}>delete</button>
+                          <span style={{ fontFamily: T.mono, fontSize: 9.5, letterSpacing: '0.05em', textTransform: 'uppercase', color: T.fg3, marginLeft: 8 }}>{e.source === 'gusto' ? 'Gusto' : (e.category + (e.recurring ? ' · monthly' : ''))}</span>
+                          {e.source === 'gusto' ? null : (
+                            <>
+                              <button type="button" onClick={() => setEditing(e)} style={{ marginLeft: 10, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: T.mono, fontSize: 11, color: T.fg3, textDecoration: 'underline' }}>edit</button>
+                              <button type="button" onClick={() => delExpense(e.id)} style={{ marginLeft: 8, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: T.mono, fontSize: 11, color: '#B3261E', textDecoration: 'underline' }}>delete</button>
+                            </>
+                          )}
                         </td>
                         {cols.map((c) => { const v = e[c.key]; return <td key={c.key} style={{ ...cellR, background: colBg(c), color: c.kind === 'year' ? '#B3261E' : T.fg3 }}>{(v || v === 0) ? '-' + money(v, cur) : ''}</td>; })}
                       </tr>
@@ -1379,9 +1383,31 @@
                   </span>
                 );
               })}
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: T.mono, fontSize: 11.5, color: T.fg2, border: `1px solid ${T.line}`, borderRadius: 999, padding: '4px 10px' }}>
-                <span style={{ width: 7, height: 7, borderRadius: 999, background: '#9A8A5A' }}/>Payroll · Gusto (not connected)
-              </span>
+              {(() => {
+                const pr = data.payroll || {};
+                if (pr.connected && pr.ok !== false) {
+                  return (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: T.mono, fontSize: 11.5, color: T.fg2, border: `1px solid ${T.line}`, borderRadius: 999, padding: '4px 10px' }}>
+                      <span style={{ width: 7, height: 7, borderRadius: 999, background: '#0A7A3B' }}/>Payroll · Gusto
+                    </span>
+                  );
+                }
+                if (pr.connected && pr.ok === false) {
+                  return (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: T.mono, fontSize: 11.5, color: T.fg2, border: `1px solid ${T.line}`, borderRadius: 999, padding: '4px 10px' }}>
+                      <span style={{ width: 7, height: 7, borderRadius: 999, background: '#B3261E' }}/>Payroll · Gusto (error)
+                    </span>
+                  );
+                }
+                // Not connected: offer to connect if creds are configured.
+                return pr.canConnect
+                  ? <a href="/api/gusto/install" style={{ ...S.btnGhost, textDecoration: 'none' }}>Connect Gusto for payroll</a>
+                  : (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6, fontFamily: T.mono, fontSize: 11.5, color: T.fg2, border: `1px solid ${T.line}`, borderRadius: 999, padding: '4px 10px' }}>
+                      <span style={{ width: 7, height: 7, borderRadius: 999, background: '#9A8A5A' }}/>Payroll · Gusto (set GUSTO_CLIENT_ID/SECRET)
+                    </span>
+                  );
+              })()}
             </div>
             <div style={{ marginTop: 12, fontFamily: T.sans, fontSize: 12.5, color: T.fg3 }}>
               Revenue is pulled live from your integrations; expenses are the lines you add above. Once Gusto is connected, payroll will fill its line automatically.
