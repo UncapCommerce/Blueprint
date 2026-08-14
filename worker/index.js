@@ -253,6 +253,9 @@ export default {
     if (url.pathname === '/api/gusto/callback' && (request.method === 'GET' || request.method === 'HEAD')) {
       return handleGustoCallback(request, env);
     }
+    if (url.pathname === '/api/admin/gusto/debug' && (request.method === 'GET' || request.method === 'HEAD')) {
+      return handleGustoDebug(request, env);
+    }
 
     // Admin approval gate: every other /api/admin/* endpoint requires an
     // APPROVED @uncap.com user. Unapproved users can only check their status
@@ -1840,6 +1843,27 @@ async function gustoFetch(env, auth, path) {
     throw new Error(`Gusto ${resp.status}: ${t.slice(0, 160)}`);
   }
   return resp.json();
+}
+
+// GET /api/admin/gusto/debug — owner-only. Reports which Gusto env vars the
+// worker can actually see (presence only, never the values) so a missing-secret
+// config problem is separable from any other issue. No token/secret material is
+// ever returned.
+async function handleGustoDebug(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess || !(await adminIsApproved(env, sess.email)) || !isSuperAdmin(sess.email)) {
+    return json(403, { ok: false, error: 'Owner only.' });
+  }
+  const cfg = gustoConfig(env);
+  const tokens = await gustoGetTokens(env);
+  return json(200, {
+    ok: true,
+    hasClientId: !!cfg.clientId,
+    hasClientSecret: !!cfg.clientSecret,
+    environment: cfg.environment,
+    apiBase: cfg.apiBase,
+    connected: !!(tokens && tokens.accessToken && tokens.companyId),
+  });
 }
 
 // GET /api/gusto/install — owner-only. Redirects to Gusto's OAuth screen.
