@@ -5303,8 +5303,12 @@ async function handleAdminGetCompany(request, env) {
   const sess = await getAdminSession(request, env);
   if (!sess) return json(401, { ok: false, error: 'Not signed in' });
   const id = new URL(request.url).searchParams.get('id') || '';
-  const rec = await getCompany(env, id);
+  let rec = await getCompany(env, id);
   if (!rec) return json(404, { ok: false, error: 'Company not found' });
+  // Self-heal: adopt a shipped registry page registered under this company's
+  // folder id (no-op when already linked), so opening the profile makes the
+  // bespoke blueprint part of the company record.
+  rec = await adoptRegistryBlueprint(env, rec);
   return json(200, { ok: true, company: rec });
 }
 
@@ -5729,6 +5733,38 @@ async function blueprintDraft(env, id) {
   const raw = await env.BLUEPRINT_AUTH.get(`bp:${normalizeBlueprintId(id)}`);
   if (!raw) return null;
   try { return JSON.parse(raw); } catch { return null; }
+}
+
+// One-time adoption: when a shipped registry page uses the company's folder id
+// but the company still links a name-derived draft slug (the creation flow at
+// handleAdminCreateBlueprint derives the slug from the company NAME), re-home
+// the draft record and its per-blueprint keys under the registry id and relink
+// the company. Idempotent — a no-op once co.blueprintId matches the registry.
+async function adoptRegistryBlueprint(env, co) {
+  const entry = BLUEPRINT_REGISTRY.find((b) => b.id === co.id);
+  if (!entry || co.blueprintId === entry.id) return co;
+  const oldId = normalizeBlueprintId(co.blueprintId || '');
+  const [oldDraft, targetRaw] = await Promise.all([
+    co.blueprintId ? blueprintDraft(env, oldId) : Promise.resolve(null),
+    env.BLUEPRINT_AUTH.get(`bp:${entry.id}`),
+  ]);
+  // Move the draft under the registry id only when the target slot is free;
+  // if a bp:<registryId> record already exists, just relink the company.
+  if (oldDraft && !targetRaw) {
+    await env.BLUEPRINT_AUTH.put(`bp:${entry.id}`, JSON.stringify({ ...oldDraft, id: entry.id }));
+    await env.BLUEPRINT_AUTH.delete(`bp:${oldId}`).catch(() => {});
+    for (const prefix of ['bpmeta', 'bpallow', 'bptos', 'bpsigned']) {
+      const v = await env.BLUEPRINT_AUTH.get(`${prefix}:${oldId}`);
+      if (v !== null) {
+        await env.BLUEPRINT_AUTH.put(`${prefix}:${entry.id}`, v);
+        await env.BLUEPRINT_AUTH.delete(`${prefix}:${oldId}`).catch(() => {});
+      }
+    }
+  }
+  const next = { ...co, blueprintId: entry.id };
+  await putCompany(env, next);
+  await logActivity(env, null, { type: 'relinked', entity: 'blueprint', id: entry.id, name: entry.name, actor: 'system', detail: `adopted shipped page ${entry.num} for ${co.id}${oldDraft && !targetRaw ? ` (draft ${oldId} re-homed)` : ''}` });
+  return next;
 }
 async function blueprintIsViewable(env, id) {
   const clean = normalizeBlueprintId(id);
