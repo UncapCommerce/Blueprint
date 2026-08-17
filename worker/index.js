@@ -2423,6 +2423,7 @@ async function handleAdminPnl(request, env) {
       net,
       plan: {
         hasPlan,
+        profitPct: (planRec && planRec.profitPct !== undefined) ? (Number(planRec.profitPct) || 0) : 30,
         revenueAnnual: Object.fromEntries(CH.map((c) => [c, Number(planRev[c]) || 0])),
         expensesRaw: planExp.map((e) => ({ id: e.id, label: e.label, category: e.category, annual: Number(e.annual) || 0 })),
         revenue: { channels: planChannels, total: planRevTotal },
@@ -2490,7 +2491,10 @@ async function handleAdminPnlPlanSave(request, env) {
     category: ((e && e.category) || '').toString().trim().slice(0, 60) || 'Other',
     annual: num(e && e.annual),
   }));
-  const rec = { year, revenue, expenses, updatedAt: new Date().toISOString() };
+  // Profit standard: target net margin %. Capital to allocate on expense lines
+  // is revenue × (1 − profitPct/100). Defaults to 30.
+  const profitPct = Math.min(100, Math.max(0, num(body.profitPct !== undefined ? body.profitPct : 30)));
+  const rec = { year, revenue, expenses, profitPct, updatedAt: new Date().toISOString() };
   await env.BLUEPRINT_AUTH.put(`pnlplan:${year}`, JSON.stringify(rec));
   return json(200, { ok: true, plan: rec });
 }

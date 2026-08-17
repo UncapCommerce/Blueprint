@@ -1319,9 +1319,9 @@
     }, [data && data.partial, partialTries]);
 
     const money = (n, cur) => { const neg = (n || 0) < 0; try { return (neg ? '-' : '') + new Intl.NumberFormat(undefined, { style: 'currency', currency: cur || 'USD', maximumFractionDigits: 0 }).format(Math.abs(n || 0)); } catch (_) { return (neg ? '-' : '') + '$' + Math.round(Math.abs(n || 0)); } };
-    // Planning horizon: the current year plus the next two, so projected P&Ls
-    // for this and the next two years can be built and reviewed.
-    const atMaxYear = parseInt(year, 10) >= parseInt(curYear, 10) + 2;
+    // Planning horizon: the current year plus the next three, so projected P&Ls
+    // through the 4-year target runway (e.g. 2026–2029) can be built and reviewed.
+    const atMaxYear = parseInt(year, 10) >= parseInt(curYear, 10) + 3;
 
     const REVROWS = [['recurring', 'Retainers'], ['fixed', 'Projects'], ['apps', 'Apps'], ['referrals', 'Referrals']];
     const SRC = REVROWS;
@@ -1351,12 +1351,13 @@
     };
 
     // ── Projected plan (pnlplan:<year>) ──────────────────────────────────
-    const plan = (data && data.plan) || { hasPlan: false, revenueAnnual: {}, expensesRaw: [], revenue: { channels: {}, total: {} }, expenses: { lines: [], total: {} }, net: {} };
-    const savePlan = async (revenueAnnual, expensesRaw) => {
-      try { await api('/api/admin/pnl/plan', { method: 'POST', body: JSON.stringify({ year, revenue: revenueAnnual, expenses: expensesRaw }) }); load(true); }
+    const plan = (data && data.plan) || { hasPlan: false, profitPct: 30, revenueAnnual: {}, expensesRaw: [], revenue: { channels: {}, total: {} }, expenses: { lines: [], total: {} }, net: {} };
+    const savePlan = async (revenueAnnual, expensesRaw, profitPct) => {
+      try { await api('/api/admin/pnl/plan', { method: 'POST', body: JSON.stringify({ year, revenue: revenueAnnual, expenses: expensesRaw, profitPct: profitPct !== undefined ? profitPct : plan.profitPct }) }); load(true); }
       catch (e) { window.alert(e.message); }
     };
     const saveRevAnnual = (k, v) => { const ra = { ...(plan.revenueAnnual || {}) }; ra[k] = v; savePlan(ra, plan.expensesRaw || []); };
+    const saveProfitPct = (v) => savePlan(plan.revenueAnnual || {}, plan.expensesRaw || [], Math.min(100, Math.max(0, v)));
     const onPlanSaved = (line) => {
       const list = (plan.expensesRaw || []).slice();
       const idx = line.id ? list.findIndex((e) => e.id === line.id) : -1;
@@ -1368,6 +1369,14 @@
       if (!window.confirm('Remove this target line?')) return;
       savePlan(plan.revenueAnnual || {}, (plan.expensesRaw || []).filter((e) => e.id !== id));
     };
+    // Profit standard → allocated-capital math (Plan view). The expense budget
+    // is what's left of the revenue target after the profit goal is protected.
+    const planRevYear = (plan.revenue.total && plan.revenue.total.year) || 0;
+    const planExpYear = (plan.expenses.total && plan.expenses.total.year) || 0;
+    const profitPct = Number(plan.profitPct) || 0;
+    const capitalBudget = planRevYear * (1 - profitPct / 100);
+    const capitalLeft = capitalBudget - planExpYear;
+    const projMargin = planRevYear > 0 ? ((planRevYear - planExpYear) / planRevYear) * 100 : 0;
     // A signed, colour-neutral variance amount (+$X / -$X).
     const varMoney = (v) => (v > 0 ? '+' : '') + money(v, cur);
 
@@ -1407,6 +1416,32 @@
             {data.partial && (
               <div style={{ marginBottom: 16, fontFamily: T.mono, fontSize: 11.5, color: '#6A4E00', background: '#FDF6E3', border: '1px solid #E8C36A', borderRadius: 6, padding: '8px 12px' }}>
                 {partialTries < 3 ? 'A revenue source is slow to respond, retrying…' : 'A revenue source is unavailable, so revenue may be incomplete. Check the source chips below or hit Refresh.'}
+              </div>
+            )}
+            {mode === 'plan' && (
+              <div style={{ display: 'grid', gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(5, 1fr)', gap: 10, marginBottom: 16 }}>
+                {[
+                  ['Revenue target', money(planRevYear, cur), T.fg1],
+                  ['Profit goal', null, T.fg1],
+                  ['Capital to allocate', money(capitalBudget, cur), T.fg1],
+                  ['Allocated', money(planExpYear, cur), T.fg2],
+                  ['Left to allocate', money(capitalLeft, cur), capitalLeft >= 0 ? '#0A7A3B' : '#B3261E'],
+                ].map(([label, val, color]) => (
+                  <div key={label} style={{ ...S.card, padding: '12px 14px' }}>
+                    <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.fg3, marginBottom: 6 }}>{label}</div>
+                    {label === 'Profit goal' ? (
+                      <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+                        <PlanAnnualInput value={profitPct} onSave={saveProfitPct}/>
+                        <span style={{ fontFamily: T.mono, fontSize: 13, color: T.fg2 }}>%</span>
+                        <span style={{ fontFamily: T.mono, fontSize: 11, color: planRevYear > 0 ? (projMargin >= profitPct ? '#0A7A3B' : '#B3261E') : T.fg3 }}>
+                          {planRevYear > 0 ? '→ ' + projMargin.toFixed(0) + '% projected' : ''}
+                        </span>
+                      </div>
+                    ) : (
+                      <div style={{ fontFamily: T.hero, fontWeight: 800, fontSize: 17, color }}>{val}</div>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
             <div style={{ ...S.card, overflow: 'hidden' }}>
@@ -1550,7 +1585,7 @@
             </div>
             <div style={{ marginTop: 12, fontFamily: T.sans, fontSize: 12.5, color: T.fg3 }}>
               {mode === 'plan'
-                ? 'Set an annual target per line (type it in the ' + year + ' column); it splits evenly across the year. Actuals from your integrations are compared against these in the Variance view.'
+                ? 'Set an annual target per line (type it in the ' + year + ' column); it splits evenly across the year. The profit goal protects that share of revenue: capital to allocate = revenue × (1 − profit%), and "Left to allocate" ticks down as you add expense targets. Actuals are compared against all of this in the Variance view.'
                 : mode === 'variance'
                   ? 'Variance = actual minus plan. Green is ahead on revenue and under on spend; red is behind. Expense variance is at the total level.'
                   : 'Revenue is pulled live from your integrations; expenses are the lines you add above. Once Gusto is connected, payroll will fill its line automatically.'}

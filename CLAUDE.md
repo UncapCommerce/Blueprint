@@ -81,8 +81,11 @@ JSX with a `babel.transform` (that's exactly what the deploy runs).
   by each column, so the client renders it generically. Columns are all twelve
   months plus every quarter subtotal (Q1–Q4) and a Year total; actuals only fill
   elapsed months so future columns read blank, while the projected plan fills the
-  whole year. The year selector spans the current year plus the next two, so
-  projected P&Ls for this and the next two years can be built. Revenue reuses the
+  whole year. The year selector spans the current year plus the next three, so
+  the 4-year target runway (e.g. 2026–2029) can be planned. Each year's plan
+  carries a `profitPct` profit standard (default 30): the Plan view derives
+  capital to allocate = revenue × (1 − profit%) and shows what's left as expense
+  targets are added. Revenue reuses the
   same integrated sources as the Revenues section (via the shared
   `collectRevenueItems` fan-out over Shopify/Stripe/QuickBooks/Partner), minus
   manual expense lines. **Projections**: a per-year plan (`pnlplan:<year>`, saved
