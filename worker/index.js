@@ -19,7 +19,7 @@
 
 import { EmailMessage } from "cloudflare:email";
 import { buildDiscoveryProfile, buildDiscoveryProfileWithAI, STOCK_SEARCH_TOKEN } from "./discovery-profile.js";
-import { prefillAnswersFromDoc, b64ToBytes } from "./discovery-prefill.js";
+import { prefillAnswersFromDoc, prefillAnswersFromTranscript, b64ToBytes } from "./discovery-prefill.js";
 import { buildBlueprintContent } from "./blueprint-content.js";
 
 const CODE_TTL_SECONDS       = 10 * 60;             // 10 minutes
@@ -378,6 +378,15 @@ export default {
     if (url.pathname === '/api/admin/discovery/delete' && request.method === 'POST') {
       return handleAdminDeleteDiscovery(request, env);
     }
+    if (url.pathname === '/api/admin/discovery/transcribe-token' && request.method === 'POST') {
+      return handleAdminDiscoveryTranscribeToken(request, env);
+    }
+    if (url.pathname === '/api/admin/discovery/transcript-fill' && request.method === 'POST') {
+      return handleAdminDiscoveryTranscriptFill(request, env);
+    }
+    if (url.pathname === '/api/admin/discovery/transcript' && request.method === 'GET') {
+      return handleAdminDiscoveryGetTranscript(request, env);
+    }
     if (url.pathname === '/api/admin/discovery/prefill' && request.method === 'POST') {
       return handleAdminDiscoveryPrefill(request, env);
     }
@@ -706,7 +715,9 @@ const CSP = [
   "font-src 'self' data: https://fonts.gstatic.com",
   "img-src 'self' data: blob: https:",
   "media-src 'self' data: https:",
-  "connect-src 'self' https://accounts.google.com",
+  // wss://api.deepgram.com: the discovery live-transcription stream (admin
+  // mints a short-lived key server-side; audio goes browser → Deepgram).
+  "connect-src 'self' https://accounts.google.com wss://api.deepgram.com",
   "frame-src 'self' https://accounts.google.com",
   "frame-ancestors 'self'",
   "base-uri 'self'",
@@ -720,7 +731,9 @@ const SECURITY_HEADERS = {
   'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
-  'Permissions-Policy': 'geolocation=(), camera=(), microphone=(), payment=()',
+  // microphone=(self): discovery live transcription mixes the rep's mic into
+  // the captured call audio; everything else stays denied.
+  'Permissions-Policy': 'geolocation=(), camera=(), microphone=(self), payment=()',
 };
 
 // Reattach headers on a (possibly immutable) response by rebuilding it.
@@ -3318,6 +3331,7 @@ async function purgeDiscoveryById(env, id) {
     env.BLUEPRINT_AUTH.delete(`discovery:${id}`),
     env.BLUEPRINT_AUTH.delete(`discans:${id}`),
     env.BLUEPRINT_AUTH.delete(`disclogo:${id}`),
+    env.BLUEPRINT_AUTH.delete(`disctrans:${id}`),
   ];
   if (rec.handle) deletes.push(env.BLUEPRINT_AUTH.delete(`dischandle:${rec.handle}`));
   const subs = await env.BLUEPRINT_AUTH.list({ prefix: `discsub:${id}:`, limit: 100 }).catch(() => null);
@@ -3782,6 +3796,107 @@ async function handleDiscoveryLogo(request, env) {
 // extracted answers into the discovery, without overwriting anything a
 // human already typed. Runs synchronously; the modal shows an analyzing
 // state while it waits.
+// ── Discovery live transcription (Deepgram) ───────────────────────────────
+// The rep captures the meeting tab's audio in the browser and streams it
+// straight to Deepgram with a short-lived key minted here; the worker never
+// touches the audio. DEEPGRAM_API_KEY (secret, needs keys:write) and optional
+// DEEPGRAM_PROJECT_ID live in the Cloudflare dashboard like the other vendors.
+
+// POST /api/admin/discovery/transcribe-token — mint a browser key (2h TTL).
+async function handleAdminDiscoveryTranscribeToken(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+  const apiKey = (env.DEEPGRAM_API_KEY || '').toString().trim();
+  if (!apiKey) return json(400, { ok: false, error: 'Live transcription is not configured: set DEEPGRAM_API_KEY in the Cloudflare dashboard.' });
+
+  let projectId = (env.DEEPGRAM_PROJECT_ID || '').toString().trim();
+  if (!projectId) {
+    projectId = (await env.BLUEPRINT_AUTH.get('deepgram:project')) || '';
+    if (!projectId) {
+      const pr = await fetch('https://api.deepgram.com/v1/projects', {
+        headers: { 'authorization': `Token ${apiKey}`, 'accept': 'application/json' },
+      });
+      if (!pr.ok) return json(502, { ok: false, error: `Deepgram rejected the API key (${pr.status}).` });
+      const pd = await pr.json().catch(() => ({}));
+      projectId = (pd.projects && pd.projects[0] && pd.projects[0].project_id) || '';
+      if (!projectId) return json(502, { ok: false, error: 'No Deepgram project found for this API key.' });
+      await env.BLUEPRINT_AUTH.put('deepgram:project', projectId);
+    }
+  }
+
+  const ttl = 7200;
+  const kr = await fetch(`https://api.deepgram.com/v1/projects/${projectId}/keys`, {
+    method: 'POST',
+    headers: { 'authorization': `Token ${apiKey}`, 'content-type': 'application/json', 'accept': 'application/json' },
+    body: JSON.stringify({ comment: `discovery-live ${sess.email}`, scopes: ['usage:write'], time_to_live_in_seconds: ttl }),
+  });
+  if (!kr.ok) {
+    const t = await kr.text().catch(() => '');
+    return json(502, { ok: false, error: `Could not mint a transcription key (Deepgram ${kr.status}: ${t.slice(0, 120)}).` });
+  }
+  const kd = await kr.json().catch(() => ({}));
+  if (!kd.key) return json(502, { ok: false, error: 'Deepgram returned no key.' });
+  return json(200, { ok: true, key: kd.key, expiresAt: Date.now() + ttl * 1000 });
+}
+
+// POST /api/admin/discovery/transcript-fill — map the call transcript onto
+// still-empty questions (never overwrites a human answer) and persist the raw
+// transcript to disctrans:<id> so a reloaded page can resume the call.
+async function handleAdminDiscoveryTranscriptFill(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+  let body;
+  try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  const disc = await getDiscoveryByHandle(env, body.handle);
+  if (!disc) return json(404, { ok: false, error: 'Discovery not found' });
+  const transcript = (body.transcript || '').toString().slice(0, 200_000);
+  if (disc.demo) return json(200, { ok: true, filled: 0, demo: true });
+
+  await env.BLUEPRINT_AUTH.put(`disctrans:${disc.id}`, JSON.stringify({ text: transcript, updatedAt: new Date().toISOString() }));
+  // fill:false persists the transcript only (used when capture stops) — the
+  // AI mapping pass runs solely on the explicit "AI fill from call" action.
+  if (body.fill === false) return json(200, { ok: true, filled: 0, saved: true });
+
+  let extracted;
+  try {
+    extracted = await prefillAnswersFromTranscript(env, transcript);
+  } catch (err) {
+    return json(err.status || 502, { ok: false, error: err.message });
+  }
+  const clean = sanitizeAnswers(extracted.answers);
+  const cur = await getDiscoveryAnswers(env, disc.id);
+  const hasValue = (v) => (Array.isArray(v) ? v.length > 0 : (v || '').toString().trim() !== '');
+  const merged = { ...clean };
+  for (const [k, v] of Object.entries(cur.answers || {})) {
+    if (hasValue(v)) merged[k] = v; // never overwrite a human answer
+  }
+  const filled = Object.keys(clean).filter((k) => !hasValue((cur.answers || {})[k]) && hasValue(clean[k])).length;
+  await env.BLUEPRINT_AUTH.put(`discans:${disc.id}`, JSON.stringify({
+    answers: merged,
+    activeStepIdx: cur.activeStepIdx || 0,
+    unlockedIdx: 9,
+    status: cur.status || 'new',
+    updatedAt: new Date().toISOString(),
+    updatedBy: sess.email,
+  }));
+  await logActivity(env, null, { type: 'disc-update', entity: 'discovery', id: disc.id, name: disc.company || disc.id, actor: sess.email, detail: `Filled ${filled} answers from the live call transcript` });
+  return json(200, { ok: true, filled, answers: merged });
+}
+
+// GET /api/admin/discovery/transcript?handle= — the saved call transcript.
+async function handleAdminDiscoveryGetTranscript(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  const disc = await getDiscoveryByHandle(env, new URL(request.url).searchParams.get('handle'));
+  if (!disc) return json(404, { ok: false, error: 'Discovery not found' });
+  const raw = disc.demo ? null : await env.BLUEPRINT_AUTH.get(`disctrans:${disc.id}`);
+  if (!raw) return json(200, { ok: true, text: '', updatedAt: '' });
+  try { const rec = JSON.parse(raw); return json(200, { ok: true, text: rec.text || '', updatedAt: rec.updatedAt || '' }); }
+  catch { return json(200, { ok: true, text: '', updatedAt: '' }); }
+}
+
 async function handleAdminDiscoveryPrefill(request, env) {
   const sess = await getAdminSession(request, env);
   if (!sess) return json(401, { ok: false, error: 'Not signed in' });

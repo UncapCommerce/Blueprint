@@ -103,6 +103,77 @@ function prefillPrompt() {
     + '\n- skuCountExact · Meta · The exact total SKU/product count, ONLY if the document states one explicitly → digits with separators as written (e.g. "48,000"), or "" when not stated';
 }
 
+// Returns { qid: value } for every question a live sales-call transcript
+// answered. Same schema/filtering as the document path, but the prompt is
+// tuned for a two-speaker conversation: only what the CLIENT actually said
+// counts, so the rep's own framing never becomes an answer.
+export async function prefillAnswersFromTranscript(env, transcript) {
+  if (!env || !env.ANTHROPIC_API_KEY) throw httpErr(503, 'Call analysis needs the ANTHROPIC_API_KEY secret in the Cloudflare dashboard.');
+  const text = (transcript || '').toString().trim();
+  if (text.length < 40) throw httpErr(400, 'Not enough transcript yet to analyze.');
+  const prompt = 'Below is a live transcript of a discovery sales call between our team (Uncap) and a client. '
+    + 'Fill our ecommerce discovery questionnaire from it.\n\n'
+    + 'Answer ONLY from what the CLIENT side said or clearly confirmed on this call. Leave a field empty ("" or []) when the call did not address it: never guess or pad. '
+    + 'Write free-text answers concisely in the client\'s own terms, as answers the client would give. '
+    + 'For chip fields pick the single closest option only when the call clearly supports it.\n\nQuestions:\n'
+    + QUESTION_CATALOG.map((q) => {
+      const kind = q.type === 'chips'
+        ? `one of: ${q.options.join(' | ')} (or "" when the call does not say)`
+        : q.type === 'chips-multi'
+          ? `array from: ${q.options.join(' | ')} ([] when the call does not say)`
+          : 'free text ("" when the call does not say)';
+      return `- ${q.id} · ${q.step} · ${q.label} → ${kind}`;
+    }).join('\n')
+    + '\n- skuCountExact · Meta · The exact total SKU/product count, ONLY if the client stated one explicitly → digits with separators as said (e.g. "48,000"), or "" when not stated'
+    + `\n\n--- CALL TRANSCRIPT ---\n${text.slice(0, 300_000)}`;
+
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 120_000);
+  let resp;
+  try {
+    resp = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      signal: ctrl.signal,
+      headers: {
+        'x-api-key': env.ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01',
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: AI_MODEL,
+        max_tokens: 16000,
+        thinking: { type: 'adaptive' },
+        output_config: { format: { type: 'json_schema', schema: prefillSchema() } },
+        messages: [{ role: 'user', content: [{ type: 'text', text: prompt }] }],
+      }),
+    });
+  } catch (e) {
+    throw httpErr(502, 'Call analysis timed out or failed to reach the model.');
+  } finally {
+    clearTimeout(timer);
+  }
+  if (!resp.ok) throw httpErr(502, `Call analysis failed (Claude API ${resp.status}).`);
+  const out = await resp.json().catch(() => ({}));
+  if (out.stop_reason === 'refusal') throw httpErr(502, 'The model declined to analyze this call.');
+  const raw = (out.content || []).filter((b) => b.type === 'text').map((b) => b.text).join('');
+  let parsed;
+  try { parsed = JSON.parse(raw); } catch { throw httpErr(502, 'Call analysis returned an unreadable result.'); }
+
+  const answers = {};
+  for (const q of QUESTION_CATALOG) {
+    const v = parsed[q.id];
+    if (Array.isArray(v)) {
+      const arr = v.filter((x) => typeof x === 'string' && x.trim());
+      if (arr.length) answers[q.id] = arr;
+    } else if (typeof v === 'string' && v.trim()) {
+      answers[q.id] = v.trim();
+    }
+  }
+  const rawCount = typeof parsed.skuCountExact === 'string' ? parsed.skuCountExact.trim() : '';
+  const skuCount = /^[\d][\d,.]{0,11}\+?$/.test(rawCount) ? rawCount : '';
+  return { answers, skuCount };
+}
+
 // Returns { qid: value } for every question the document answered.
 export async function prefillAnswersFromDoc(env, doc) {
   if (!env || !env.ANTHROPIC_API_KEY) throw httpErr(503, 'Document analysis needs the ANTHROPIC_API_KEY secret in the Cloudflare dashboard.');

@@ -177,7 +177,21 @@ JSX with a `babel.transform` (that's exactly what the deploy runs).
   the scenes generator). Clicking a section spotlights it and links to its
   question group. ALWAYS tag any new/updated section this way. The `uncap`
   handle is a fixed, always-filled training demo (`DEMO_ANSWERS` in
-  `worker/index.js`) — enrich only that one with example entries
+  `worker/index.js`) — enrich only that one with example entries.
+  **Live call transcription (admin only)**: the LIVE CAPTURE button in the
+  top bar shares the meeting tab (tab audio + mic, mixed via AudioContext)
+  and streams to Deepgram (`wss://api.deepgram.com`, allowed in the CSP
+  connect-src; mic allowed via Permissions-Policy `microphone=(self)`).
+  The worker mints a 2h browser key at
+  `POST /api/admin/discovery/transcribe-token` (needs `DEEPGRAM_API_KEY`
+  secret with keys:write; optional `DEEPGRAM_PROJECT_ID`, else looked up and
+  cached at `deepgram:project`). Finalized speech appends into the focused
+  open-text question through the normal autosave; "AI fill from call" posts
+  the transcript to `POST /api/admin/discovery/transcript-fill`
+  (`prefillAnswersFromTranscript` in `worker/discovery-prefill.js`, fills
+  only empty fields, never overwrites a human answer; `fill:false` persists
+  the transcript only). Raw transcript lives at `disctrans:<id>` (read via
+  `GET /api/admin/discovery/transcript`, purged with the discovery)
 - `/build` quiz: `public/build/index.html` + `public/components/QuizApp.jsx`
 - Worker handles `/api/checkout/*` (Stripe SetupIntents) and
   `/api/build/session/*` (KV-backed quiz resume), then falls through to

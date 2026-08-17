@@ -308,6 +308,141 @@
 
     const isAdmin = role === 'admin';
 
+    // ── Live call transcription (admin only) ─────────────────────────────
+    // The rep shares the meeting tab (with audio) once; tab audio + mic are
+    // mixed and streamed to Deepgram with a short-lived key minted by the
+    // worker. Finalized speech appends into whichever open-text question is
+    // focused; "AI fill from call" maps the whole transcript onto any fields
+    // still empty (the server never overwrites a human answer).
+    const [live, setLive] = useState('');           // '' | 'starting' | 'on'
+    const [liveErr, setLiveErr] = useState('');
+    const [interim, setInterim] = useState('');
+    const [liveFill, setLiveFill] = useState('');   // '' | 'filling' | 'filled N'
+    const [focusedQid, setFocusedQid] = useState('');
+    const focusedQidRef = useRef('');
+    const liveRef = useRef(null);                   // { ws, recorder, ctx, streams, keepalive }
+    const transcriptRef = useRef('');
+
+    const isAdminRef = useRef(isAdmin);
+    isAdminRef.current = isAdmin;
+
+    const noteFocus = (qid) => { focusedQidRef.current = qid; setFocusedQid(qid); };
+
+    const appendToFocused = (text) => {
+      const qid = focusedQidRef.current;
+      if (!qid || !text) return;
+      setAnswers((prev) => {
+        const cur = (prev[qid] || '').toString();
+        const joined = cur ? cur.replace(/\s+$/, '') + ' ' + text : text;
+        const next = { ...prev, [qid]: joined.slice(0, 8000) };
+        scheduleSave(next, stepIdxRef.current, unlockedIdx);
+        return next;
+      });
+    };
+
+    const stopLive = useCallback((persist) => {
+      const l = liveRef.current;
+      liveRef.current = null;
+      setLive(''); setInterim('');
+      if (!l) return;
+      try { if (l.keepalive) clearInterval(l.keepalive); } catch (_) {}
+      try { if (l.recorder && l.recorder.state !== 'inactive') l.recorder.stop(); } catch (_) {}
+      try { if (l.ws && l.ws.readyState === 1) { l.ws.send(JSON.stringify({ type: 'CloseStream' })); } } catch (_) {}
+      try { if (l.ws) l.ws.close(); } catch (_) {}
+      (l.streams || []).forEach((s) => { try { s.getTracks().forEach((t) => t.stop()); } catch (_) {} });
+      try { if (l.ctx) l.ctx.close(); } catch (_) {}
+      if (persist && transcriptRef.current) {
+        api('/api/admin/discovery/transcript-fill', { method: 'POST', body: JSON.stringify({ handle: HANDLE, transcript: transcriptRef.current, fill: false }) }).catch(() => {});
+      }
+    }, []);
+
+    const startLive = async () => {
+      setLiveErr(''); setLive('starting');
+      let key;
+      try {
+        const d = await api('/api/admin/discovery/transcribe-token', { method: 'POST', body: '{}' });
+        key = d.key;
+      } catch (e) { setLive(''); setLiveErr(e.message || 'Could not start transcription.'); return; }
+      let disp;
+      try {
+        disp = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+      } catch (_) { setLive(''); setLiveErr('Pick the meeting tab and tick "Also share tab audio".'); return; }
+      if (!disp.getAudioTracks().length) {
+        disp.getTracks().forEach((t) => t.stop());
+        setLive(''); setLiveErr('No audio was shared. Choose a Chrome TAB and tick "Also share tab audio".');
+        return;
+      }
+      let mic = null;
+      try { mic = await navigator.mediaDevices.getUserMedia({ audio: true }); } catch (_) { /* mic optional: tab audio alone still captures the call */ }
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const dest = ctx.createMediaStreamDestination();
+      ctx.createMediaStreamSource(new MediaStream(disp.getAudioTracks())).connect(dest);
+      if (mic) ctx.createMediaStreamSource(mic).connect(dest);
+      const recorder = new MediaRecorder(dest.stream, { mimeType: 'audio/webm;codecs=opus' });
+      const ws = new WebSocket('wss://api.deepgram.com/v1/listen?model=nova-2&smart_format=true&interim_results=true', ['token', key]);
+      const l = { ws, recorder, ctx, streams: [disp, mic].filter(Boolean), keepalive: 0 };
+      liveRef.current = l;
+      ws.onopen = () => {
+        recorder.start(250);
+        l.keepalive = setInterval(() => { try { if (ws.readyState === 1) ws.send(JSON.stringify({ type: 'KeepAlive' })); } catch (_) {} }, 8000);
+        setLive('on');
+      };
+      recorder.ondataavailable = (e) => { try { if (e.data && e.data.size && ws.readyState === 1) ws.send(e.data); } catch (_) {} };
+      ws.onmessage = (ev) => {
+        let d; try { d = JSON.parse(ev.data); } catch (_) { return; }
+        const alt = d.channel && d.channel.alternatives && d.channel.alternatives[0];
+        const t = alt && alt.transcript ? alt.transcript.trim() : '';
+        if (!t) return;
+        if (d.is_final) {
+          transcriptRef.current += (transcriptRef.current ? '\n' : '') + t;
+          setInterim('');
+          appendToFocused(t);
+        } else {
+          setInterim(t);
+        }
+      };
+      ws.onerror = () => { if (liveRef.current === l) { setLiveErr('Transcription connection failed.'); stopLive(true); } };
+      ws.onclose = () => { if (liveRef.current === l) stopLive(true); };
+      const vTrack = disp.getVideoTracks()[0];
+      if (vTrack) vTrack.onended = () => { if (liveRef.current === l) stopLive(true); };
+    };
+
+    const aiFillFromCall = async () => {
+      if (!transcriptRef.current || liveFill === 'filling') return;
+      setLiveFill('filling');
+      try {
+        const d = await api('/api/admin/discovery/transcript-fill', { method: 'POST', body: JSON.stringify({ handle: HANDLE, transcript: transcriptRef.current }) });
+        // Merge only into locally-empty fields; typed-but-unsaved text wins.
+        setAnswers((prev) => {
+          const next = { ...prev };
+          for (const k of Object.keys(d.answers || {})) {
+            const cur = next[k];
+            const has = Array.isArray(cur) ? cur.length > 0 : (cur || '').toString().trim() !== '';
+            if (!has) next[k] = d.answers[k];
+          }
+          scheduleSave(next, stepIdxRef.current, unlockedIdx);
+          return next;
+        });
+        setLiveFill('filled ' + (d.filled || 0));
+        setTimeout(() => setLiveFill((s) => (s === 'filling' ? s : '')), 4000);
+      } catch (e) {
+        setLiveFill('');
+        setLiveErr(e.message || 'AI fill failed.');
+      }
+    };
+
+    // Restore the call transcript for a resumed session; stop capture cleanly
+    // on unmount.
+    useEffect(() => {
+      if (isAdmin) {
+        api('/api/admin/discovery/transcript?handle=' + encodeURIComponent(HANDLE))
+          .then((d) => { if (d && d.text && !transcriptRef.current) transcriptRef.current = d.text; })
+          .catch(() => {});
+      }
+      return () => stopLive(false);
+      // eslint-disable-next-line
+    }, [isAdmin]);
+
     // Build a qid → label map once, for change reporting on the client side.
     const labelMap = useRef((function () {
       const m = {};
@@ -659,10 +794,46 @@
               </button>
             ))}
           </div>
+          {isAdmin && (
+            <button onClick={() => (live ? stopLive(true) : startLive())} disabled={live === 'starting'}
+              style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 7, padding: '6px 12px', border: '1px solid ' + (live === 'on' ? '#B5322B' : '#0A0A0A'), borderRadius: 999, background: live === 'on' ? '#B5322B' : 'transparent', color: live === 'on' ? '#FFFFFF' : '#0A0A0A', fontFamily: "'JetBrains Mono',monospace", fontSize: 10, letterSpacing: '0.08em', cursor: 'pointer' }}>
+              <span style={{ width: 7, height: 7, borderRadius: '50%', background: live === 'on' ? '#FFFFFF' : '#B5322B', animation: live === 'on' ? 'uc-pulse 1.6s cubic-bezier(.2,.7,.2,1) infinite' : 'none' }}></span>
+              {live === 'on' ? 'STOP LIVE' : live === 'starting' ? 'STARTING…' : 'LIVE CAPTURE'}
+            </button>
+          )}
           <div style={{ flex: '0 0 auto', fontFamily: "'JetBrains Mono',monospace", fontSize: 10, letterSpacing: '0.08em', color: '#9A9A9A' }}>
             {isAdmin ? (saveState === 'saving' ? 'SAVING…' : saveState === 'saved' ? 'SAVED ✓' : 'ADMIN') : 'CLIENT'}
           </div>
         </div>
+
+        {/* LIVE CAPTURE PANEL */}
+        {isAdmin && (live || liveErr || liveFill) ? (
+          <div style={{ position: 'fixed', right: 16, bottom: 16, zIndex: 200, width: 'min(340px, calc(100vw - 32px))', background: '#0A0A0A', color: '#FFFFFF', borderRadius: 8, padding: '14px 16px', boxShadow: '0 16px 40px rgba(10,10,10,0.35)', fontFamily: "'JetBrains Mono',monospace" }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 10, letterSpacing: '0.1em' }}>
+              <span style={{ width: 8, height: 8, borderRadius: '50%', background: live === 'on' ? '#E8FF4E' : '#707070', animation: live === 'on' ? 'uc-pulse 1.6s cubic-bezier(.2,.7,.2,1) infinite' : 'none' }}></span>
+              {live === 'on' ? 'LIVE · CALL TRANSCRIPTION' : live === 'starting' ? 'CONNECTING…' : 'CALL TRANSCRIPTION'}
+              {live
+                ? <button onClick={() => stopLive(true)} style={{ marginLeft: 'auto', border: '1px solid #4D4D4D', background: 'transparent', color: '#FFFFFF', borderRadius: 4, padding: '3px 8px', fontFamily: 'inherit', fontSize: 9.5, cursor: 'pointer' }}>STOP</button>
+                : <button onClick={() => { setLiveErr(''); setLiveFill(''); setInterim(''); }} style={{ marginLeft: 'auto', border: 'none', background: 'transparent', color: '#9A9A9A', fontFamily: 'inherit', fontSize: 12, cursor: 'pointer' }}>✕</button>}
+            </div>
+            {live === 'on' ? (
+              <div style={{ marginTop: 10, fontSize: 11, color: '#C9C7C0' }}>
+                {focusedQid && labelMap.current[focusedQid]
+                  ? <span>→ {labelMap.current[focusedQid].slice(0, 60)}</span>
+                  : <span style={{ color: '#9A9A9A' }}>Click an open question to route speech into it</span>}
+              </div>
+            ) : null}
+            {interim ? <div style={{ marginTop: 8, fontSize: 11.5, fontStyle: 'italic', color: '#9A9A9A', maxHeight: 48, overflow: 'hidden' }}>{interim}</div> : null}
+            {liveErr ? <div style={{ marginTop: 8, fontSize: 11, color: '#FF8A80' }}>{liveErr}</div> : null}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12 }}>
+              <button onClick={aiFillFromCall} disabled={liveFill === 'filling' || !transcriptRef.current}
+                style={{ border: 'none', background: '#E8FF4E', color: '#0A0A0A', borderRadius: 5, padding: '8px 12px', fontFamily: 'inherit', fontSize: 10.5, fontWeight: 700, letterSpacing: '0.04em', cursor: 'pointer', opacity: liveFill === 'filling' || !transcriptRef.current ? 0.55 : 1 }}>
+                {liveFill === 'filling' ? 'ANALYZING…' : 'AI FILL FROM CALL'}
+              </button>
+              {liveFill && liveFill !== 'filling' ? <span style={{ fontSize: 10.5, color: '#E8FF4E' }}>✓ {liveFill}</span> : null}
+            </div>
+          </div>
+        ) : null}
 
         {/* MAIN ROW — side-by-side on desktop, stacked (stage over form) on mobile */}
         <div style={{ flex: '1 1 auto', display: 'flex', flexDirection: isMobile ? 'column' : 'row', minHeight: 0 }}>
@@ -770,12 +941,12 @@
                         <div key={q.id} style={{ marginTop: 16 }}>
                           <div style={{ fontSize: 13, fontWeight: 600, color: '#1A1A1A', marginBottom: 7 }}>{q.label}{q.required ? <span style={{ color: '#B5322B' }}> *</span> : null}</div>
                           {q.type === 'text' && (
-                            <input value={v || ''} onClick={(e) => e.stopPropagation()} onChange={(e) => setAnswer(q.id, e.target.value)} placeholder={q.placeholder || ''}
-                              style={{ width: '100%', padding: '10px 12px', border: '1px solid #C9C7C0', borderRadius: 5, fontSize: 14, background: '#FDFCF9', outline: 'none', color: '#0A0A0A' }}/>
+                            <input value={v || ''} onClick={(e) => e.stopPropagation()} onFocus={() => noteFocus(q.id)} onChange={(e) => setAnswer(q.id, e.target.value)} placeholder={q.placeholder || ''}
+                              style={{ width: '100%', padding: '10px 12px', border: '1px solid ' + (live === 'on' && focusedQid === q.id ? '#0A0A0A' : '#C9C7C0'), boxShadow: live === 'on' && focusedQid === q.id ? '0 0 0 2px #E8FF4E' : 'none', borderRadius: 5, fontSize: 14, background: '#FDFCF9', outline: 'none', color: '#0A0A0A' }}/>
                           )}
                           {q.type === 'textarea' && (
-                            <textarea value={v || ''} onClick={(e) => e.stopPropagation()} onChange={(e) => setAnswer(q.id, e.target.value)} placeholder={q.placeholder || ''} rows={3}
-                              style={{ width: '100%', padding: '10px 12px', border: '1px solid #C9C7C0', borderRadius: 5, fontSize: 14, background: '#FDFCF9', outline: 'none', resize: 'vertical', lineHeight: 1.5, color: '#0A0A0A' }}/>
+                            <textarea value={v || ''} onClick={(e) => e.stopPropagation()} onFocus={() => noteFocus(q.id)} onChange={(e) => setAnswer(q.id, e.target.value)} placeholder={q.placeholder || ''} rows={3}
+                              style={{ width: '100%', padding: '10px 12px', border: '1px solid ' + (live === 'on' && focusedQid === q.id ? '#0A0A0A' : '#C9C7C0'), boxShadow: live === 'on' && focusedQid === q.id ? '0 0 0 2px #E8FF4E' : 'none', borderRadius: 5, fontSize: 14, background: '#FDFCF9', outline: 'none', resize: 'vertical', lineHeight: 1.5, color: '#0A0A0A' }}/>
                           )}
                           {CASCADE_CATALOGS[q.type] && (() => {
                             const catalog = CASCADE_CATALOGS[q.type];
