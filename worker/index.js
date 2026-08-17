@@ -546,16 +546,20 @@ export default {
             assetUrl.pathname = '/discovery/index.html';
             return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
           }
-          if (coApp[2] === 'blueprint' && co.blueprintId) {
+          if (coApp[2] === 'blueprint') {
             // Bespoke shipped page wins; else the dynamic templated page when
-            // the draft's content is ready.
-            const entry = BLUEPRINT_REGISTRY.find((b) => b.id === co.blueprintId);
+            // the draft's content is ready. The registry matches by the
+            // company's blueprintId first, then by the company folder id
+            // itself, so a shipped page whose registry id is the company id
+            // serves even when the draft got a different name-derived slug.
+            const entry = BLUEPRINT_REGISTRY.find((b) => b.id === co.blueprintId)
+              || BLUEPRINT_REGISTRY.find((b) => b.id === co.id);
             if (entry) {
               const assetUrl = new URL(url.toString());
               assetUrl.pathname = `/${entry.dir}/index.html`;
               return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
             }
-            if (await blueprintIsViewable(env, co.blueprintId)) {
+            if (co.blueprintId && await blueprintIsViewable(env, co.blueprintId)) {
               const assetUrl = new URL(url.toString());
               assetUrl.pathname = '/blueprint-template/index.html';
               return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
@@ -579,7 +583,9 @@ export default {
       const coBpSub = url.pathname.match(/^\/([a-z0-9-]{2,60})\/blueprint\/(.+)$/);
       if (coBpSub && !PORTAL_RESERVED.has(coBpSub[1]) && coBpSub[2] !== 'app') {
         const co = await getCompany(env, coBpSub[1]);
-        const entry = co && co.blueprintId ? BLUEPRINT_REGISTRY.find((b) => b.id === co.blueprintId) : null;
+        // Same two-step registry match as the tab route above.
+        const entry = co ? (BLUEPRINT_REGISTRY.find((b) => b.id === co.blueprintId)
+          || BLUEPRINT_REGISTRY.find((b) => b.id === co.id)) : null;
         if (entry) {
           const assetUrl = new URL(url.toString());
           assetUrl.pathname = `/${entry.dir}/${coBpSub[2]}`;
@@ -5624,17 +5630,25 @@ async function handlePortalMe(request, env) {
     preview = true;
   }
 
+  // Effective blueprint id: the linked draft slug when it's shipped in the
+  // registry, else the company folder id when a registry page uses it (same
+  // fallback as the page routes), else the draft slug. Keeps the Hub tab,
+  // viewability, and the bpsigned rollup aligned with the page actually served.
+  const bpRegDirect = rec.blueprintId && BLUEPRINT_REGISTRY.some((b) => b.id === rec.blueprintId);
+  const bpRegByCompany = !bpRegDirect && BLUEPRINT_REGISTRY.some((b) => b.id === rec.id);
+  const bpId = bpRegDirect ? rec.blueprintId : (bpRegByCompany ? rec.id : (rec.blueprintId || ''));
+
   // These four reads depend only on `rec`, not on each other, so fetch them in
   // one parallel batch instead of four serial KV round-trips (this is the
   // highest-traffic customer request).
   const [disc, bpViewable, signedRaw, estRec] = await Promise.all([
     rec.discoveryHandle ? getDiscoveryByHandle(env, rec.discoveryHandle) : Promise.resolve(null),
-    rec.blueprintId ? blueprintIsViewable(env, rec.blueprintId) : Promise.resolve(false),
-    rec.blueprintId ? env.BLUEPRINT_AUTH.get(`bpsigned:${rec.blueprintId}`) : Promise.resolve(null),
+    bpId ? blueprintIsViewable(env, bpId) : Promise.resolve(false),
+    bpId ? env.BLUEPRINT_AUTH.get(`bpsigned:${bpId}`) : Promise.resolve(null),
     rec.hasEstimate ? getEstimate(env, rec.id) : Promise.resolve(null),
   ]);
   const discovery = disc ? { handle: disc.handle, status: disc.status || 'new', url: `/${rec.id}/discovery` } : null;
-  const blueprint = (rec.blueprintId && bpViewable) ? { id: rec.blueprintId, url: `/${rec.id}/blueprint` } : null;
+  const blueprint = (bpId && bpViewable) ? { id: bpId, url: `/${rec.id}/blueprint` } : null;
   // `signed` drives the hub's "Onboarding" sales-process stage.
   const signed = !!signedRaw;
   const estimate = rec.hasEstimate ? estimateForPortal(estRec) : null;
