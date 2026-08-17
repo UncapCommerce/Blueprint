@@ -331,6 +331,9 @@ export default {
     if (url.pathname === '/api/admin/pnl/expense/delete' && request.method === 'POST') {
       return handleAdminPnlExpenseDelete(request, env);
     }
+    if (url.pathname === '/api/admin/pnl/plan' && request.method === 'POST') {
+      return handleAdminPnlPlanSave(request, env);
+    }
     if (url.pathname === '/api/admin/items' && request.method === 'GET') {
       return handleAdminListItems(request, env);
     }
@@ -2303,6 +2306,14 @@ async function listPnlExpenses(env) {
   return rows.filter(Boolean);
 }
 
+// Projected P&L for a year (pnlplan:<year>): annual target per revenue channel
+// plus a list of plan expense lines. One small record per year.
+async function readPnlPlan(env, year) {
+  const raw = await env.BLUEPRINT_AUTH.get(`pnlplan:${year}`);
+  if (!raw) return null;
+  try { return JSON.parse(raw); } catch { return null; }
+}
+
 // GET /api/admin/pnl — a P&L statement. Two modes:
 //   ?year=YYYY   → the whole year (one "year" column). This is the default view.
 //   ?month=YYYY-MM → that month plus year-to-date (two columns: month, ytd).
@@ -2350,19 +2361,18 @@ async function handleAdminPnl(request, env) {
   };
 
   {
-    // A column per month, a quarter column once its three months complete
-    // (Q1 after Mar … Q4 after Dec), and a Year total. Values are keyed by
-    // column so the client renders them generically.
+    // A column per month, a subtotal per quarter (Q1–Q4), and a Year total.
+    // Quarter/year columns always render so a projected plan (and future years)
+    // show full periods; actuals stay year-to-date because `revM` and recurring
+    // costs only fill elapsed months, leaving future columns blank.
     const cols = [];
     for (let m = 1; m <= 12; m++) {
       cols.push({ key: `m${m}`, label: EST_MONTHS[m - 1], kind: 'month' });
-      // Quarter subtotal once its three months are complete (future months show
-      // blank, so a not-yet-finished quarter gets no rollup column).
-      if (m % 3 === 0 && m <= monthsElapsed) cols.push({ key: `q${m / 3}`, label: `Q${m / 3}`, kind: 'quarter' });
+      if (m % 3 === 0) cols.push({ key: `q${m / 3}`, label: `Q${m / 3}`, kind: 'quarter' });
     }
     cols.push({ key: 'year', label: String(year), kind: 'year' });
     const monthsOf = (key) => {
-      if (key === 'year') { const a = []; for (let m = 1; m <= monthsElapsed; m++) a.push(m); return a; }
+      if (key === 'year') return [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
       if (key[0] === 'q') { const q = parseInt(key.slice(1), 10); return [q * 3 - 2, q * 3 - 1, q * 3]; }
       return [parseInt(key.slice(1), 10)];
     };
@@ -2391,11 +2401,34 @@ async function handleAdminPnl(request, env) {
     const lines = payrollLine ? [payrollLine, ...manualLines] : manualLines;
     const expTotal = Object.fromEntries(cols.map((col) => [col.key, lines.reduce((s, e) => s + (e[col.key] || 0), 0)]));
     const net = Object.fromEntries(cols.map((col) => [col.key, total[col.key] - expTotal[col.key]]));
+
+    // Projected plan for this year (annual target per line, split evenly across
+    // months): month = annual/12, quarter = annual/4, year = annual. Unlike
+    // actuals, the plan fills the whole year regardless of what has elapsed.
+    const planRec = await readPnlPlan(env, year);
+    const planRev = (planRec && planRec.revenue) || {};
+    const planExp = (planRec && Array.isArray(planRec.expenses)) ? planRec.expenses : [];
+    const spread = (annual) => { const per = (Number(annual) || 0) / 12; return Object.fromEntries(cols.map((col) => [col.key, per * monthsOf(col.key).length])); };
+    const planChannels = Object.fromEntries(CH.map((c) => [c, spread(planRev[c])]));
+    const planRevTotal = Object.fromEntries(cols.map((col) => [col.key, CH.reduce((s, c) => s + planChannels[c][col.key], 0)]));
+    const planLines = planExp.map((e) => ({ id: e.id, label: e.label, category: e.category, annual: Number(e.annual) || 0, ...spread(e.annual) }));
+    const planExpTotal = Object.fromEntries(cols.map((col) => [col.key, planLines.reduce((s, e) => s + (e[col.key] || 0), 0)]));
+    const planNet = Object.fromEntries(cols.map((col) => [col.key, planRevTotal[col.key] - planExpTotal[col.key]]));
+    const hasPlan = CH.some((c) => Number(planRev[c]) > 0) || planExp.length > 0;
+
     return json(200, {
       ...base, mode: 'year', columns: cols,
       revenue: { channels, total },
       expenses: { lines, total: expTotal },
       net,
+      plan: {
+        hasPlan,
+        revenueAnnual: Object.fromEntries(CH.map((c) => [c, Number(planRev[c]) || 0])),
+        expensesRaw: planExp.map((e) => ({ id: e.id, label: e.label, category: e.category, annual: Number(e.annual) || 0 })),
+        revenue: { channels: planChannels, total: planRevTotal },
+        expenses: { lines: planLines, total: planExpTotal },
+        net: planNet,
+      },
       windows: { yearFrom, to },
     });
   }
@@ -2437,6 +2470,29 @@ async function handleAdminPnlExpenseDelete(request, env) {
   if (!/^[a-z0-9]{6,}$/.test(id)) return json(400, { ok: false, error: 'Bad id' });
   await env.BLUEPRINT_AUTH.delete(`pnlexp:${id}`).catch(() => {});
   return json(200, { ok: true });
+}
+
+// POST /api/admin/pnl/plan — save the whole projected plan for one year.
+// Body: { year, revenue: { recurring, fixed, apps, referrals }, expenses: [{ id, label, category, annual }] }
+async function handleAdminPnlPlanSave(request, env) {
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+  let body;
+  try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  const year = (body.year || '').toString().slice(0, 4);
+  if (!/^\d{4}$/.test(year)) return json(400, { ok: false, error: 'year=YYYY required' });
+  const num = (v) => Math.round((Number(v) || 0) * 100) / 100;
+  const CH = ['recurring', 'fixed', 'apps', 'referrals'];
+  const revenue = {};
+  CH.forEach((c) => { revenue[c] = num(body.revenue && body.revenue[c]); });
+  const expenses = (Array.isArray(body.expenses) ? body.expenses : []).slice(0, 100).map((e) => ({
+    id: /^[a-z0-9]{6,}$/.test((e && e.id) || '') ? e.id : genRandSlug(),
+    label: ((e && e.label) || '').toString().trim().slice(0, 120) || 'Expense',
+    category: ((e && e.category) || '').toString().trim().slice(0, 60) || 'Other',
+    annual: num(e && e.annual),
+  }));
+  const rec = { year, revenue, expenses, updatedAt: new Date().toISOString() };
+  await env.BLUEPRINT_AUTH.put(`pnlplan:${year}`, JSON.stringify(rec));
+  return json(200, { ok: true, plan: rec });
 }
 
 // ── Stripe integration (Services > Retainers) ────────────────────────────

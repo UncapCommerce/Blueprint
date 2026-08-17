@@ -1230,6 +1230,57 @@
     );
   }
 
+  // A projected expense target: label + category + annual amount (split evenly
+  // across the year on the Plan view). Saves through the parent's onSave, which
+  // merges it into the year's plan.
+  // Inline-editable annual target (Plan view, Year column). Commits on blur/Enter.
+  // A stable top-level component so background refreshes don't remount it mid-edit.
+  function PlanAnnualInput({ value, onSave }) {
+    const [v, setV] = useState(String(value || 0));
+    useEffect(() => { setV(String(value || 0)); }, [value]);
+    const commit = () => { const n = parseFloat(v) || 0; if (n !== (Number(value) || 0)) onSave(n); };
+    return (
+      <input value={v} onChange={(e) => setV(e.target.value)} onBlur={commit}
+        onKeyDown={(e) => { if (e.key === 'Enter') { e.target.blur(); } if (e.key === 'Escape') { setV(String(value || 0)); e.target.blur(); } }}
+        type="number" inputMode="numeric"
+        style={{ width: 92, textAlign: 'right', fontFamily: T.mono, fontSize: 13, border: `1px solid ${T.line}`, borderRadius: 6, padding: '4px 6px', background: '#fff', color: T.fg1 }}/>
+    );
+  }
+
+  function PnLPlanTargetModal({ initial, onClose, onSave }) {
+    const [f, setF] = useState(() => ({
+      id: (initial && initial.id) || '',
+      label: (initial && initial.label) || '',
+      category: (initial && initial.category) || 'Payroll',
+      annual: initial ? String(initial.annual) : '',
+    }));
+    const [err, setErr] = useState('');
+    const set = (k) => (v) => setF((s) => ({ ...s, [k]: v }));
+    const save = () => {
+      if (!f.label.trim()) { setErr('Add a label'); return; }
+      onSave({ id: f.id || undefined, label: f.label.trim(), category: f.category, annual: parseFloat(f.annual) || 0 });
+    };
+    return (
+      <Modal title={initial ? 'Edit target' : 'Add expense target'} sub="Annual amount, split evenly across the year" onClose={onClose} width={460}>
+        <div style={{ padding: 20, display: 'flex', flexDirection: 'column', gap: 14 }}>
+          <Field label="Label" value={f.label} onChange={set('label')} placeholder="e.g. Payroll, Software, Marketing" autoFocus/>
+          <div>
+            <label style={S.label}>Category</label>
+            <select value={f.category} onChange={(e) => set('category')(e.target.value)} style={{ ...S.input, cursor: 'pointer' }}>
+              {PNL_CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          <Field label="Annual amount (USD)" value={f.annual} onChange={set('annual')} placeholder="0" type="number"/>
+          {err ? <div style={{ fontFamily: T.sans, fontSize: 12.5, color: '#B3261E' }}>{err}</div> : null}
+          <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', paddingTop: 4 }}>
+            <button type="button" style={S.btnGhost} onClick={onClose}>Cancel</button>
+            <button type="button" style={S.btnLime} onClick={save}>Save</button>
+          </div>
+        </div>
+      </Modal>
+    );
+  }
+
   function PnL() {
     const isMobile = useIsMobile();
     const now = new Date();
@@ -1241,6 +1292,9 @@
     const [refreshing, setRefreshing] = useState(false);
     const [partialTries, setPartialTries] = useState(0);
     const [editing, setEditing] = useState(null); // null | {} (new) | line
+    const [planEditing, setPlanEditing] = useState(null); // null | {} (new) | plan line
+    const [mode, setMode] = useState('actual'); // 'actual' | 'plan' | 'variance'
+    const isFuture = parseInt(year, 10) > parseInt(curYear, 10);
 
     const load = (force, silent) => {
       if (force) setRefreshing(true); else if (!silent) setData(null);
@@ -1250,7 +1304,8 @@
         .catch((e) => { setError(e.message); setData((p) => p || {}); })
         .finally(() => { if (force) setRefreshing(false); });
     };
-    useEffect(() => { setPartialTries(0); load(false); /* eslint-disable-next-line */ }, [year]);
+    // Future years have no actuals, so land on the Plan view; past/current start on Actuals.
+    useEffect(() => { setPartialTries(0); setMode(parseInt(year, 10) > parseInt(curYear, 10) ? 'plan' : 'actual'); load(false); /* eslint-disable-next-line */ }, [year]);
     useEffect(() => {
       if (data && data.stale) { const t = setTimeout(() => load(false, true), 6000); return () => clearTimeout(t); }
       // eslint-disable-next-line
@@ -1264,7 +1319,9 @@
     }, [data && data.partial, partialTries]);
 
     const money = (n, cur) => { const neg = (n || 0) < 0; try { return (neg ? '-' : '') + new Intl.NumberFormat(undefined, { style: 'currency', currency: cur || 'USD', maximumFractionDigits: 0 }).format(Math.abs(n || 0)); } catch (_) { return (neg ? '-' : '') + '$' + Math.round(Math.abs(n || 0)); } };
-    const atCurrentYear = year >= curYear;
+    // Planning horizon: the current year plus the next two, so projected P&Ls
+    // for this and the next two years can be built and reviewed.
+    const atMaxYear = parseInt(year, 10) >= parseInt(curYear, 10) + 2;
 
     const REVROWS = [['recurring', 'Retainers'], ['fixed', 'Projects'], ['apps', 'Apps'], ['referrals', 'Referrals']];
     const SRC = REVROWS;
@@ -1293,6 +1350,27 @@
       catch (e) { window.alert(e.message); }
     };
 
+    // ── Projected plan (pnlplan:<year>) ──────────────────────────────────
+    const plan = (data && data.plan) || { hasPlan: false, revenueAnnual: {}, expensesRaw: [], revenue: { channels: {}, total: {} }, expenses: { lines: [], total: {} }, net: {} };
+    const savePlan = async (revenueAnnual, expensesRaw) => {
+      try { await api('/api/admin/pnl/plan', { method: 'POST', body: JSON.stringify({ year, revenue: revenueAnnual, expenses: expensesRaw }) }); load(true); }
+      catch (e) { window.alert(e.message); }
+    };
+    const saveRevAnnual = (k, v) => { const ra = { ...(plan.revenueAnnual || {}) }; ra[k] = v; savePlan(ra, plan.expensesRaw || []); };
+    const onPlanSaved = (line) => {
+      const list = (plan.expensesRaw || []).slice();
+      const idx = line.id ? list.findIndex((e) => e.id === line.id) : -1;
+      if (idx >= 0) list[idx] = { ...list[idx], ...line }; else list.push(line);
+      setPlanEditing(null);
+      savePlan(plan.revenueAnnual || {}, list);
+    };
+    const delPlanExp = (id) => {
+      if (!window.confirm('Remove this target line?')) return;
+      savePlan(plan.revenueAnnual || {}, (plan.expensesRaw || []).filter((e) => e.id !== id));
+    };
+    // A signed, colour-neutral variance amount (+$X / -$X).
+    const varMoney = (v) => (v > 0 ? '+' : '') + money(v, cur);
+
     return (
       <Page wide>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 4, marginBottom: 16, flexWrap: 'wrap' }}>
@@ -1300,8 +1378,21 @@
           <span style={{ flex: '1 1 auto' }}/>
           <button type="button" style={{ ...S.btnGhost, padding: '7px 12px' }} onClick={() => setYear(String(parseInt(year, 10) - 1))}>{isMobile ? '←' : '← ' + (parseInt(year, 10) - 1)}</button>
           <span style={{ fontFamily: T.hero, fontWeight: 800, fontSize: 18, color: T.fg1, minWidth: 56, textAlign: 'center' }}>{year}</span>
-          <button type="button" style={{ ...S.btnGhost, padding: '7px 12px', opacity: atCurrentYear ? 0.5 : 1 }} disabled={atCurrentYear} onClick={() => setYear(String(parseInt(year, 10) + 1))}>{isMobile ? '→' : (parseInt(year, 10) + 1) + ' →'}</button>
+          <button type="button" style={{ ...S.btnGhost, padding: '7px 12px', opacity: atMaxYear ? 0.5 : 1 }} disabled={atMaxYear} onClick={() => setYear(String(parseInt(year, 10) + 1))}>{isMobile ? '→' : (parseInt(year, 10) + 1) + ' →'}</button>
         </div>
+
+        {(() => {
+          const opts = isFuture ? [['plan', 'Plan']] : [['actual', 'Actuals'], ['plan', 'Plan'], ['variance', 'Variance']];
+          if (opts.length < 2) return null;
+          return (
+            <div style={{ display: 'inline-flex', border: `1px solid ${T.line}`, borderRadius: 8, overflow: 'hidden', marginBottom: 16 }}>
+              {opts.map(([m, l]) => (
+                <button key={m} type="button" onClick={() => setMode(m)}
+                  style={{ padding: '6px 14px', fontFamily: T.sans, fontSize: 13, fontWeight: mode === m ? 700 : 500, background: mode === m ? T.fg1 : 'transparent', color: mode === m ? '#fff' : T.fg2, border: 'none', cursor: 'pointer' }}>{l}</button>
+              ))}
+            </div>
+          );
+        })()}
 
         {data === null ? (
           <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>Loading…</div>
@@ -1326,51 +1417,99 @@
                     {cols.map((c) => <th key={c.key} style={{ ...S.th, textAlign: 'right', background: colBg(c), color: (c.kind === 'quarter' || c.kind === 'year') ? T.fg1 : undefined }}>{c.label}</th>)}
                   </tr></thead>
                   <tbody>
-                    {sectionRow('Revenue')}
+                    {sectionRow('Revenue' + (mode === 'plan' ? ' · targets' : mode === 'variance' ? ' · actual vs plan' : ''))}
                     {REVROWS.map(([k, l]) => (
                       <tr key={k}>
                         <td style={cellL}>{l}</td>
-                        {cols.map((c) => <td key={c.key} style={{ ...cellR, background: colBg(c), color: c.kind === 'year' ? T.fg1 : T.fg2 }}>{money(data.revenue.channels[k][c.key], cur)}</td>)}
+                        {cols.map((c) => {
+                          if (mode === 'plan') {
+                            if (c.kind === 'year') return <td key={c.key} style={{ ...cellR, background: colBg(c) }}><PlanAnnualInput value={(plan.revenueAnnual || {})[k]} onSave={(v) => saveRevAnnual(k, v)}/></td>;
+                            return <td key={c.key} style={{ ...cellR, background: colBg(c), color: T.fg2 }}>{money((plan.revenue.channels[k] || {})[c.key], cur)}</td>;
+                          }
+                          if (mode === 'variance') {
+                            const v = (data.revenue.channels[k][c.key] || 0) - ((plan.revenue.channels[k] || {})[c.key] || 0);
+                            return <td key={c.key} style={{ ...cellR, background: colBg(c), color: v >= 0 ? '#0A7A3B' : '#B3261E' }}>{varMoney(v)}</td>;
+                          }
+                          return <td key={c.key} style={{ ...cellR, background: colBg(c), color: c.kind === 'year' ? T.fg1 : T.fg2 }}>{money(data.revenue.channels[k][c.key], cur)}</td>;
+                        })}
                       </tr>
                     ))}
                     <tr>
                       <td style={{ ...cellL, fontWeight: 700 }}>Total revenue</td>
-                      {cols.map((c) => <td key={c.key} style={{ ...cellR, fontWeight: 700, background: colBg(c) }}>{money(data.revenue.total[c.key], cur)}</td>)}
+                      {cols.map((c) => {
+                        const val = mode === 'plan' ? plan.revenue.total[c.key]
+                          : mode === 'variance' ? (data.revenue.total[c.key] || 0) - (plan.revenue.total[c.key] || 0)
+                          : data.revenue.total[c.key];
+                        const color = mode === 'variance' ? (val >= 0 ? '#0A7A3B' : '#B3261E') : undefined;
+                        return <td key={c.key} style={{ ...cellR, fontWeight: 700, background: colBg(c), color }}>{mode === 'variance' ? varMoney(val) : money(val, cur)}</td>;
+                      })}
                     </tr>
 
-                    {sectionRow('Expenses', <button type="button" style={{ ...S.btnGhost, padding: '4px 10px', fontSize: 12 }} onClick={() => setEditing({})}>+ Add expense</button>)}
-                    {data.expenses.lines.length === 0 ? (
-                      <tr><td colSpan={nCols} style={{ ...cellL, color: T.fg3, fontSize: 12.5 }}>No expenses yet. Add payroll and tool costs, or connect Gusto for payroll.</td></tr>
-                    ) : data.expenses.lines.map((e) => (
-                      <tr key={e.id}>
-                        <td style={cellL}>
-                          <span style={{ fontWeight: 600 }}>{e.label}</span>
-                          <span style={{ fontFamily: T.mono, fontSize: 9.5, letterSpacing: '0.05em', textTransform: 'uppercase', color: T.fg3, marginLeft: 8 }}>{e.source === 'gusto' ? 'Gusto' : (e.category + (e.recurring ? ' · monthly' : ''))}</span>
-                          {e.source === 'gusto' ? null : (
-                            <>
-                              <button type="button" onClick={() => setEditing(e)} style={{ marginLeft: 10, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: T.mono, fontSize: 11, color: T.fg3, textDecoration: 'underline' }}>edit</button>
-                              <button type="button" onClick={() => delExpense(e.id)} style={{ marginLeft: 8, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: T.mono, fontSize: 11, color: '#B3261E', textDecoration: 'underline' }}>delete</button>
-                            </>
-                          )}
-                        </td>
-                        {cols.map((c) => { const v = e[c.key]; return <td key={c.key} style={{ ...cellR, background: colBg(c), color: c.kind === 'year' ? '#B3261E' : T.fg3 }}>{(v || v === 0) ? '-' + money(v, cur) : ''}</td>; })}
-                      </tr>
-                    ))}
+                    {sectionRow('Expenses' + (mode === 'plan' ? ' · targets' : ''), mode === 'plan'
+                      ? <button type="button" style={{ ...S.btnGhost, padding: '4px 10px', fontSize: 12 }} onClick={() => setPlanEditing({})}>+ Add target</button>
+                      : mode === 'actual' ? <button type="button" style={{ ...S.btnGhost, padding: '4px 10px', fontSize: 12 }} onClick={() => setEditing({})}>+ Add expense</button>
+                      : null)}
+                    {mode === 'variance' ? null : mode === 'plan' ? (
+                      plan.expenses.lines.length === 0 ? (
+                        <tr><td colSpan={nCols} style={{ ...cellL, color: T.fg3, fontSize: 12.5 }}>No expense targets yet. Add payroll, software, marketing, and other planned costs.</td></tr>
+                      ) : plan.expenses.lines.map((e) => (
+                        <tr key={e.id}>
+                          <td style={cellL}>
+                            <span style={{ fontWeight: 600 }}>{e.label}</span>
+                            <span style={{ fontFamily: T.mono, fontSize: 9.5, letterSpacing: '0.05em', textTransform: 'uppercase', color: T.fg3, marginLeft: 8 }}>{e.category}</span>
+                            <button type="button" onClick={() => setPlanEditing(e)} style={{ marginLeft: 10, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: T.mono, fontSize: 11, color: T.fg3, textDecoration: 'underline' }}>edit</button>
+                            <button type="button" onClick={() => delPlanExp(e.id)} style={{ marginLeft: 8, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: T.mono, fontSize: 11, color: '#B3261E', textDecoration: 'underline' }}>delete</button>
+                          </td>
+                          {cols.map((c) => { const v = e[c.key]; return <td key={c.key} style={{ ...cellR, background: colBg(c), color: c.kind === 'year' ? '#B3261E' : T.fg3 }}>{(v || v === 0) ? '-' + money(v, cur) : ''}</td>; })}
+                        </tr>
+                      ))
+                    ) : (
+                      data.expenses.lines.length === 0 ? (
+                        <tr><td colSpan={nCols} style={{ ...cellL, color: T.fg3, fontSize: 12.5 }}>No expenses yet. Add payroll and tool costs, or connect Gusto for payroll.</td></tr>
+                      ) : data.expenses.lines.map((e) => (
+                        <tr key={e.id}>
+                          <td style={cellL}>
+                            <span style={{ fontWeight: 600 }}>{e.label}</span>
+                            <span style={{ fontFamily: T.mono, fontSize: 9.5, letterSpacing: '0.05em', textTransform: 'uppercase', color: T.fg3, marginLeft: 8 }}>{e.source === 'gusto' ? 'Gusto' : (e.category + (e.recurring ? ' · monthly' : ''))}</span>
+                            {e.source === 'gusto' ? null : (
+                              <>
+                                <button type="button" onClick={() => setEditing(e)} style={{ marginLeft: 10, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: T.mono, fontSize: 11, color: T.fg3, textDecoration: 'underline' }}>edit</button>
+                                <button type="button" onClick={() => delExpense(e.id)} style={{ marginLeft: 8, background: 'none', border: 'none', padding: 0, cursor: 'pointer', fontFamily: T.mono, fontSize: 11, color: '#B3261E', textDecoration: 'underline' }}>delete</button>
+                              </>
+                            )}
+                          </td>
+                          {cols.map((c) => { const v = e[c.key]; return <td key={c.key} style={{ ...cellR, background: colBg(c), color: c.kind === 'year' ? '#B3261E' : T.fg3 }}>{(v || v === 0) ? '-' + money(v, cur) : ''}</td>; })}
+                        </tr>
+                      ))
+                    )}
                     <tr>
                       <td style={{ ...cellL, fontWeight: 700 }}>Total expenses</td>
-                      {cols.map((c) => <td key={c.key} style={{ ...cellR, fontWeight: 700, color: '#B3261E', background: colBg(c) }}>-{money(data.expenses.total[c.key], cur)}</td>)}
+                      {cols.map((c) => {
+                        if (mode === 'variance') {
+                          // Under plan (spending less) is good → green; over plan → red.
+                          const v = (data.expenses.total[c.key] || 0) - (plan.expenses.total[c.key] || 0);
+                          return <td key={c.key} style={{ ...cellR, fontWeight: 700, background: colBg(c), color: v <= 0 ? '#0A7A3B' : '#B3261E' }}>{varMoney(v)}</td>;
+                        }
+                        const val = mode === 'plan' ? plan.expenses.total[c.key] : data.expenses.total[c.key];
+                        return <td key={c.key} style={{ ...cellR, fontWeight: 700, color: '#B3261E', background: colBg(c) }}>-{money(val, cur)}</td>;
+                      })}
                     </tr>
 
                     <tr>
-                      <td style={{ ...cellL, fontWeight: 800, fontSize: 14, borderTop: `2px solid ${T.fg1}` }}>Net profit</td>
-                      {cols.map((c) => <td key={c.key} style={{ ...cellR, fontWeight: 800, fontSize: 14, borderTop: `2px solid ${T.fg1}`, background: colBg(c), color: data.net[c.key] >= 0 ? '#0A7A3B' : '#B3261E' }}>{money(data.net[c.key], cur)}</td>)}
+                      <td style={{ ...cellL, fontWeight: 800, fontSize: 14, borderTop: `2px solid ${T.fg1}` }}>{mode === 'variance' ? 'Net variance' : mode === 'plan' ? 'Net (planned)' : 'Net profit'}</td>
+                      {cols.map((c) => {
+                        const val = mode === 'plan' ? plan.net[c.key]
+                          : mode === 'variance' ? (data.net[c.key] || 0) - (plan.net[c.key] || 0)
+                          : data.net[c.key];
+                        return <td key={c.key} style={{ ...cellR, fontWeight: 800, fontSize: 14, borderTop: `2px solid ${T.fg1}`, background: colBg(c), color: (val || 0) >= 0 ? '#0A7A3B' : '#B3261E' }}>{mode === 'variance' ? varMoney(val) : money(val, cur)}</td>;
+                      })}
                     </tr>
                   </tbody>
                 </table>
               </div>
             </div>
 
-            <div style={{ marginTop: 16, display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
+            <div style={{ marginTop: 16, display: mode === 'plan' ? 'none' : 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
               <span style={{ fontFamily: T.mono, fontSize: 10.5, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.fg3, marginRight: 4 }}>Sources</span>
               {SRC.map(([k, l]) => {
                 const s = (data.sources && data.sources[k]) || {};
@@ -1410,11 +1549,16 @@
               })()}
             </div>
             <div style={{ marginTop: 12, fontFamily: T.sans, fontSize: 12.5, color: T.fg3 }}>
-              Revenue is pulled live from your integrations; expenses are the lines you add above. Once Gusto is connected, payroll will fill its line automatically.
+              {mode === 'plan'
+                ? 'Set an annual target per line (type it in the ' + year + ' column); it splits evenly across the year. Actuals from your integrations are compared against these in the Variance view.'
+                : mode === 'variance'
+                  ? 'Variance = actual minus plan. Green is ahead on revenue and under on spend; red is behind. Expense variance is at the total level.'
+                  : 'Revenue is pulled live from your integrations; expenses are the lines you add above. Once Gusto is connected, payroll will fill its line automatically.'}
             </div>
           </>
         )}
         {editing !== null && <PnLExpenseModal initial={editing.id ? editing : null} defaultMonth={curMonth()} onClose={() => setEditing(null)} onSaved={onSaved}/>}
+        {planEditing !== null && <PnLPlanTargetModal initial={planEditing.id ? planEditing : null} onClose={() => setPlanEditing(null)} onSave={onPlanSaved}/>}
       </Page>
     );
   }

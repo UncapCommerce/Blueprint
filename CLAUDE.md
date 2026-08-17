@@ -79,11 +79,20 @@ JSX with a `babel.transform` (that's exactly what the deploy runs).
   (`isSuper`, denis@uncap.com), a full-width whole-year statement.
   `GET /api/admin/pnl?year=YYYY` returns it: a `columns` array with values keyed
   by each column, so the client renders it generically. Columns are all twelve
-  months (future months blank) plus a quarter subtotal once each quarter
-  completes (Q1 after Mar … Q4 after Dec) and a Year total. Revenue reuses the
+  months plus every quarter subtotal (Q1–Q4) and a Year total; actuals only fill
+  elapsed months so future columns read blank, while the projected plan fills the
+  whole year. The year selector spans the current year plus the next two, so
+  projected P&Ls for this and the next two years can be built. Revenue reuses the
   same integrated sources as the Revenues section (via the shared
   `collectRevenueItems` fan-out over Shopify/Stripe/QuickBooks/Partner), minus
-  manual expense lines. Expenses are KV records (`pnlexp:<id>`, editable via
+  manual expense lines. **Projections**: a per-year plan (`pnlplan:<year>`, saved
+  via `POST /api/admin/pnl/plan`) holds an annual target per revenue channel plus
+  plan expense lines; the backend splits each annual evenly across the columns
+  (month = annual/12, quarter = annual/4, year = annual) and returns it as
+  `plan` on the P&L payload. The client offers an **Actuals · Plan · Variance**
+  view toggle (Variance = actual − plan, aligned at each revenue channel and the
+  revenue/expense/net totals; future years default to Plan). Expenses are KV
+  records (`pnlexp:<id>`, editable via
   `POST /api/admin/pnl/expense{,/delete}`) with a `recurring` monthly flag or a
   one-off `month`. **Payroll** fills automatically from **Gusto** once connected:
   OAuth 2.0 at `/api/gusto/{install,callback}` (owner-only), tokens in
