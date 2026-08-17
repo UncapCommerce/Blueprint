@@ -1,0 +1,132 @@
+
+html { scroll-behavior: smooth; scroll-padding-top: 96px; }
+  html, body { margin: 0; background: var(--uc-cream); color: var(--fg-1); font-family: var(--font-sans); -webkit-font-smoothing: antialiased; }
+  * { box-sizing: border-box; }
+  ::selection { background: var(--uc-signal); color: var(--uc-black); }
+  a { color: inherit; }
+  .bp-scope-card:hover { border-color: var(--uc-black); transform: translateY(-4px); box-shadow: 0 18px 40px -22px rgba(10,10,10,0.4); }
+
+  .uc-btn {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 14px 22px; border-radius: var(--radius);
+    font-family: var(--font-sans);
+    font-weight: 600; font-size: 14px; letter-spacing: -0.005em;
+    border: 1px solid transparent; cursor: pointer;
+    transition: background .18s var(--ease-out), color .18s var(--ease-out), transform .12s var(--ease-out);
+    text-decoration: none; line-height: 1;
+  }
+  .uc-btn span { transition: transform .18s var(--ease-out); display: inline-flex; }
+  .uc-btn:hover:not(:disabled) span { transform: translateX(4px); }
+  .uc-btn:active:not(:disabled) { transform: scale(0.97); }
+  .uc-btn.b-primary { background: var(--uc-brand); color: var(--uc-paper); padding: 14px 22px; }
+  .uc-btn.b-primary:hover { background: var(--uc-brand-hover); color: var(--uc-paper); }
+  .uc-btn.b-dark { background: var(--uc-brand); color: var(--uc-paper); padding: 16px 24px; font-size: 15px; }
+  .uc-btn.b-dark:hover { background: var(--uc-brand-hover); color: var(--uc-paper); }
+  .uc-btn.b-signal { background: var(--uc-signal); color: var(--uc-black); padding: 16px 24px; font-size: 15px; }
+  .uc-btn.b-signal:hover { background: var(--uc-paper); color: var(--uc-black); }
+
+  /* Outlined button on dark backgrounds */
+  .uc-outline-light {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 14px 22px; border-radius: var(--radius);
+    border: 1px solid var(--uc-paper);
+    background: transparent; color: var(--uc-paper);
+    font-family: var(--font-sans); font-weight: 600; font-size: 14px;
+    letter-spacing: -0.005em; text-decoration: none; line-height: 1;
+    transition: background .18s var(--ease-out), color .18s var(--ease-out), border-color .18s var(--ease-out), transform .12s var(--ease-out);
+  }
+  .uc-outline-light span { transition: transform .18s var(--ease-out); display: inline-flex; }
+  .uc-outline-light:hover { background: var(--uc-signal); color: var(--uc-black); border-color: var(--uc-signal); }
+  .uc-outline-light:hover span { transform: translateX(4px); }
+  .uc-outline-light:active { transform: scale(0.97); }
+  .uc-btn.b-on-dark { background: var(--uc-paper); color: var(--uc-black); }
+  .uc-btn.b-on-dark:hover { background: var(--uc-signal); color: var(--uc-black); }
+
+  .uc-link {
+    color: var(--fg-1); text-decoration: none; font-weight: 600; font-size: 14px;
+    display: inline-flex; align-items: center; gap: 8px;
+    border-bottom: 1px solid transparent;
+    transition: border-color .15s var(--ease-out); line-height: 1.2;
+  }
+  .uc-link:hover { border-bottom-color: currentColor; }
+  .uc-link span { transition: transform .18s var(--ease-out); }
+  .uc-link:hover span { transform: translateX(3px); }
+  .uc-link.uc-link-light { color: var(--uc-paper); }
+  .uc-link.uc-link-light:hover { border-bottom-color: var(--uc-paper); }
+
+  .uc-pulse {
+    width: 8px; height: 8px; border-radius: 999px;
+    background: var(--uc-signal);
+    box-shadow: 0 0 0 0 rgba(232,255,82,0.7);
+    animation: uc-pulse-kf 2.4s ease-out infinite;
+  }
+  @keyframes uc-pulse-kf {
+    0%   { box-shadow: 0 0 0 0 rgba(232,255,82,0.6); }
+    70%  { box-shadow: 0 0 0 10px rgba(232,255,82,0); }
+    100% { box-shadow: 0 0 0 0 rgba(232,255,82,0); }
+  }
+
+  .uc-rise { display: block; opacity: 0; transform: translateY(40px); transition: opacity 1s var(--ease-out), transform 1s var(--ease-out); }
+  .uc-rise.in { opacity: 1; transform: none; }
+
+  /* Header mega menu */
+  .uc-menu-item:hover { background: rgba(10,10,10,0.04); }
+  .uc-menu-item:hover .uc-menu-arrow { transform: translateX(3px); color: var(--fg-1); }
+  .uc-menu-item:hover .uc-menu-icon { transform: translateY(-1px); }
+
+  /* Footer link underline */
+  .uc-footer-link { position: relative; transition: color .15s var(--ease-out); }
+  .uc-footer-link:hover { color: var(--uc-paper); }
+  .uc-footer-link::after {
+    content: ''; position: absolute; left: 0; right: 0; bottom: -3px;
+    height: 1px; background: var(--uc-signal);
+    transform: scaleX(0); transform-origin: left;
+    transition: transform .2s var(--ease-out);
+  }
+  .uc-footer-link:hover::after { transform: scaleX(1); }
+
+  /* Mega CTA (footer) */
+  .uc-cta-mega {
+    display: inline-flex; align-items: center; gap: 28px;
+    padding: 22px 28px; background: var(--uc-signal); color: var(--uc-black);
+    border-radius: 5px; text-decoration: none;
+    border: 1px solid var(--uc-signal);
+    transition: background .2s var(--ease-out), color .2s var(--ease-out), transform .12s var(--ease-out);
+  }
+  .uc-cta-mega:hover { background: var(--uc-paper); border-color: var(--uc-paper); }
+  .uc-cta-mega-arrow {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 48px; height: 48px; border-radius: 999px;
+    border: 1.5px solid var(--uc-black); color: var(--uc-black);
+    transition: transform .2s var(--ease-out), background .2s var(--ease-out), color .2s var(--ease-out);
+  }
+  .uc-cta-mega:hover .uc-cta-mega-arrow { background: var(--uc-black); color: var(--uc-signal); transform: translateX(4px); }
+
+  @keyframes uc-marquee { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0ms !important; transition-duration: 0ms !important; }
+    .uc-rise { opacity: 1 !important; transform: none !important; }
+  }
+
+  /* ── Mobile (<=720px): collapse the fixed section-nav overlay, stack the
+     multi-column content grids, and reclaim the desktop side padding.
+     Grids are inline-styled; the browser serializes minmax(0,…) as
+     minmax(0px,…). "fr) minmax(0px, 1fr)" matches any fractional 2-col hero
+     (1.4fr/1.2fr/…) while skipping px-first icon grids like
+     "minmax(0px, 44px) minmax(0px, 1fr)". ── */
+  @media (max-width: 720px) {
+    nav { display: none !important; }
+    [style*="fr) minmax(0px, 1fr)"],
+    [style*="minmax(0px, auto) minmax(0px, 1fr)"],
+    [style*="minmax(0px, 1fr) minmax(0px, 1.05fr)"],
+    [style*="grid-template-columns: 1fr 1fr"],
+    [style*="repeat(2, minmax(0px, 1fr))"],
+    [style*="grid-template-columns: repeat(3, 1fr)"] {
+      grid-template-columns: 1fr !important;
+    }
+    [style*="grid-template-columns: repeat(4, 1fr)"] {
+      grid-template-columns: 1fr 1fr !important;
+    }
+    section { padding-left: 18px !important; padding-right: 18px !important; }
+  }

@@ -2574,6 +2574,7 @@ const BLUEPRINT_REGISTRY = [
   { id: 'hydra-powersystems', dir: 'HydraPower', name: 'Hydra-Power Systems', num: '015', channel: 'Inbound' },
   { id: 'trusty-cook', dir: 'TrustyCook', name: 'Trusty-Cook', num: '016', channel: 'Inbound' },
   { id: 'qpfeed', dir: 'QPFeed', name: 'QP Feed', num: '017', channel: 'Inbound' },
+  { id: 'parmancorp', dir: 'Parman', name: 'Parman', num: '018', channel: 'Inbound' },
 ];
 
 function getCookie(request, name) {

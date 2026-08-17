@@ -86,6 +86,7 @@ const files = [
   'public/HydraPower/index.html',
   'public/TrustyCook/index.html',
   'public/QPFeed/index.html',
+  'public/Parman/index.html',
   'public/demo/blueprint/index.html',
   'public/discovery/index.html',
 ];
