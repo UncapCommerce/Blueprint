@@ -1964,10 +1964,20 @@
   }
 
   // Read-only transcript: every question and its captured answer, grouped by step.
+  // The 24KB question catalog (/discovery/discovery-data.js) is only needed
+  // here, so it lazy-loads on first open instead of on every admin page load.
   function TranscriptModal({ disc, onClose }) {
     const [data, setData] = useState(null);
     const [error, setError] = useState('');
-    const steps = window.DISCOVERY_STEPS || [];
+    const [stepsReady, setStepsReady] = useState(() => !!window.DISCOVERY_STEPS);
+    useEffect(() => {
+      if (window.DISCOVERY_STEPS) return;
+      const s = document.createElement('script');
+      s.src = '/discovery/discovery-data.js?v=' + encodeURIComponent(window.__DEPLOY_HASH || 'dev');
+      s.onload = () => setStepsReady(true);
+      document.head.appendChild(s);
+    }, []);
+    const steps = (stepsReady && window.DISCOVERY_STEPS) || [];
     useEffect(() => {
       let dead = false;
       api('/api/discovery/answers?handle=' + encodeURIComponent(disc.handle))

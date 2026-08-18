@@ -23,9 +23,30 @@
 /colors_and_type.css
   Cache-Control: public, max-age=31536000, immutable
 
-# Root-page JSX/JS components change with deploys; revalidate.
-/components/*
-  Cache-Control: public, max-age=300, s-maxage=86400
+# Version-busted app scripts (?v=DEPLOY_HASH in every referencing page) are
+# byte-stable per deploy, so cache them like the CSS above. Each rule names
+# both the .jsx source (dev) and the precompiled .js sibling (production).
+# These come AFTER the broader /admin/* and /legal/* revalidate rules below
+# would match, but _headers gives later, more specific rules precedence, so
+# order them after those blocks anyway (see the overrides section).
+/portal/PortalApp.jsx
+  Cache-Control: public, max-age=31536000, immutable
+/portal/PortalApp.js
+  Cache-Control: public, max-age=31536000, immutable
+/blueprint-template/BlueprintTemplate.jsx
+  Cache-Control: public, max-age=31536000, immutable
+/blueprint-template/BlueprintTemplate.js
+  Cache-Control: public, max-age=31536000, immutable
+/blueprint-template/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+/estimate-template/EstimateTemplate.jsx
+  Cache-Control: public, max-age=31536000, immutable
+/estimate-template/EstimateTemplate.js
+  Cache-Control: public, max-age=31536000, immutable
+/estimate-template/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+/favicon-32.png
+  Cache-Control: public, max-age=31536000, immutable
 
 # Discovery scripts are version-busted from index.html (?v=DEPLOY_HASH), so
 # each deploy's bytes are immutable; the HTML itself must revalidate. Covers
@@ -47,6 +68,21 @@
 /admin/*
   Cache-Control: public, max-age=0, must-revalidate
 
+# …except their version-busted scripts, which are byte-stable per deploy.
+# (Later rules win over the broader matches above.)
+/legal/UncapMSA.jsx
+  Cache-Control: public, max-age=31536000, immutable
+/legal/UncapMSA.js
+  Cache-Control: public, max-age=31536000, immutable
+/admin/AdminApp.jsx
+  Cache-Control: public, max-age=31536000, immutable
+/admin/AdminApp.js
+  Cache-Control: public, max-age=31536000, immutable
+/admin/AdminToolbar.jsx
+  Cache-Control: public, max-age=31536000, immutable
+/admin/AdminToolbar.js
+  Cache-Control: public, max-age=31536000, immutable
+
 # Root + section HTML always revalidates.
 /
   Cache-Control: public, max-age=0, must-revalidate
@@ -60,11 +96,19 @@
   Cache-Control: public, max-age=0, must-revalidate
 /AnatomyWarehouse/assets/*
   Cache-Control: public, max-age=31536000, immutable
+/AnatomyWarehouse/colors_and_type.css
+  Cache-Control: public, max-age=31536000, immutable
+/AnatomyWarehouse/page-shell.css
+  Cache-Control: public, max-age=31536000, immutable
 /Ben-Ami/
   Cache-Control: public, max-age=0, must-revalidate
 /Ben-Ami/components/*
   Cache-Control: public, max-age=0, must-revalidate
 /Ben-Ami/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+/Ben-Ami/colors_and_type.css
+  Cache-Control: public, max-age=31536000, immutable
+/Ben-Ami/page-shell.css
   Cache-Control: public, max-age=31536000, immutable
 /CartonCraftSupply/
   Cache-Control: public, max-age=0, must-revalidate
@@ -72,11 +116,19 @@
   Cache-Control: public, max-age=0, must-revalidate
 /CartonCraftSupply/assets/*
   Cache-Control: public, max-age=31536000, immutable
+/CartonCraftSupply/colors_and_type.css
+  Cache-Control: public, max-age=31536000, immutable
+/CartonCraftSupply/page-shell.css
+  Cache-Control: public, max-age=31536000, immutable
 /ElevateOralCare/
   Cache-Control: public, max-age=0, must-revalidate
 /ElevateOralCare/components/*
   Cache-Control: public, max-age=0, must-revalidate
 /ElevateOralCare/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+/ElevateOralCare/colors_and_type.css
+  Cache-Control: public, max-age=31536000, immutable
+/ElevateOralCare/page-shell.css
   Cache-Control: public, max-age=31536000, immutable
 /ElyCattleman/
   Cache-Control: public, max-age=0, must-revalidate
@@ -84,11 +136,19 @@
   Cache-Control: public, max-age=0, must-revalidate
 /ElyCattleman/assets/*
   Cache-Control: public, max-age=31536000, immutable
+/ElyCattleman/colors_and_type.css
+  Cache-Control: public, max-age=31536000, immutable
+/ElyCattleman/page-shell.css
+  Cache-Control: public, max-age=31536000, immutable
 /GPSCity/
   Cache-Control: public, max-age=0, must-revalidate
 /GPSCity/components/*
   Cache-Control: public, max-age=0, must-revalidate
 /GPSCity/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+/GPSCity/colors_and_type.css
+  Cache-Control: public, max-age=31536000, immutable
+/GPSCity/page-shell.css
   Cache-Control: public, max-age=31536000, immutable
 /HydraPower/
   Cache-Control: public, max-age=0, must-revalidate
@@ -96,11 +156,29 @@
   Cache-Control: public, max-age=0, must-revalidate
 /HydraPower/assets/*
   Cache-Control: public, max-age=31536000, immutable
+/HydraPower/colors_and_type.css
+  Cache-Control: public, max-age=31536000, immutable
+/HydraPower/page-shell.css
+  Cache-Control: public, max-age=31536000, immutable
 /Mitutoyo/
   Cache-Control: public, max-age=0, must-revalidate
 /Mitutoyo/components/*
   Cache-Control: public, max-age=0, must-revalidate
 /Mitutoyo/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+/Mitutoyo/colors_and_type.css
+  Cache-Control: public, max-age=31536000, immutable
+/Mitutoyo/page-shell.css
+  Cache-Control: public, max-age=31536000, immutable
+/Parman/
+  Cache-Control: public, max-age=0, must-revalidate
+/Parman/components/*
+  Cache-Control: public, max-age=0, must-revalidate
+/Parman/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+/Parman/colors_and_type.css
+  Cache-Control: public, max-age=31536000, immutable
+/Parman/page-shell.css
   Cache-Control: public, max-age=31536000, immutable
 /QPFeed/
   Cache-Control: public, max-age=0, must-revalidate
@@ -108,11 +186,19 @@
   Cache-Control: public, max-age=0, must-revalidate
 /QPFeed/assets/*
   Cache-Control: public, max-age=31536000, immutable
+/QPFeed/colors_and_type.css
+  Cache-Control: public, max-age=31536000, immutable
+/QPFeed/page-shell.css
+  Cache-Control: public, max-age=31536000, immutable
 /SperScientific/
   Cache-Control: public, max-age=0, must-revalidate
 /SperScientific/components/*
   Cache-Control: public, max-age=0, must-revalidate
 /SperScientific/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+/SperScientific/colors_and_type.css
+  Cache-Control: public, max-age=31536000, immutable
+/SperScientific/page-shell.css
   Cache-Control: public, max-age=31536000, immutable
 /TrustyCook/
   Cache-Control: public, max-age=0, must-revalidate
@@ -120,11 +206,19 @@
   Cache-Control: public, max-age=0, must-revalidate
 /TrustyCook/assets/*
   Cache-Control: public, max-age=31536000, immutable
+/TrustyCook/colors_and_type.css
+  Cache-Control: public, max-age=31536000, immutable
+/TrustyCook/page-shell.css
+  Cache-Control: public, max-age=31536000, immutable
 /TucsonAlternator/
   Cache-Control: public, max-age=0, must-revalidate
 /TucsonAlternator/components/*
   Cache-Control: public, max-age=0, must-revalidate
 /TucsonAlternator/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+/TucsonAlternator/colors_and_type.css
+  Cache-Control: public, max-age=31536000, immutable
+/TucsonAlternator/page-shell.css
   Cache-Control: public, max-age=31536000, immutable
 /Uncap/
   Cache-Control: public, max-age=0, must-revalidate
@@ -132,11 +226,19 @@
   Cache-Control: public, max-age=0, must-revalidate
 /Uncap/assets/*
   Cache-Control: public, max-age=31536000, immutable
+/Uncap/colors_and_type.css
+  Cache-Control: public, max-age=31536000, immutable
+/Uncap/page-shell.css
+  Cache-Control: public, max-age=31536000, immutable
 /VIVO/
   Cache-Control: public, max-age=0, must-revalidate
 /VIVO/components/*
   Cache-Control: public, max-age=0, must-revalidate
 /VIVO/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+/VIVO/colors_and_type.css
+  Cache-Control: public, max-age=31536000, immutable
+/VIVO/page-shell.css
   Cache-Control: public, max-age=31536000, immutable
 /ValveMan/
   Cache-Control: public, max-age=0, must-revalidate
@@ -144,11 +246,19 @@
   Cache-Control: public, max-age=0, must-revalidate
 /ValveMan/assets/*
   Cache-Control: public, max-age=31536000, immutable
+/ValveMan/colors_and_type.css
+  Cache-Control: public, max-age=31536000, immutable
+/ValveMan/page-shell.css
+  Cache-Control: public, max-age=31536000, immutable
 /Weedoo/
   Cache-Control: public, max-age=0, must-revalidate
 /Weedoo/components/*
   Cache-Control: public, max-age=0, must-revalidate
 /Weedoo/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+/Weedoo/colors_and_type.css
+  Cache-Control: public, max-age=31536000, immutable
+/Weedoo/page-shell.css
   Cache-Control: public, max-age=31536000, immutable
 /demo/blueprint/
   Cache-Control: public, max-age=0, must-revalidate
@@ -156,10 +266,18 @@
   Cache-Control: public, max-age=0, must-revalidate
 /demo/blueprint/assets/*
   Cache-Control: public, max-age=31536000, immutable
+/demo/blueprint/colors_and_type.css
+  Cache-Control: public, max-age=31536000, immutable
+/demo/blueprint/page-shell.css
+  Cache-Control: public, max-age=31536000, immutable
 /wichelt/
   Cache-Control: public, max-age=0, must-revalidate
 /wichelt/components/*
   Cache-Control: public, max-age=0, must-revalidate
 /wichelt/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+/wichelt/colors_and_type.css
+  Cache-Control: public, max-age=31536000, immutable
+/wichelt/page-shell.css
   Cache-Control: public, max-age=31536000, immutable
 # <<< AUTO BRAND RULES

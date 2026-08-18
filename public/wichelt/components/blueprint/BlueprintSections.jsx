@@ -2101,7 +2101,7 @@ function BPTeam() {
         {team.map((p, i) =>
         <div key={i} style={{ background: 'var(--uc-paper)', border: '1px solid var(--line-2)', borderRadius: 5, padding: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div style={{ aspectRatio: '1/1', background: 'var(--uc-stone-200)', borderRadius: 4, overflow: 'hidden', border: '1px solid var(--line-1)' }}>
-              <img src={p.img} alt={p.n} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+              <img src={p.img} loading="lazy" decoding="async" alt={p.n} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
             </div>
             <div>
               <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 14, letterSpacing: '-0.012em', color: 'var(--fg-1)' }}>{p.n}</div>
@@ -2338,7 +2338,7 @@ function BPWhy() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: '8px' }}>
           {clients.map((c, i) =>
           <span key={i} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--uc-paper)', borderRadius: 6, padding: '8px 10px', height: 'clamp(38px, 3.4vw, 48px)' }}>
-              <img src={`assets/logos/${c}.svg`} alt={c} style={{ maxHeight: '100%', maxWidth: '100%', width: 'auto', display: 'block' }} />
+              <img src={`assets/logos/${c}.svg`} loading="lazy" decoding="async" alt={c} style={{ maxHeight: '100%', maxWidth: '100%', width: 'auto', display: 'block' }} />
             </span>
           )}
         </div>

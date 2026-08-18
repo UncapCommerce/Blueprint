@@ -13,7 +13,38 @@
    - Fraunces — serif italic accent (substitute for Boska).
    - JetBrains Mono — mono accents (section markers, code).
 */
-@import url('https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,300..900;1,14..32,300..900&family=Fraunces:ital,opsz,wght@0,9..144,400..700;1,9..144,400..700&family=JetBrains+Mono:wght@400;500;600&display=swap');
+/* Fonts are self-hosted (root /fonts/, immutable-cached): no Google Fonts
+   round trip. Same face set as the root colors_and_type.css. */
+/* Inter 18pt: body / UI */
+@font-face { font-family:"Inter"; font-weight:400; font-style:normal;  src:url("/fonts/Inter_18pt-Regular.woff2") format("woff2"); font-display:swap }
+@font-face { font-family:"Inter"; font-weight:400; font-style:italic;  src:url("/fonts/Inter_18pt-Italic.woff2") format("woff2"); font-display:swap }
+@font-face { font-family:"Inter"; font-weight:500; font-style:normal;  src:url("/fonts/Inter_18pt-Medium.woff2") format("woff2"); font-display:swap }
+@font-face { font-family:"Inter"; font-weight:500; font-style:italic;  src:url("/fonts/Inter_18pt-MediumItalic.woff2") format("woff2"); font-display:swap }
+@font-face { font-family:"Inter"; font-weight:600; font-style:normal;  src:url("/fonts/Inter_18pt-SemiBold.woff2") format("woff2"); font-display:swap }
+@font-face { font-family:"Inter"; font-weight:700; font-style:normal;  src:url("/fonts/Inter_18pt-Bold.woff2") format("woff2"); font-display:swap }
+@font-face { font-family:"Inter"; font-weight:800; font-style:normal;  src:url("/fonts/Inter_18pt-ExtraBold.woff2") format("woff2"); font-display:swap }
+@font-face { font-family:"Inter"; font-weight:900; font-style:normal;  src:url("/fonts/Inter_18pt-Black.woff2") format("woff2"); font-display:swap }
+
+/* Inter 24pt: H1/H2 headlines */
+@font-face { font-family:"Inter Display"; font-weight:400; font-style:normal; src:url("/fonts/Inter_24pt-Regular.woff2") format("woff2"); font-display:swap }
+@font-face { font-family:"Inter Display"; font-weight:400; font-style:italic; src:url("/fonts/Inter_24pt-Italic.woff2") format("woff2"); font-display:swap }
+@font-face { font-family:"Inter Display"; font-weight:500; font-style:normal; src:url("/fonts/Inter_24pt-Medium.woff2") format("woff2"); font-display:swap }
+@font-face { font-family:"Inter Display"; font-weight:500; font-style:italic; src:url("/fonts/Inter_24pt-MediumItalic.woff2") format("woff2"); font-display:swap }
+@font-face { font-family:"Inter Display"; font-weight:600; font-style:normal; src:url("/fonts/Inter_24pt-SemiBold.woff2") format("woff2"); font-display:swap }
+@font-face { font-family:"Inter Display"; font-weight:700; font-style:normal; src:url("/fonts/Inter_24pt-Bold.woff2") format("woff2"); font-display:swap }
+@font-face { font-family:"Inter Display"; font-weight:800; font-style:normal; src:url("/fonts/Inter_24pt-ExtraBold.woff2") format("woff2"); font-display:swap }
+
+/* Inter 28pt: hero-scale display */
+@font-face { font-family:"Inter Hero"; font-weight:700; font-style:normal; src:url("/fonts/Inter_28pt-Bold.woff2") format("woff2"); font-display:swap }
+@font-face { font-family:"Inter Hero"; font-weight:800; font-style:normal; src:url("/fonts/Inter_28pt-ExtraBold.woff2") format("woff2"); font-display:swap }
+@font-face { font-family:"Inter Hero"; font-weight:900; font-style:normal; src:url("/fonts/Inter_28pt-Black.woff2") format("woff2"); font-display:swap }
+
+/* Fraunces (serif accent) and JetBrains Mono are self-hosted too: Latin
+   variable-weight WOFF2s vendored from Google Fonts, so pages that load this
+   stylesheet need no third-party font request at all. */
+@font-face { font-family:"Fraunces"; font-weight:400 700; font-style:normal; src:url("/fonts/Fraunces-Var.woff2") format("woff2"); font-display:swap }
+@font-face { font-family:"Fraunces"; font-weight:400 700; font-style:italic; src:url("/fonts/Fraunces-Italic-Var.woff2") format("woff2"); font-display:swap }
+@font-face { font-family:"JetBrains Mono"; font-weight:400 600; font-style:normal; src:url("/fonts/JetBrainsMono-Var.woff2") format("woff2"); font-display:swap }
 
 html { font-optical-sizing: auto; }
 

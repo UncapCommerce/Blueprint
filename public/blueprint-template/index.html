@@ -12,14 +12,14 @@
   #root { min-height: 100vh; }
   button, input, textarea, select { font-family: inherit; }
 </style>
+</head>
+<body>
+<div id="root"></div>
 <script src="/vendor/react.production.min.js"></script>
 <script src="/vendor/react-dom.production.min.js"></script>
 <script src="/vendor/babel.min.js"></script>
 <script type="text/babel" src="/legal/UncapMSA.jsx?v=DEPLOY_HASH"></script>
 <script type="text/babel" src="/blueprint-template/BlueprintTemplate.jsx?v=DEPLOY_HASH"></script>
-</head>
-<body>
-<div id="root"></div>
 <script type="text/babel">
   ReactDOM.createRoot(document.getElementById('root')).render(<BlueprintTemplate/>);
 </script>

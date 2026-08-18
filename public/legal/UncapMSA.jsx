@@ -69,11 +69,11 @@
   function ensureStyles() {
     if (typeof document === 'undefined') return;
     if (!document.getElementById(FONT_ID)) {
-      const link = document.createElement('link');
-      link.id  = FONT_ID;
-      link.rel = 'stylesheet';
-      link.href = 'https://fonts.googleapis.com/css2?family=Caveat:wght@700&display=swap';
-      document.head.appendChild(link);
+      // Self-hosted signature face: no third-party request at sign time.
+      const s = document.createElement('style');
+      s.id = FONT_ID;
+      s.textContent = '@font-face { font-family:"Caveat"; font-weight:700; font-style:normal; src:url("/fonts/Caveat-Bold.woff2") format("woff2"); font-display:swap }';
+      document.head.appendChild(s);
     }
     if (document.getElementById(STYLE_ID)) return;
     const s = document.createElement('style');

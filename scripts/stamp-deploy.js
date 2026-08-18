@@ -41,7 +41,11 @@ function regenBrandHeaders(publicDir) {
   const block = brands.map((b) => (
     `/${b}/\n  Cache-Control: public, max-age=0, must-revalidate\n` +
     `/${b}/components/*\n  Cache-Control: public, max-age=0, must-revalidate\n` +
-    `/${b}/assets/*\n  Cache-Control: public, max-age=31536000, immutable`
+    `/${b}/assets/*\n  Cache-Control: public, max-age=31536000, immutable\n` +
+    // The per-brand stylesheets are ?v=DEPLOY_HASH-busted from index.html,
+    // so each deploy's bytes are immutable.
+    `/${b}/colors_and_type.css\n  Cache-Control: public, max-age=31536000, immutable\n` +
+    `/${b}/page-shell.css\n  Cache-Control: public, max-age=31536000, immutable`
   )).join('\n');
   const src = fs.readFileSync(headersPath, 'utf8');
   const s = src.indexOf(BRAND_START);
@@ -64,41 +68,19 @@ function resolveSha() {
 
 function main() {
 const sha = resolveSha().slice(0, 8);
-const files = [
-  'public/index.html',
-  'public/admin/index.html',
-  'public/blueprint-template/index.html',
-  'public/estimate-template/index.html',
-  'public/Mitutoyo/index.html',
-  'public/wichelt/index.html',
-  'public/ElevateOralCare/index.html',
-  'public/ValveMan/index.html',
-  'public/Ben-Ami/index.html',
-  'public/AnatomyWarehouse/index.html',
-  'public/SperScientific/index.html',
-  'public/GPSCity/index.html',
-  'public/TucsonAlternator/index.html',
-  'public/ElyCattleman/index.html',
-  'public/VIVO/index.html',
-  'public/Weedoo/index.html',
-  'public/CartonCraftSupply/index.html',
-  'public/Uncap/index.html',
-  'public/HydraPower/index.html',
-  'public/TrustyCook/index.html',
-  'public/QPFeed/index.html',
-  'public/Parman/index.html',
-  'public/demo/blueprint/index.html',
-  'public/discovery/index.html',
-];
+// Stamp every HTML file in the tree that carries a DEPLOY_HASH token — the
+// same walk precompile-jsx uses, so a new page can never be silently left
+// un-versioned by a stale manual list (the old hardcoded array's failure
+// mode).
+const { findHtml } = require('./precompile-jsx.js');
+const files = findHtml('public');
 
 let touched = 0;
 for (const f of files) {
   const before = fs.readFileSync(f, 'utf8');
-  const after = before.replace(/DEPLOY_HASH/g, sha);
-  if (after !== before) {
-    fs.writeFileSync(f, after);
-    touched++;
-  }
+  if (!before.includes('DEPLOY_HASH')) continue;
+  fs.writeFileSync(f, before.replace(/DEPLOY_HASH/g, sha));
+  touched++;
 }
 console.log(`[stamp-deploy] sha=${sha} files-rewritten=${touched}`);
 

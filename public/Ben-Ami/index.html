@@ -19,9 +19,8 @@
       shopifyBadge:   'assets/shopify-platinum-partner-black.svg',
       benamiLogo:     'assets/ben-ami-logo.svg',
       businessCentral:'assets/business-central.webp',
-      bgVector1:      'assets/bg-vector-1.svg',
-      bgVector2:      'assets/bg-vector-2.svg',
-      bgVector3:      'assets/bg-vector-3.svg',
+      bgVector1:      '/assets/bg-vector-1.svg',
+      bgVector2:      '/assets/bg-vector-2.svg',
       reviewBrandt:   'assets/review-brandt.webp'
     };
   }
@@ -41,8 +40,8 @@
   </svg>
 </template>
 
-<link rel="stylesheet" href="colors_and_type.css"/>
-<link rel="stylesheet" href="page-shell.css"/>
+<link rel="stylesheet" href="colors_and_type.css?v=DEPLOY_HASH"/>
+<link rel="stylesheet" href="page-shell.css?v=DEPLOY_HASH"/>
 
 </head>
 <body>
@@ -52,7 +51,6 @@
 <script src="/vendor/react-dom.production.min.js"></script>
 <script src="/vendor/babel.min.js"></script>
 
-<script src="image-slot.js?v=DEPLOY_HASH"></script>
 <script type="text/babel" src="/legal/UncapMSA.jsx?v=DEPLOY_HASH"></script>
 <script type="text/babel" src="components/blueprint/BlueprintSections.jsx?v=DEPLOY_HASH"></script>
 <script type="text/babel" src="/admin/AdminToolbar.jsx?v=DEPLOY_HASH"></script>

@@ -87,4 +87,4 @@ function precompileTree(publicDir) {
   return { pages, files: transpiledFiles.size };
 }
 
-module.exports = { precompileTree, transpile };
+module.exports = { precompileTree, transpile, findHtml };

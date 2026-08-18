@@ -2266,7 +2266,7 @@ function BPWhy() {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(10, 1fr)', gap: '8px' }}>
           {clients.map((c, i) =>
           <span key={i} style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', background: 'var(--uc-paper)', borderRadius: 6, padding: '8px 10px', height: 'clamp(38px, 3.4vw, 48px)' }}>
-              <img src={`assets/logos/${c}.svg`} alt={c} style={{ maxHeight: '100%', maxWidth: '100%', width: 'auto', display: 'block' }} />
+              <img src={`assets/logos/${c}.svg`} loading="lazy" decoding="async" alt={c} style={{ maxHeight: '100%', maxWidth: '100%', width: 'auto', display: 'block' }} />
             </span>
           )}
         </div>
