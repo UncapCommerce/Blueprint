@@ -38,14 +38,14 @@ function findBrandDirs(publicDir, rel = '', out = []) {
 function regenBrandHeaders(publicDir) {
   const headersPath = path.join(publicDir, '_headers');
   const brands = findBrandDirs(publicDir).sort();
+  // Cloudflare hard-caps _headers at 100 rules and FAILS THE DEPLOY above it,
+  // so each brand gets exactly two: the HTML (its URL never changes, so it
+  // must revalidate for deploys to roll out) and the assets (byte-stable).
+  // Everything else a brand page loads is ?v=DEPLOY_HASH-busted and needs no
+  // rule for correctness.
   const block = brands.map((b) => (
     `/${b}/\n  Cache-Control: public, max-age=0, must-revalidate\n` +
-    `/${b}/components/*\n  Cache-Control: public, max-age=0, must-revalidate\n` +
-    `/${b}/assets/*\n  Cache-Control: public, max-age=31536000, immutable\n` +
-    // The per-brand stylesheets are ?v=DEPLOY_HASH-busted from index.html,
-    // so each deploy's bytes are immutable.
-    `/${b}/colors_and_type.css\n  Cache-Control: public, max-age=31536000, immutable\n` +
-    `/${b}/page-shell.css\n  Cache-Control: public, max-age=31536000, immutable`
+    `/${b}/assets/*\n  Cache-Control: public, max-age=31536000, immutable`
   )).join('\n');
   const src = fs.readFileSync(headersPath, 'utf8');
   const s = src.indexOf(BRAND_START);
@@ -93,6 +93,12 @@ console.log(`[stamp-deploy] sha=${sha} files-rewritten=${touched}`);
 // public/_headers always matches the brands on disk (fixes stale-after-deploy).
 const brandCount = regenBrandHeaders('public');
 console.log(`[stamp-deploy] _headers brand rules regenerated for ${brandCount} blueprint dirs`);
+// Cloudflare rejects deploys with more than 100 _headers rules, so fail loud
+// here (where the message is readable) instead of at version upload.
+const ruleCount = fs.readFileSync('public/_headers', 'utf8').split('\n').filter((l) => l.startsWith('/')).length;
+console.log(`[stamp-deploy] _headers rules total=${ruleCount} (Cloudflare limit 100)`);
+if (ruleCount > 100) throw new Error(`_headers has ${ruleCount} rules — over Cloudflare's 100-rule limit; trim rules or drop per-brand entries`);
+if (ruleCount > 90) console.warn(`[stamp-deploy] WARNING: _headers at ${ruleCount}/100 rules — nearing Cloudflare's hard limit`);
 
 const isCI = !!(process.env.WORKERS_CI_COMMIT_SHA || process.env.GITHUB_SHA || process.env.PRECOMPILE_JSX);
 if (isCI) {
