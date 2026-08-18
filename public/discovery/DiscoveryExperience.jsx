@@ -57,9 +57,28 @@
     if (!resp.ok || data.ok === false) {
       const err = new Error(data.error || ('Request failed (' + resp.status + ')'));
       err.status = resp.status;
+      if (data.meta) err.meta = data.meta; // 401s can carry the public meta payload
       throw err;
     }
     return data;
+  };
+
+  // Scenes are lazy-loaded one file each (/discovery/scenes/scene-<n>.js,
+  // written by scripts/split-scenes.js): the login Gate ships zero scene
+  // bytes, the active step loads only its own scene (~5-55KB), and the rest
+  // prefetch when the browser is idle so step navigation stays instant.
+  const scenePending = {};
+  const ensureScene = (n) => {
+    if (n < 1 || n > 9 || (window.DISCOVERY_SCENES || {})[n]) return Promise.resolve();
+    if (scenePending[n]) return scenePending[n];
+    scenePending[n] = new Promise((resolve) => {
+      const s = document.createElement('script');
+      s.src = '/discovery/scenes/scene-' + n + '.js?v=' + encodeURIComponent(window.__DEPLOY_HASH || 'dev');
+      s.onload = resolve;
+      s.onerror = () => { delete scenePending[n]; resolve(); }; // blank stage now, retried on next visit
+      document.head.appendChild(s);
+    });
+    return scenePending[n];
   };
 
   const answered = (v) => {
@@ -289,6 +308,7 @@
     const [contentH, setContentH] = useState(900);
     const [infoCard, setInfoCard] = useState(null);
     const [siteHotspots, setSiteHotspots] = useState([]); // measured section rects for scenes 3-6
+    const [sceneReady, setSceneReady] = useState(0); // bumps when a lazy scene file lands
     const [fontsReady, setFontsReady] = useState(false);
     const [saveState, setSaveState] = useState(''); // '', 'saving', 'saved'
     const [submitState, setSubmitState] = useState('');
@@ -493,6 +513,17 @@
     }, []);
     // Re-fit on step change, and measure the rich scene's natural height so
     // the scroll viewport gets the right scroll extent.
+    // Lazy scene loading: fetch the active step's scene (bumping sceneReady
+    // so the html memo + measurements recompute when it lands), then prefetch
+    // the rest when the browser is idle so step navigation stays instant.
+    useEffect(() => {
+      let on = true;
+      ensureScene(activeStepIdx + 1).then(() => { if (on) setSceneReady((n) => n + 1); });
+      const idle = window.requestIdleCallback || ((fn) => setTimeout(fn, 1500));
+      idle(() => { for (let i = 1; i <= 9; i++) ensureScene(i).then(() => { if (on) setSceneReady((n) => n + 1); }); });
+      return () => { on = false; };
+    }, [activeStepIdx]);
+
     useLayoutEffect(() => {
       setInfoCard(null);
       measure();
@@ -501,7 +532,7 @@
       } else {
         setContentH(900);
       }
-    }, [activeStepIdx, measure, fontsReady]);
+    }, [activeStepIdx, measure, fontsReady, sceneReady]);
 
     // Measure each tagged section (union per hotspot id) so the animated
     // marker/outline overlay lines up with the rich scene DOM. Re-runs when
@@ -525,7 +556,7 @@
         const b = byId[id];
         return { id, x: b.x0, y: b.y0, w: b.x1 - b.x0, h: b.y1 - b.y0, num: String(i + 1).padStart(2, '0'), gid: resolveHotspot(id).gid };
       }));
-    }, [activeStepIdx, scale, contentH, fontsReady]);
+    }, [activeStepIdx, scale, contentH, fontsReady, sceneReady]);
 
     // Admin autosave (debounced). Clients persist only on Submit.
     const scheduleSave = useCallback((nextAnswers, aIdx, uIdx) => {
@@ -754,7 +785,7 @@
     // Scene HTML (1-9 static); scene 10 rendered in JSX.
     // Memoized: the swap pipeline makes 15+ full passes over a scene string
     // that can run to ~80KB, and the component re-renders on every keystroke.
-    // Its inputs only change on step change / load, so compute it then only.
+    // Its inputs only change on step change / scene load, so compute it then only.
     const isRich = isRichScene(activeStepIdx);
     const logoUrl = hasLogo ? '/api/discovery/logo?handle=' + encodeURIComponent(HANDLE) : '';
     const sceneHtml = useMemo(() => {
@@ -780,7 +811,7 @@
       html = applyProfileSwaps(html, profile);
       if (isRich) html = applyPalette(html, palette);
       return html;
-    }, [activeStepIdx, company, address, logoUrl, profile, palette, isRich]);
+    }, [activeStepIdx, company, address, logoUrl, profile, palette, isRich, sceneReady]);
 
     return (
       <div style={{ height: isMobile ? 'auto' : '100vh', minHeight: isMobile ? '100dvh' : undefined, display: 'flex', flexDirection: 'column', background: '#F2EFE7', color: '#0A0A0A' }}>
@@ -1199,17 +1230,20 @@
     useEffect(() => {
       if (!HANDLE) { setErr('Invalid discovery link.'); setPhase('error'); return; }
       (async () => {
-        // Admins are authed by cookie — try answers directly first.
-        try { await loadAnswers(''); return; } catch (e) { if (e.status !== 401) { /* fall through to gate */ } }
+        // Admins are authed by cookie — try answers directly first. Its 401
+        // carries the public meta payload, so the gate path costs one round
+        // trip instead of answers + meta.
+        let meta = null;
+        try { await loadAnswers(''); return; } catch (e) { if (e.status !== 401) { /* fall through to gate */ } if (e.meta) meta = e.meta; }
         // Try a stored client token.
         let tok = '';
         try { tok = sessionStorage.getItem(TOKEN_KEY) || ''; } catch (_) {}
         if (tok) {
-          try { setToken(tok); await loadAnswers(tok); return; } catch (_) { try { sessionStorage.removeItem(TOKEN_KEY); } catch (_) {} }
+          try { setToken(tok); await loadAnswers(tok); return; } catch (e) { try { sessionStorage.removeItem(TOKEN_KEY); } catch (_) {} if (e.meta) meta = e.meta; }
         }
-        // Need the passcode gate — fetch public meta for the company name.
+        // Need the passcode gate — use the piggybacked meta, else fetch it.
         try {
-          const m = await api('/api/discovery/meta?handle=' + encodeURIComponent(HANDLE));
+          const m = meta || await api('/api/discovery/meta?handle=' + encodeURIComponent(HANDLE));
           setCompany(m.company || m.clientName || '');
           setAddress(m.address || '');
           setProfile(m.profile || null);

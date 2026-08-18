@@ -30,7 +30,7 @@
 # Discovery scripts are version-busted from index.html (?v=DEPLOY_HASH), so
 # each deploy's bytes are immutable; the HTML itself must revalidate. Covers
 # both the .jsx source (dev) and the precompiled .js sibling (production).
-/discovery/scenes.js
+/discovery/scenes/*
   Cache-Control: public, max-age=31536000, immutable
 /discovery/discovery-data.js
   Cache-Control: public, max-age=31536000, immutable

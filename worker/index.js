@@ -4457,7 +4457,23 @@ async function handleDiscoveryGetAnswers(request, env) {
   const disc = await getDiscoveryByHandle(env, url.searchParams.get('handle'));
   if (!disc) return json(404, { ok: false, error: 'Discovery not found' });
   const actor = await resolveDiscoveryActor(request, env, { token: url.searchParams.get('token') || '' }, disc);
-  if (!actor) return json(401, { ok: false, error: 'Not authorised' });
+  if (!actor) {
+    // Piggyback the public meta on the 401 so the client's pre-gate flow is
+    // one round trip (it used to follow up with GET /api/discovery/meta).
+    return json(401, {
+      ok: false, error: 'Not authorised',
+      meta: {
+        handle: disc.handle,
+        company: disc.company || '',
+        clientName: disc.company || disc.client || '',
+        address: disc.address || '',
+        profile: disc.profile || null,
+        palette: disc.palette || null,
+        hasLogo: !!disc.hasLogo,
+        status: disc.status || 'new',
+      },
+    });
+  }
   // The training demo always returns the full example set, every step
   // unlocked, and never reads persisted answers.
   if (disc.demo) {

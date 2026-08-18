@@ -9,9 +9,10 @@
    - Inter_24pt-* → "Inter Display" (large headlines, lighter spacing)
    - Inter_28pt-* → "Inter Hero" (display-only, hero-scale headlines)
    Serif italic accent uses Fraunces; mono is JetBrains Mono. Both are
-   pulled from Google Fonts via a <link> in index.html (not @import) so
-   they kick off in parallel with the local stylesheet rather than being
-   discovered after CSS parse.
+   self-hosted variable WOFF2s in /fonts/ (declared at the end of this
+   block), so no Google Fonts request is needed by pages that use this
+   stylesheet. (Legacy per-brand blueprint stylesheets still @import
+   Google Fonts; migrate them when touched.)
 
    Only weights actually used on the page are declared. Browsers fault in
    each face on first use, so unused weights cost nothing — but they still
@@ -41,6 +42,13 @@
 @font-face { font-family:"Inter Hero"; font-weight:700; font-style:normal; src:url("./fonts/Inter_28pt-Bold.woff2") format("woff2"); font-display:swap }
 @font-face { font-family:"Inter Hero"; font-weight:800; font-style:normal; src:url("./fonts/Inter_28pt-ExtraBold.woff2") format("woff2"); font-display:swap }
 @font-face { font-family:"Inter Hero"; font-weight:900; font-style:normal; src:url("./fonts/Inter_28pt-Black.woff2") format("woff2"); font-display:swap }
+
+/* Fraunces (serif accent) and JetBrains Mono are self-hosted too: Latin
+   variable-weight WOFF2s vendored from Google Fonts, so pages that load this
+   stylesheet need no third-party font request at all. */
+@font-face { font-family:"Fraunces"; font-weight:400 700; font-style:normal; src:url("./fonts/Fraunces-Var.woff2") format("woff2"); font-display:swap }
+@font-face { font-family:"Fraunces"; font-weight:400 700; font-style:italic; src:url("./fonts/Fraunces-Italic-Var.woff2") format("woff2"); font-display:swap }
+@font-face { font-family:"JetBrains Mono"; font-weight:400 600; font-style:normal; src:url("./fonts/JetBrainsMono-Var.woff2") format("woff2"); font-display:swap }
 
 :root {
   /* ---------- PALETTE ---------- */

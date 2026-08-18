@@ -170,7 +170,13 @@ JSX with a `babel.transform` (that's exactly what the deploy runs).
   preview session from the `__Host-bp_admin` cookie via `/api/admin/bp-token`,
   so the team never types email codes
 - Discovery experience: `public/discovery/` served at `/discovery/<handle>/`.
-  10-step questionnaire over scaled artboard "scenes". CRITICAL pattern:
+  10-step questionnaire over scaled artboard "scenes". Scenes live as one
+  lazy-loaded file each under `public/discovery/scenes/scene-<n>.js`
+  (regenerate from a scenes-generator bundle with `node
+  scripts/split-scenes.js <bundle>`); the login gate ships zero scene bytes
+  and the app prefetches the rest when idle. Fraunces + JetBrains Mono are
+  self-hosted in `/fonts/` via the root `colors_and_type.css`, so the page
+  makes no Google Fonts request. CRITICAL pattern:
   every section of every scene must be click-to-highlight — coordinate
   hotspots for the plain artboards, and a `data-hotspot="<groupId>"`
   attribute on each section of the rich website-frame scenes (3-6, built by
