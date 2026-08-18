@@ -370,7 +370,9 @@ export default {
       return handleAdminListDiscoveries(request, env);
     }
     if (url.pathname === '/api/admin/activity' && request.method === 'GET') {
-      return handleAdminActivity(request, env);
+      // The feed is a 4-prefix list() + per-key gets (up to ~1200 reads);
+      // a 30s SWR window keeps the dashboard snappy without going stale.
+      return revenueCached(request, env, ctx, () => handleAdminActivity(request, env), { freshMs: 30000 });
     }
     if (url.pathname === '/api/admin/discovery/submission' && request.method === 'GET') {
       return handleAdminDiscoverySubmission(request, env);
@@ -391,7 +393,7 @@ export default {
       return handleAdminDiscoveryPrefill(request, env);
     }
     if (url.pathname === '/api/discovery/logo' && request.method === 'GET') {
-      return handleDiscoveryLogo(request, env);
+      return cachedImage(request, ctx, () => handleDiscoveryLogo(request, env));
     }
 
     // ── Discovery experience (public /discovery/<handle>/) ───────────────
@@ -408,10 +410,10 @@ export default {
       return handleDiscoveryGetAnswers(request, env);
     }
     if (url.pathname === '/api/discovery/answers' && request.method === 'POST') {
-      return handleDiscoverySaveAnswers(request, env);
+      return handleDiscoverySaveAnswers(request, env, ctx);
     }
     if (url.pathname === '/api/discovery/submit' && request.method === 'POST') {
-      return handleDiscoverySubmit(request, env);
+      return handleDiscoverySubmit(request, env, ctx);
     }
     if (url.pathname === '/api/admin/discoveries' && request.method === 'POST') {
       return handleAdminCreateDiscovery(request, env, ctx);
@@ -450,7 +452,9 @@ export default {
       return handleAdminGetCompany(request, env);
     }
     if (url.pathname === '/api/admin/company/activity' && request.method === 'GET') {
-      return handleAdminCompanyActivity(request, env);
+      // Scans the whole activity log to pick one company's rows; SWR-cache
+      // per company (?id= is part of the cache key) for 30s.
+      return revenueCached(request, env, ctx, () => handleAdminCompanyActivity(request, env), { freshMs: 30000 });
     }
     if (url.pathname === '/api/admin/company/artifact-delete' && request.method === 'POST') {
       return handleAdminCompanyArtifactDelete(request, env);
@@ -477,7 +481,7 @@ export default {
       return handleAdminCompanyFileGet(request, env);
     }
     if (url.pathname === '/api/company/logo' && request.method === 'GET') {
-      return handleCompanyLogo(request, env);
+      return cachedImage(request, ctx, () => handleCompanyLogo(request, env));
     }
     if (url.pathname === '/api/blueprint/content' && request.method === 'GET') {
       return handleBlueprintContent(request, env);
@@ -486,7 +490,7 @@ export default {
       return handlePortalRequestCode(request, env);
     }
     if (url.pathname === '/api/portal/verify' && request.method === 'POST') {
-      return handlePortalVerify(request, env);
+      return handlePortalVerify(request, env, ctx);
     }
     if (url.pathname === '/api/portal/me' && request.method === 'GET') {
       return handlePortalMe(request, env);
@@ -1150,12 +1154,18 @@ function roleFromRecord(email, u) {
   return ROLE_PENDING;
 }
 
+const _roleMemo = new Map(); // email → { at, role } — 5s, so role edits still land fast
 async function getAdminRole(env, email) {
   const e = (email || '').toString().toLowerCase();
   if (isRemovedAdmin(e)) return ROLE_PENDING;
   if (isSuperAdmin(e)) return ROLE_ADMIN;
   if (SEED_MANAGEMENT.includes(e)) return ROLE_MANAGEMENT;
-  return roleFromRecord(e, await getAdminUser(env, e));
+  // The gate + handlers can resolve the same role several times per request.
+  const hit = _roleMemo.get(e);
+  if (hit && (Date.now() - hit.at) < 5000) return hit.role;
+  const role = roleFromRecord(e, await getAdminUser(env, e));
+  _roleMemo.set(e, { at: Date.now(), role });
+  return role;
 }
 
 // Approved = holds any team role (Admin / Management / Staff), i.e. not pending.
@@ -1292,6 +1302,7 @@ const CO_CACHE_MS = 5000;
 // immediately on next load.
 async function bustPipelineCache(env) {
   _coCacheAt = 0; _coCacheJson = null;
+  _companyMemo.clear();
   await env.BLUEPRINT_AUTH.delete('revcache:v3:/api/admin/pipeline?').catch(() => {});
 }
 
@@ -1357,8 +1368,7 @@ async function revenueCached(request, env, ctx, compute, opts) {
 // blended into one list. Either source alone is enough to be connected.
 async function handleAdminRecurringRevenue(request, env) {
   const cfg = shopifyConfig(env);
-  const token = await shopifyGetToken(env);
-  const shop = await shopifyShopDomain(env);
+  const [token, shop] = await Promise.all([shopifyGetToken(env), shopifyShopDomain(env)]);
   const stripe = stripeConfig(env);
   const shopifyOn = !!(shop && token);
   const stripeOn = !!stripe.key;
@@ -2207,8 +2217,7 @@ async function collectRevenueItems(env, minISO, maxISO) {
   await Promise.all([
     // Retainers — Shopify paid orders + Stripe payments (blended)
     (async () => {
-      const sToken = await shopifyGetToken(env);
-      const sShop = await shopifyShopDomain(env);
+      const [sToken, sShop] = await Promise.all([shopifyGetToken(env), shopifyShopDomain(env)]);
       const recurringOn = !!(sShop && sToken) || !!stripe.key;
       sources.recurring = recurringOn ? { connected: true, ok: true } : { connected: false };
       if (sShop && sToken) {
@@ -2369,9 +2378,12 @@ async function handleAdminPnl(request, env) {
     }
   }
 
-  const all = await listPnlExpenses(env);
-  // Real payroll cost per month from Gusto (empty/unconnected → manual only).
-  const payroll = await gustoPayrollByMonth(env, year);
+  // Expenses, Gusto payroll, and the projected plan are independent reads.
+  const [all, payroll, planRecEarly] = await Promise.all([
+    listPnlExpenses(env),
+    gustoPayrollByMonth(env, year), // real payroll per month (unconnected → manual only)
+    readPnlPlan(env, year),
+  ]);
   const payrollErrored = payroll.connected === true && payroll.ok === false;
   const partial = payrollErrored || Object.keys(sources).some((k) => sources[k] && sources[k].connected && sources[k].ok === false);
   const base = {
@@ -2424,7 +2436,7 @@ async function handleAdminPnl(request, env) {
     // Projected plan for this year (annual target per line, split evenly across
     // months): month = annual/12, quarter = annual/4, year = annual. Unlike
     // actuals, the plan fills the whole year regardless of what has elapsed.
-    const planRec = await readPnlPlan(env, year);
+    const planRec = planRecEarly;
     const planRev = (planRec && planRec.revenue) || {};
     const planExp = (planRec && Array.isArray(planRec.expenses)) ? planRec.expenses : [];
     const spread = (annual) => { const per = (Number(annual) || 0) / 12; return Object.fromEntries(cols.map((col) => [col.key, per * monthsOf(col.key).length])); };
@@ -2622,9 +2634,15 @@ function sameOrigin(request) {
 async function getAdminSession(request, env) {
   const token = getCookie(request, ADMIN_COOKIE);
   if (!/^[a-f0-9]{48}$/.test(token)) return null;
-  const raw = await env.BLUEPRINT_AUTH.get(`admin_session:${token}`);
-  if (!raw) return null;
-  try { return { token, ...JSON.parse(raw) }; } catch { return null; }
+  // Request-scoped memo: the /api/admin/* gate and most handlers each resolve
+  // the session, which used to cost 2-3 identical KV reads per request.
+  if (request.__adminSessP) return request.__adminSessP;
+  request.__adminSessP = (async () => {
+    const raw = await env.BLUEPRINT_AUTH.get(`admin_session:${token}`);
+    if (!raw) return null;
+    try { return { token, ...JSON.parse(raw) }; } catch { return null; }
+  })();
+  return request.__adminSessP;
 }
 
 function handleAdminConfig(env) {
@@ -3053,7 +3071,14 @@ async function handleAdminBlueprints(request, env) {
   }
 
   await Promise.all(items.map(async (i) => {
-    const meta = await getBpMeta(env, i.id);
+    // Registry pages and templated drafts that have gone live (contentStatus
+    // 'ready') can both be signed, so load signatures for either. The meta
+    // and the signature rollup are independent — fetch them together.
+    const signable = i.kind === 'live' || i.contentStatus === 'ready';
+    const [meta, rollup] = await Promise.all([
+      getBpMeta(env, i.id),
+      signable ? env.BLUEPRINT_AUTH.get(`bpsigned:${i.id}`) : Promise.resolve(null),
+    ]);
     i.expiresAt = meta.expiresAt || '';
     i.disabled  = !!meta.disabled;
     // An explicit channel saved in bpmeta wins; otherwise fall back to the
@@ -3061,10 +3086,7 @@ async function handleAdminBlueprints(request, env) {
     i.channel   = meta.channel || i.channel || '';
     i.expired   = isBpExpired(meta);
 
-    // Registry pages and templated drafts that have gone live (contentStatus
-    // 'ready') can both be signed, so load signatures for either.
-    if (i.kind !== 'live' && i.contentStatus !== 'ready') return;
-    const rollup = await env.BLUEPRINT_AUTH.get(`bpsigned:${i.id}`);
+    if (!signable) return;
     if (rollup) { try { i.signature = JSON.parse(rollup); return; } catch { /* fall through */ } }
     const list = await env.BLUEPRINT_AUTH.list({ prefix: `signature:${i.id}:`, limit: 10 });
     if (!list.keys.length) return;
@@ -3447,11 +3469,13 @@ async function handleAdminBpToken(request, env) {
   const blueprintId = normalizeBlueprintId(body.blueprintId);
 
   // The blueprint page reads this to render its "Valid through" date from the
-  // expiration an admin set in the app, rather than a hardcoded value.
-  const bpMeta = await getBpMeta(env, blueprintId);
+  // expiration an admin set in the app, rather than a hardcoded value. The
+  // meta and the session are independent reads — fetch them together.
+  const [bpMeta, sess] = await Promise.all([
+    getBpMeta(env, blueprintId),
+    getAdminSession(request, env),
+  ]);
   const expiresAt = (bpMeta && bpMeta.expiresAt) || '';
-
-  const sess = await getAdminSession(request, env);
   if (sess) {
     const token = genToken();
     await env.BLUEPRINT_AUTH.put(
@@ -4392,8 +4416,10 @@ async function handleDiscoveryRequestCode(request, env) {
   }
   {
     const ip = clientIp(request);
-    const okEmail = await rateLimit(env, `disccode:email:${disc.id}:${encodeURIComponent(email)}`, 3, 15 * 60);
-    const okIp = ip ? await rateLimit(env, `disccode:ip:${ip}`, 10, 15 * 60) : true;
+    const [okEmail, okIp] = await Promise.all([
+      rateLimit(env, `disccode:email:${disc.id}:${encodeURIComponent(email)}`, 3, 15 * 60),
+      ip ? rateLimit(env, `disccode:ip:${ip}`, 10, 15 * 60) : Promise.resolve(true),
+    ]);
     if (!okEmail || !okIp) return json(429, { ok: false, error: 'Too many code requests. Wait a few minutes and try again.' });
   }
   const code = genCode();
@@ -4510,7 +4536,7 @@ async function writeDiscoveryStatus(env, disc, status) {
 
 // Admin autosave (continuous during the call) — also flips status to
 // in_progress on first save, and to complete when the admin finishes.
-async function handleDiscoverySaveAnswers(request, env) {
+async function handleDiscoverySaveAnswers(request, env, ctx) {
   let body;
   try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
   const disc = await getDiscoveryByHandle(env, body.handle);
@@ -4537,16 +4563,16 @@ async function handleDiscoverySaveAnswers(request, env) {
   await writeDiscoveryStatus(env, disc, status);
 
   if (complete && prev.status !== 'complete') {
-    await logActivity(env, null, { type: 'status', entity: 'discovery', id: disc.id, name: disc.company || disc.handle, actor: actor.email, detail: 'Discovery completed' });
+    await logActivity(env, ctx, { type: 'status', entity: 'discovery', id: disc.id, name: disc.company || disc.handle, actor: actor.email, detail: 'Discovery completed' });
   } else if (prev.status === 'new') {
-    await logActivity(env, null, { type: 'edited', entity: 'discovery', id: disc.id, name: disc.company || disc.handle, actor: actor.email, detail: 'Discovery started' });
+    await logActivity(env, ctx, { type: 'edited', entity: 'discovery', id: disc.id, name: disc.company || disc.handle, actor: actor.email, detail: 'Discovery started' });
   }
   return json(200, { ok: true, status });
 }
 
 // Client submit — diff against what's stored, save, and report the change
 // set on the dashboard activity feed with a viewable payload.
-async function handleDiscoverySubmit(request, env) {
+async function handleDiscoverySubmit(request, env, ctx) {
   let body;
   try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
   const disc = await getDiscoveryByHandle(env, body.handle);
@@ -4595,7 +4621,7 @@ async function handleDiscoverySubmit(request, env) {
       by: actor.name, email: actor.email, at: new Date(ts).toISOString(), changes,
     }), { expirationTtl: ACCESS_LOG_TTL_SECONDS });
     const who = actor.name || actor.email || 'A client';
-    await logActivity(env, null, {
+    await logActivity(env, ctx, {
       type: 'disc-update', entity: 'discovery', id: disc.id,
       name: disc.company || disc.handle, actor: who,
       detail: `${changes.length} ${changes.length === 1 ? 'entry' : 'entries'} updated`,
@@ -4894,10 +4920,20 @@ function companyFieldsFrom(body) {
   };
 }
 
+// Per-isolate company memo (same 5s window as the listCompanies memo, and
+// busted alongside it). Blueprint pages resolve the company on EVERY sub-asset
+// request (/​<id>/blueprint/<file>), so without this one page view costs
+// 10-30 identical KV reads.
+const _companyMemo = new Map(); // id → { at, json|null }
 async function getCompany(env, id) {
   const clean = (id || '').toString().trim().toLowerCase();
   if (!/^[a-z0-9-]{1,60}$/.test(clean)) return null;
+  const hit = _companyMemo.get(clean);
+  if (hit && (Date.now() - hit.at) < CO_CACHE_MS) {
+    return hit.json ? JSON.parse(hit.json) : null; // fresh copy; callers may mutate
+  }
   const raw = await env.BLUEPRINT_AUTH.get(`company:${clean}`);
+  _companyMemo.set(clean, { at: Date.now(), json: raw || null });
   if (!raw) return null;
   try { return JSON.parse(raw); } catch { return null; }
 }
@@ -4938,8 +4974,10 @@ function padCompanyNo(n) {
 async function nextCompanyNo(env) {
   return highestCompanyNo(await listCompanies(env)) + 1;
 }
+let _conumV1Done = false;
 async function assignCompanyNumbersV1(env) {
-  if (await env.BLUEPRINT_AUTH.get('conum:v1')) return;
+  if (_conumV1Done) return;
+  if (await env.BLUEPRINT_AUTH.get('conum:v1')) { _conumV1Done = true; return; }
   const companies = await listCompanies(env);
   const used = new Set();
   for (const co of companies) { const n = parseInt(co.no, 10); if (n > 0) used.add(n); }
@@ -5029,8 +5067,10 @@ async function listItems(env) {
   const gi = (g) => { const i = ITEM_GROUP_KEYS.indexOf(g); return i === -1 ? 99 : i; };
   return rows.filter(Boolean).sort((a, b) => (gi(a.group) - gi(b.group)) || (a.name || '').localeCompare(b.name || ''));
 }
+let _itemsSeededDone = false;
 async function seedItemsV1(env) {
-  if (await env.BLUEPRINT_AUTH.get('items:seeded:v1')) return;
+  if (_itemsSeededDone) return;
+  if (await env.BLUEPRINT_AUTH.get('items:seeded:v1')) { _itemsSeededDone = true; return; }
   await env.BLUEPRINT_AUTH.put('items:seeded:v1', new Date().toISOString());
   for (const s of SEED_ITEMS) {
     const id = 'itm_' + crypto.randomUUID().slice(0, 8);
@@ -5129,9 +5169,10 @@ async function handleAdminGetEstimate(request, env) {
   const co = await getCompany(env, companyId);
   if (!co) return json(404, { ok: false, error: 'Company not found' });
   try { await seedItemsV1(env); } catch (_) { /* best-effort */ }
+  const [estimate, master] = await Promise.all([getEstimate(env, companyId), listItems(env)]);
   return json(200, {
-    ok: true, estimate: await getEstimate(env, companyId),
-    master: await listItems(env), groups: ITEM_GROUPS, rate: ITEM_RATE,
+    ok: true, estimate,
+    master, groups: ITEM_GROUPS, rate: ITEM_RATE,
     defaultTimeline: DEFAULT_TIMELINE, company: { id: co.id, name: co.name },
   });
 }
@@ -5608,6 +5649,22 @@ async function handleAdminCompanyFileGet(request, env) {
 }
 
 // Public logo by company id, CSP-locked like the discovery logo.
+
+// Wrap a logo-style handler with the Cache API: worker-generated responses
+// are never edge-cached on their own, so repeats re-read KV and re-decode
+// base64 every time. Cached copy honors the handler's cache-control (1h);
+// logo changes show up within that hour, same as the old browser-only TTL.
+async function cachedImage(request, ctx, compute) {
+  const cache = caches.default;
+  const hit = await cache.match(request).catch(() => null);
+  if (hit) return hit;
+  const resp = await compute();
+  if (resp.status === 200 && ctx && ctx.waitUntil) {
+    ctx.waitUntil(cache.put(request, resp.clone()).catch(() => {}));
+  }
+  return resp;
+}
+
 async function handleCompanyLogo(request, env) {
   const url = new URL(request.url);
   const rec = await getCompany(env, url.searchParams.get('id'));
@@ -5661,8 +5718,10 @@ async function handlePortalRequestCode(request, env) {
 
   {
     const ip = clientIp(request);
-    const okEmail = await rateLimit(env, `pocode:rl:${encodeURIComponent(email)}`, 3, 15 * 60);
-    const okIp = ip ? await rateLimit(env, `pocode:ip:${ip}`, 10, 15 * 60) : true;
+    const [okEmail, okIp] = await Promise.all([
+      rateLimit(env, `pocode:rl:${encodeURIComponent(email)}`, 3, 15 * 60),
+      ip ? rateLimit(env, `pocode:ip:${ip}`, 10, 15 * 60) : Promise.resolve(true),
+    ]);
     if (!okEmail || !okIp) return json(429, { ok: false, error: 'Too many code requests. Wait a few minutes and try again.' });
   }
 
@@ -5683,7 +5742,7 @@ async function handlePortalRequestCode(request, env) {
   return json(200, { ok: true });
 }
 
-async function handlePortalVerify(request, env) {
+async function handlePortalVerify(request, env, ctx) {
   let body;
   try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
   const email = (body.email || '').toString().trim().toLowerCase();
@@ -5719,7 +5778,7 @@ async function handlePortalVerify(request, env) {
     JSON.stringify({ email, name, companyId: company.id, ts: Date.now() }),
     { expirationTtl: PORTAL_SESSION_TTL_SECONDS }
   );
-  await logActivity(env, null, { type: 'view', entity: 'company', id: company.id, name: company.name, actor: email, detail: 'Portal sign-in' });
+  await logActivity(env, ctx, { type: 'view', entity: 'company', id: company.id, name: company.name, actor: email, detail: 'Portal sign-in' });
   return withSecurityHeaders(new Response(JSON.stringify({ ok: true, name }), {
     status: 200,
     headers: {
@@ -5914,8 +5973,10 @@ async function findCompanyByDiscoveryHandle(env, handle) {
 // ── One-time migration: give every existing blueprint and discovery a
 // portal company, so old clients get the new /<company>/ experience.
 // Flag-guarded and idempotent; runs from the admin companies list.
+let _comigrateV1Done = false;
 async function migrateCompaniesV1(env) {
-  if (await env.BLUEPRINT_AUTH.get('comigrate:v1')) return;
+  if (_comigrateV1Done) return;
+  if (await env.BLUEPRINT_AUTH.get('comigrate:v1')) { _comigrateV1Done = true; return; }
   await env.BLUEPRINT_AUTH.put('comigrate:v1', new Date().toISOString());
 
   const upsert = async (slug, patch) => {
