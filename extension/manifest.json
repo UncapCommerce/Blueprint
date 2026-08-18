@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "Uncap Capture",
+  "version": "1.0.0",
+  "description": "Streams the meeting tab's audio into the open Uncap discovery so the client's answers transcribe live.",
+  "permissions": ["tabCapture", "offscreen", "tabs"],
+  "background": { "service_worker": "background.js" },
+  "action": {
+    "default_title": "Uncap Capture: click on the MEETING tab to start/stop"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://go.uncap.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

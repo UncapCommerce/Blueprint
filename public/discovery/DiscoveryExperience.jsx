@@ -328,23 +328,26 @@
 
     const isAdmin = role === 'admin';
 
-    // ── Live call transcription (admin only) ─────────────────────────────
-    // The rep shares the meeting tab (with audio) once; tab audio + mic are
-    // mixed and streamed to Deepgram with a short-lived key minted by the
-    // worker. Finalized speech appends into whichever open-text question is
-    // focused; "AI fill from call" maps the whole transcript onto any fields
-    // still empty (the server never overwrites a human answer).
-    const [live, setLive] = useState('');           // '' | 'starting' | 'on'
-    const [liveErr, setLiveErr] = useState('');
+    // ── Live call transcription (admin only, fully automatic) ───────────
+    // No buttons: on admin load the page mints a Deepgram key and starts
+    // transcribing the MICROPHONE (Chrome remembers the one-time permission,
+    // so every later load starts silently). The Uncap Capture extension
+    // streams the MEETING TAB's audio (the client's voice, headphones-safe)
+    // and posts its segments into this page, where they are handled exactly
+    // like the mic's. Finalized speech appends into the focused open-text
+    // question, and an automatic sweep maps the whole call onto still-empty
+    // fields every ~75s (the server never overwrites a human answer).
+    const [live, setLive] = useState('');           // '' | 'starting' | 'on' | 'micoff' | 'nokey' | 'error'
     const [interim, setInterim] = useState('');
-    const [liveFill, setLiveFill] = useState('');   // '' | 'filling' | 'filled N'
+    const [liveFill, setLiveFill] = useState('');   // '' | 'filling' | 'auto-filled N'
     const [focusedQid, setFocusedQid] = useState('');
     const focusedQidRef = useRef('');
-    const liveRef = useRef(null);                   // { ws, recorder, ctx, streams, keepalive }
+    const liveRef = useRef(null);                   // { ws, recorder, ctx, streams, keepalive, closed }
     const transcriptRef = useRef('');
-
-    const isAdminRef = useRef(isAdmin);
-    isAdminRef.current = isAdmin;
+    const sweptLenRef = useRef(0);                  // transcript length at the last AI sweep
+    const keyRef = useRef(null);                    // { key, expiresAt }
+    const retryRef = useRef(0);
+    const mountedRef = useRef(true);
 
     const noteFocus = (qid) => { focusedQidRef.current = qid; setFocusedQid(qid); };
 
@@ -360,11 +363,28 @@
       });
     };
 
+    // A finalized segment, whether it came from the mic stream or from the
+    // capture extension relaying the meeting tab.
+    const onFinalSegment = (t) => {
+      if (!t) return;
+      transcriptRef.current += (transcriptRef.current ? '\n' : '') + t;
+      setInterim('');
+      appendToFocused(t);
+    };
+
+    const mintKey = async () => {
+      if (keyRef.current && keyRef.current.expiresAt - Date.now() > 10 * 60 * 1000) return keyRef.current.key;
+      const d = await api('/api/admin/discovery/transcribe-token', { method: 'POST', body: '{}' });
+      keyRef.current = { key: d.key, expiresAt: d.expiresAt || (Date.now() + 7200000) };
+      return d.key;
+    };
+
     const stopLive = useCallback((persist) => {
       const l = liveRef.current;
       liveRef.current = null;
       setLive(''); setInterim('');
       if (!l) return;
+      l.closed = true;
       try { if (l.keepalive) clearInterval(l.keepalive); } catch (_) {}
       try { if (l.recorder && l.recorder.state !== 'inactive') l.recorder.stop(); } catch (_) {}
       try { if (l.ws && l.ws.readyState === 1) { l.ws.send(JSON.stringify({ type: 'CloseStream' })); } } catch (_) {}
@@ -376,35 +396,29 @@
       }
     }, []);
 
-    const startLive = async () => {
-      setLiveErr(''); setLive('starting');
+    // Start (or restart) the automatic mic capture. Never throws; the status
+    // chip reflects why capture isn't running.
+    const startAuto = async () => {
+      if (liveRef.current || !mountedRef.current) return;
+      setLive('starting');
       let key;
-      try {
-        const d = await api('/api/admin/discovery/transcribe-token', { method: 'POST', body: '{}' });
-        key = d.key;
-      } catch (e) { setLive(''); setLiveErr(e.message || 'Could not start transcription.'); return; }
-      let disp;
-      try {
-        disp = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
-      } catch (_) { setLive(''); setLiveErr('Pick the meeting tab and tick "Also share tab audio".'); return; }
-      if (!disp.getAudioTracks().length) {
-        disp.getTracks().forEach((t) => t.stop());
-        setLive(''); setLiveErr('No audio was shared. Choose a Chrome TAB and tick "Also share tab audio".');
-        return;
-      }
-      let mic = null;
-      try { mic = await navigator.mediaDevices.getUserMedia({ audio: true }); } catch (_) { /* mic optional: tab audio alone still captures the call */ }
+      try { key = await mintKey(); }
+      catch (e) { setLive((e && e.status === 400) ? 'nokey' : 'error'); return; }
+      let mic;
+      try { mic = await navigator.mediaDevices.getUserMedia({ audio: true }); }
+      catch (_) { setLive('micoff'); return; }
+      if (!mountedRef.current) { mic.getTracks().forEach((t) => t.stop()); return; }
       const ctx = new (window.AudioContext || window.webkitAudioContext)();
       const dest = ctx.createMediaStreamDestination();
-      ctx.createMediaStreamSource(new MediaStream(disp.getAudioTracks())).connect(dest);
-      if (mic) ctx.createMediaStreamSource(mic).connect(dest);
+      ctx.createMediaStreamSource(mic).connect(dest);
       const recorder = new MediaRecorder(dest.stream, { mimeType: 'audio/webm;codecs=opus' });
       const ws = new WebSocket('wss://api.deepgram.com/v1/listen?model=nova-2&smart_format=true&interim_results=true', ['token', key]);
-      const l = { ws, recorder, ctx, streams: [disp, mic].filter(Boolean), keepalive: 0 };
+      const l = { ws, recorder, ctx, streams: [mic], keepalive: 0, closed: false };
       liveRef.current = l;
       ws.onopen = () => {
         recorder.start(250);
         l.keepalive = setInterval(() => { try { if (ws.readyState === 1) ws.send(JSON.stringify({ type: 'KeepAlive' })); } catch (_) {} }, 8000);
+        retryRef.current = 0;
         setLive('on');
       };
       recorder.ondataavailable = (e) => { try { if (e.data && e.data.size && ws.readyState === 1) ws.send(e.data); } catch (_) {} };
@@ -413,22 +427,27 @@
         const alt = d.channel && d.channel.alternatives && d.channel.alternatives[0];
         const t = alt && alt.transcript ? alt.transcript.trim() : '';
         if (!t) return;
-        if (d.is_final) {
-          transcriptRef.current += (transcriptRef.current ? '\n' : '') + t;
-          setInterim('');
-          appendToFocused(t);
-        } else {
-          setInterim(t);
-        }
+        if (d.is_final) onFinalSegment(t); else setInterim(t);
       };
-      ws.onerror = () => { if (liveRef.current === l) { setLiveErr('Transcription connection failed.'); stopLive(true); } };
-      ws.onclose = () => { if (liveRef.current === l) stopLive(true); };
-      const vTrack = disp.getVideoTracks()[0];
-      if (vTrack) vTrack.onended = () => { if (liveRef.current === l) stopLive(true); };
+      // Unexpected drop → clean up and quietly reconnect (fresh key if the
+      // 2h one is near expiry), backing off after repeated failures.
+      const reconnect = () => {
+        if (l.closed || liveRef.current !== l || !mountedRef.current) return;
+        stopLive(false);
+        if (retryRef.current++ < 5) setTimeout(() => { if (mountedRef.current) startAuto(); }, Math.min(30000, 2000 * retryRef.current));
+        else setLive('error');
+      };
+      ws.onerror = reconnect;
+      ws.onclose = reconnect;
     };
 
-    const aiFillFromCall = async () => {
-      if (!transcriptRef.current || liveFill === 'filling') return;
+    // Automatic AI sweep: map the call onto still-empty fields. Runs on a
+    // timer while capture is live, when the tab hides, and can be forced.
+    const aiSweep = async (force) => {
+      const grown = transcriptRef.current.length - sweptLenRef.current;
+      if (liveFill === 'filling') return;
+      if (!transcriptRef.current || (!force && grown < 300) || (force && grown <= 0)) return;
+      sweptLenRef.current = transcriptRef.current.length;
       setLiveFill('filling');
       try {
         const d = await api('/api/admin/discovery/transcript-fill', { method: 'POST', body: JSON.stringify({ handle: HANDLE, transcript: transcriptRef.current }) });
@@ -443,23 +462,49 @@
           scheduleSave(next, stepIdxRef.current, unlockedIdx);
           return next;
         });
-        setLiveFill('filled ' + (d.filled || 0));
-        setTimeout(() => setLiveFill((s) => (s === 'filling' ? s : '')), 4000);
-      } catch (e) {
+        setLiveFill(d.filled ? 'auto-filled ' + d.filled : '');
+        if (d.filled) setTimeout(() => setLiveFill((s) => (s === 'filling' ? s : '')), 5000);
+      } catch (_) {
         setLiveFill('');
-        setLiveErr(e.message || 'AI fill failed.');
       }
     };
+    const aiSweepRef = useRef(aiSweep);
+    aiSweepRef.current = aiSweep;
 
-    // Restore the call transcript for a resumed session; stop capture cleanly
-    // on unmount.
+    // Everything automatic lives in one admin-only effect: restore the call
+    // transcript, start mic capture, listen for the capture extension, sweep
+    // on an interval and on tab-hide, clean up on unmount.
     useEffect(() => {
-      if (isAdmin) {
-        api('/api/admin/discovery/transcript?handle=' + encodeURIComponent(HANDLE))
-          .then((d) => { if (d && d.text && !transcriptRef.current) transcriptRef.current = d.text; })
-          .catch(() => {});
-      }
-      return () => stopLive(false);
+      if (!isAdmin) return;
+      mountedRef.current = true;
+      api('/api/admin/discovery/transcript?handle=' + encodeURIComponent(HANDLE))
+        .then((d) => { if (d && d.text && !transcriptRef.current) { transcriptRef.current = d.text; sweptLenRef.current = d.text.length; } })
+        .catch(() => {})
+        .finally(() => { startAuto(); });
+
+      const onMsg = (ev) => {
+        if (ev.origin !== location.origin && ev.source !== window) return;
+        const m = ev.data;
+        if (!m || m.source !== 'uncap-capture') return;
+        if (m.kind === 'final' && typeof m.text === 'string') onFinalSegment(m.text.trim());
+        else if (m.kind === 'interim' && typeof m.text === 'string') setInterim(m.text);
+        else if (m.kind === 'mint-key') {
+          mintKey().then((key) => window.postMessage({ source: 'uncap-page', kind: 'key', key }, location.origin)).catch(() => {
+            window.postMessage({ source: 'uncap-page', kind: 'key', key: '' }, location.origin);
+          });
+        }
+      };
+      window.addEventListener('message', onMsg);
+      const sweep = setInterval(() => aiSweepRef.current(false), 75000);
+      const onHide = () => { if (document.visibilityState === 'hidden') aiSweepRef.current(true); };
+      document.addEventListener('visibilitychange', onHide);
+      return () => {
+        mountedRef.current = false;
+        window.removeEventListener('message', onMsg);
+        clearInterval(sweep);
+        document.removeEventListener('visibilitychange', onHide);
+        stopLive(true);
+      };
       // eslint-disable-next-line
     }, [isAdmin]);
 
@@ -831,46 +876,33 @@
               </button>
             ))}
           </div>
-          {isAdmin && (
-            <button onClick={() => (live ? stopLive(true) : startLive())} disabled={live === 'starting'}
-              style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 7, padding: '6px 12px', border: '1px solid ' + (live === 'on' ? '#B5322B' : '#0A0A0A'), borderRadius: 999, background: live === 'on' ? '#B5322B' : 'transparent', color: live === 'on' ? '#FFFFFF' : '#0A0A0A', fontFamily: "'JetBrains Mono',monospace", fontSize: 10, letterSpacing: '0.08em', cursor: 'pointer' }}>
-              <span style={{ width: 7, height: 7, borderRadius: '50%', background: live === 'on' ? '#FFFFFF' : '#B5322B', animation: live === 'on' ? 'uc-pulse 1.6s cubic-bezier(.2,.7,.2,1) infinite' : 'none' }}></span>
-              {live === 'on' ? 'STOP LIVE' : live === 'starting' ? 'STARTING…' : 'LIVE CAPTURE'}
-            </button>
-          )}
+          {isAdmin && (() => {
+            // Passive status chip: capture runs by itself, this only reports.
+            const st = liveFill && liveFill !== 'filling'
+              ? { c: '#2F7A47', l: '✓ ' + liveFill.toUpperCase(), pulse: false }
+              : live === 'on'    ? { c: '#B5322B', l: 'LIVE', pulse: true }
+              : live === 'starting' ? { c: '#9A9A9A', l: 'CONNECTING…', pulse: false }
+              : live === 'micoff'   ? { c: '#9A9A9A', l: 'MIC OFF', pulse: false }
+              : live === 'nokey'    ? { c: '#B8741F', l: 'SET DEEPGRAM KEY', pulse: false }
+              : live === 'error'    ? { c: '#B5322B', l: 'CAPTURE ERROR', pulse: false }
+              : null;
+            if (!st) return null;
+            const hint = live === 'on'
+              ? (focusedQid && labelMap.current[focusedQid] ? '→ ' + labelMap.current[focusedQid] : 'Click an open question to route speech into it')
+              : live === 'micoff' ? 'Allow the microphone in the address bar to transcribe the call'
+              : live === 'nokey' ? 'Add DEEPGRAM_API_KEY in the Cloudflare dashboard' : '';
+            return (
+              <div title={hint} style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 7, padding: '6px 12px', border: '1px solid #C9C7C0', borderRadius: 999, fontFamily: "'JetBrains Mono',monospace", fontSize: 10, letterSpacing: '0.08em', color: '#4D4D4D', maxWidth: 300, overflow: 'hidden' }}>
+                <span style={{ width: 7, height: 7, borderRadius: '50%', flex: '0 0 auto', background: st.c, animation: st.pulse ? 'uc-pulse 1.6s cubic-bezier(.2,.7,.2,1) infinite' : 'none' }}></span>
+                <span style={{ whiteSpace: 'nowrap' }}>{st.l}</span>
+                {interim ? <span style={{ fontStyle: 'italic', color: '#9A9A9A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{interim}</span> : null}
+              </div>
+            );
+          })()}
           <div style={{ flex: '0 0 auto', fontFamily: "'JetBrains Mono',monospace", fontSize: 10, letterSpacing: '0.08em', color: '#9A9A9A' }}>
             {isAdmin ? (saveState === 'saving' ? 'SAVING…' : saveState === 'saved' ? 'SAVED ✓' : 'ADMIN') : 'CLIENT'}
           </div>
         </div>
-
-        {/* LIVE CAPTURE PANEL */}
-        {isAdmin && (live || liveErr || liveFill) ? (
-          <div style={{ position: 'fixed', right: 16, bottom: 16, zIndex: 200, width: 'min(340px, calc(100vw - 32px))', background: '#0A0A0A', color: '#FFFFFF', borderRadius: 8, padding: '14px 16px', boxShadow: '0 16px 40px rgba(10,10,10,0.35)', fontFamily: "'JetBrains Mono',monospace" }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 10, letterSpacing: '0.1em' }}>
-              <span style={{ width: 8, height: 8, borderRadius: '50%', background: live === 'on' ? '#E8FF4E' : '#707070', animation: live === 'on' ? 'uc-pulse 1.6s cubic-bezier(.2,.7,.2,1) infinite' : 'none' }}></span>
-              {live === 'on' ? 'LIVE · CALL TRANSCRIPTION' : live === 'starting' ? 'CONNECTING…' : 'CALL TRANSCRIPTION'}
-              {live
-                ? <button onClick={() => stopLive(true)} style={{ marginLeft: 'auto', border: '1px solid #4D4D4D', background: 'transparent', color: '#FFFFFF', borderRadius: 4, padding: '3px 8px', fontFamily: 'inherit', fontSize: 9.5, cursor: 'pointer' }}>STOP</button>
-                : <button onClick={() => { setLiveErr(''); setLiveFill(''); setInterim(''); }} style={{ marginLeft: 'auto', border: 'none', background: 'transparent', color: '#9A9A9A', fontFamily: 'inherit', fontSize: 12, cursor: 'pointer' }}>✕</button>}
-            </div>
-            {live === 'on' ? (
-              <div style={{ marginTop: 10, fontSize: 11, color: '#C9C7C0' }}>
-                {focusedQid && labelMap.current[focusedQid]
-                  ? <span>→ {labelMap.current[focusedQid].slice(0, 60)}</span>
-                  : <span style={{ color: '#9A9A9A' }}>Click an open question to route speech into it</span>}
-              </div>
-            ) : null}
-            {interim ? <div style={{ marginTop: 8, fontSize: 11.5, fontStyle: 'italic', color: '#9A9A9A', maxHeight: 48, overflow: 'hidden' }}>{interim}</div> : null}
-            {liveErr ? <div style={{ marginTop: 8, fontSize: 11, color: '#FF8A80' }}>{liveErr}</div> : null}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12 }}>
-              <button onClick={aiFillFromCall} disabled={liveFill === 'filling' || !transcriptRef.current}
-                style={{ border: 'none', background: '#E8FF4E', color: '#0A0A0A', borderRadius: 5, padding: '8px 12px', fontFamily: 'inherit', fontSize: 10.5, fontWeight: 700, letterSpacing: '0.04em', cursor: 'pointer', opacity: liveFill === 'filling' || !transcriptRef.current ? 0.55 : 1 }}>
-                {liveFill === 'filling' ? 'ANALYZING…' : 'AI FILL FROM CALL'}
-              </button>
-              {liveFill && liveFill !== 'filling' ? <span style={{ fontSize: 10.5, color: '#E8FF4E' }}>✓ {liveFill}</span> : null}
-            </div>
-          </div>
-        ) : null}
 
         {/* MAIN ROW — side-by-side on desktop, stacked (stage over form) on mobile */}
         <div style={{ flex: '1 1 auto', display: 'flex', flexDirection: isMobile ? 'column' : 'row', minHeight: 0 }}>
