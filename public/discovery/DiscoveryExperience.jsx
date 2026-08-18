@@ -5,7 +5,7 @@
  * unlock it with an email passcode, then edit/fill their own entries.
  */
 (function () {
-  const { useState, useEffect, useLayoutEffect, useRef, useCallback } = React;
+  const { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } = React;
   // Scenes 3-6 are the rich "website frame" pages (normal document flow, tall,
   // sections tagged with data-hotspot). All 10 steps fit to width and scroll
   // vertically inside the fixed viewport.
@@ -752,29 +752,35 @@
     });
 
     // Scene HTML (1-9 static); scene 10 rendered in JSX.
+    // Memoized: the swap pipeline makes 15+ full passes over a scene string
+    // that can run to ~80KB, and the component re-renders on every keystroke.
+    // Its inputs only change on step change / load, so compute it then only.
     const isRich = isRichScene(activeStepIdx);
     const logoUrl = hasLogo ? '/api/discovery/logo?handle=' + encodeURIComponent(HANDLE) : '';
-    let sceneHtml = (window.DISCOVERY_SCENES || {})[activeStepIdx + 1] || '';
-    if (activeStepIdx === 0) {
-      sceneHtml = sceneHtml.replace(/__CLIENT_NAME__/g, escapeText(company || 'there'));
-      // Street on line one, city/state/zip on line two; parts are escaped
-      // individually so the <br/> survives the substitution.
-      const addr = (address || '').toUpperCase().trim();
-      const comma = addr.indexOf(',');
-      const addrHtml = comma > 0
-        ? escapeText(addr.slice(0, comma).trim()) + '<br/>' + escapeText(addr.slice(comma + 1).trim())
-        : escapeText(addr);
-      sceneHtml = sceneHtml.replace(/__CLIENT_ADDRESS__/g, addrHtml);
-      sceneHtml = sceneHtml.replace(/__CLIENT_LOGO__/g, logoUrl
-        ? '<img src="' + logoUrl + '" alt="" style="height:44px;max-width:210px;object-fit:contain;object-position:right;display:block"/>'
-        : '');
-    }
-    // Logo swaps run on the raw scene, before the text swaps consume the
-    // wordmark tokens they anchor on. The palette only ever touches the
-    // website wireframe scenes; every other slide keeps the Uncap lime.
-    sceneHtml = applyClientLogo(sceneHtml, logoUrl);
-    sceneHtml = applyProfileSwaps(sceneHtml, profile);
-    if (isRich) sceneHtml = applyPalette(sceneHtml, palette);
+    const sceneHtml = useMemo(() => {
+      let html = (window.DISCOVERY_SCENES || {})[activeStepIdx + 1] || '';
+      if (activeStepIdx === 0) {
+        html = html.replace(/__CLIENT_NAME__/g, escapeText(company || 'there'));
+        // Street on line one, city/state/zip on line two; parts are escaped
+        // individually so the <br/> survives the substitution.
+        const addr = (address || '').toUpperCase().trim();
+        const comma = addr.indexOf(',');
+        const addrHtml = comma > 0
+          ? escapeText(addr.slice(0, comma).trim()) + '<br/>' + escapeText(addr.slice(comma + 1).trim())
+          : escapeText(addr);
+        html = html.replace(/__CLIENT_ADDRESS__/g, addrHtml);
+        html = html.replace(/__CLIENT_LOGO__/g, logoUrl
+          ? '<img src="' + logoUrl + '" alt="" style="height:44px;max-width:210px;object-fit:contain;object-position:right;display:block"/>'
+          : '');
+      }
+      // Logo swaps run on the raw scene, before the text swaps consume the
+      // wordmark tokens they anchor on. The palette only ever touches the
+      // website wireframe scenes; every other slide keeps the Uncap lime.
+      html = applyClientLogo(html, logoUrl);
+      html = applyProfileSwaps(html, profile);
+      if (isRich) html = applyPalette(html, palette);
+      return html;
+    }, [activeStepIdx, company, address, logoUrl, profile, palette, isRich]);
 
     return (
       <div style={{ height: isMobile ? 'auto' : '100vh', minHeight: isMobile ? '100dvh' : undefined, display: 'flex', flexDirection: 'column', background: '#F2EFE7', color: '#0A0A0A' }}>
