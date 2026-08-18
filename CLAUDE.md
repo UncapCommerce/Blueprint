@@ -201,10 +201,11 @@ JSX with a `babel.transform` (that's exactly what the deploy runs).
   (`prefillAnswersFromTranscript` in `worker/discovery-prefill.js`, fills
   only empty fields, never overwrites a human answer; `fill:false` persists
   the transcript only). A passive status chip in the top bar reports state
-  (LIVE / MIC OFF / SET DEEPGRAM KEY); there are no capture buttons. Each
-  open-text question carries a small admin-only ✦ icon that rewrites JUST
-  that answer from the call (`transcript-fill` with `qid`, scoped prompt,
-  overwrite allowed since the click is explicit intent). Raw
+  (LIVE / MIC OFF / SET DEEPGRAM KEY); there are no capture buttons. The
+  focused open-text field IS the dictation target: it wears a green
+  recording ring while capture is live, and focusing a field also
+  (re)starts capture if the engine isn't running. (`transcript-fill` still
+  accepts a scoped `qid` server-side.) Raw
   transcript lives at `disctrans:<id>` (read via
   `GET /api/admin/discovery/transcript`, purged with the discovery)
 - `/build` quiz: `public/build/index.html` + `public/components/QuizApp.jsx`
