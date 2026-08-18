@@ -41,7 +41,7 @@ function BlueprintTemplate() {
             headers: { 'content-type': 'application/json' },
             body: JSON.stringify({ blueprintId: d.id }),
           }).then((r) => r.ok ? r.json() : null);
-          if (t && t.ok && t.token) { window.__bpToken = t.token; setToken(t.token); }
+          if (t && t.ok && t.token) { window.__bpToken = t.token; window.__blueprintId = d.id; setToken(t.token); }
         } catch (_) {}
       } catch (_) { setState('empty'); }
     })();

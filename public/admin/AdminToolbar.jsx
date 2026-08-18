@@ -58,9 +58,10 @@
         h1, h2, h3, h4 { break-after: avoid; page-break-after: avoid; }
         .msa-sigbox, .msa-clause.h, .msa-sub { break-inside: avoid; page-break-inside: avoid; }
 
-        /* The client's own "Download signed copy" button is a page
-           chrome element, never part of the document itself. */
+        /* The client's own "Download signed copy" button and the team's
+           floating toolbar are page chrome, never part of the document. */
         #bp-client-download-btn { display: none !important; }
+        #bp-admin-toolbar { display: none !important; }
 
         /* Letter is the predictable default for proposals on this side
            of the Atlantic; modest margins so dark sections breathe. */
@@ -367,14 +368,10 @@
     } catch (_) { return null; }
   }
 
-  async function maybeAutoPrint() {
+  async function maybeAutoPrint(session) {
     let mode = '';
     try { mode = new URLSearchParams(window.location.search).get('bpPrint') || ''; } catch (_) {}
     if (mode !== 'delivery' && mode !== 'shopify' && mode !== 'client') return;
-
-    const token = window.__bpToken;
-    if (!token) return;
-    const session = await fetchSession(token);
     if (!session || (!session.admin && !session.selfTest)) return;
 
     // Give the page a beat to finish mounting sections + images, then fire.
@@ -440,13 +437,74 @@
     document.body.appendChild(btn);
   }
 
+  // ── Floating team toolbar ─────────────────────────────────────────────
+  // Rendered only for admin/preview sessions (clients never see it): a slim
+  // pill top-right with the three print modes and a hop back to the admin.
+  // Blueprint pages are opened from the Pipeline, the company profile, and
+  // the Blueprints list — the toolbar makes print available from all of
+  // them without hunting for the list's Print menu.
+  const TOOLBAR_ID = 'bp-admin-toolbar';
+  function mountAdminBar(session) {
+    if (!session || (!session.admin && !session.selfTest)) return;
+    if (document.getElementById(TOOLBAR_ID)) return;
+
+    const bar = document.createElement('div');
+    bar.id = TOOLBAR_ID;
+    bar.style.cssText = [
+      'position:fixed', 'top:12px', 'right:12px', 'z-index:2000',
+      'display:flex', 'align-items:center', 'gap:6px', 'flex-wrap:wrap', 'justify-content:flex-end',
+      'max-width:calc(100vw - 24px)',
+      'background:rgba(10,10,10,0.92)', 'backdrop-filter:blur(6px)',
+      'border:1px solid #2B2B2B', 'border-radius:999px', 'padding:6px 8px 6px 14px',
+      'box-shadow:0 14px 34px -16px rgba(10,10,10,0.6)',
+      "font-family:ui-monospace,SFMono-Regular,Menlo,monospace", 'font-size:10px',
+      'letter-spacing:0.08em', 'color:#F2EFE7',
+    ].join(';');
+
+    const label = document.createElement('span');
+    label.textContent = 'UNCAP · ADMIN';
+    label.style.cssText = 'font-weight:700;color:#E8FF4E;margin-right:4px;white-space:nowrap';
+    bar.appendChild(label);
+
+    const btn = (text, onClick) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = text;
+      b.style.cssText = [
+        'border:1px solid #4D4D4D', 'background:transparent', 'color:#F2EFE7',
+        'border-radius:999px', 'padding:7px 12px', 'cursor:pointer',
+        'font-family:inherit', 'font-size:10px', 'letter-spacing:0.06em', 'white-space:nowrap',
+      ].join(';');
+      b.addEventListener('mouseenter', () => { b.style.background = '#2B2B2B'; });
+      b.addEventListener('mouseleave', () => { b.style.background = 'transparent'; });
+      b.addEventListener('click', (e) => { e.preventDefault(); onClick(); });
+      bar.appendChild(b);
+      return b;
+    };
+
+    btn('PRINT · DELIVERY', () => printDeliveryDocument());
+    btn('PRINT · SHOPIFY', () => printShopifyPartnerDocument());
+    btn('PRINT · CLIENT', () => printClientDocument());
+
+    const link = document.createElement('a');
+    link.href = '/admin/blueprints';
+    link.textContent = 'ADMIN ↗';
+    link.style.cssText = 'color:#E8FF4E;text-decoration:none;font-weight:700;padding:7px 8px;white-space:nowrap';
+    bar.appendChild(link);
+
+    document.body.appendChild(bar);
+  }
+
   // window.__bpToken may not be set yet when this script first runs (the
   // Gate sets it asynchronously — for admins, via the bp_admin cookie).
-  // Poll briefly until it appears, or give up after 60 seconds.
+  // Poll briefly until it appears, or give up after 60 seconds. The session
+  // is resolved once and shared by the auto-print hook and the toolbar.
   let attempts = 0;
-  function tryInit() {
+  async function tryInit() {
     if (window.__bpToken && window.__blueprintId) {
-      maybeAutoPrint();
+      const session = await fetchSession(window.__bpToken);
+      mountAdminBar(session);
+      maybeAutoPrint(session);
       maybeShowClientDownloadButton();
       return;
     }

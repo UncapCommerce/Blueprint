@@ -163,11 +163,16 @@ JSX with a `babel.transform` (that's exactly what the deploy runs).
   logout, blueprints, discoveries, access-log, bp-token). The
   `BLUEPRINT_REGISTRY` const lists every shipped blueprint — append to
   it when adding blueprint 012+
-- Blueprint pages no longer render a floating admin toolbar;
-  `public/admin/AdminToolbar.jsx` is print hooks only (print-quality CSS
-  for everyone + `?bpPrint=delivery|shopify` auto-print for admins,
-  triggered from the admin app). Each blueprint Gate silently mints a
-  preview session from the `__Host-bp_admin` cookie via `/api/admin/bp-token`,
+- Blueprint pages render a floating admin toolbar for team sessions only
+  (`#bp-admin-toolbar` in `public/admin/AdminToolbar.jsx`): print modes
+  delivery / shopify / client (`window.__bpPrint.*`) plus a hop to
+  `/admin/blueprints`; clients never see it, and print CSS hides it on
+  paper. The same file carries print-quality CSS for everyone and the
+  `?bpPrint=delivery|shopify|client` auto-print deep links used by the
+  Blueprints list's Print menu. Loaded by every bespoke brand page AND
+  `blueprint-template` (which sets `window.__blueprintId` after content
+  loads). Each blueprint Gate silently mints a preview session from the
+  `__Host-bp_admin` cookie via `/api/admin/bp-token`,
   so the team never types email codes
 - Discovery experience: `public/discovery/` served at `/discovery/<handle>/`.
   10-step questionnaire over scaled artboard "scenes". Scenes live as one
