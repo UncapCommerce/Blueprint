@@ -20,6 +20,7 @@
 import { EmailMessage } from "cloudflare:email";
 import { buildDiscoveryProfile, buildDiscoveryProfileWithAI, STOCK_SEARCH_TOKEN } from "./discovery-profile.js";
 import { prefillAnswersFromDoc, prefillAnswersFromTranscript, b64ToBytes } from "./discovery-prefill.js";
+import { QUESTION_CATALOG } from "./discovery-questions.js";
 import { buildBlueprintContent } from "./blueprint-content.js";
 
 const CODE_TTL_SECONDS       = 10 * 60;             // 10 minutes
@@ -3880,23 +3881,37 @@ async function handleAdminDiscoveryTranscriptFill(request, env) {
 
   await env.BLUEPRINT_AUTH.put(`disctrans:${disc.id}`, JSON.stringify({ text: transcript, updatedAt: new Date().toISOString() }));
   // fill:false persists the transcript only (used when capture stops) — the
-  // AI mapping pass runs solely on the explicit "AI fill from call" action.
+  // AI mapping pass runs on the automatic sweep and per-field requests.
   if (body.fill === false) return json(200, { ok: true, filled: 0, saved: true });
+
+  // Optional per-field mode: fill exactly one question, and — because the
+  // admin explicitly asked for THIS field — replace whatever it held. The
+  // never-overwrite rule below still governs the global sweep (no qid).
+  const qid = (body.qid || '').toString().slice(0, 80);
+  if (qid && !QUESTION_CATALOG.some((q) => q.id === qid)) {
+    return json(400, { ok: false, error: 'Unknown question id' });
+  }
 
   let extracted;
   try {
-    extracted = await prefillAnswersFromTranscript(env, transcript);
+    extracted = await prefillAnswersFromTranscript(env, transcript, qid ? [qid] : undefined);
   } catch (err) {
     return json(err.status || 502, { ok: false, error: err.message });
   }
   const clean = sanitizeAnswers(extracted.answers);
   const cur = await getDiscoveryAnswers(env, disc.id);
   const hasValue = (v) => (Array.isArray(v) ? v.length > 0 : (v || '').toString().trim() !== '');
-  const merged = { ...clean };
-  for (const [k, v] of Object.entries(cur.answers || {})) {
-    if (hasValue(v)) merged[k] = v; // never overwrite a human answer
+  let merged, filled;
+  if (qid) {
+    merged = { ...(cur.answers || {}) };
+    if (hasValue(clean[qid])) { merged[qid] = clean[qid]; filled = 1; } else { filled = 0; }
+  } else {
+    merged = { ...clean };
+    for (const [k, v] of Object.entries(cur.answers || {})) {
+      if (hasValue(v)) merged[k] = v; // never overwrite a human answer
+    }
+    filled = Object.keys(clean).filter((k) => !hasValue((cur.answers || {})[k]) && hasValue(clean[k])).length;
   }
-  const filled = Object.keys(clean).filter((k) => !hasValue((cur.answers || {})[k]) && hasValue(clean[k])).length;
   await env.BLUEPRINT_AUTH.put(`discans:${disc.id}`, JSON.stringify({
     answers: merged,
     activeStepIdx: cur.activeStepIdx || 0,

@@ -201,7 +201,10 @@ JSX with a `babel.transform` (that's exactly what the deploy runs).
   (`prefillAnswersFromTranscript` in `worker/discovery-prefill.js`, fills
   only empty fields, never overwrites a human answer; `fill:false` persists
   the transcript only). A passive status chip in the top bar reports state
-  (LIVE / MIC OFF / SET DEEPGRAM KEY); there are no capture buttons. Raw
+  (LIVE / MIC OFF / SET DEEPGRAM KEY); there are no capture buttons. Each
+  open-text question carries a small admin-only ✦ icon that rewrites JUST
+  that answer from the call (`transcript-fill` with `qid`, scoped prompt,
+  overwrite allowed since the click is explicit intent). Raw
   transcript lives at `disctrans:<id>` (read via
   `GET /api/admin/discovery/transcript`, purged with the discovery)
 - `/build` quiz: `public/build/index.html` + `public/components/QuizApp.jsx`

@@ -471,6 +471,22 @@
     const aiSweepRef = useRef(aiSweep);
     aiSweepRef.current = aiSweep;
 
+    // Per-field AI fill: the ✦ icon on an open-text question rewrites THAT
+    // field from the call (an explicit click is intent, so it overwrites).
+    const [fillingQids, setFillingQids] = useState({}); // qid → 'busy' | 'done' | 'none'
+    const fillField = async (qid) => {
+      if (!transcriptRef.current || fillingQids[qid] === 'busy') return;
+      setFillingQids((s) => ({ ...s, [qid]: 'busy' }));
+      let state = 'none';
+      try {
+        const d = await api('/api/admin/discovery/transcript-fill', { method: 'POST', body: JSON.stringify({ handle: HANDLE, qid, transcript: transcriptRef.current }) });
+        const v = d.answers && d.answers[qid];
+        if (typeof v === 'string' && v.trim()) { setAnswer(qid, v); state = 'done'; }
+      } catch (_) { /* icon just settles back */ }
+      setFillingQids((s) => ({ ...s, [qid]: state }));
+      setTimeout(() => setFillingQids((s) => { const n = { ...s }; delete n[qid]; return n; }), 2500);
+    };
+
     // Everything automatic lives in one admin-only effect: restore the call
     // transcript, start mic capture, listen for the capture extension, sweep
     // on an interval and on tab-hide, clean up on unmount.
@@ -1008,7 +1024,26 @@
                       const isChips = q.type === 'chips' || q.type === 'chips-multi';
                       return (
                         <div key={q.id} style={{ marginTop: 16 }}>
-                          <div style={{ fontSize: 13, fontWeight: 600, color: '#1A1A1A', marginBottom: 7 }}>{q.label}{q.required ? <span style={{ color: '#B5322B' }}> *</span> : null}</div>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 7 }}>
+                            <span style={{ fontSize: 13, fontWeight: 600, color: '#1A1A1A' }}>{q.label}{q.required ? <span style={{ color: '#B5322B' }}> *</span> : null}</span>
+                            {isAdmin && (q.type === 'text' || q.type === 'textarea') ? (() => {
+                              // ✦ rewrites this one answer from the call transcript.
+                              const st = fillingQids[q.id];
+                              const idle = !transcriptRef.current;
+                              return (
+                                <button type="button"
+                                  onClick={(e) => { e.stopPropagation(); fillField(q.id); }}
+                                  title={idle ? 'AI fill activates once the call has a transcript' : 'AI-fill this answer from the call'}
+                                  style={{ marginLeft: 'auto', flex: '0 0 auto', width: 26, height: 26, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid ' + (st === 'done' ? '#2F7A47' : '#E4E1D8'), borderRadius: 6, background: st === 'done' ? '#EAF5EE' : '#FDFCF9', cursor: idle ? 'default' : 'pointer', opacity: idle ? 0.35 : 1, padding: 0 }}>
+                                  {st === 'busy'
+                                    ? <span style={{ width: 12, height: 12, border: '2px solid #C9C7C0', borderTopColor: '#0A0A0A', borderRadius: '50%', animation: 'uc-spin 700ms linear infinite', display: 'block' }}></span>
+                                    : st === 'done'
+                                      ? <span style={{ fontSize: 12, color: '#2F7A47', fontWeight: 700 }}>✓</span>
+                                      : <span style={{ fontSize: 12, color: st === 'none' ? '#C9C7C0' : '#8A7A2A' }}>✦</span>}
+                                </button>
+                              );
+                            })() : null}
+                          </div>
                           {q.type === 'text' && (
                             <input value={v || ''} onClick={(e) => e.stopPropagation()} onFocus={() => noteFocus(q.id)} onChange={(e) => setAnswer(q.id, e.target.value)} placeholder={q.placeholder || ''}
                               style={{ width: '100%', padding: '10px 12px', border: '1px solid ' + (live === 'on' && focusedQid === q.id ? '#0A0A0A' : '#C9C7C0'), boxShadow: live === 'on' && focusedQid === q.id ? '0 0 0 2px #E8FF4E' : 'none', borderRadius: 5, fontSize: 14, background: '#FDFCF9', outline: 'none', color: '#0A0A0A' }}/>

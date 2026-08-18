@@ -77,9 +77,9 @@ function httpErr(status, message) {
   return err;
 }
 
-function prefillSchema() {
+function prefillSchema(catalog) {
   const props = { skuCountExact: { type: 'string' } };
-  for (const q of QUESTION_CATALOG) {
+  for (const q of (catalog || QUESTION_CATALOG)) {
     if (q.type === 'chips') props[q.id] = { type: 'string', enum: [...q.options, ''] };
     else if (q.type === 'chips-multi') props[q.id] = { type: 'array', items: { type: 'string', enum: q.options } };
     else props[q.id] = { type: 'string' };
@@ -107,16 +107,20 @@ function prefillPrompt() {
 // answered. Same schema/filtering as the document path, but the prompt is
 // tuned for a two-speaker conversation: only what the CLIENT actually said
 // counts, so the rep's own framing never becomes an answer.
-export async function prefillAnswersFromTranscript(env, transcript) {
+export async function prefillAnswersFromTranscript(env, transcript, qids) {
   if (!env || !env.ANTHROPIC_API_KEY) throw httpErr(503, 'Call analysis needs the ANTHROPIC_API_KEY secret in the Cloudflare dashboard.');
   const text = (transcript || '').toString().trim();
   if (text.length < 40) throw httpErr(400, 'Not enough transcript yet to analyze.');
+  // A per-field fill scopes the prompt + schema to just those questions —
+  // much faster and cheaper than the full-catalog sweep.
+  const scoped = Array.isArray(qids) && qids.length ? QUESTION_CATALOG.filter((q) => qids.includes(q.id)) : null;
+  const catalog = scoped && scoped.length ? scoped : QUESTION_CATALOG;
   const prompt = 'Below is a live transcript of a discovery sales call between our team (Uncap) and a client. '
     + 'Fill our ecommerce discovery questionnaire from it.\n\n'
     + 'Answer ONLY from what the CLIENT side said or clearly confirmed on this call. Leave a field empty ("" or []) when the call did not address it: never guess or pad. '
     + 'Write free-text answers concisely in the client\'s own terms, as answers the client would give. '
     + 'For chip fields pick the single closest option only when the call clearly supports it.\n\nQuestions:\n'
-    + QUESTION_CATALOG.map((q) => {
+    + catalog.map((q) => {
       const kind = q.type === 'chips'
         ? `one of: ${q.options.join(' | ')} (or "" when the call does not say)`
         : q.type === 'chips-multi'
@@ -124,7 +128,7 @@ export async function prefillAnswersFromTranscript(env, transcript) {
           : 'free text ("" when the call does not say)';
       return `- ${q.id} · ${q.step} · ${q.label} → ${kind}`;
     }).join('\n')
-    + '\n- skuCountExact · Meta · The exact total SKU/product count, ONLY if the client stated one explicitly → digits with separators as said (e.g. "48,000"), or "" when not stated'
+    + (scoped ? '' : '\n- skuCountExact · Meta · The exact total SKU/product count, ONLY if the client stated one explicitly → digits with separators as said (e.g. "48,000"), or "" when not stated')
     + `\n\n--- CALL TRANSCRIPT ---\n${text.slice(0, 300_000)}`;
 
   const ctrl = new AbortController();
@@ -141,9 +145,9 @@ export async function prefillAnswersFromTranscript(env, transcript) {
       },
       body: JSON.stringify({
         model: AI_MODEL,
-        max_tokens: 16000,
+        max_tokens: scoped ? 2000 : 16000,
         thinking: { type: 'adaptive' },
-        output_config: { format: { type: 'json_schema', schema: prefillSchema() } },
+        output_config: { format: { type: 'json_schema', schema: prefillSchema(scoped || undefined) } },
         messages: [{ role: 'user', content: [{ type: 'text', text: prompt }] }],
       }),
     });
