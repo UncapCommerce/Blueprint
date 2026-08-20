@@ -192,6 +192,27 @@ function Portal({ me, onSignOut }) {
   const signOutBtn = (
     <button onClick={onSignOut} style={{ border: '1px solid #4D4D4D', background: 'transparent', color: '#FFFFFF', borderRadius: 4, padding: '3px 9px', fontSize: 10.5, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap', flexShrink: 0 }}>Sign out</button>
   );
+  // Print (client version) for the framed blueprint. The blueprint page
+  // exposes window.__bpPrint for every session (the admin bar is separate),
+  // and the frame is same-origin, so the shell can trigger it directly.
+  const frameRef = React.useRef(null);
+  const printBlueprint = () => {
+    try {
+      const w = frameRef.current && frameRef.current.contentWindow;
+      if (!w) return;
+      if (w.__bpPrint && w.__bpPrint.client) w.__bpPrint.client();
+      else w.print();
+    } catch (_) {}
+  };
+  const printBtn = tab === 'Blueprint' && me.blueprint ? (
+    <button onClick={printBlueprint} title="Print blueprint" aria-label="Print blueprint" style={{ border: '1px solid #4D4D4D', background: 'transparent', color: '#FFFFFF', borderRadius: 4, padding: '3px 8px', cursor: 'pointer', flexShrink: 0, display: 'flex', alignItems: 'center' }}>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <polyline points="6 9 6 2 18 2 18 9"/>
+        <path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/>
+        <rect x="6" y="14" width="12" height="8"/>
+      </svg>
+    </button>
+  ) : null;
   return (
     <div style={{ height: '100vh', display: 'flex', flexDirection: 'column' }}>
       <div style={{ flex: '0 0 auto', background: '#0A0A0A', borderBottom: '1px solid rgba(255,255,255,0.12)', zIndex: 50 }}>
@@ -201,6 +222,7 @@ function Portal({ me, onSignOut }) {
               {logo}
               <div style={{ display: 'flex', alignItems: 'center', gap: 10, minWidth: 0 }}>
                 <span style={{ fontSize: 11.5, fontWeight: 650, color: '#FFFFFF', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: 130 }}>{co.name || ''}</span>
+                {printBtn}
                 {signOutBtn}
               </div>
             </div>
@@ -217,6 +239,7 @@ function Portal({ me, onSignOut }) {
             <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 10 }}>
               <span style={{ fontSize: 11.5, fontWeight: 650, color: '#FFFFFF', whiteSpace: 'nowrap' }}>{co.name || ''}</span>
               <span style={{ fontFamily: MONO, fontSize: 9, letterSpacing: '0.04em', color: '#9A9A9A', whiteSpace: 'nowrap' }}>{me.email}</span>
+              {printBtn}
               {signOutBtn}
             </div>
           </div>
@@ -224,7 +247,7 @@ function Portal({ me, onSignOut }) {
       </div>
 
       {framed ? (
-        <iframe title={tab} src={'/' + co.id + '/' + slugForTab(tab) + '/app'}
+        <iframe title={tab} ref={frameRef} src={'/' + co.id + '/' + slugForTab(tab) + '/app'}
           style={{ flex: '1 1 auto', width: '100%', border: 'none', display: 'block', background: '#F2EFE7' }}/>
       ) : (
         <div style={{ flex: '1 1 auto', overflowY: 'auto' }}>
