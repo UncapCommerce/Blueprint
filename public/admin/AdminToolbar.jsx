@@ -446,10 +446,13 @@
   const TOOLBAR_ID = 'bp-admin-toolbar';
   function mountAdminBar(session) {
     if (!session || (!session.admin && !session.selfTest)) return;
-    // Framed inside the Hub (client view or admin preview): the shell owns
-    // the chrome and offers the single client print icon, so the team bar
-    // never renders in a frame. Direct opens keep it.
+    // Customer-side surfaces never show the team bar: not when framed in
+    // the Hub (client view or admin preview), and not on company-folder
+    // URLs (/<company>/blueprint...) even when opened top-level. The bar
+    // renders only on direct /blueprint/<id>/ team opens (Pipeline,
+    // company profile, Blueprints list all link there).
     try { if (window.self !== window.top) return; } catch (_) { return; }
+    if (!/^\/blueprint\//.test(window.location.pathname)) return;
     if (document.getElementById(TOOLBAR_ID)) return;
 
     const bar = document.createElement('div');
