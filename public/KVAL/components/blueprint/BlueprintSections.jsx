@@ -195,7 +195,7 @@ function BPIntro() {
               { k: 'Prepared by', v: 'Denis Dyli', s: 'Principal' },
               { k: 'Client lead',  v: 'Danielle Swartz',  s: 'Sales Department Manager' },
               { k: 'Company', v: 'Kval Inc', s: '825 Petaluma Blvd. So. · Petaluma, CA 94952' },
-              { k: 'Valid through', v: 'Aug 31, 2026',    s: 'End of month' }
+              { k: 'Valid through', v: 'Aug 31, 2026',    s: '11 days' }
             ].map((c, i) => (
               <div key={i} style={{
                 padding: '14px 0', borderBottom: '1px solid #1F1F1F',
