@@ -2607,6 +2607,7 @@ const BLUEPRINT_REGISTRY = [
   { id: 'trusty-cook', dir: 'TrustyCook', name: 'Trusty-Cook', num: '016', channel: 'Inbound' },
   { id: 'qpfeed', dir: 'QPFeed', name: 'QP Feed', num: '017', channel: 'Inbound' },
   { id: 'parmancorp', dir: 'Parman', name: 'Parman', num: '018', channel: 'Inbound' },
+  { id: 'kvalinc', dir: 'KVAL', name: 'KVAL', num: '019', channel: 'Inbound' },
 ];
 
 function getCookie(request, name) {
