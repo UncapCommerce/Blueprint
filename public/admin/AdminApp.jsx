@@ -2783,6 +2783,7 @@
     const [saving, setSaving] = useState(false);
     const [fileBusy, setFileBusy] = useState('');
     const [discBusy, setDiscBusy] = useState('');
+    const [bpBusy, setBpBusy] = useState('');
     const [error, setError] = useState('');
     const readFile = (file, cb) => {
       const r = new FileReader();
@@ -2935,6 +2936,19 @@
       } catch (err) { window.alert(err.message); }
       finally { setDiscBusy(''); }
     };
+    // Create the blueprint for THIS company in place — same as discoveries.
+    // The server drafts the templated proposal content in the background from
+    // the company + discovery answers, exactly like every previous version.
+    const createBlueprint = async () => {
+      if (!co.leadContact) { window.alert('Set a Client Lead on this company first — the blueprint gate and signature need one.'); return; }
+      setBpBusy('Creating…');
+      try {
+        await api('/api/admin/blueprints', { method: 'POST', body: JSON.stringify({ companyId: co.id }) });
+        const fresh = await api('/api/admin/company?id=' + encodeURIComponent(co.id));
+        if (fresh.company) setCo(fresh.company);
+      } catch (err) { window.alert(err.message); }
+      finally { setBpBusy(''); }
+    };
     const savePalette = () => persist({ palette: { prime, accent } });
     // A page row: mono label on the left, the (inline-editable) value on the
     // right; stacks on mobile.
@@ -2965,7 +2979,7 @@
           ) : null);
           // onCreate (+ busy label) makes "Create" an in-place action instead of
           // a link — used for Discovery so it creates for THIS company directly.
-          const tile = (label, has, statusText, viewHref, createHref, comingSoon, whatKey, onCreate, busy) => (
+          const tile = (label, has, statusText, viewHref, createHref, comingSoon, whatKey, onCreate, busy, editHref) => (
             <div style={{ ...S.card, flex: '1 1 180px', minWidth: 168, padding: '14px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
               <div style={{ fontFamily: T.mono, fontSize: 10, letterSpacing: '0.1em', textTransform: 'uppercase', color: T.fg3 }}>{label}</div>
               <div style={{ fontFamily: T.sans, fontSize: 13, fontWeight: 600, color: has ? T.fg1 : T.fg3 }}>{busy || statusText}</div>
@@ -2977,6 +2991,7 @@
                     : onCreate
                       ? <button type="button" style={{ ...S.btnLime, opacity: busy ? 0.7 : 1 }} disabled={!!busy} onClick={onCreate}>{busy ? 'Working…' : 'Create'}</button>
                       : <a href={createHref} onClick={navClick(createHref)} style={{ ...S.btnLime, textDecoration: 'none' }}>Create</a>}
+                {has && editHref ? <a href={editHref} onClick={navClick(editHref)} style={{ ...S.btnGhost, textDecoration: 'none' }}>Edit</a> : null}
                 {has ? delBtn(whatKey, label.toLowerCase()) : null}
               </div>
             </div>
@@ -2997,7 +3012,7 @@
             <div style={{ display: 'flex', gap: 12, marginBottom: 16, flexWrap: 'wrap' }}>
               {estTile}
               {tile('Discovery', !!co.discoveryHandle, co.discoveryHandle ? 'Started' : 'Not started', '/' + co.id + '/discovery', '/admin/discoveries', false, 'discovery', createDiscovery, discBusy)}
-              {tile('Blueprint', !!co.blueprintId, co.blueprintId ? 'Created' : 'Not started', '/blueprint/' + co.blueprintId + '/', '/admin/blueprints', false, 'blueprint')}
+              {tile('Blueprint', !!co.blueprintId, co.blueprintId ? 'Created' : 'Not started', '/blueprint/' + co.blueprintId + '/', '/admin/blueprints', false, 'blueprint', createBlueprint, bpBusy, '/admin/blueprint/' + co.blueprintId)}
             </div>
           );
         })()}
