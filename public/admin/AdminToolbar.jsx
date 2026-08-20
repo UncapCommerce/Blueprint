@@ -446,6 +446,10 @@
   const TOOLBAR_ID = 'bp-admin-toolbar';
   function mountAdminBar(session) {
     if (!session || (!session.admin && !session.selfTest)) return;
+    // Framed inside the Hub (client view or admin preview): the shell owns
+    // the chrome and offers the single client print icon, so the team bar
+    // never renders in a frame. Direct opens keep it.
+    try { if (window.self !== window.top) return; } catch (_) { return; }
     if (document.getElementById(TOOLBAR_ID)) return;
 
     const bar = document.createElement('div');
