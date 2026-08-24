@@ -75,6 +75,7 @@
           if (dead) return;
           if (d && d.ok && d.token) {
             try { window.sessionStorage.setItem(STORAGE_KEY, d.token); } catch (_) {}
+            if (typeof window !== 'undefined') window.__bpExpiresAt = d.expiresAt || '';
             setToken(d.token);
           } else {
             setDenied(true);

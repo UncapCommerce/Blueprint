@@ -99,9 +99,10 @@ function BPIntro() {
   // (surfaced on window.__bpExpiresAt by the Gate); fall back if none is set.
   const bpExp = (typeof window !== 'undefined' && window.__bpExpiresAt) || '';
   const expMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(bpExp);
-  const validThrough = expMatch
-    ? ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][+expMatch[2] - 1] + ' ' + (+expMatch[3]) + ', ' + expMatch[1]
-    : 'Aug 31, 2026';
+  const [expY, expM, expD] = expMatch ? [+expMatch[1], +expMatch[2], +expMatch[3]] : [2026, 8, 31];
+  const validThrough = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][expM - 1] + ' ' + expD + ', ' + expY;
+  const validDays = Math.max(0, Math.floor((Date.UTC(expY, expM - 1, expD, 23, 59, 59) - Date.now()) / 86400000));
+  const validSub = validDays === 1 ? '1 day' : validDays + ' days';
   return (
     <section id="intro" data-bp-section="intro" style={{
       background: 'var(--uc-black)',
@@ -202,7 +203,7 @@ function BPIntro() {
               { k: 'Prepared by', v: 'Denis Dyli', s: 'Principal' },
               { k: 'Client lead',  v: 'Brock Trusty',  s: 'Engineering & Operations' },
               { k: 'Company', v: 'Trusty-Cook Inc.', s: '10530 E. 59th Street, Indianapolis, IN 46236' },
-              { k: 'Valid through', v: validThrough,    s: '30 days' }
+              { k: 'Valid through', v: validThrough,    s: validSub }
             ].map((c, i) => (
               <div key={i} style={{
                 padding: '14px 0', borderBottom: '1px solid #1F1F1F',

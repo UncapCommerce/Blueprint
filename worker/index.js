@@ -3281,18 +3281,23 @@ async function handleBlueprintContent(request, env) {
   }
   if (!ok) return json(401, { ok: false, error: 'Not authorised' });
 
+  // A shipped registry page has no KV draft but is always live (bespoke wins
+  // in serving precedence) — let admins open it so the editor can say so
+  // instead of erroring.
+  const registryEntry = BLUEPRINT_REGISTRY.find((b) => b.id === id) || null;
   const draft = await blueprintDraft(env, id);
-  if (!draft) return json(404, { ok: false, error: 'Not found' });
+  if (!draft && !(registryEntry && isAdmin)) return json(404, { ok: false, error: 'Not found' });
   // Admins may open a not-yet-generated draft (content: null) so the editor
   // can render a Generate button. Customers get 404 until it's ready.
-  if (!draft.content && !isAdmin) return json(404, { ok: false, error: 'No content yet' });
-  if (draft.content && draft.content.status !== 'ready' && !isAdmin) return json(404, { ok: false, error: 'Not ready' });
+  if (draft && !draft.content && !isAdmin) return json(404, { ok: false, error: 'No content yet' });
+  if (draft && draft.content && draft.content.status !== 'ready' && !isAdmin) return json(404, { ok: false, error: 'Not ready' });
 
   return json(200, {
     ok: true,
     id,
-    name: (company && company.name) || draft.name || id,
-    content: draft.content || null,
+    bespoke: !!registryEntry,
+    name: (company && company.name) || (draft && draft.name) || (registryEntry && registryEntry.name) || id,
+    content: (draft && draft.content) || null,
     branding: company ? {
       hasLogo: !!company.hasLogo,
       logoUrl: company.hasLogo ? `/api/company/logo?id=${encodeURIComponent(company.id)}` : '',
@@ -3310,8 +3315,14 @@ async function handleAdminSaveBlueprintContent(request, env) {
   let body;
   try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
   const id = normalizeBlueprintId(body.id || '');
-  const draft = await blueprintDraft(env, id);
-  if (!draft) return json(404, { ok: false, error: 'Blueprint draft not found' });
+  let draft = await blueprintDraft(env, id);
+  if (!draft) {
+    // Shipped registry pages have no KV draft; create a stub so a save from
+    // the editor never dead-ends (the bespoke page still wins at serve time).
+    const entry = BLUEPRINT_REGISTRY.find((b) => b.id === id);
+    if (!entry) return json(404, { ok: false, error: 'Blueprint draft not found' });
+    draft = { id, name: entry.name, createdAt: new Date().toISOString(), createdBy: sess.email };
+  }
   draft.content = sanitizeBlueprintContent(body.content);
   await env.BLUEPRINT_AUTH.put(`bp:${id}`, JSON.stringify(draft));
   return json(200, { ok: true, content: draft.content });

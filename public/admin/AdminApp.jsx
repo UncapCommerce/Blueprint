@@ -3309,6 +3309,7 @@
   function BlueprintEditor({ id }) {
     const [name, setName] = useState('');
     const [content, setContent] = useState(null); // null = loading
+    const [bespoke, setBespoke] = useState(false);
     const [error, setError] = useState('');
     const [busy, setBusy] = useState('');
     const [saved, setSaved] = useState(false);
@@ -3317,6 +3318,7 @@
       try {
         const d = await api('/api/blueprint/content?id=' + encodeURIComponent(id));
         setName(d.name || id);
+        setBespoke(!!d.bespoke);
         setContent(d.content ? { ...EMPTY_CONTENT, ...d.content } : { ...EMPTY_CONTENT });
       } catch (err) {
         if (err.status === 404) { setName(id); setContent({ ...EMPTY_CONTENT }); }
@@ -3351,6 +3353,32 @@
 
     if (content === null) return <Page><div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>Loading…</div></Page>;
     const isReady = content.status === 'ready';
+
+    // Hand-designed registry pages are always live — there is no draft to
+    // save or publish here, so say so instead of showing a dead-end form.
+    if (bespoke) {
+      return (
+        <Page>
+          <PageHead eyebrow="Blueprint · bespoke" title={name} action={
+            <a href="/admin/blueprints" onClick={navClick('/admin/blueprints')} style={{ ...S.btnGhost, textDecoration: 'none' }}>← Blueprints</a>
+          }/>
+          <div style={{ ...S.card, padding: 28, display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', background: '#DFFCE6', borderRadius: 8 }}>
+              <span style={{ fontFamily: T.mono, fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', color: '#064E2E' }}>HAND-DESIGNED PAGE · LIVE TO SIGNED-IN CLIENTS</span>
+            </div>
+            <div style={{ fontFamily: T.sans, fontSize: 14, color: T.fg2, lineHeight: 1.65 }}>
+              This blueprint is a bespoke page shipped with the app, so there is nothing to save or mark ready here;
+              it is already visible in the client's Hub and carries the standard sign &amp; approve flow.
+              Manage its expiration date, access, terms, and printing from the Blueprints list.
+            </div>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <button type="button" style={S.btn} onClick={preview}>Open the page</button>
+              <a href="/admin/blueprints" onClick={navClick('/admin/blueprints')} style={{ ...S.btnGhost, textDecoration: 'none' }}>Blueprints list</a>
+            </div>
+          </div>
+        </Page>
+      );
+    }
 
     return (
       <Page>

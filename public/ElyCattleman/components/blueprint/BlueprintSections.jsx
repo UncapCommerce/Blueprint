@@ -93,6 +93,14 @@ function BPSerif({ children }) {
 function BPIntro() {
   const [r, setR] = React.useState(false);
   React.useEffect(() => { const t = setTimeout(() => setR(true), 80); return () => clearTimeout(t); }, []);
+  // "Valid through" comes from the expiration set on this blueprint in the app
+  // (surfaced on window.__bpExpiresAt by the Gate); fall back if none is set.
+  const bpExp = (typeof window !== 'undefined' && window.__bpExpiresAt) || '';
+  const expMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(bpExp);
+  const [expY, expM, expD] = expMatch ? [+expMatch[1], +expMatch[2], +expMatch[3]] : [2026, 8, 31];
+  const validThrough = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][expM - 1] + ' ' + expD + ', ' + expY;
+  const validDays = Math.max(0, Math.floor((Date.UTC(expY, expM - 1, expD, 23, 59, 59) - Date.now()) / 86400000));
+  const validSub = validDays === 1 ? '1 day' : validDays + ' days';
   return (
     <section id="intro" data-bp-section="intro" style={{
       background: 'var(--uc-black)',
@@ -192,7 +200,7 @@ function BPIntro() {
               { k: 'Prepared by', v: 'Denis Dyli', s: 'Principal' },
               { k: 'Client lead',  v: 'Shelby Stein',  s: 'Executive' },
               { k: 'Company', v: 'Ely Cattleman', s: '208 Hartmann Dr. · Lebanon, TN 37087' },
-              { k: 'Valid through', v: 'Jul 31, 2026',    s: '30 days' }
+              { k: 'Valid through', v: validThrough,    s: validSub }
             ].map((c, i) => (
               <div key={i} style={{
                 padding: '14px 0', borderBottom: '1px solid #1F1F1F',
