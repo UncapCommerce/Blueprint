@@ -32,12 +32,30 @@
     return data;
   }
 
+  // All admin dates render MM/DD/YY. Activity feeds put the time first
+  // (fmtWhenTime); everything else is date-first (fmtWhen).
+  const pad2 = (n) => String(n).padStart(2, '0');
+  const fmtDateShort = (d) => `${pad2(d.getMonth() + 1)}/${pad2(d.getDate())}/${String(d.getFullYear()).slice(-2)}`;
   const fmtWhen = (iso) => {
     if (!iso) return '';
     const d = new Date(iso);
     if (isNaN(d.getTime())) return iso;
-    const pad = (n) => String(n).padStart(2, '0');
-    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+    return `${fmtDateShort(d)} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
+  };
+  const fmtWhenTime = (iso) => {
+    if (!iso) return '';
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return iso;
+    return `${pad2(d.getHours())}:${pad2(d.getMinutes())} · ${fmtDateShort(d)}`;
+  };
+  // Date-only strings: YYYY-MM-DD reformats directly (no Date.parse, so no
+  // timezone drift); anything else parses, or passes through untouched.
+  const fmtDay = (s) => {
+    if (!s) return '';
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
+    if (m) return `${m[2]}/${m[3]}/${m[1].slice(-2)}`;
+    const d = new Date(s);
+    return isNaN(d.getTime()) ? s : fmtDateShort(d);
   };
 
   // ── design tokens (inline-styled, matching the blueprint pages) ──────
@@ -553,7 +571,6 @@
     }, [data && data.stale, data && data.cachedAt]);
 
     const money = (n, cur) => { try { return new Intl.NumberFormat(undefined, { style: 'currency', currency: cur || 'USD' }).format(n || 0); } catch (_) { return '$' + (n || 0).toFixed(2); } };
-    const fmtDate = (s) => { if (!s) return ''; const d = new Date(s); return isNaN(d.getTime()) ? s.slice(0, 10) : d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }); };
     const statChip = (label, value) => (
       <div style={{ ...S.card, padding: '16px 20px', minWidth: 150 }}>
         <div style={S.eyebrow}>{label}</div>
@@ -648,7 +665,7 @@
                     <tbody>
                       {data.orders.map((o) => (
                         <tr key={o.id}>
-                          <td style={{ ...S.td, whiteSpace: 'nowrap', fontFamily: T.mono, fontSize: 12.5 }}>{fmtDate(o.date)}</td>
+                          <td style={{ ...S.td, whiteSpace: 'nowrap', fontFamily: T.mono, fontSize: 12.5 }}>{fmtDay(o.date)}</td>
                           <td style={S.td}><span style={{ fontFamily: T.mono, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', background: o.source === 'Stripe' ? '#EEE9FF' : '#DFFCE6', color: o.source === 'Stripe' ? '#4B2CC4' : '#064E2E', borderRadius: 999, padding: '3px 9px', whiteSpace: 'nowrap' }}>{o.source}</span></td>
                           <td style={{ ...S.td, fontWeight: 700, maxWidth: 260, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{o.name}</td>
                           <td style={S.td}>{o.customer || '—'}</td>
@@ -700,7 +717,6 @@
     }, [range.from, range.to, kind]);
 
     const money = (n, cur) => { try { return new Intl.NumberFormat(undefined, { style: 'currency', currency: cur || 'USD' }).format(n || 0); } catch (_) { return '$' + (n || 0).toFixed(2); } };
-    const fmtDate = (s) => { if (!s) return ''; const d = new Date(s); return isNaN(d.getTime()) ? s.slice(0, 10) : d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }); };
     const invoices = kind === 'invoices';
 
     return (
@@ -805,7 +821,7 @@
                     <tbody>
                       {data.rows.map((r) => (
                         <tr key={r.id}>
-                          <td style={{ ...S.td, whiteSpace: 'nowrap', fontFamily: T.mono, fontSize: 12.5 }}>{fmtDate(r.date)}</td>
+                          <td style={{ ...S.td, whiteSpace: 'nowrap', fontFamily: T.mono, fontSize: 12.5 }}>{fmtDay(r.date)}</td>
                           {invoices ? <td style={{ ...S.td, fontWeight: 700 }}>{r.docNumber || ('#' + r.id)}</td> : null}
                           <td style={S.td}>{r.customer || '—'}</td>
                           <td style={{ ...S.td, textAlign: 'right', fontFamily: T.mono, whiteSpace: 'nowrap' }}>{money(r.amount, r.currency)}</td>
@@ -856,7 +872,6 @@
     }, [range.from, range.to]);
 
     const money = (n, cur) => { try { return new Intl.NumberFormat(undefined, { style: 'currency', currency: cur || 'USD' }).format(n || 0); } catch (_) { return '$' + (n || 0).toFixed(2); } };
-    const fmtDate = (s) => { if (!s) return ''; const d = new Date(s); return isNaN(d.getTime()) ? s.slice(0, 10) : d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }); };
 
     return (
       <Page>
@@ -935,7 +950,7 @@
                     <tbody>
                       {data.rows.map((r) => (
                         <tr key={r.id}>
-                          <td style={{ ...S.td, whiteSpace: 'nowrap', fontFamily: T.mono, fontSize: 12.5 }}>{fmtDate(r.date)}</td>
+                          <td style={{ ...S.td, whiteSpace: 'nowrap', fontFamily: T.mono, fontSize: 12.5 }}>{fmtDay(r.date)}</td>
                           <td style={{ ...S.td, fontWeight: 700 }}>{r.app || '—'}</td>
                           <td style={{ ...S.td, fontFamily: T.mono, fontSize: 12 }}>{r.shop || '—'}</td>
                           <td style={S.td}><span style={{ fontFamily: T.mono, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', background: '#EEF0FE', color: '#3A44C4', borderRadius: 999, padding: '3px 9px', whiteSpace: 'nowrap' }}>{r.type}</span></td>
@@ -985,7 +1000,6 @@
     }, [range.from, range.to]);
 
     const money = (n, cur) => { try { return new Intl.NumberFormat(undefined, { style: 'currency', currency: cur || 'USD' }).format(n || 0); } catch (_) { return '$' + (n || 0).toFixed(2); } };
-    const fmtDate = (s) => { if (!s) return ''; const d = new Date(s); return isNaN(d.getTime()) ? s.slice(0, 10) : d.toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }); };
 
     return (
       <Page>
@@ -1053,7 +1067,7 @@
                     <tbody>
                       {data.rows.map((r) => (
                         <tr key={r.id}>
-                          <td style={{ ...S.td, whiteSpace: 'nowrap', fontFamily: T.mono, fontSize: 12.5 }}>{fmtDate(r.date)}</td>
+                          <td style={{ ...S.td, whiteSpace: 'nowrap', fontFamily: T.mono, fontSize: 12.5 }}>{fmtDay(r.date)}</td>
                           <td style={{ ...S.td, fontFamily: T.mono, fontSize: 12 }}>{r.shop || '—'}</td>
                           <td style={S.td}><span style={{ fontFamily: T.mono, fontSize: 10, textTransform: 'uppercase', letterSpacing: '0.06em', background: '#EEF0FE', color: '#3A44C4', borderRadius: 999, padding: '3px 9px', whiteSpace: 'nowrap' }}>{r.type}</span></td>
                           <td style={{ ...S.td, textAlign: 'right', fontFamily: T.mono, whiteSpace: 'nowrap', color: r.amount < 0 ? '#B3261E' : T.fg1 }}>{money(r.amount, r.currency)}</td>
@@ -2752,7 +2766,7 @@
                   <div style={{ fontFamily: T.sans, fontSize: 13, fontWeight: 650, color: T.fg1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{actionText(ev)}</div>
                   <div style={{ fontFamily: T.mono, fontSize: 10.5, color: T.fg3, marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nameFor(ev.actor)}</div>
                 </div>
-                <div style={{ flexShrink: 0, fontFamily: T.mono, fontSize: 10, color: T.fg3, textAlign: 'right' }}>{fmtWhen(ev.ts)}</div>
+                <div style={{ flexShrink: 0, fontFamily: T.mono, fontSize: 10, color: T.fg3, textAlign: 'right' }}>{fmtWhenTime(ev.ts)}</div>
               </div>
             );
           })
@@ -3599,7 +3613,7 @@
         <span>
           <span style={{ display: 'inline-block', padding: '3px 10px', borderRadius: 999, fontFamily: T.mono, fontSize: 9.5, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', background: '#DFFCE6', color: '#064E2E', border: '1px solid #9BDDB0' }}>Signed</span>
           <span style={{ display: 'inline-block', marginLeft: 8, fontFamily: T.mono, fontSize: 10.5, color: T.fg3 }}>
-            {bp.signature.name || bp.signature.email}{bp.signature.signedAt ? ' · ' + fmtWhen(bp.signature.signedAt).slice(0, 10) : ''}
+            {bp.signature.name || bp.signature.email}{bp.signature.signedAt ? ' · ' + fmtDay(bp.signature.signedAt) : ''}
           </span>
         </span>
       );
@@ -3643,7 +3657,7 @@
     const expiresCell = (bp) => (
       <span style={{ display: 'inline-flex', alignItems: 'center', gap: 7 }}>
         <span style={{ fontFamily: T.mono, fontSize: 12, color: bp.expired ? '#B3261E' : (bp.expiresAt ? T.fg1 : T.fg3) }}>
-          {bp.expiresAt || '—'}
+          {bp.expiresAt ? fmtDay(bp.expiresAt) : '—'}
         </span>
         <button type="button" aria-label="Edit expiration" title="Edit expiration"
           onClick={() => setEditExpiryBp(bp)}
@@ -4100,7 +4114,7 @@
                     <div style={{ fontFamily: T.sans, fontSize: 12.5, color: T.fg2, marginTop: 4 }}>{ev.name || ''}{ev.title ? ' · ' + ev.title : ''}</div>
                   )}
                   <div style={{ fontFamily: T.mono, fontSize: 10.5, color: T.fg3, marginTop: 6 }}>
-                    {fmtWhen(ev.verifiedAt || ev.signedAt)}{ev.ip ? ' · ' + ev.ip : ''}{fmtLocation(ev) ? ' · ' + fmtLocation(ev) : ''}
+                    {fmtWhenTime(ev.verifiedAt || ev.signedAt)}{ev.ip ? ' · ' + ev.ip : ''}{fmtLocation(ev) ? ' · ' + fmtLocation(ev) : ''}
                   </div>
                 </div>
               ))}
@@ -4122,7 +4136,7 @@
                           <div style={{ color: T.fg3, marginTop: 3, fontSize: 11.5 }}>{ev.name || ''}{ev.title ? ' · ' + ev.title : ''}</div>
                         )}
                       </td>
-                      <td style={{ ...S.td, fontFamily: T.mono, fontSize: 11.5 }}>{fmtWhen(ev.verifiedAt || ev.signedAt)}</td>
+                      <td style={{ ...S.td, fontFamily: T.mono, fontSize: 11.5 }}>{fmtWhenTime(ev.verifiedAt || ev.signedAt)}</td>
                       <td style={{ ...S.td, fontFamily: T.mono, fontSize: 11.5 }}>{ev.ip || ''}</td>
                       <td style={{ ...S.td, fontFamily: T.mono, fontSize: 11.5 }}>{fmtLocation(ev)}</td>
                       <td style={{ ...S.td, fontSize: 11, color: T.fg3, maxWidth: 300, wordBreak: 'break-word' }}>{shortUA(ev.userAgent)}</td>
@@ -4264,7 +4278,7 @@
                         {ev.actor ? (
                           <div style={{ fontFamily: T.mono, fontSize: 10.5, color: T.fg2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ev.actor}</div>
                         ) : null}
-                        <div style={{ fontFamily: T.mono, fontSize: 10, color: T.fg3, marginTop: 1 }}>{fmtWhen(ev.ts)}</div>
+                        <div style={{ fontFamily: T.mono, fontSize: 10, color: T.fg3, marginTop: 1 }}>{fmtWhenTime(ev.ts)}</div>
                       </div>
                     </a>
                   );
