@@ -2399,7 +2399,7 @@ function BPGrowth() {
           Uncap Growth: Core Plan &middot; <span style={{ fontFamily: 'var(--font-hero)', fontWeight: 800 }}>$2.5k / mo</span>
         </div>
         <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--fg-3)', letterSpacing: '0.06em' }}>
-          MANAGED SERVICE RETAINER &middot; 6 MONTHS
+          MANAGED SERVICE RETAINER &middot; MONTH TO MONTH
         </div>
       </div>
     </BPSection>
