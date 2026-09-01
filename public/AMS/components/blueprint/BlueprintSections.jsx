@@ -2336,7 +2336,8 @@ function BPTeam() {
     { n: 'Denis Dyli', r: 'CEO, Principal', img: 'assets/team-denis.webp' },
     { n: 'Michael Johnson', r: 'Head of Services', img: 'assets/team-michael.webp' },
     { n: 'Jo Tan', r: 'Head of Design', img: 'assets/team-jo.webp' },
-    { n: 'Vishal Ranpariya', r: 'Head of Products', img: '' }
+    { n: 'Vishal Ranpariya', r: 'Head of Products', img: '' },
+    { n: 'Jack Patel', r: 'Head of Solutions', img: '' }
   ];
   return (
     <BPSection id="team" n="17" label="Team" tail="WHO DOES THE WORK">
@@ -2350,7 +2351,7 @@ function BPTeam() {
       </p>
       <div style={{
         marginTop: 'clamp(32px, 4vw, 48px)',
-        display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14
+        display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 14
       }}>
         {team.map((p, i) => (
           <div key={i} style={{ background: 'var(--uc-paper)', border: '1px solid var(--line-2)', borderRadius: 5, padding: 14, display: 'flex', flexDirection: 'column', gap: 12 }}>
