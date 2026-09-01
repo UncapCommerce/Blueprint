@@ -2612,14 +2612,17 @@ function BPGrowth() {
       <div style={{ marginTop: 'clamp(32px, 4vw, 48px)', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
         {services.map((sv, i) => (
           <div key={i} style={{
-            background: 'var(--uc-paper)', border: '1px solid var(--line-2)', borderRadius: 5,
+            background: '#0F0F0F', border: '1px solid #1F1F1F', borderRadius: 8,
             padding: 'clamp(22px, 2.6vw, 30px)', display: 'flex', flexDirection: 'column', gap: 12,
-            position: 'relative', overflow: 'hidden'
+            position: 'relative', overflow: 'hidden', color: 'var(--uc-paper)'
           }}>
-            <span aria-hidden="true" style={{ position: 'absolute', top: 0, left: 0, width: 36, height: 3, background: 'var(--uc-signal)' }}/>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--fg-3)', letterSpacing: 0 }}>{String(i + 1).padStart(2, '0')} / 04</div>
-            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'clamp(20px, 2vw, 26px)', letterSpacing: '-0.02em', color: 'var(--fg-1)' }}>{sv.t}</div>
-            <div style={{ fontFamily: 'var(--font-serif)', fontSize: 14.5, lineHeight: 1.45, color: 'var(--fg-2)' }}>{sv.d}</div>
+            <span aria-hidden="true" style={{ position: 'absolute', right: 22, bottom: -28, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(90px, 9vw, 150px)', letterSpacing: '-0.05em', lineHeight: 1, color: 'rgba(255,255,255,0.05)', pointerEvents: 'none', userSelect: 'none' }}>{String(i + 1).padStart(2, '0')}</span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--uc-stone-500)', letterSpacing: '0.06em' }}>{String(i + 1).padStart(2, '0')} / 04</span>
+              <span aria-hidden="true" style={{ width: 16, height: 3, background: 'var(--uc-signal)' }}/>
+            </div>
+            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'clamp(22px, 2.2vw, 30px)', letterSpacing: '-0.025em', color: 'var(--uc-paper)', position: 'relative' }}>{sv.t}</div>
+            <div style={{ fontFamily: 'var(--font-serif)', fontSize: 14.5, lineHeight: 1.5, color: 'var(--uc-stone-300)', position: 'relative', textWrap: 'pretty' }}>{sv.d}</div>
           </div>
         ))}
       </div>
