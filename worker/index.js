@@ -2608,6 +2608,7 @@ const BLUEPRINT_REGISTRY = [
   { id: 'qpfeed', dir: 'QPFeed', name: 'QP Feed', num: '017', channel: 'Inbound' },
   { id: 'parmancorp', dir: 'Parman', name: 'Parman', num: '018', channel: 'Inbound' },
   { id: 'kvalinc', dir: 'KVAL', name: 'KVAL', num: '019', channel: 'Inbound' },
+  { id: 'amsperformance', dir: 'AMS', name: 'AMS Performance', num: '020', channel: 'Inbound' },
 ];
 
 function getCookie(request, name) {
