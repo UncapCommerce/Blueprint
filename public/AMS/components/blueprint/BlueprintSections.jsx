@@ -754,8 +754,8 @@ function GfxMegaNav() {
 }
 function GfxCollection() {
   const prods = [
-    ['Alpha Intercooler','$1,299','R35 GT-R','#8A8780','BEST','4.8','212'],
-    ['Cold Air Intake','$449','A90 Supra','#3A3632',null,'4.6','158'],
+    ['Alpha Intercooler','$1,299','R35 GT-R','#7A7E85','BEST','4.8','212'],
+    ['Cold Air Intake','$449','A90 Supra','#26272B',null,'4.6','158'],
     ['Downpipes','$1,099','B58','#6B7280','NEW','4.9','64'],
     ['Charge Pipes','$399','2.0T EA888','#9CA3AF',null,'4.7','309'],
     ['Heat Exchanger','$899','AMG M177','#1F1F1F','PRO','4.9','47'],
@@ -818,7 +818,7 @@ function GfxCollection() {
           {prods.map((p,i)=>(
             <div key={i} style={{ border:'1px solid var(--line-1)', borderRadius:3, padding:6, display:'flex', flexDirection:'column', gap:4, background:'var(--uc-paper)' }}>
               <div style={{ aspectRatio:'1/1', background:`linear-gradient(140deg, ${p[3]}, var(--uc-bone))`, borderRadius:2, position:'relative' }}>
-                {p[4] && <span style={{ position:'absolute', top:4, left:4, padding:'1px 5px', background:p[4]==='NEW'?'var(--uc-brand)':(p[4]==='PRO'?'var(--uc-black)':'#3F8B5D'), color:'#fff', borderRadius:2, fontFamily:'var(--font-mono)', fontSize:5.5, fontWeight:800 }}>{p[4]}</span>}
+                {p[4] && <span style={{ position:'absolute', top:4, left:4, padding:'1px 5px', background:p[4]==='NEW'?'var(--uc-brand)':(p[4]==='PRO'?'var(--uc-black)':'#D6203B'), color:'#fff', borderRadius:2, fontFamily:'var(--font-mono)', fontSize:5.5, fontWeight:800 }}>{p[4]}</span>}
                 <span style={{ position:'absolute', bottom:4, right:4, width:15, height:15, borderRadius:999, background:'var(--uc-paper)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, color:'var(--fg-1)', boxShadow:'0 1px 3px rgba(0,0,0,0.18)' }}>＋</span>
               </div>
               <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:8.5, letterSpacing:'-0.01em', color:'var(--fg-1)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{p[0]}</span>
@@ -839,7 +839,7 @@ function GfxCollection() {
 }
 function GfxCart() {
   const lines=[['Alpha Intercooler · R35','2','$1,249','$2,498'],['Charge Pipe Kit · B58','2','$379','$758'],['BOV Kit · Evo X','2','$239','$478']];
-  const grid=[['Alpha Intercooler','$1,299','#8A8780','BEST'],['Cold Air Intake','$449','#3A3632',null],['Downpipes','$1,099','#6B7280','NEW'],['Charge Pipes','$399','#9CA3AF',null],['Heat Exchanger','$899','#1F1F1F',null],['BOV Kit','$249','#4B5563',null]];
+  const grid=[['Alpha Intercooler','$1,299','#7A7E85','BEST'],['Cold Air Intake','$449','#26272B',null],['Downpipes','$1,099','#6B7280','NEW'],['Charge Pipes','$399','#9CA3AF',null],['Heat Exchanger','$899','#1F1F1F',null],['BOV Kit','$249','#4B5563',null]];
   return (
     <div style={{ position:'relative', background:'var(--uc-paper)', border:'1px solid var(--line-1)', borderRadius:5, overflow:'hidden' }}>
       {/* Full CATEGORY page behind */}
@@ -938,9 +938,9 @@ function GfxPDP() {
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:13, padding:'9px 14px 13px' }}>
         {/* gallery */}
         <div style={{ display:'grid', gridTemplateColumns:'26px 1fr', gap:7 }}>
-          <div style={{ display:'flex', flexDirection:'column', gap:6 }}>{['#C2410C','#3A3632','#8A8780','#C8A14E'].map((c,i)=>(<div key={i} style={{ aspectRatio:'1/1', borderRadius:3, background:`linear-gradient(140deg, ${c}, var(--uc-bone))`, border:i===0?'1.5px solid var(--uc-black)':'1px solid var(--line-1)' }}/>))}</div>
-          <div style={{ aspectRatio:'4/4.6', borderRadius:4, background:'radial-gradient(120% 90% at 65% 20%, #C2410C, #7A3B16 60%, #2A2622)', position:'relative', overflow:'hidden' }}>
-            <span style={{ position:'absolute', top:8, left:8, padding:'2px 7px', background:'#3F8B5D', color:'#fff', borderRadius:999, fontFamily:'var(--font-mono)', fontSize:6, fontWeight:800, letterSpacing:'0.06em' }}>BEST SELLER</span>
+          <div style={{ display:'flex', flexDirection:'column', gap:6 }}>{['#A81929','#26272B','#7A7E85','#D6203B'].map((c,i)=>(<div key={i} style={{ aspectRatio:'1/1', borderRadius:3, background:`linear-gradient(140deg, ${c}, var(--uc-bone))`, border:i===0?'1.5px solid var(--uc-black)':'1px solid var(--line-1)' }}/>))}</div>
+          <div style={{ aspectRatio:'4/4.6', borderRadius:4, background:'radial-gradient(120% 90% at 65% 20%, #A81929, #8F1522 60%, #1B1B1E)', position:'relative', overflow:'hidden' }}>
+            <span style={{ position:'absolute', top:8, left:8, padding:'2px 7px', background:'#D6203B', color:'#fff', borderRadius:999, fontFamily:'var(--font-mono)', fontSize:6, fontWeight:800, letterSpacing:'0.06em' }}>BEST SELLER</span>
             <svg viewBox="0 0 100 100" style={{ position:'absolute', bottom:'4%', right:'2%', width:'80%', opacity:0.92 }}><path d="M16 40 L58 40 L58 30 L74 35 L74 55 L58 60 L58 50 L30 50 L30 66 L16 66 Z" fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth="1.7"/><rect x="22" y="66" width="13" height="20" rx="2" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1.4"/><circle cx="66" cy="45" r="4.5" fill="rgba(255,255,255,0.18)"/></svg>
             <span style={{ position:'absolute', bottom:8, left:8, display:'flex', gap:4 }}>{[0,1,2,3].map(i=>(<span key={i} style={{ width:5, height:5, borderRadius:999, background:i===0?'#fff':'rgba(255,255,255,0.45)' }}/>))}</span>
           </div>
@@ -952,7 +952,7 @@ function GfxPDP() {
           <div style={{ fontFamily:'var(--font-hero)', fontWeight:700, fontSize:21, letterSpacing:'-0.04em', lineHeight:0.9, color:'var(--fg-1)' }}>ALPHA FMIC<br/><span style={{ fontFamily:'var(--font-serif)', fontWeight:400, fontSize:16 }}>Front Mount Intercooler</span></div>
           <div style={{ display:'flex', alignItems:'center', gap:6, fontFamily:'var(--font-mono)', fontSize:8 }}><span style={{ color:'var(--uc-brand)' }}>★★★★★</span><span style={{ color:'var(--fg-3)' }}>4.9 · 128 reviews</span></div>
           {/* swatches */}
-          <div style={{ display:'flex', gap:5, marginTop:1 }}>{['#C2410C','#1F1F1F','#C8A14E','#8A8780'].map((c,i)=>(<span key={i} style={{ width:16, height:16, borderRadius:999, background:c, border:i===0?'1.5px solid var(--uc-black)':'1px solid var(--line-1)', boxShadow:i===0?'0 0 0 2px var(--uc-paper) inset':'none' }}/>))}</div>
+          <div style={{ display:'flex', gap:5, marginTop:1 }}>{['#A81929','#1F1F1F','#D6203B','#7A7E85'].map((c,i)=>(<span key={i} style={{ width:16, height:16, borderRadius:999, background:c, border:i===0?'1.5px solid var(--uc-black)':'1px solid var(--line-1)', boxShadow:i===0?'0 0 0 2px var(--uc-paper) inset':'none' }}/>))}</div>
           {/* configuration — configurable product */}
           <div style={{ marginTop:1 }}>
             <div style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:4 }}>CONFIGURATION</div>
@@ -984,7 +984,7 @@ function GfxPDP() {
           <div style={{ marginTop:7, paddingTop:9, borderTop:'1px solid var(--line-1)' }}>
             <div style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:6 }}>FREQUENTLY BOUGHT TOGETHER</div>
             <div style={{ display:'flex', alignItems:'center', gap:5, marginBottom:8 }}>
-              {[['Alpha Intercooler','$1,299','#8A8780'],['Charge Pipe Kit','$399','#1F1F1F'],['BOV Kit','$249','#4B5563']].map((p,i)=>(
+              {[['Alpha Intercooler','$1,299','#7A7E85'],['Charge Pipe Kit','$399','#1F1F1F'],['BOV Kit','$249','#4B5563']].map((p,i)=>(
                 <React.Fragment key={i}>
                   {i>0 && <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:11, color:'var(--fg-3)', flexShrink:0 }}>+</span>}
                   <div style={{ flex:1, display:'flex', flexDirection:'column', gap:3 }}>
@@ -1028,7 +1028,7 @@ function GfxPDP() {
       {/* you may also like */}
       <div style={{ padding:'11px 14px', borderTop:'1px solid var(--line-1)', background:'var(--uc-bone)' }}>
         <div style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:8 }}>COMPLETE THE SET</div>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:7 }}>{[['Charge Pipe Kit','$399','#C2410C'],['BOV Kit','$249','#8A8780'],['Heat Exchanger','$899','#3A3632'],['Intake Kit','$449','#C8A14E']].map((p,i)=>(<div key={i} style={{ display:'flex', flexDirection:'column', gap:4 }}><div style={{ aspectRatio:'1/1', borderRadius:3, background:`linear-gradient(140deg, ${p[2]}, var(--uc-bone))` }}/><span style={{ fontFamily:'var(--font-display)', fontWeight:600, fontSize:7.5, color:'var(--fg-1)' }}>{p[0]}</span><span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--fg-1)' }}>{p[1]}</span></div>))}</div>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:7 }}>{[['Charge Pipe Kit','$399','#A81929'],['BOV Kit','$249','#7A7E85'],['Heat Exchanger','$899','#26272B'],['Intake Kit','$449','#D6203B']].map((p,i)=>(<div key={i} style={{ display:'flex', flexDirection:'column', gap:4 }}><div style={{ aspectRatio:'1/1', borderRadius:3, background:`linear-gradient(140deg, ${p[2]}, var(--uc-bone))` }}/><span style={{ fontFamily:'var(--font-display)', fontWeight:600, fontSize:7.5, color:'var(--fg-1)' }}>{p[0]}</span><span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--fg-1)' }}>{p[1]}</span></div>))}</div>
       </div>
     </div>
   );
@@ -1045,7 +1045,7 @@ function GfxPortal() {
         <BrandMark fontSize={11}/>
         <span style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:7 }}>
           <span style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, color:'var(--fg-3)' }}>APEX SPEED SHOP</span>
-          <span style={{ width:18, height:18, borderRadius:999, background:'linear-gradient(135deg,#8FA086,#6E5235)', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:800, color:'#fff' }}>M</span>
+          <span style={{ width:18, height:18, borderRadius:999, background:'linear-gradient(135deg,#9AA0A8,#3A3D42)', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:800, color:'#fff' }}>M</span>
         </span>
       </div>
 
@@ -1097,7 +1097,7 @@ function GfxHomepage() {
     { h: 'Quick Links', items: ['New Arrivals','Clearance','Alpha Series','Dealer Program'] }
   ];
   const brands = ['ALPHA','OMEGA','GARRETT','MOTUL','HKS','CSF'];
-  const feat = [['Alpha Intercooler','$1,299','#8A8780','BEST'],['Cold Air Intake','$449','#3A3632',null],['Downpipes','$1,099','#6B7280','NEW'],['Heat Exchanger','$899','#1F1F1F','PRO']];
+  const feat = [['Alpha Intercooler','$1,299','#7A7E85','BEST'],['Cold Air Intake','$449','#26272B',null],['Downpipes','$1,099','#6B7280','NEW'],['Heat Exchanger','$899','#1F1F1F','PRO']];
   return (
     <div style={{ background:'var(--uc-paper)', border:'1px solid var(--line-1)', borderRadius:5, overflow:'hidden' }}>
       {/* announcement */}
@@ -1113,7 +1113,7 @@ function GfxHomepage() {
       </div>
 
       {/* hero + mega menu overlay */}
-      <div style={{ position:'relative', height:188, background:'linear-gradient(100deg, #1C1A17 0%, #3A2F25 55%, #7A3B16 135%)', overflow:'hidden' }}>
+      <div style={{ position:'relative', height:188, background:'linear-gradient(100deg, #141518 0%, #26272B 55%, #8F1522 135%)', overflow:'hidden' }}>
         <svg viewBox="0 0 200 90" preserveAspectRatio="none" style={{ position:'absolute', right:-10, bottom:-10, width:220, opacity:0.16 }}><path d="M5 85 L5 34 L52 34 L52 12 L104 12 L104 34 L195 34 L195 85 Z" fill="none" stroke="#fff" strokeWidth="1.6"/><path d="M28 85 L28 52 M78 85 L78 34 M150 85 L150 50" stroke="#fff" strokeWidth="1"/></svg>
         {/* hero copy (right 1/3) */}
         <div style={{ position:'absolute', right:18, top:0, bottom:0, width:'34%', display:'flex', flexDirection:'column', justifyContent:'center', gap:7 }}>
@@ -1150,7 +1150,7 @@ function GfxHomepage() {
       <div style={{ padding:'0 14px 14px', display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:9 }}>
         {feat.map((p,i)=>(
           <div key={i} style={{ display:'flex', flexDirection:'column', gap:4 }}>
-            <div style={{ aspectRatio:'1/0.9', borderRadius:4, background:`linear-gradient(150deg, ${p[2]}, var(--uc-bone))`, position:'relative' }}>{p[3] && <span style={{ position:'absolute', top:5, left:5, padding:'1px 6px', background:p[3]==='DEAL'?'var(--uc-brand)':(p[3]==='NEW'?'var(--uc-black)':(p[3]==='PRO'?'var(--uc-black)':'#3F8B5D')), color:'#fff', borderRadius:2, fontFamily:'var(--font-mono)', fontSize:5.5, fontWeight:800 }}>{p[3]}</span>}<span style={{ position:'absolute', bottom:5, right:5, width:16, height:16, borderRadius:999, background:'var(--uc-paper)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, color:'var(--fg-1)', boxShadow:'0 1px 3px rgba(0,0,0,0.18)' }}>＋</span></div>
+            <div style={{ aspectRatio:'1/0.9', borderRadius:4, background:`linear-gradient(150deg, ${p[2]}, var(--uc-bone))`, position:'relative' }}>{p[3] && <span style={{ position:'absolute', top:5, left:5, padding:'1px 6px', background:p[3]==='DEAL'?'var(--uc-brand)':(p[3]==='NEW'?'var(--uc-black)':(p[3]==='PRO'?'var(--uc-black)':'#D6203B')), color:'#fff', borderRadius:2, fontFamily:'var(--font-mono)', fontSize:5.5, fontWeight:800 }}>{p[3]}</span>}<span style={{ position:'absolute', bottom:5, right:5, width:16, height:16, borderRadius:999, background:'var(--uc-paper)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, color:'var(--fg-1)', boxShadow:'0 1px 3px rgba(0,0,0,0.18)' }}>＋</span></div>
             <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:8.5, color:'var(--fg-1)', letterSpacing:'-0.01em' }}>{p[0]}</span>
             <span style={{ fontFamily:'var(--font-mono)', fontSize:8.5, fontWeight:700, color:'var(--fg-1)' }}>{p[1]}</span>
           </div>
@@ -1159,7 +1159,7 @@ function GfxHomepage() {
 
       {/* brand story — image + text */}
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:0, borderTop:'1px solid var(--line-1)' }}>
-        <div style={{ background:'linear-gradient(150deg, #6E5235, #2A2018)', minHeight:96, position:'relative' }}><span style={{ position:'absolute', bottom:8, left:10, padding:'2px 7px', background:'var(--uc-paper)', borderRadius:3, fontFamily:'var(--font-mono)', fontSize:5.5, fontWeight:800, letterSpacing:'0.1em', color:'var(--fg-3)' }}>EST. 2001</span></div>
+        <div style={{ background:'linear-gradient(150deg, #3A3D42, #1B1B1E)', minHeight:96, position:'relative' }}><span style={{ position:'absolute', bottom:8, left:10, padding:'2px 7px', background:'var(--uc-paper)', borderRadius:3, fontFamily:'var(--font-mono)', fontSize:5.5, fontWeight:800, letterSpacing:'0.1em', color:'var(--fg-3)' }}>EST. 2001</span></div>
         <div style={{ padding:'16px 16px', display:'flex', flexDirection:'column', justifyContent:'center', gap:7, background:'var(--uc-bone)' }}>
           <span style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, letterSpacing:'0.14em', color:'var(--fg-3)' }}>OUR STORY</span>
           <span style={{ fontFamily:'var(--font-serif)', fontStyle:'italic', fontSize:14, lineHeight:1.3, letterSpacing:'-0.01em', color:'var(--fg-1)' }}>Built by racers — every part engineered, dyno-tested, and proven at the track.</span>
@@ -1260,7 +1260,7 @@ function BPPerformance() {
                 ))}
               </ul>
             </div>
-            <div className="gfx-brand" style={{ order: i % 2 === 0 ? 2 : 1, '--uc-signal': '#D6203B', '--on-signal': '#FFFFFF' }}>{g.gfx}</div>
+            <div className="gfx-brand" style={{ order: i % 2 === 0 ? 2 : 1, '--uc-signal': '#D6203B', '--on-signal': '#FFFFFF', '--uc-brand': '#D6203B', '--uc-bone': '#F4F5F6' }}>{g.gfx}</div>
           </div>
         ))}
       </div>
@@ -1309,7 +1309,7 @@ function GfxPhone({ kind }) {
             {/* contractor announcement */}
             <div style={{ background:'var(--uc-black)', color:'var(--uc-paper)', padding:'4px 0', textAlign:'center', fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, letterSpacing:'0.12em' }}>FREE SHIPPING OVER $249 · FINANCING AVAILABLE</div>
             {/* SHORT hero banner */}
-            <div style={{ margin:'10px 12px 0', borderRadius:8, background:'linear-gradient(100deg, #1C1A17 0%, #3A2F25 55%, #7A3B16 135%)', position:'relative', overflow:'hidden', padding:'12px 13px', display:'flex', flexDirection:'column', gap:5, minHeight:96 }}>
+            <div style={{ margin:'10px 12px 0', borderRadius:8, background:'linear-gradient(100deg, #141518 0%, #26272B 55%, #8F1522 135%)', position:'relative', overflow:'hidden', padding:'12px 13px', display:'flex', flexDirection:'column', gap:5, minHeight:96 }}>
               <svg viewBox="0 0 120 60" style={{ position:'absolute', right:-6, bottom:-6, width:120, opacity:0.18 }}><path d="M5 55 L5 22 L32 22 L32 8 L62 8 L62 22 L115 22 L115 55 Z" fill="none" stroke="#fff" strokeWidth="1.6"/><path d="M16 55 L16 33 M46 55 L46 22 M88 55 L88 32" stroke="#fff" strokeWidth="1"/></svg>
               <span style={{ fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, letterSpacing:'0.16em', color:'var(--uc-signal)' }}>TRACK SEASON · ENDS FRIDAY</span>
               <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:18, letterSpacing:'-0.04em', lineHeight:0.9, color:'#fff' }}>Race-proven<br/><span style={{ fontFamily:'var(--font-serif)', fontWeight:400 }}>power, on sale.</span></span>
@@ -1321,9 +1321,9 @@ function GfxPhone({ kind }) {
             <div style={{ display:'flex', gap:13, padding:'10px 12px 8px' }}>{['Best Sellers','New','Deals'].map((t,i)=>(<span key={t} style={{ paddingBottom:4, fontFamily:'var(--font-display)', fontWeight:700, fontSize:9, color:i===0?'var(--fg-1)':'var(--fg-3)', borderBottom:i===0?'2px solid var(--uc-black)':'2px solid transparent' }}>{t}</span>))}</div>
             {/* product grid */}
             <div style={{ padding:'0 12px 11px', display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
-              {[['Alpha Intercooler','$1,299','#8A8780','BEST'],['Cold Air Intake','$449','#3A3632',null],['Downpipes','$1,099','#6B7280','NEW'],['Heat Exchanger','$899','#1F1F1F','DEAL']].map((p,i)=>(
+              {[['Alpha Intercooler','$1,299','#7A7E85','BEST'],['Cold Air Intake','$449','#26272B',null],['Downpipes','$1,099','#6B7280','NEW'],['Heat Exchanger','$899','#1F1F1F','DEAL']].map((p,i)=>(
                 <div key={i} style={{ display:'flex', flexDirection:'column', gap:4 }}>
-                  <div style={{ aspectRatio:'1/0.86', borderRadius:5, background:`linear-gradient(150deg, ${p[2]}, var(--uc-bone))`, position:'relative' }}>{p[3] && <span style={{ position:'absolute', top:5, left:5, padding:'1px 6px', background:p[3]==='DEAL'?'var(--uc-brand)':(p[3]==='NEW'?'var(--uc-black)':'#3F8B5D'), color:'#fff', borderRadius:2, fontFamily:'var(--font-mono)', fontSize:5, fontWeight:800 }}>{p[3]}</span>}<span style={{ position:'absolute', bottom:5, right:5, width:16, height:16, borderRadius:999, background:'var(--uc-paper)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, color:'var(--fg-1)' }}>＋</span></div>
+                  <div style={{ aspectRatio:'1/0.86', borderRadius:5, background:`linear-gradient(150deg, ${p[2]}, var(--uc-bone))`, position:'relative' }}>{p[3] && <span style={{ position:'absolute', top:5, left:5, padding:'1px 6px', background:p[3]==='DEAL'?'var(--uc-brand)':(p[3]==='NEW'?'var(--uc-black)':'#D6203B'), color:'#fff', borderRadius:2, fontFamily:'var(--font-mono)', fontSize:5, fontWeight:800 }}>{p[3]}</span>}<span style={{ position:'absolute', bottom:5, right:5, width:16, height:16, borderRadius:999, background:'var(--uc-paper)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, color:'var(--fg-1)' }}>＋</span></div>
                   <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:8, color:'var(--fg-1)', letterSpacing:'-0.01em' }}>{p[0]}</span>
                   <span style={{ fontFamily:'var(--font-mono)', fontSize:8, fontWeight:700, color:'var(--fg-1)' }}>{p[1]}</span>
                 </div>
@@ -1332,7 +1332,7 @@ function GfxPhone({ kind }) {
             {/* categories */}
             <div style={{ padding:'0 12px 12px' }}>
               <div style={{ fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:6 }}>SHOP BY CATEGORY</div>
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:6 }}>{[['Intakes','#C2A878'],['Turbo','#9A938A'],['Exhaust','#C8A14E'],['Cooling','#C2410C']].map((c,i)=>(<div key={i} style={{ display:'flex', flexDirection:'column', gap:3 }}><div style={{ aspectRatio:'1/1', borderRadius:4, background:`linear-gradient(140deg, ${c[1]}, var(--uc-bone))` }}/><span style={{ fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, textAlign:'center', color:'var(--fg-2)' }}>{c[0]}</span></div>))}</div>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:6 }}>{[['Intakes','#B9BDC4'],['Turbo','#7A7E85'],['Exhaust','#D6203B'],['Cooling','#A81929']].map((c,i)=>(<div key={i} style={{ display:'flex', flexDirection:'column', gap:3 }}><div style={{ aspectRatio:'1/1', borderRadius:4, background:`linear-gradient(140deg, ${c[1]}, var(--uc-bone))` }}/><span style={{ fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, textAlign:'center', color:'var(--fg-2)' }}>{c[0]}</span></div>))}</div>
             </div>
           </div>
         )}
@@ -1345,8 +1345,8 @@ function GfxPhone({ kind }) {
             </div>
             {/* overlapping image cards */}
             <div style={{ position:'relative', height:112, margin:'2px 13px 8px' }}>
-              <div style={{ position:'absolute', left:0, top:8, width:'58%', aspectRatio:'4/3', borderRadius:5, background:'linear-gradient(150deg, #C2A878, var(--uc-bone))', transform:'rotate(-4deg)', boxShadow:'0 8px 16px -10px rgba(10,10,10,0.45)' }}/>
-              <div style={{ position:'absolute', right:6, top:0, width:'52%', aspectRatio:'3/4', borderRadius:5, background:'linear-gradient(150deg, #7A3B16, var(--uc-bone))', transform:'rotate(6deg)', boxShadow:'0 8px 16px -10px rgba(10,10,10,0.4)' }}/>
+              <div style={{ position:'absolute', left:0, top:8, width:'58%', aspectRatio:'4/3', borderRadius:5, background:'linear-gradient(150deg, #B9BDC4, var(--uc-bone))', transform:'rotate(-4deg)', boxShadow:'0 8px 16px -10px rgba(10,10,10,0.45)' }}/>
+              <div style={{ position:'absolute', right:6, top:0, width:'52%', aspectRatio:'3/4', borderRadius:5, background:'linear-gradient(150deg, #8F1522, var(--uc-bone))', transform:'rotate(6deg)', boxShadow:'0 8px 16px -10px rgba(10,10,10,0.4)' }}/>
               <span style={{ position:'absolute', left:'33%', bottom:2, padding:'3px 8px', background:'var(--uc-paper)', border:'1px solid var(--line-1)', borderRadius:3, fontFamily:'var(--font-mono)', fontSize:5.5, fontWeight:800, letterSpacing:'0.1em', color:'var(--fg-3)', transform:'rotate(-3deg)' }}>DYNO CELL 01 · 2001</span>
             </div>
             {/* manifesto */}
@@ -1360,7 +1360,7 @@ function GfxPhone({ kind }) {
             <div style={{ padding:'12px 13px 8px' }}><span style={{ fontFamily:'var(--font-hero)', fontWeight:700, fontSize:19, letterSpacing:'-0.04em', color:'var(--fg-1)' }}>Tech Guides</span></div>
             {/* featured story */}
             <div style={{ margin:'0 13px', borderRadius:6, overflow:'hidden', border:'1px solid var(--line-1)' }}>
-              <div style={{ aspectRatio:'16/9', background:'radial-gradient(120% 100% at 30% 10%, #C2A878, #6E5235)', position:'relative' }}><span style={{ position:'absolute', top:7, left:7, padding:'2px 7px', background:'var(--uc-signal)', color:'var(--on-signal, var(--uc-black))', borderRadius:999, fontFamily:'var(--font-mono)', fontSize:6, fontWeight:800, letterSpacing:'0.06em' }}>FEATURED</span></div>
+              <div style={{ aspectRatio:'16/9', background:'radial-gradient(120% 100% at 30% 10%, #B9BDC4, #3A3D42)', position:'relative' }}><span style={{ position:'absolute', top:7, left:7, padding:'2px 7px', background:'var(--uc-signal)', color:'var(--on-signal, var(--uc-black))', borderRadius:999, fontFamily:'var(--font-mono)', fontSize:6, fontWeight:800, letterSpacing:'0.06em' }}>FEATURED</span></div>
               <div style={{ padding:'9px 11px', background:'var(--uc-paper)', display:'flex', flexDirection:'column', gap:4 }}>
                 <span style={{ fontFamily:'var(--font-mono)', fontSize:5.5, fontWeight:700, letterSpacing:'0.12em', color:'var(--fg-3)' }}>TUNING · 7 MIN</span>
                 <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:12.5, letterSpacing:'-0.018em', lineHeight:1.08, color:'var(--fg-1)' }}>Boost control, explained with data.</span>
@@ -1368,7 +1368,7 @@ function GfxPhone({ kind }) {
             </div>
             {/* article list */}
             <div style={{ padding:'10px 13px', display:'flex', flexDirection:'column', gap:9 }}>
-              {[['Intercooler sizing basics','5 min','#9C8F7A'],['Choosing the right downpipe','6 min','#8A8780'],['Flex fuel, explained','8 min','#C8A14E']].map((a,i)=>(
+              {[['Intercooler sizing basics','5 min','#8B9098'],['Choosing the right downpipe','6 min','#7A7E85'],['Flex fuel, explained','8 min','#D6203B']].map((a,i)=>(
                 <div key={i} style={{ display:'grid', gridTemplateColumns:'42px 1fr', gap:9, alignItems:'center' }}>
                   <div style={{ aspectRatio:'1/1', borderRadius:4, background:`linear-gradient(150deg, ${a[2]}, var(--uc-bone))` }}/>
                   <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
@@ -1411,7 +1411,7 @@ function BPContent() {
       <div className="gfx-brand" style={{
         marginTop:'clamp(32px, 4vw, 56px)',
         display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:'clamp(16px, 2.5vw, 32px)',
-        '--uc-signal': '#D6203B', '--on-signal': '#FFFFFF'
+        '--uc-signal': '#D6203B', '--on-signal': '#FFFFFF', '--uc-brand': '#D6203B', '--uc-bone': '#F4F5F6'
       }}>
         {screens.map((s, i) => (
           <div key={i} style={{ display:'flex', flexDirection:'column', gap:18 }}>
