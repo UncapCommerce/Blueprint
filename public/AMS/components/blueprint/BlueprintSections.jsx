@@ -2337,7 +2337,7 @@ function BPTeam() {
     { n: 'Michael Johnson', r: 'Head of Services', img: 'assets/team-michael.webp' },
     { n: 'Jo Tan', r: 'Head of Design', img: 'assets/team-jo.webp' },
     { n: 'Vishal Ranpariya', r: 'Head of Products', img: '' },
-    { n: 'Jack Patel', r: 'Head of Solutions', img: '' }
+    { n: 'Jack Patel', r: 'Head of Solutions', img: 'assets/team-jack.webp' }
   ];
   return (
     <BPSection id="team" n="17" label="Team" tail="WHO DOES THE WORK">
