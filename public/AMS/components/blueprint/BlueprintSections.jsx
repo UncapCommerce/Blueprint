@@ -199,7 +199,7 @@ function BPIntro() {
           }}>
             {[
               { k: 'Prepared by', v: 'Denis Dyli', s: 'Principal' },
-              { k: 'Client lead',  v: 'TBD',  s: 'Client Lead' },
+              { k: 'Client lead',  v: 'Max Tynczuk',  s: 'Chief Operating Officer' },
               { k: 'Company', v: 'AMS Performance', s: '114 Easy St. · West Chicago, IL 60185' },
               { k: 'Valid through', v: validThrough,    s: validSub }
             ].map((c, i) => (
