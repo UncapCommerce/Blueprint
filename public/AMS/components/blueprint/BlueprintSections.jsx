@@ -97,7 +97,7 @@ function BPIntro() {
   // (surfaced on window.__bpExpiresAt by the Gate); fall back if none is set.
   const bpExp = (typeof window !== 'undefined' && window.__bpExpiresAt) || '';
   const expMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(bpExp);
-  const [expY, expM, expD] = expMatch ? [+expMatch[1], +expMatch[2], +expMatch[3]] : [2026, 8, 31];
+  const [expY, expM, expD] = expMatch ? [+expMatch[1], +expMatch[2], +expMatch[3]] : [2026, 9, 30];
   const validThrough = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][expM - 1] + ' ' + expD + ', ' + expY;
   const validDays = Math.max(0, Math.floor((Date.UTC(expY, expM - 1, expD, 23, 59, 59) - Date.now()) / 86400000));
   const validSub = validDays === 1 ? '1 day' : validDays + ' days';
