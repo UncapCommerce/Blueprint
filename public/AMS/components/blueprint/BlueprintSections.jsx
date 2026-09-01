@@ -336,7 +336,7 @@ function BPWhereCell({ it, i }) {
 
 function BPWhere() {
   const items = [
-    { n: '01', t: 'Aging storefront', tag: 'Storefront', impact: 'High', pct: 82, d: 'Custom-built, patched for years, costing more every renewal cycle.' },
+    { n: '01', t: 'Aging storefront', tag: 'Storefront', impact: 'High', pct: 82, d: 'WordPress, patched for years, uneasy and time consuming to update and maintain.' },
     { n: '02', t: 'Outdated experience', tag: 'Storefront', impact: 'High', pct: 82, d: 'Unfriendly shopping experience and no mobile optimization.' },
     { n: '03', t: 'No optionality', tag: 'Systems', impact: 'Critical', pct: 94, d: 'Lack of ability to integrate and plug and play with modern advanced commerce tools and solutions.' },
     { n: '04', t: 'Zero agentic optimisation', tag: 'AI', impact: 'High', pct: 78, d: 'No in-site technical components and integrations with AI discovery platforms.' }
@@ -365,7 +365,7 @@ function BPObjectives() {
   const items = [
     { n: '01', t: 'Seamless replatforming', d: 'Migrate to Shopify without losing what works — while optimizing for growth.', metric: 'Zero',   unit: 'disruption',       tag: 'Migration' },
     { n: '02', t: 'Unify commerce',   d: 'One platform for storefront, B2B, and back-office. No reconciling.',           metric: 'One',    unit: 'system of record', tag: 'Revenue' },
-    { n: '03', t: 'Cut cost of ownership', d: 'Fewer tools, one partner. Retire the legacy stack and its renewals.',          metric: 'Lower',  unit: 'total cost',       tag: 'Finance' },
+    { n: '03', t: 'Low cost of ownership', d: 'Fewer tools, one partner. Retire the legacy stack and its renewals.',          metric: 'Lower',  unit: 'total cost',       tag: 'Finance' },
     { n: '04', t: 'Growth-ready foundation', d: 'Conversion, AOV, retention — engineered in, not bolted on.',                  metric: 'Higher', unit: 'AOV + LTV',        tag: 'Growth' },
     { n: '05', t: 'Free the team',         d: 'Automate the robot work. Let people do the work that grows the business.',     metric: 'Faster', unit: 'daily ops',        tag: 'Operations' }
   ];
@@ -405,7 +405,7 @@ function BPObjectives() {
 // ── 04 RECOMMENDED APPROACH ────────────────────────────────────────────────
 function BPApproach() {
   const steps = [
-    { n: 'Phase 1', t: 'Blueprint', d: 'Architecture, data model, integration map. A plan that holds up under scrutiny.', wk: '2–4 weeks' },
+    { n: 'Phase 1', t: 'Blueprint', d: 'Architecture, data model, integration map. A plan that holds up under scrutiny.', wk: '2 weeks' },
     { n: 'Phase 2', t: 'Build', d: 'Storefront, B2B, QuickBooks sync. Fixed scope, senior team, no surprises.', wk: 'Weeks 16+' },
     { n: 'Phase 3', t: 'Grow', d: 'Migrate, go live, then optimize conversion, AOV, and automation.', wk: 'Months 6–12' }
   ];
@@ -574,7 +574,7 @@ function BPScope() {
     { code: '02', t: 'Experience Design', d: 'A modern, conversion-focused storefront, built to scale.' },
     { code: '03', t: 'Solution Architecture', d: 'Solution architecture, roadmap and integration.' },
     { code: '04', t: 'B2B Enablement',    d: 'Catalogs, pricing tiers, NET terms, and account portals.' },
-    { code: '05', t: 'QuickBooks Integration', d: 'Bidirectional, real-time sync native to Shopify Plus.' },
+    { code: '05', t: 'System Integration', d: 'Bidirectional, real-time sync native to Shopify Plus.' },
     { code: '06', t: 'Data Migration',    d: 'Products, customers, order history, and SEO redirects.' },
     { code: '07', t: 'Launch & Hypercare Support',  d: 'QA, a go-live runbook, and 30-day post-launch care.', kind: 'base' }
   ];
@@ -725,7 +725,7 @@ function GfxChrome({ children }) {
         <div style={{ display:'flex', gap:11, marginLeft:6 }}>{['Intakes','Turbo','Exhaust','Fueling'].map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:8.5, fontWeight:700, letterSpacing:'0.04em', color:i===0?'var(--fg-1)':'var(--fg-3)' }}>{x}</span>))}</div>
         <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
           <span style={{ fontFamily:'var(--font-mono)', fontSize:8, color:'var(--fg-3)' }}>Search…</span>
-          <span style={{ fontFamily:'var(--font-mono)', fontSize:8, fontWeight:700, color:'var(--uc-paper)', background:'var(--uc-black)', padding:'3px 8px', borderRadius:3 }}>Cart 2</span>
+          <span style={{ fontFamily:'var(--font-mono)', fontSize:8, fontWeight:700, color:'#FFFFFF', background:'var(--uc-signal)', padding:'3px 8px', borderRadius:3 }}>Cart 2</span>
         </div>
       </div>
       {children}
@@ -775,7 +775,7 @@ function GfxCollection() {
         <div style={{ display:'flex', gap:9, marginLeft:4 }}>{['Intakes','Turbo','Exhaust','Fueling'].map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:i===1?'var(--fg-1)':'var(--fg-3)' }}>{x}</span>))}</div>
         <span style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:7 }}>
           <span style={{ width:110, height:18, borderRadius:999, border:'1px solid var(--line-2)', display:'flex', alignItems:'center', gap:4, padding:'0 9px', fontFamily:'var(--font-mono)', fontSize:7, color:'var(--fg-3)', whiteSpace:'nowrap', overflow:'hidden' }}><span style={{ fontSize:8 }}>⌕</span>Search products…</span>
-          <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--uc-paper)', background:'var(--uc-black)', padding:'3px 8px', borderRadius:3 }}>Cart 0</span>
+          <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'#FFFFFF', background:'var(--uc-signal)', padding:'3px 8px', borderRadius:3 }}>Cart 0</span>
         </span>
       </div>
 
@@ -848,7 +848,7 @@ function GfxCart() {
         <div style={{ display:'flex', alignItems:'center', gap:11, padding:'8px 14px', borderBottom:'1px solid var(--line-1)' }}>
           <BrandMark fontSize={11}/>
           <div style={{ display:'flex', gap:9, marginLeft:4 }}>{['Intakes','Turbo','Exhaust','Fueling'].map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:i===0?'var(--fg-1)':'var(--fg-3)' }}>{x}</span>))}</div>
-          <span style={{ marginLeft:'auto', fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--uc-paper)', background:'var(--uc-black)', padding:'3px 8px', borderRadius:3 }}>Cart 3</span>
+          <span style={{ marginLeft:'auto', fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'#FFFFFF', background:'var(--uc-signal)', padding:'3px 8px', borderRadius:3 }}>Cart 3</span>
         </div>
         {/* category title + breadcrumb */}
         <div style={{ padding:'11px 14px 9px', display:'flex', alignItems:'baseline', justifyContent:'space-between' }}>
@@ -915,7 +915,7 @@ function GfxCart() {
         <div style={{ marginTop:'auto', padding:'10px 13px', borderTop:'1px solid var(--line-1)' }}>
           <div style={{ display:'flex', justifyContent:'space-between', fontFamily:'var(--font-mono)', fontSize:8.5, color:'var(--fg-3)', marginBottom:3 }}><span>Subtotal</span><span>$3,734</span></div>
           <div style={{ display:'flex', justifyContent:'space-between', fontFamily:'var(--font-mono)', fontSize:8.5, color:'#3F8B5D', marginBottom:7 }}><span>Tier savings</span><span>−$300</span></div>
-          <span style={{ display:'block', textAlign:'center', padding:'9px', background:'var(--uc-black)', color:'var(--uc-paper)', borderRadius:3, fontSize:10, fontWeight:700 }}>Checkout · NET-30 · $3,434</span>
+          <span style={{ display:'block', textAlign:'center', padding:'9px', background:'var(--uc-signal)', color:'#FFFFFF', borderRadius:3, fontSize:10, fontWeight:700 }}>Checkout · NET-30 · $3,434</span>
         </div>
       </div>
     </div>
@@ -929,7 +929,7 @@ function GfxPDP() {
       <div style={{ display:'flex', alignItems:'center', gap:11, padding:'8px 14px', borderBottom:'1px solid var(--line-1)' }}>
         <BrandMark fontSize={11}/>
         <div style={{ display:'flex', gap:9, marginLeft:4 }}>{['Intakes','Turbo','Exhaust','Fueling'].map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:i===0?'var(--fg-1)':'var(--fg-3)' }}>{x}</span>))}</div>
-        <span style={{ marginLeft:'auto', fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--uc-paper)', background:'var(--uc-black)', padding:'3px 8px', borderRadius:3 }}>Cart 2</span>
+        <span style={{ marginLeft:'auto', fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'#FFFFFF', background:'var(--uc-signal)', padding:'3px 8px', borderRadius:3 }}>Cart 2</span>
       </div>
       {/* breadcrumb */}
       <div style={{ padding:'8px 14px 0', fontFamily:'var(--font-mono)', fontSize:7, letterSpacing:'0.08em', color:'var(--fg-3)' }}>HOME / COOLING / INTERCOOLERS</div>
@@ -974,7 +974,7 @@ function GfxPDP() {
                 <span style={{ padding:'8px 4px', minWidth:18, textAlign:'center', fontFamily:'var(--font-mono)', fontSize:9, fontWeight:700, color:'var(--fg-1)', borderLeft:'1px solid var(--line-1)', borderRight:'1px solid var(--line-1)' }}>1</span>
                 <span style={{ padding:'0 8px', fontFamily:'var(--font-mono)', fontSize:11, fontWeight:700, color:'var(--fg-2)' }}>+</span>
               </div>
-              <span style={{ flex:1, padding:'8px', textAlign:'center', background:'var(--uc-black)', color:'var(--uc-paper)', borderRadius:3, fontFamily:'var(--font-display)', fontSize:9.5, fontWeight:800 }}>Add to cart</span>
+              <span style={{ flex:1, padding:'8px', textAlign:'center', background:'var(--uc-signal)', color:'#FFFFFF', borderRadius:3, fontFamily:'var(--font-display)', fontSize:9.5, fontWeight:800 }}>Add to cart</span>
             </div>
             <span style={{ padding:'7px', textAlign:'center', border:'1px solid var(--uc-black)', borderRadius:3, fontFamily:'var(--font-display)', fontSize:9, fontWeight:700, color:'var(--fg-1)' }}>Request a Quote</span>
           </div>
@@ -997,7 +997,7 @@ function GfxPDP() {
             </div>
             <div style={{ display:'flex', alignItems:'center', gap:8 }}>
               <span style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, color:'var(--fg-3)', whiteSpace:'nowrap' }}>Bundle <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:12, color:'var(--fg-1)' }}>$1,947</span></span>
-              <span style={{ flex:1, padding:'6px', textAlign:'center', background:'var(--uc-black)', color:'var(--uc-paper)', borderRadius:3, fontFamily:'var(--font-display)', fontSize:8.5, fontWeight:700 }}>Add all 3</span>
+              <span style={{ flex:1, padding:'6px', textAlign:'center', background:'var(--uc-signal)', color:'#FFFFFF', borderRadius:3, fontFamily:'var(--font-display)', fontSize:8.5, fontWeight:700 }}>Add all 3</span>
             </div>
           </div>
         </div>
@@ -1011,7 +1011,7 @@ function GfxPDP() {
         </div>
         <div style={{ background:'var(--uc-cream)', padding:'11px 14px' }}>
           <div style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:7 }}>WHY BUYERS CHOOSE IT</div>
-          <div style={{ display:'flex', flexDirection:'column', gap:6 }}>{['Dyno-proven — lower IATs and consistent power, pull after pull.','Trade pricing and NET terms unlock at 4+ units.','Direct bolt-on fitment — no cutting, no fabrication.'].map((t,i)=>(<div key={i} style={{ display:'grid', gridTemplateColumns:'12px 1fr', gap:7, alignItems:'start' }}><span style={{ width:10, height:10, borderRadius:999, background:'var(--uc-signal)', marginTop:1, display:'flex', alignItems:'center', justifyContent:'center' }}><svg width="6" height="6" viewBox="0 0 12 12" fill="none"><path d="M2 6 L5 9 L10 3" stroke="var(--uc-black)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg></span><span style={{ fontFamily:'var(--font-serif)', fontSize:9, lineHeight:1.35, color:'var(--fg-2)' }}>{t}</span></div>))}</div>
+          <div style={{ display:'flex', flexDirection:'column', gap:6 }}>{['Dyno-proven — lower IATs and consistent power, pull after pull.','Trade pricing and NET terms unlock at 4+ units.','Direct bolt-on fitment — no cutting, no fabrication.'].map((t,i)=>(<div key={i} style={{ display:'grid', gridTemplateColumns:'12px 1fr', gap:7, alignItems:'start' }}><span style={{ width:10, height:10, borderRadius:999, background:'var(--uc-signal)', marginTop:1, display:'flex', alignItems:'center', justifyContent:'center' }}><svg width="6" height="6" viewBox="0 0 12 12" fill="none"><path d="M2 6 L5 9 L10 3" stroke="#FFFFFF" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg></span><span style={{ fontFamily:'var(--font-serif)', fontSize:9, lineHeight:1.35, color:'var(--fg-2)' }}>{t}</span></div>))}</div>
         </div>
       </div>
 
@@ -1108,7 +1108,7 @@ function GfxHomepage() {
         <div style={{ display:'flex', gap:11, marginLeft:6 }}>{nav.map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:i===0?'var(--fg-1)':'var(--fg-3)', position:'relative' }}>{x}{i===0 && <span style={{ position:'absolute', left:0, right:0, bottom:-9, height:2, background:'var(--uc-black)' }}/>}</span>))}</div>
         <span style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:7 }}>
           <span style={{ width:120, height:18, borderRadius:999, border:'1px solid var(--line-2)', display:'flex', alignItems:'center', gap:4, padding:'0 9px', fontFamily:'var(--font-mono)', fontSize:7, color:'var(--fg-3)', whiteSpace:'nowrap', overflow:'hidden' }}><span style={{ fontSize:8 }}>⌕</span>Search part or vehicle…</span>
-          <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--uc-paper)', background:'var(--uc-black)', padding:'3px 8px', borderRadius:3 }}>Cart 6</span>
+          <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'#FFFFFF', background:'var(--uc-signal)', padding:'3px 8px', borderRadius:3 }}>Cart 6</span>
         </span>
       </div>
 
@@ -1251,7 +1251,7 @@ function BPPerformance() {
               <ul style={{ listStyle:'none', padding:0, margin:'20px 0 0', display:'flex', flexDirection:'column', gap:14 }}>
                 {g.points.map(p => (
                   <li key={p.t} style={{ display:'grid', gridTemplateColumns:'16px minmax(0,1fr)', gap:12, alignItems:'start' }}>
-                    <span style={{ width:14, height:14, borderRadius:999, background:'var(--uc-signal)', display:'inline-flex', alignItems:'center', justifyContent:'center', marginTop:3, flexShrink:0 }}><svg width="8" height="8" viewBox="0 0 12 12" fill="none"><path d="M2 6 L5 9 L10 3" stroke="var(--uc-black)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></span>
+                    <span style={{ width:14, height:14, borderRadius:999, background:'var(--uc-signal)', display:'inline-flex', alignItems:'center', justifyContent:'center', marginTop:3, flexShrink:0 }}><svg width="8" height="8" viewBox="0 0 12 12" fill="none"><path d="M2 6 L5 9 L10 3" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></span>
                     <div>
                       <div style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:'clamp(15px, 1.3vw, 18px)', letterSpacing:'-0.012em', color:'var(--fg-1)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{p.t}</div>
                       <div style={{ fontFamily:'var(--font-serif)', fontSize:14, color:'var(--fg-2)', marginTop:3, lineHeight:1.45, display:'-webkit-box', WebkitLineClamp:2, WebkitBoxOrient:'vertical', overflow:'hidden', minHeight:'2.9em' }}>{p.d}</div>
@@ -1260,7 +1260,7 @@ function BPPerformance() {
                 ))}
               </ul>
             </div>
-            <div className="gfx-brand" style={{ order: i % 2 === 0 ? 2 : 1 }}>{g.gfx}</div>
+            <div className="gfx-brand" style={{ order: i % 2 === 0 ? 2 : 1, '--uc-signal': '#D6203B', '--on-signal': '#FFFFFF' }}>{g.gfx}</div>
           </div>
         ))}
       </div>
@@ -1290,7 +1290,7 @@ function GfxPhone({ kind }) {
               <BrandMark fontSize={14} family="var(--font-hero)" weight={800} letterSpacing="-0.045em"/>
             </span>
             <span style={{ display:'inline-flex', gap:6, alignItems:'center' }}>
-              <span style={{ display:'inline-flex', alignItems:'center', gap:5, height:22, padding:'0 9px', background:'var(--uc-black)', borderRadius:5, fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--uc-paper)' }}>⛒ Cart<span style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', minWidth:11, height:11, padding:'0 2px', background:'var(--uc-signal)', color:'var(--on-signal, var(--uc-black))', borderRadius:999, fontSize:6, fontWeight:800 }}>6</span></span>
+              <span style={{ display:'inline-flex', alignItems:'center', gap:5, height:22, padding:'0 9px', background:'var(--uc-signal)', borderRadius:5, fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'#FFFFFF' }}>⛒ Cart<span style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', minWidth:11, height:11, padding:'0 2px', background:'#FFFFFF', color:'#D6203B', borderRadius:999, fontSize:6, fontWeight:800 }}>6</span></span>
             </span>
           </div>
           {/* big open search */}
@@ -1410,7 +1410,8 @@ function BPContent() {
 
       <div className="gfx-brand" style={{
         marginTop:'clamp(32px, 4vw, 56px)',
-        display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:'clamp(16px, 2.5vw, 32px)'
+        display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:'clamp(16px, 2.5vw, 32px)',
+        '--uc-signal': '#D6203B', '--on-signal': '#FFFFFF'
       }}>
         {screens.map((s, i) => (
           <div key={i} style={{ display:'flex', flexDirection:'column', gap:18 }}>
