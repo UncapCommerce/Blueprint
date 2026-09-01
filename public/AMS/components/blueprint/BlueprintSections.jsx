@@ -2572,6 +2572,12 @@ function BPGrowth() {
     { label: 'Reporting', v: ['Monthly', 'Monthly', 'Bi-weekly performance review'] },
     { label: 'Primary focus', v: ['Stability & direction', 'Lower TCO, efficiency, controlled growth', 'Velocity, experimentation & scale'] },
   ];
+  const services = [
+    { t: 'Revenue.', d: 'We raise margin per order and average order value with upsells, cross-sells, bundles, and personalization. The store does more with the same traffic, and the top line keeps climbing after launch.' },
+    { t: 'Optimization.', d: 'We improve performance and conversion across the full funnel, from first click to checkout. Faster pages, fewer drop-offs, and more of the visitors you already have turning into orders.' },
+    { t: 'Retention.', d: 'We build the reasons buyers come back: email automation, self-service portals, quick reorders, and pro membership clubs. The second order gets easier, and so does the tenth.' },
+    { t: 'Operations.', d: 'We integrate your systems and automate the workflows that slow the team down. AI takes the robot work like data entry and reconciliation, so your people spend their time on the work that grows the business.' }
+  ];
   const [plan, setPlan] = React.useState('core');
   const check = (
     <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6 L5 9 L10 3" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -2591,6 +2597,20 @@ function BPGrowth() {
         compounding revenue operation. Retainers start the month after go-live, and run
         month-to-month after the first quarter — move up or down as the season demands.
       </p>
+      <div style={{ marginTop: 'clamp(32px, 4vw, 48px)', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
+        {services.map((sv, i) => (
+          <div key={i} style={{
+            background: 'var(--uc-paper)', border: '1px solid var(--line-2)', borderRadius: 5,
+            padding: 'clamp(22px, 2.6vw, 30px)', display: 'flex', flexDirection: 'column', gap: 12,
+            position: 'relative', overflow: 'hidden'
+          }}>
+            <span aria-hidden="true" style={{ position: 'absolute', top: 0, left: 0, width: 36, height: 3, background: 'var(--uc-signal)' }}/>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--fg-3)', letterSpacing: 0 }}>{String(i + 1).padStart(2, '0')} / 04</div>
+            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'clamp(20px, 2vw, 26px)', letterSpacing: '-0.02em', color: 'var(--fg-1)' }}>{sv.t}</div>
+            <div style={{ fontFamily: 'var(--font-serif)', fontSize: 14.5, lineHeight: 1.45, color: 'var(--fg-2)' }}>{sv.d}</div>
+          </div>
+        ))}
+      </div>
       <div style={{ marginTop: 'clamp(26px, 3.2vw, 40px)', overflowX: 'auto' }}>
         <div style={{ minWidth: 780, paddingTop: 22 }}>
           <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.1fr) repeat(3, minmax(0,1fr))', borderTop: '1px solid var(--line-2)' }}>
