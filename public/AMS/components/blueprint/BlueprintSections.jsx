@@ -2336,7 +2336,7 @@ function BPTeam() {
     { n: 'Denis Dyli', r: 'CEO, Principal', img: 'assets/team-denis.webp' },
     { n: 'Michael Johnson', r: 'Head of Services', img: 'assets/team-michael.webp' },
     { n: 'Jo Tan', r: 'Head of Design', img: 'assets/team-jo.webp' },
-    { n: 'Vishal Ranpariya', r: 'Head of Products', img: '' },
+    { n: 'Vishal Ranpariya', r: 'Head of Products', img: 'assets/team-vishal.webp' },
     { n: 'Jack Patel', r: 'Head of Solutions', img: 'assets/team-jack.webp' }
   ];
   return (
