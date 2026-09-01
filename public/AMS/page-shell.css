@@ -125,7 +125,9 @@ html { scroll-behavior: smooth; scroll-padding-top: 96px; }
     [style*="grid-template-columns: repeat(3, 1fr)"] {
       grid-template-columns: 1fr !important;
     }
-    [style*="grid-template-columns: repeat(4, 1fr)"] {
+    [style*="grid-template-columns: repeat(4, 1fr)"],
+    [style*="grid-template-columns: repeat(5, 1fr)"],
+    [style*="grid-template-columns: repeat(6, 1fr)"] {
       grid-template-columns: 1fr 1fr !important;
     }
     section { padding-left: 18px !important; padding-right: 18px !important; }
