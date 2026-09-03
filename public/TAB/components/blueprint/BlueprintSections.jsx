@@ -2632,7 +2632,7 @@ function BPGrowth() {
     { t: 'Retention.', d: 'Email automation, self-service portals, quick reorders, and membership clubs bring buyers back.' },
     { t: 'Operations.', d: 'We integrate your systems and automate the robot work, so your people focus on what grows the business.' }
   ];
-  const [plan, setPlan] = React.useState('optimize');
+  const plan = 'optimize'; // client has selected this package
   const check = (
     <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6 L5 9 L10 3" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
   );
@@ -2675,10 +2675,10 @@ function BPGrowth() {
             {PLANS.map((pl) => {
               const on = plan === pl.id;
               return (
-                <span key={pl.id} onClick={() => setPlan(pl.id)} style={{ display: 'flex', flexDirection: 'column', gap: 6, justifyContent: 'flex-end', cursor: 'pointer', position: 'relative', zIndex: on ? 1 : 0, padding: on ? '20px 18px 14px' : '16px 18px 14px', marginTop: on ? -18 : 0, borderBottom: '1px solid var(--line-2)', borderTop: '2px solid ' + (on ? 'var(--uc-black)' : 'transparent'), borderLeft: '2px solid ' + (on ? 'var(--uc-black)' : 'transparent'), borderRight: '2px solid ' + (on ? 'var(--uc-black)' : 'transparent'), borderRadius: on ? '10px 10px 0 0' : 0, background: on ? 'var(--uc-paper)' : 'transparent', boxShadow: on ? '0 -3px 0 var(--uc-signal) inset' : 'none' }}>
+                <span key={pl.id} style={{ display: 'flex', flexDirection: 'column', gap: 6, justifyContent: 'flex-end', position: 'relative', zIndex: on ? 1 : 0, padding: on ? '20px 18px 14px' : '16px 18px 14px', marginTop: on ? -18 : 0, borderBottom: '1px solid var(--line-2)', borderTop: '2px solid ' + (on ? 'var(--uc-black)' : 'transparent'), borderLeft: '2px solid ' + (on ? 'var(--uc-black)' : 'transparent'), borderRight: '2px solid ' + (on ? 'var(--uc-black)' : 'transparent'), borderRadius: on ? '10px 10px 0 0' : 0, background: on ? 'var(--uc-paper)' : 'transparent', boxShadow: on ? '0 -3px 0 var(--uc-signal) inset' : 'none' }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                     <span style={{ fontFamily: 'var(--font-hero)', fontWeight: 700, fontSize: 'clamp(19px, 1.9vw, 26px)', letterSpacing: '-0.035em', color: 'var(--fg-1)' }}>{pl.name}</span>
-                    {pl.id === 'optimize' ? <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', background: 'var(--uc-signal)', color: 'var(--uc-black)', borderRadius: 999, padding: '3px 7px' }}>Recommended</span> : null}
+                    {pl.id === 'optimize' ? <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', background: 'var(--uc-signal)', color: 'var(--uc-black)', borderRadius: 999, padding: '3px 7px' }}>Selected</span> : null}
                   </span>
                   <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, color: 'var(--fg-3)' }}>{pl.sub}</span>
                 </span>
@@ -2702,9 +2702,11 @@ function BPGrowth() {
             {PLANS.map((pl) => {
               const on = plan === pl.id;
               return (
-                <span key={pl.id} onClick={() => setPlan(pl.id)} style={{ padding: '4px 18px 20px', display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer', borderLeft: '2px solid ' + (on ? 'var(--uc-black)' : 'transparent'), borderRight: '2px solid ' + (on ? 'var(--uc-black)' : 'transparent'), borderBottom: '2px solid ' + (on ? 'var(--uc-black)' : 'transparent'), borderRadius: on ? '0 0 10px 10px' : 0, background: on ? 'var(--uc-paper)' : 'transparent' }}>
-                  <span style={{ flex: '0 0 auto', width: 20, height: 20, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid ' + (on ? 'var(--uc-black)' : 'var(--uc-stone-500)'), background: on ? 'var(--uc-signal)' : 'transparent', color: on ? 'var(--uc-black)' : 'transparent' }}>{check}</span>
-                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-2)' }}>{on ? 'Selected' : 'Choose'}</span>
+                <span key={pl.id} style={{ padding: '4px 18px 20px', display: 'flex', alignItems: 'center', gap: 10, borderLeft: '2px solid ' + (on ? 'var(--uc-black)' : 'transparent'), borderRight: '2px solid ' + (on ? 'var(--uc-black)' : 'transparent'), borderBottom: '2px solid ' + (on ? 'var(--uc-black)' : 'transparent'), borderRadius: on ? '0 0 10px 10px' : 0, background: on ? 'var(--uc-paper)' : 'transparent' }}>
+                  {on ? <>
+                    <span style={{ flex: '0 0 auto', width: 20, height: 20, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid var(--uc-black)', background: 'var(--uc-signal)', color: 'var(--uc-black)' }}>{check}</span>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-2)' }}>Selected</span>
+                  </> : null}
                 </span>
               );
             })}
