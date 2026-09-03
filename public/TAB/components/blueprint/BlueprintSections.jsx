@@ -2586,18 +2586,20 @@ function BPGrowth() {
   const PLANS = [
     { id: 'core', name: 'Core', sub: 'Advisory + essentials', price: '$2,500' },
     { id: 'optimize', name: 'Optimize', sub: 'Most popular', price: '$5,000' },
-    { id: 'accelerate', name: 'Accelerate', sub: 'Embedded partner', price: '$7,500+' },
+    { id: 'accelerate', name: 'Accelerate', sub: 'Embedded partner', price: '$9,000' },
   ];
   const GROWTH_ROWS = [
-    { label: 'Engagement model', v: ['Advisory-first support & essential execution', 'Operational optimization & execution', 'Embedded growth partnership'] },
-    { label: 'Service capacity', v: ['15 hrs / month', '35 hrs / month', '50+ hrs / month'] },
-    { label: 'Strategic planning', v: ['Monthly assessment & roadmap', 'Monthly assessment & roadmap', 'Bi-weekly strategy & planning'] },
-    { label: 'Exec alignment', v: ['Video walkthrough responses', 'Allocated 1-1 office hours', 'Quarterly mastermind session'] },
-    { label: 'CRO services', v: ['\u2014', 'Essential CRO', 'Dedicated CRO, SEO/GEO & retention'] },
-    { label: 'Cadence', v: ['Monthly call', 'Bi-weekly calls', 'Weekly calls'] },
-    { label: 'Account management', v: ['Shared delivery team', 'Senior-led delivery', 'Dedicated account manager'] },
-    { label: 'Reporting', v: ['Monthly', 'Monthly', 'Bi-weekly performance review'] },
-    { label: 'Primary focus', v: ['Stability & direction', 'Lower TCO, efficiency, controlled growth', 'Velocity, experimentation & scale'] },
+    { label: 'Engagement Model', v: ['Advisory-first support & essential execution', 'Operational optimization & execution', 'Embedded growth partnership'] },
+    { label: 'Service Capacity', v: ['15 hrs / month', '35 hrs / month', '65 hrs / month'] },
+    { label: 'Strategic Planning', v: ['Quarterly assessment & roadmap', 'Monthly assessment & roadmap', 'Bi-weekly strategy & planning'] },
+    { label: 'Founder & Exec Alignment', v: ['\u2014', 'Allocated 1-1 office hours', '1-1 office hours & mastermind sessions'] },
+    { label: 'CRO Services', v: ['\u2014', 'Essential CRO', 'Strategic CRO, SEO/GEO & Retention'] },
+    { label: 'Meetings & Cadence', v: ['Monthly call', 'Bi-weekly calls', 'Weekly calls'] },
+    { label: 'Account Management', v: ['Shared delivery team', 'Senior-led delivery', 'Dedicated account manager'] },
+    { label: 'Reporting & Insights', v: ['Quarterly', 'Monthly', 'Bi-weekly performance review'] },
+    { label: 'Primary Focus', v: ['Stability & direction', 'Lower TCO, efficiency, controlled growth', 'Velocity, experimentation & scale'] },
+    { label: 'Best For', v: ['Teams needing guidance, light execution, and a clear roadmap', 'Ops-led teams focused on efficiency, reliability, and measurable improvement', 'Teams requiring white-glove execution and weekly leadership involvement'] },
+    { label: 'Contract', v: ['Month-To-Month', 'Month-To-Month', 'Month-To-Month'] },
   ];
   const services = [
     { t: 'Revenue.', d: 'Upsells, cross-sells, bundles, and personalization raise order value, so the store does more with the same traffic.' },
