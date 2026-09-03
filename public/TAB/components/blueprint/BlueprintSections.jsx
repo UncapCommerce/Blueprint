@@ -200,7 +200,7 @@ function BPIntro() {
             {[
               { k: 'Prepared by', v: 'Denis Dyli', s: 'CEO & Principal Architect' },
               { k: 'Client lead',  v: 'William Graham',  s: 'CEO' },
-              { k: 'Company', v: 'TAB', s: '' },
+              { k: 'Company', v: 'Tab Products', s: '605 4th St. · Mayville, WI 53050' },
               { k: 'Valid through', v: validThrough,    s: validSub }
             ].map((c, i) => (
               <div key={i} style={{
