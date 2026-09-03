@@ -198,7 +198,7 @@ function BPIntro() {
             borderTop: '1px solid #1F1F1F'
           }}>
             {[
-              { k: 'Prepared by', v: 'Denis Dyli', s: 'Principal' },
+              { k: 'Prepared by', v: 'Denis Dyli', s: 'CEO & Principal Architect' },
               { k: 'Client lead',  v: 'William Graham',  s: 'CEO' },
               { k: 'Company', v: 'TAB', s: '' },
               { k: 'Valid through', v: validThrough,    s: validSub }
