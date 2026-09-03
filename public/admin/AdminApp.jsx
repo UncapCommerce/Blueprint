@@ -36,6 +36,25 @@
   // (fmtWhenTime); everything else is date-first (fmtWhen).
   const pad2 = (n) => String(n).padStart(2, '0');
   const fmtDateShort = (d) => `${pad2(d.getMonth() + 1)}/${pad2(d.getDate())}/${String(d.getFullYear()).slice(-2)}`;
+  // Single-field hex entry for color pickers: type #XXXXXX (or XXXXXX) and
+  // commit on blur/Enter; invalid input snaps back to the current color.
+  function HexEntry({ value, onCommit }) {
+    return (
+      <input
+        key={value}
+        defaultValue={(value || '').toUpperCase()}
+        spellCheck={false}
+        onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } }}
+        onBlur={(e) => {
+          const m = /^#?([0-9a-fA-F]{6})$/.exec(e.target.value.trim());
+          if (m) { const hex = '#' + m[1].toLowerCase(); if (hex !== value) onCommit(hex); }
+          else e.target.value = (value || '').toUpperCase();
+        }}
+        style={{ marginLeft: 'auto', width: 92, fontFamily: T.mono, fontSize: 16, color: T.fg1, background: 'transparent', border: 'none', outline: 'none', textAlign: 'right', padding: 0 }}
+      />
+    );
+  }
+
   const fmtWhen = (iso) => {
     if (!iso) return '';
     const d = new Date(iso);
@@ -2622,7 +2641,7 @@
                       <input type="color" value={v} onChange={(e) => setC(e.target.value)}
                         style={{ width: 34, height: 34, padding: 0, border: 'none', background: 'transparent', cursor: 'pointer' }}/>
                       <span style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 13, color: T.fg1 }}>{l}</span>
-                      <span style={{ marginLeft: 'auto', fontFamily: T.mono, fontSize: 11, color: T.fg3 }}>{v.toUpperCase()}</span>
+                      <HexEntry value={v} onCommit={setC}/>
                     </label>
                   ))}
                 </div>
@@ -3093,7 +3112,7 @@
                   <input type="color" value={v} onChange={(e) => setC(e.target.value)} onBlur={savePalette}
                     style={{ width: 34, height: 34, padding: 0, border: 'none', background: 'transparent', cursor: 'pointer' }}/>
                   <span style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 13, color: T.fg1 }}>{l}</span>
-                  <span style={{ marginLeft: 'auto', fontFamily: T.mono, fontSize: 11, color: T.fg3 }}>{v.toUpperCase()}</span>
+                  <HexEntry value={v} onCommit={(hex) => { setC(hex); persist({ palette: { prime: l === 'Prime' ? hex : prime, accent: l === 'Accent' ? hex : accent } }); }}/>
                 </label>
               ))}
             </div>
