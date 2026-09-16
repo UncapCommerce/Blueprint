@@ -2684,7 +2684,7 @@
                     <input key={c.email + ':' + (c.title || '')} defaultValue={c.title || ''} placeholder="Title" spellCheck={false}
                       onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } }}
                       onBlur={(e) => { const t = e.target.value.trim(); if (onTitle && t !== (c.title || '')) onTitle(c.email, t); }}
-                      style={{ flex: '1 1 auto', minWidth: 60, fontFamily: T.mono, fontSize: 16, color: T.fg2, background: 'transparent', border: 'none', outline: 'none', padding: 0 }}/>
+                      style={{ flex: '1 1 auto', minWidth: 60, fontFamily: T.mono, fontSize: 11, color: T.fg2, background: 'transparent', border: 'none', outline: 'none', padding: 0 }}/>
                   </div>
                 </div>
                 <select value={c.role} onChange={(e) => onRole(c.email, e.target.value)} aria-label={'Role for ' + (c.name || c.email)}
