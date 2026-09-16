@@ -3485,12 +3485,22 @@ async function handleAdminBpToken(request, env) {
   const blueprintId = normalizeBlueprintId(body.blueprintId);
 
   // The blueprint page reads this to render its "Valid through" date from the
-  // expiration an admin set in the app, rather than a hardcoded value. The
-  // meta and the session are independent reads — fetch them together.
-  const [bpMeta, sess] = await Promise.all([
+  // expiration an admin set in the app, and the intro card's client lead +
+  // company address from the company record. The reads are independent —
+  // fetch them together. Bespoke registry ids equal the company folder id,
+  // so the memoized getCompany covers the common case; the list scan only
+  // runs when a legacy draft id differs from the company id.
+  const [bpMeta, sess, coDirect] = await Promise.all([
     getBpMeta(env, blueprintId),
     getAdminSession(request, env),
+    getCompany(env, blueprintId),
   ]);
+  const bpCo = coDirect || await findCompanyByBlueprintId(env, blueprintId);
+  const company = bpCo ? {
+    name: bpCo.name || '',
+    address: bpCo.address || '',
+    lead: bpCo.leadContact ? { name: bpCo.leadContact.name || '', email: bpCo.leadContact.email || '' } : null,
+  } : null;
   const expiresAt = (bpMeta && bpMeta.expiresAt) || '';
   if (sess) {
     const token = genToken();
@@ -3499,7 +3509,7 @@ async function handleAdminBpToken(request, env) {
       JSON.stringify({ email: sess.email, admin: true, selfTest: true, blueprintId, ip: clientIp(request), userAgent: clientUa(request), ts: Date.now() }),
       { expirationTtl: SESSION_TTL_SECONDS }
     );
-    return json(200, { ok: true, token, expiresAt });
+    return json(200, { ok: true, token, expiresAt, company });
   }
   // Signed-in portal customers pass their own company's blueprint gate
   // silently — the gate already calls this endpoint on load.
@@ -3513,7 +3523,7 @@ async function handleAdminBpToken(request, env) {
         JSON.stringify({ email: portal.email, name: portal.name || '', portal: true, blueprintId, ip: clientIp(request), userAgent: clientUa(request), ts: Date.now() }),
         { expirationTtl: SESSION_TTL_SECONDS }
       );
-      return json(200, { ok: true, token, expiresAt });
+      return json(200, { ok: true, token, expiresAt, company });
     }
   }
   return json(401, { ok: false, error: 'Not signed in' });

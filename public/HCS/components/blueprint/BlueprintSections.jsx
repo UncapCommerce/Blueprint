@@ -103,6 +103,13 @@ function BPIntro() {
   const validThrough = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][expM - 1] + ' ' + expD + ', ' + expY;
   const validDays = Math.max(0, Math.floor((Date.UTC(expY, expM - 1, expD, 23, 59, 59) - Date.now()) / 86400000));
   const validSub = validDays === 1 ? '1 day' : validDays + ' days';
+  // Client lead + company address come from the company record in the app
+  // (surfaced on window.__bpCompany by the Gate), with static fallbacks.
+  const bpCo = (typeof window !== 'undefined' && window.__bpCompany) || null;
+  const leadName = (bpCo && bpCo.lead && bpCo.lead.name) || 'TBD';
+  const leadSub = (bpCo && bpCo.lead && bpCo.lead.email) || 'Client Lead';
+  const coName = (bpCo && bpCo.name) || 'Hydro-Chem Systems';
+  const coAddr = (bpCo && bpCo.address) || '';
   return (
     <section id="intro" data-bp-section="intro" style={{
       background: 'var(--uc-black)',
@@ -201,8 +208,8 @@ function BPIntro() {
           }}>
             {[
               { k: 'Prepared by', v: 'Denis Dyli', s: 'Principal' },
-              { k: 'Client lead',  v: 'TBD',  s: 'Client Lead' },
-              { k: 'Company', v: 'Hydro-Chem Systems', s: '' },
+              { k: 'Client lead',  v: leadName,  s: leadSub },
+              { k: 'Company', v: coName, s: coAddr },
               { k: 'Valid through', v: validThrough,    s: validSub }
             ].map((c, i) => (
               <div key={i} style={{
