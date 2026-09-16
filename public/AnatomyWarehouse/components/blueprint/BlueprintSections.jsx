@@ -93,6 +93,14 @@ function BPSerif({ children }) {
 function BPIntro() {
   const [r, setR] = React.useState(false);
   React.useEffect(() => { const t = setTimeout(() => setR(true), 80); return () => clearTimeout(t); }, []);
+  // "Valid through" comes from the expiration set on this blueprint in the app
+  // (surfaced on window.__bpExpiresAt by the Gate); fall back if none is set.
+  const bpExp = (typeof window !== 'undefined' && window.__bpExpiresAt) || '';
+  const expMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(bpExp);
+  const [expY, expM, expD] = expMatch ? [+expMatch[1], +expMatch[2], +expMatch[3]] : [2026, 9, 30];
+  const validThrough = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][expM - 1] + ' ' + expD + ', ' + expY;
+  const validDays = Math.max(0, Math.floor((Date.UTC(expY, expM - 1, expD, 23, 59, 59) - Date.now()) / 86400000));
+  const validSub = validDays === 1 ? '1 day' : validDays + ' days';
   return (
     <section id="intro" data-bp-section="intro" style={{
       background: 'var(--uc-black)',
@@ -192,7 +200,7 @@ function BPIntro() {
               { k: 'Prepared by', v: 'Denis Dyli', s: 'CEO, Principal' },
               { k: 'Client lead',  v: 'Liz Huff',   s: 'CEO' },
               { k: 'Company',      v: 'Anatomy Warehouse', s: null, a: '8047 Monticello Ave\nSkokie, IL 60076' },
-              { k: 'Valid through', v: 'Jun 30, 2026',    s: '7 days' }
+              { k: 'Valid through', v: validThrough,    s: validSub }
             ].map((c, i) => (
               <div key={i} style={{
                 padding: '14px 0', borderBottom: '1px solid #1F1F1F',
@@ -1838,8 +1846,7 @@ function BPB2B() {
     { t: 'Quotes & approvals', d: 'Request, negotiate, and convert quotes to orders inside Shopify.' },
     { t: 'Payment terms', d: 'NET-30/45/60, PO numbers, and credit limits at checkout.' },
     { t: 'Quick order & reorder', d: 'One-click reorders, saved lists, and fast repeat ordering.' },
-    { t: 'Sales rep tools', d: 'Order on behalf of, account dashboards, and assisted selling.' },
-    { t: 'Quote request management', d: 'Capture, review, negotiate, and convert quote requests into orders — powered by the Uncap Quotes Shopify app.' }
+    { t: 'Sales rep tools', d: 'Order on behalf of, account dashboards, and assisted selling.' }
   ];
   const channels = ['DTC Storefront', 'B2B Portal', 'Quote Management', 'Sales Reps'];
   return (
@@ -2503,12 +2510,36 @@ function BPInvestment() {
 
 // ── 11 GROWTH ───────────────────────────────────────────────────────────────
 function BPGrowth() {
-  const services = [
-    { t: 'Shopify Support', d: 'Design, development, integrations, upgrades, and new-feature enablement — on call.' },
-    { t: 'Performance Optimization', d: 'Constantly optimizing experience, speed, conversion, and the tech stack behind it.' },
-    { t: 'Revenue Growth', d: 'Optimizing Product Search & Discovery, AOV, checkout, and self-serve buying.' },
-    { t: 'Retention Growth', d: 'Loyalty programs, email/text automations, optimization, automation and B2B enablement.' }
+  // Same plan data and selector as the estimate template's Managed Growth
+  // table (estimate-template/EstimateTemplate.jsx) — keep the two in sync.
+  const PLANS = [
+    { id: 'core', name: 'Core', sub: 'Advisory + essentials', price: '$2,500' },
+    { id: 'optimize', name: 'Optimize', sub: 'Most popular', price: '$5,000' },
+    { id: 'accelerate', name: 'Accelerate', sub: 'Embedded partner', price: '$9,000' },
   ];
+  const GROWTH_ROWS = [
+    { label: 'Engagement Model', v: ['Advisory-first support & essential execution', 'Operational optimization & execution', 'Embedded growth partnership'] },
+    { label: 'Service Capacity', v: ['15 hrs / month', '35 hrs / month', '65 hrs / month'] },
+    { label: 'Strategic Planning', v: ['Quarterly assessment & roadmap', 'Monthly assessment & roadmap', 'Bi-weekly strategy & planning'] },
+    { label: 'Founder & Exec Alignment', v: ['\u2014', 'Allocated 1-1 office hours', '1-1 office hours & mastermind sessions'] },
+    { label: 'CRO Services', v: ['\u2014', 'Essential CRO', 'Strategic CRO, SEO/GEO & Retention'] },
+    { label: 'Meetings & Cadence', v: ['Monthly call', 'Bi-weekly calls', 'Weekly calls'] },
+    { label: 'Account Management', v: ['Shared delivery team', 'Senior-led delivery', 'Dedicated account manager'] },
+    { label: 'Reporting & Insights', v: ['Quarterly', 'Monthly', 'Bi-weekly performance review'] },
+    { label: 'Primary Focus', v: ['Stability & direction', 'Lower TCO, efficiency, controlled growth', 'Velocity, experimentation & scale'] },
+    { label: 'Best For', v: ['Teams needing guidance, light execution, and a clear roadmap', 'Ops-led teams focused on efficiency, reliability, and measurable improvement', 'Teams requiring white-glove execution and weekly leadership involvement'] },
+    { label: 'Contract', v: ['Month-To-Month', 'Month-To-Month', 'Month-To-Month'] },
+  ];
+  const services = [
+    { t: 'Revenue.', d: 'Upsells, cross-sells, bundles, and personalization raise order value, so the store does more with the same traffic.' },
+    { t: 'Optimization.', d: 'Faster pages, fewer drop-offs, and more of the visitors you already have turning into orders.' },
+    { t: 'Retention.', d: 'Email automation, self-service portals, quick reorders, and membership clubs bring buyers back.' },
+    { t: 'Operations.', d: 'We integrate your systems and automate the robot work, so your people focus on what grows the business.' }
+  ];
+  const plan = 'optimize'; // client has selected this package
+  const check = (
+    <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6 L5 9 L10 3" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
+  );
   return (
     <BPSection id="growth" n="16" label="Growth" paper tail="AFTER LAUNCH">
       <BPHeadline>
@@ -2521,34 +2552,72 @@ function BPGrowth() {
         lineHeight: 1.5, color: 'var(--fg-2)'
       }}>
         Post-launch, we stay embedded as your growth team — turning a live store into a
-        compounding revenue operation. Managed monthly, measured every quarter.
+        compounding revenue operation. Retainers start the month after go-live, and run
+        month-to-month after the first quarter — move up or down as the season demands.
       </p>
-      <div style={{ marginTop: 'clamp(32px, 4vw, 48px)', display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
-        {services.map((s, i) => (
+      <div style={{ marginTop: 'clamp(32px, 4vw, 48px)', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
+        {services.map((sv, i) => (
           <div key={i} style={{
-            background: 'var(--uc-paper)', border: '1px solid var(--line-2)', borderRadius: 5,
+            background: '#0F0F0F', border: '1px solid #1F1F1F', borderRadius: 8,
             padding: 'clamp(22px, 2.6vw, 30px)', display: 'flex', flexDirection: 'column', gap: 12,
-            position: 'relative', overflow: 'hidden'
+            position: 'relative', overflow: 'hidden', color: 'var(--uc-paper)'
           }}>
-            <span aria-hidden="true" style={{ position: 'absolute', top: 0, left: 0, width: 36, height: 3, background: 'var(--uc-signal)' }}/>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--fg-3)', letterSpacing: 0 }}>{String(i + 1).padStart(2, '0')} / 04</div>
-            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'clamp(20px, 2vw, 26px)', letterSpacing: '-0.02em', color: 'var(--fg-1)' }}>{s.t}</div>
-            <div style={{ fontFamily: 'var(--font-serif)', fontSize: 14.5, lineHeight: 1.45, color: 'var(--fg-2)' }}>{s.d}</div>
+            <span aria-hidden="true" style={{ position: 'absolute', right: 22, bottom: -28, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(90px, 9vw, 150px)', letterSpacing: '-0.05em', lineHeight: 1, color: 'rgba(255,255,255,0.05)', pointerEvents: 'none', userSelect: 'none' }}>{String(i + 1).padStart(2, '0')}</span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--uc-stone-500)', letterSpacing: '0.06em' }}>{String(i + 1).padStart(2, '0')} / 04</span>
+              <span aria-hidden="true" style={{ width: 16, height: 3, background: 'var(--uc-signal)' }}/>
+            </div>
+            <div style={{ fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'clamp(22px, 2.2vw, 30px)', letterSpacing: '-0.025em', color: 'var(--uc-paper)', position: 'relative' }}>{sv.t}</div>
+            <div style={{ fontFamily: 'var(--font-serif)', fontSize: 14.5, lineHeight: 1.5, color: 'var(--uc-stone-300)', position: 'relative', textWrap: 'pretty' }}>{sv.d}</div>
           </div>
         ))}
       </div>
-      <div style={{
-        marginTop: 24, padding: '18px 22px', background: 'var(--uc-bone)',
-        border: '1px solid var(--line-1)', borderRadius: 5,
-        display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 16, flexWrap: 'wrap'
-      }}>
-        <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 15, color: 'var(--fg-1)' }}>
-          Uncap Growth: Optimize Package · <span style={{ fontFamily: 'var(--font-hero)', fontWeight: 800 }}>$5k / mo</span>
-        </div>
-        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--fg-3)', letterSpacing: '0.06em' }}>
-          12 MONTH RETAINER
+      <div style={{ marginTop: 'clamp(26px, 3.2vw, 40px)', overflowX: 'auto' }}>
+        <div style={{ minWidth: 780, paddingTop: 22 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1.1fr) repeat(3, minmax(0,1fr))', borderTop: '1px solid var(--line-2)' }}>
+            <span style={{ padding: '16px 18px 14px 0', borderBottom: '1px solid var(--line-2)', display: 'flex', alignItems: 'flex-end', fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--fg-3)' }}>Compare</span>
+            {PLANS.map((pl) => {
+              const on = plan === pl.id;
+              return (
+                <span key={pl.id} style={{ display: 'flex', flexDirection: 'column', gap: 6, justifyContent: 'flex-end', position: 'relative', zIndex: on ? 1 : 0, padding: on ? '20px 18px 14px' : '16px 18px 14px', marginTop: on ? -18 : 0, borderBottom: '1px solid var(--line-2)', borderTop: '2px solid ' + (on ? 'var(--uc-black)' : 'transparent'), borderLeft: '2px solid ' + (on ? 'var(--uc-black)' : 'transparent'), borderRight: '2px solid ' + (on ? 'var(--uc-black)' : 'transparent'), borderRadius: on ? '10px 10px 0 0' : 0, background: on ? 'var(--uc-paper)' : 'transparent', boxShadow: on ? '0 -3px 0 var(--uc-signal) inset' : 'none' }}>
+                  <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                    <span style={{ fontFamily: 'var(--font-hero)', fontWeight: 700, fontSize: 'clamp(19px, 1.9vw, 26px)', letterSpacing: '-0.035em', color: 'var(--fg-1)' }}>{pl.name}</span>
+                    {pl.id === 'optimize' ? <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', background: 'var(--uc-signal)', color: 'var(--uc-black)', borderRadius: 999, padding: '3px 7px' }}>Selected</span> : null}
+                  </span>
+                  <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, color: 'var(--fg-3)' }}>{pl.sub}</span>
+                </span>
+              );
+            })}
+            {GROWTH_ROWS.map((r, ri) => (
+              <React.Fragment key={ri}>
+                <span style={{ padding: '12px 18px 12px 0', borderBottom: '1px solid var(--line-1)', fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 13, letterSpacing: '-0.005em', color: 'var(--fg-1)' }}>{r.label}</span>
+                {PLANS.map((pl, i) => {
+                  const on = plan === pl.id;
+                  return <span key={pl.id} style={{ padding: '12px 18px', borderBottom: '1px solid var(--line-1)', borderLeft: '2px solid ' + (on ? 'var(--uc-black)' : 'transparent'), borderRight: '2px solid ' + (on ? 'var(--uc-black)' : 'transparent'), background: on ? 'var(--uc-paper)' : 'transparent', color: on ? 'var(--fg-1)' : 'var(--fg-2)', fontWeight: on ? 500 : 400, fontFamily: 'var(--font-sans)', fontSize: 13.5, lineHeight: 1.45 }}>{r.v[i]}</span>;
+                })}
+              </React.Fragment>
+            ))}
+            <span style={{ padding: '18px 18px 8px 0', fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--fg-3)', display: 'flex', alignItems: 'center' }}>Monthly investment</span>
+            {PLANS.map((pl) => {
+              const on = plan === pl.id;
+              return <span key={pl.id} style={{ padding: '18px 18px 8px', fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(22px, 2.3vw, 30px)', letterSpacing: '-0.04em', color: 'var(--fg-1)', borderLeft: '2px solid ' + (on ? 'var(--uc-black)' : 'transparent'), borderRight: '2px solid ' + (on ? 'var(--uc-black)' : 'transparent'), background: on ? 'var(--uc-paper)' : 'transparent' }}>{pl.price}<span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, fontWeight: 500, letterSpacing: 0, color: 'var(--fg-3)' }}>/mo</span></span>;
+            })}
+            <span/>
+            {PLANS.map((pl) => {
+              const on = plan === pl.id;
+              return (
+                <span key={pl.id} style={{ padding: '4px 18px 20px', display: 'flex', alignItems: 'center', gap: 10, borderLeft: '2px solid ' + (on ? 'var(--uc-black)' : 'transparent'), borderRight: '2px solid ' + (on ? 'var(--uc-black)' : 'transparent'), borderBottom: '2px solid ' + (on ? 'var(--uc-black)' : 'transparent'), borderRadius: on ? '0 0 10px 10px' : 0, background: on ? 'var(--uc-paper)' : 'transparent' }}>
+                  {on ? <>
+                    <span style={{ flex: '0 0 auto', width: 20, height: 20, borderRadius: 999, display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid var(--uc-black)', background: 'var(--uc-signal)', color: 'var(--uc-black)' }}>{check}</span>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-2)' }}>Selected</span>
+                  </> : null}
+                </span>
+              );
+            })}
+          </div>
         </div>
       </div>
+      <p style={{ margin: '10px 0 0', fontFamily: 'var(--font-mono)', fontSize: 10.5, letterSpacing: '0.06em', color: 'var(--fg-3)' }}>RETAINER PRICING IS SEPARATE FROM THE PROJECT INVESTMENT ABOVE</p>
     </BPSection>
   );
 }
