@@ -69,6 +69,9 @@ html { font-optical-sizing: auto; }
   --uc-brand:        #495af3;   /* primary CTA blue */
   --uc-brand-hover:  #3647d8;   /* darker on hover */
   --uc-signal:       #E8FF52;   /* electric lime — used sparingly */
+  /* Storefront wireframes only (client palette): main + CTA */
+  --wf-main:         #002040;
+  --wf-cta:          #5ED144;
   --uc-signal-soft:  #F4FBC6;   /* tint */
   --uc-shopify:      #5A8A3A;   /* Shopify partner badge green */
 
