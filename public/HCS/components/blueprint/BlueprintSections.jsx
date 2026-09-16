@@ -106,8 +106,8 @@ function BPIntro() {
   // Client lead + company address come from the company record in the app
   // (surfaced on window.__bpCompany by the Gate), with static fallbacks.
   const bpCo = (typeof window !== 'undefined' && window.__bpCompany) || null;
-  const leadName = (bpCo && bpCo.lead && bpCo.lead.name) || 'TBD';
-  const leadSub = (bpCo && bpCo.lead && bpCo.lead.email) || 'Client Lead';
+  const leadName = (bpCo && bpCo.lead && bpCo.lead.name) || 'Jim Voss';
+  const leadSub = (bpCo && bpCo.lead && bpCo.lead.title) || 'VP of Sales & Marketing';
   const coName = (bpCo && bpCo.name) || 'Hydro-Chem Systems';
   const coAddr = (bpCo && bpCo.address) || '';
   return (

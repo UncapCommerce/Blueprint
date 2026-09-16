@@ -2617,7 +2617,7 @@
                 <div style={{ flex: 1 }}><Field label="Current platform" value={form.platform} onChange={set('platform')} placeholder="e.g. Magento Open Source"/></div>
                 <div style={{ flex: 1 }}><Field label="Current ERP" value={form.erp} onChange={set('erp')} placeholder="e.g. Sage X3"/></div>
               </div>
-              <ContactsEditor contacts={contacts} state={contactsState} onRole={setRole} onRemove={removeContact} onAdd={(c) => setContacts((l) => l.some((x) => x.email === c.email) ? l : [...l, c])}/>
+              <ContactsEditor contacts={contacts} state={contactsState} onRole={setRole} onRemove={removeContact} onAdd={(c) => setContacts((l) => l.some((x) => x.email === c.email) ? l : [...l, c])} onTitle={(email, title) => setContacts((l) => l.map((c) => c.email === email ? { ...c, title } : c))}/>
               <div>
                 <label style={S.label}>Company logo</label>
                 {logo ? (
@@ -2660,7 +2660,7 @@
 
   // Shared contact rows: role select + remove, plus a manual add row for
   // people who are not in Attio.
-  function ContactsEditor({ contacts, state, onRole, onRemove, onAdd }) {
+  function ContactsEditor({ contacts, state, onRole, onRemove, onAdd, onTitle }) {
     const [draft, setDraft] = useState({ name: '', email: '', title: '' });
     const add = () => {
       const email = draft.email.trim().toLowerCase();
@@ -2679,7 +2679,13 @@
               <div key={c.email} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: T.cream, border: `1px solid ${c.role === 'lead' ? T.black : T.line}`, borderRadius: 8 }}>
                 <div style={{ flex: '1 1 auto', minWidth: 0 }}>
                   <div style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 13.5, color: T.fg1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.name || c.email}</div>
-                  <div style={{ fontFamily: T.mono, fontSize: 11, color: T.fg3, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.email}{c.title ? ' · ' + c.title : ''}</div>
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, fontFamily: T.mono, fontSize: 11, color: T.fg3, marginTop: 2, minWidth: 0 }}>
+                    <span style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.email} ·</span>
+                    <input key={c.email + ':' + (c.title || '')} defaultValue={c.title || ''} placeholder="Title" spellCheck={false}
+                      onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); e.target.blur(); } }}
+                      onBlur={(e) => { const t = e.target.value.trim(); if (onTitle && t !== (c.title || '')) onTitle(c.email, t); }}
+                      style={{ flex: '1 1 auto', minWidth: 60, fontFamily: T.mono, fontSize: 16, color: T.fg2, background: 'transparent', border: 'none', outline: 'none', padding: 0 }}/>
+                  </div>
                 </div>
                 <select value={c.role} onChange={(e) => onRole(c.email, e.target.value)} aria-label={'Role for ' + (c.name || c.email)}
                   style={{ ...S.input, width: 'auto', flexShrink: 0, padding: '8px 10px', fontSize: 13, cursor: 'pointer' }}>
@@ -3066,7 +3072,7 @@
           <Row label="Current ERP"><InlineEdit value={form.erp} onSave={commitField('erp')} placeholder="e.g. Sage X3"/></Row>
 
           <Row label="Contacts">
-            <ContactsEditor contacts={contacts} state="done" onRole={setRole} onRemove={removeContact} onAdd={addContact}/>
+            <ContactsEditor contacts={contacts} state="done" onRole={setRole} onRemove={removeContact} onAdd={addContact} onTitle={(email, title) => applyContacts(contacts.map((c) => c.email === email ? { ...c, title } : c))}/>
           </Row>
 
           {inviteList.length ? (

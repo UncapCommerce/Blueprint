@@ -828,6 +828,7 @@ function sanitizeContact(raw) {
   return {
     attioId: (raw.attioId || '').toString().trim().slice(0, 100),
     name: (raw.name || '').toString().trim().slice(0, 200),
+    title: (raw.title || '').toString().trim().slice(0, 120),
     email,
   };
 }
@@ -3499,7 +3500,7 @@ async function handleAdminBpToken(request, env) {
   const company = bpCo ? {
     name: bpCo.name || '',
     address: bpCo.address || '',
-    lead: bpCo.leadContact ? { name: bpCo.leadContact.name || '', email: bpCo.leadContact.email || '' } : null,
+    lead: bpCo.leadContact ? { name: bpCo.leadContact.name || '', title: bpCo.leadContact.title || '', email: bpCo.leadContact.email || '' } : null,
   } : null;
   const expiresAt = (bpMeta && bpMeta.expiresAt) || '';
   if (sess) {
