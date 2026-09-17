@@ -2145,7 +2145,6 @@
 
   // ── Sales pipeline (CRM kanban) ──────────────────────────────────────
   const PIPELINE_STAGES = [
-    { key: 'opportunity', label: 'Opportunity', dot: '#9A8A5A' },
     { key: 'estimate',    label: 'Estimate',    dot: '#E4A11B' },
     { key: 'discovery',   label: 'Discovery',   dot: '#3A44C4' },
     { key: 'blueprint',   label: 'Blueprint',   dot: '#0A7A3B' },
@@ -2337,28 +2336,24 @@
   // the Pipeline columns so the team knows what each stage means and what to do.
   function SalesProcess() {
     const STEPS = [
-      { n: '01', label: 'Opportunity', dot: '#9A8A5A',
-        what: 'A prospect we’ve added to the pipeline but haven’t scoped yet. Every engagement starts here.',
-        trigger: 'A company is created with “+ Add company” on the Pipeline.',
-        todo: ['Confirm the fit and that there’s a real project.', 'Set the lead contact and capture the store URL + key people.', 'Agree on next step: a quick estimate or straight to discovery.'] },
-      { n: '02', label: 'Estimate', dot: '#E4A11B',
-        what: 'A ballpark investment and timeline so the client can gut-check budget before we invest in discovery.',
-        trigger: 'An estimate is created for the company. (Estimate tooling is coming soon; for now this is shared over email.)',
-        todo: ['Rough-scope the work from what we know.', 'Send a range, not a fixed price — that comes after discovery.', 'Get a verbal go-ahead to proceed to discovery.'] },
-      { n: '03', label: 'Discovery', dot: '#3A44C4',
+      { n: '01', label: 'Estimate', dot: '#E4A11B',
+        what: 'A ballpark investment and timeline so the client can gut-check budget before we invest in discovery. Every engagement starts here.',
+        trigger: 'A company is created with “+ Add company” on the Pipeline; build its estimate from the items catalog.',
+        todo: ['Confirm the fit, set the lead contact, and capture the store URL + key people.', 'Rough-scope the work and send a range, not a fixed price — that comes after discovery.', 'Get a verbal go-ahead to proceed to discovery.'] },
+      { n: '02', label: 'Discovery', dot: '#3A44C4',
         what: 'A structured deep-dive into the client’s systems, catalog, and requirements — the raw material for the blueprint.',
         trigger: 'A discovery is started and linked to the company (its status shows on the card and in the Hub).',
         todo: ['Send the discovery, or run it live with the client.', 'Map the current platform, ERP, and integrations.', 'Nail down scope so the blueprint holds up under scrutiny.'] },
-      { n: '04', label: 'Blueprint', dot: '#0A7A3B',
+      { n: '03', label: 'Blueprint', dot: '#0A7A3B',
         what: 'The fixed-scope proposal — architecture, scope, timeline, and investment — for the client to review and approve.',
         trigger: 'A blueprint is created for the company and marked ready; it appears in the client’s Hub.',
         todo: ['Draft and review the blueprint internally.', 'Share it through the Hub and walk the client through it.', 'Answer questions and revise until they’re ready to sign.'] },
-      { n: '05', label: 'Signed', dot: '#16A34A',
+      { n: '04', label: 'Signed', dot: '#16A34A',
         what: 'The client has approved the blueprint. The deal is won and the project is a go.',
         trigger: 'The client signs and approves the blueprint in the Hub.',
         todo: ['Kick off onboarding and collect access.', 'Hand off to the delivery team with the signed scope.', 'Confirm the payment schedule and start dates.'] },
-      { n: '06', label: 'Declined', dot: '#B3261E',
-        what: 'The client passed, or the opportunity went cold. Kept on record so we can re-engage later.',
+      { n: '05', label: 'Declined', dot: '#B3261E',
+        what: 'The client passed, or the deal went cold. Kept on record so we can re-engage later.',
         trigger: 'The company is moved to Declined from its profile.',
         todo: ['Their Hub access is fully disabled — no estimate, discovery, or blueprint.', 'Note why it was declined for future context.', 'Restore access from the profile if they come back.'] },
     ];

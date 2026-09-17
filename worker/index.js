@@ -5399,7 +5399,7 @@ async function handleAdminCompanyDecline(request, env) {
 }
 
 // GET /api/admin/pipeline — the Sales CRM board. Returns every company placed
-// into a stage (opportunity → estimate → discovery → blueprint → signed) with
+// into a stage (estimate → discovery → blueprint → signed) with
 // the data each card shows: lead contact, discovery status, blueprint number +
 // signed state, and quick-links. Stage is the furthest artifact that exists.
 async function handleAdminPipeline(request, env) {
@@ -5443,8 +5443,7 @@ async function handleAdminPipeline(request, env) {
       : (blueprint && blueprint.signed) ? 'signed'
       : blueprint ? 'blueprint'
       : discovery ? 'discovery'
-      : estimate ? 'estimate'
-      : 'opportunity';
+      : 'estimate';
     return {
       id: co.id, no: parseInt(co.no, 10) || null, name: co.name || co.id, hasLogo: !!co.hasLogo, updatedAt: co.updatedAt || '', declined: !!co.declined,
       leadContact: co.leadContact ? { name: co.leadContact.name || '', email: co.leadContact.email || '', title: co.leadContact.title || '' } : null,
