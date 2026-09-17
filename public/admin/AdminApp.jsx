@@ -1742,9 +1742,9 @@
           setResults(d[kind] || []);
           setFailed(false);
           setOpen(true);
-        } catch (_) {
+        } catch (err) {
           if (dead) return;
-          setResults([]); setFailed(true); setOpen(true);
+          setResults([]); setFailed(err.message || true); setOpen(true);
         } finally {
           if (!dead) setLoading(false);
         }
@@ -1782,7 +1782,7 @@
             {loading ? (
               <div style={{ padding: 12, fontFamily: T.sans, fontSize: 13, color: T.fg3 }}>Searching…</div>
             ) : failed ? (
-              <div style={{ padding: 12, fontFamily: T.sans, fontSize: 13, color: T.fg3 }}>Couldn't reach Attio — check it's connected.</div>
+              <div style={{ padding: 12, fontFamily: T.sans, fontSize: 13, color: '#B3261E' }}>{typeof failed === 'string' ? failed : "Couldn't reach Attio — check it's connected."}</div>
             ) : results.length === 0 ? (
               <div style={{ padding: 12, fontFamily: T.sans, fontSize: 13, color: T.fg3 }}>No matches in Attio</div>
             ) : results.map((r) => (
