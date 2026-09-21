@@ -2612,6 +2612,7 @@ const BLUEPRINT_REGISTRY = [
   { id: 'amsperformance', dir: 'AMS', name: 'AMS Performance', num: '020', channel: 'Inbound' },
   { id: 'tab', dir: 'TAB', name: 'TAB', num: '021', channel: 'Inbound' },
   { id: 'hydrochemsystems', dir: 'HCS', name: 'Hydro-Chem Systems', num: '022', channel: 'Inbound' },
+  { id: 'northwest', dir: 'NorthWest', name: 'The North West Company', num: '023', channel: 'Inbound' },
 ];
 
 function getCookie(request, name) {
