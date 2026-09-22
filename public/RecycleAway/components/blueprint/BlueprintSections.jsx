@@ -913,11 +913,11 @@ function GfxCart() {
           <div style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:6 }}>PAIRS WELL WITH</div>
           <div style={{ display:'flex', gap:6 }}>{[['Swing Lid','$18'],['Stream Decals','$9'],['Can Liners','$26']].map((u,i)=>(<div key={i} style={{ flex:1, border:'1px solid var(--line-1)', borderRadius:3, padding:5, display:'flex', flexDirection:'column', gap:3, background:'var(--uc-paper)' }}><div style={{ aspectRatio:'1/1', background:'var(--uc-stone-200)', borderRadius:2 }}/><span style={{ fontFamily:'var(--font-display)', fontWeight:600, fontSize:7, color:'var(--fg-1)' }}>{u[0]}</span><span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--uc-black)' }}>+ {u[1]}</span></div>))}</div>
         </div>
-        {/* Trade account upsell */}
+        {/* Membership club upsell */}
         <div style={{ padding:'10px 13px', background:'var(--uc-black)', color:'var(--uc-paper)', borderBottom:'1px solid var(--line-1)', display:'flex', gap:9, alignItems:'center' }}>
           <span style={{ width:18, height:18, borderRadius:999, border:'2px solid var(--ra-green)', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center' }}><span style={{ width:7, height:7, borderRadius:999, background:'var(--ra-green)' }}/></span>
-          <div style={{ flex:1 }}><div style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:9.5, color:'var(--uc-paper)' }}>Open a trade account <span style={{ color:'var(--ra-green)' }}>· NET 30</span></div><div style={{ fontFamily:'var(--font-mono)', fontSize:7, color:'var(--uc-stone-300)' }}>Pay later · bulk pricing · dedicated rep</div></div>
-          <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:800, color:'var(--uc-black)', background:'var(--ra-green)', padding:'4px 8px', borderRadius:3 }}>APPLY</span>
+          <div style={{ flex:1 }}><div style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:9.5, color:'var(--uc-paper)' }}>Join the Membership Club <span style={{ color:'var(--ra-green)' }}>−10% today</span></div><div style={{ fontFamily:'var(--font-mono)', fontSize:7, color:'var(--uc-stone-300)' }}>Member pricing · free shipping · early access to new products</div></div>
+          <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:800, color:'var(--uc-black)', background:'var(--ra-green)', padding:'4px 8px', borderRadius:3 }}>JOIN</span>
         </div>
         {/* totals + checkout */}
         <div style={{ marginTop:'auto', padding:'10px 13px', borderTop:'1px solid var(--line-1)' }}>
