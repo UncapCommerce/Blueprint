@@ -1509,16 +1509,16 @@ function BPTechStack() {
     { name: 'Shopify Knowledge Base',      fn: 'Help center & self-service',          pri: 'launch', cost: 'Free' },
     { name: 'Shopify Flow',                fn: 'Workflow automation',                 pri: 'launch', cost: 'Free' },
     { name: 'Shopify Bundles',             fn: 'Bundled & grouped products',          pri: 'launch', cost: 'Free' },
-    { name: 'Uncap Quotes',                fn: 'B2B quote management',                pri: 'start',  cost: '$90/mo' },
     { name: 'Shopify Marketplace Connect', fn: 'Sync to marketplaces',                pri: 'future', cost: 'Free' },
     { name: 'Shopify Messaging',           fn: 'Customer chat & conversations',       pri: 'launch', cost: 'Free' },
-    { name: 'Avalara',                     fn: 'Sales tax calculation & filing',      pri: 'start',  cost: 'Quote' },
+    { name: 'Avalara',                     fn: 'Sales tax calculation & filing',      pri: 'start',  cost: 'Included' },
+    { name: 'Uncap Quotes',                fn: 'B2B quote management',                pri: 'start',  cost: '$90/mo' },
     { name: 'Matrixify',                   fn: 'Bulk import / export & migration',    pri: 'start',  cost: '$50/mo' }
   ];
   const priMeta = {
     start:  { l: 'Needed to start',  c: 'var(--uc-signal)', fg: 'var(--uc-black)' },
     launch: { l: 'Needed on launch', c: '#FF8B37',          fg: 'var(--uc-black)' },
-    future: { l: 'Future phase',     c: 'transparent',      fg: 'var(--fg-3)', outline: true }
+    future: { l: 'Post launch',      c: 'transparent',      fg: 'var(--fg-3)', outline: true }
   };
   return (
     <BPSection id="techstack" n="08" label="Architecture" dark grid tail="WHAT IT RUNS ON">
@@ -1629,7 +1629,7 @@ function BPTechStack() {
       <div style={{ marginTop:16, display:'flex', gap:18, flexWrap:'wrap', fontFamily:'var(--font-mono)', fontSize:10, color:'var(--uc-stone-500)', letterSpacing:'0.06em' }}>
         <span style={{ display:'inline-flex', alignItems:'center', gap:6 }}><span style={{ width:8,height:8,borderRadius:999,background:'var(--uc-signal)' }}/>NEEDED TO START</span>
         <span style={{ display:'inline-flex', alignItems:'center', gap:6 }}><span style={{ width:8,height:8,borderRadius:999,background:'#FF8B37' }}/>NEEDED ON LAUNCH</span>
-        <span style={{ display:'inline-flex', alignItems:'center', gap:6 }}><span style={{ width:8,height:8,borderRadius:999,border:'1px solid #2B2B2B' }}/>FUTURE PHASE</span>
+        <span style={{ display:'inline-flex', alignItems:'center', gap:6 }}><span style={{ width:8,height:8,borderRadius:999,border:'1px solid #2B2B2B' }}/>POST LAUNCH</span>
         <span style={{ marginLeft:'auto' }}>↳ Swappable to your existing vendors</span>
       </div>
       </div>
