@@ -2312,7 +2312,7 @@ function BPInvestment() {
     'Front and back-end Shopify development',
     'Essential integrations: payments, shipping, core tools',
     'Data migration: products, customers, orders, content',
-    'Shopify-side ERP integration guidance',
+    'System integration',
     'Full B2B enablement: companies, catalogs, checkout',
     'Enriched customer account experience',
     'Workflow automation across your systems',
@@ -2320,17 +2320,16 @@ function BPInvestment() {
     'Go live, a clean handoff, and a 30-day warranty'
   ];
   const integration = [
-    'Scheduled SFTP exchange — secure, bidirectional flat files',
-    'Orders and customers exported from Shopify',
-    'Prices and inventory imported from your back office',
-    'Field-level mapping with validation and error handling',
-    'Live sync log and alerts inside Shopify admin',
-    'Dry-runs in staging, then a monitored cutover'
+    'Using Recycle Away UX design and theme',
+    'Using Recycle Away system and data architecture',
+    'Migrate data and content from Trashcans Warehouse',
+    'Configure and implement Shopify for Trashcans Warehouse',
+    'Complete system and app setup for Trashcans Warehouse'
   ];
   const schedule = [
-    { n: '01', amount: '$54,000', due: 'Due at signup', share: '1/2' },
-    { n: '02', amount: '$27,000', due: 'Due at design approval', share: '1/4' },
-    { n: '03', amount: '$27,000', due: 'Due at project completion', share: '1/4' }
+    { n: '01', amount: '$49,000', due: 'Due at signup', share: '1/2' },
+    { n: '02', amount: '$24,500', due: 'Due at design approval', share: '1/4' },
+    { n: '03', amount: '$24,500', due: 'Due at project completion', share: '1/4' }
   ];
   return (
     <BPSection id="investment" n="14" label="Investment" dark tail="FIXED · NO SURPRISES">
@@ -2346,7 +2345,7 @@ function BPInvestment() {
         {/* LEFT — identity + price */}
         <div style={{ padding: 'clamp(28px, 3.4vw, 52px)', display: 'flex', flexDirection: 'column', gap: 'clamp(18px, 2vw, 26px)' }}>
           <div>
-            <h3 style={{ margin: 0, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(40px, 5vw, 76px)', letterSpacing: '-0.045em', lineHeight: 0.9, color: 'var(--uc-paper)' }}>Shopify <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, fontSize: '0.62em', letterSpacing: '-0.02em' }}>Implementation</span></h3>
+            <h3 style={{ margin: 0, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(40px, 5vw, 76px)', letterSpacing: '-0.045em', lineHeight: 0.9, color: 'var(--uc-paper)' }}>Shopify <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, fontSize: '0.62em', letterSpacing: '-0.02em' }}>Replatforming</span></h3>
             <div style={{ marginTop: 'clamp(14px, 1.6vw, 20px)', fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 'clamp(17px, 1.6vw, 24px)', lineHeight: 1.25, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>Your store and your integrated systems, working as one.</div>
           </div>
           <p style={{ margin: 0, maxWidth: 460, fontFamily: 'var(--font-serif)', fontSize: 'clamp(14.5px, 1.2vw, 17px)', lineHeight: 1.55, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>
@@ -2357,7 +2356,7 @@ function BPInvestment() {
           {/* price — standout box */}
           <div style={{ padding: 'clamp(18px, 2vw, 26px) clamp(20px, 2.2vw, 28px)', background: 'var(--uc-signal)', borderRadius: 12, boxShadow: '0 22px 60px -26px rgba(232,255,82,0.45)' }}>
             <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--uc-black)' }}>Fixed price</div>
-            <div style={{ marginTop: 4, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(52px, 6vw, 88px)', letterSpacing: '-0.05em', lineHeight: 0.85, color: 'var(--uc-black)' }}>$76k</div>
+            <div style={{ marginTop: 4, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(52px, 6vw, 88px)', letterSpacing: '-0.05em', lineHeight: 0.85, color: 'var(--uc-black)' }}>$64k</div>
           </div>
 
           {/* walk away */}
@@ -2390,13 +2389,13 @@ function BPInvestment() {
       }}>
         <div style={{ padding: 'clamp(24px, 3vw, 44px)', display: 'flex', flexDirection: 'column', gap: 'clamp(16px, 1.8vw, 22px)' }}>
           <div>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--uc-stone-500)', marginBottom: 12 }}>Integration</div>
-            <h3 style={{ margin: 0, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(30px, 3.6vw, 54px)', letterSpacing: '-0.045em', lineHeight: 0.9, color: 'var(--uc-paper)' }}>FTP <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, fontSize: '0.62em', letterSpacing: '-0.02em' }}>File Synchronization</span></h3>
-            <div style={{ marginTop: 'clamp(12px, 1.4vw, 16px)', fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 'clamp(15px, 1.4vw, 20px)', lineHeight: 1.3, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>Prices, orders and customers — kept in step with your back office.</div>
+            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--uc-stone-500)', marginBottom: 12 }}>Cloning</div>
+            <h3 style={{ margin: 0, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(30px, 3.6vw, 54px)', letterSpacing: '-0.045em', lineHeight: 0.9, color: 'var(--uc-paper)' }}>Trashcans Warehouse <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, fontSize: '0.62em', letterSpacing: '-0.02em' }}>Replatforming</span></h3>
+            <div style={{ marginTop: 'clamp(12px, 1.4vw, 16px)', fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 'clamp(15px, 1.4vw, 20px)', lineHeight: 1.3, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>Your Trashcans Warehouse storefront, built on the Recycle Away foundation.</div>
           </div>
           <div style={{ marginTop: 'auto', alignSelf: 'flex-start', padding: 'clamp(14px, 1.6vw, 20px) clamp(20px, 2.2vw, 28px)', background: 'var(--uc-signal)', borderRadius: 12, boxShadow: '0 22px 60px -26px rgba(232,255,82,0.45)' }}>
             <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--uc-black)' }}>Fixed price</div>
-            <div style={{ marginTop: 4, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(40px, 4.4vw, 64px)', letterSpacing: '-0.05em', lineHeight: 0.85, color: 'var(--uc-black)' }}>$32k</div>
+            <div style={{ marginTop: 4, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(40px, 4.4vw, 64px)', letterSpacing: '-0.05em', lineHeight: 0.85, color: 'var(--uc-black)' }}>$34k</div>
           </div>
         </div>
         <div style={{ padding: 'clamp(24px, 3vw, 44px)', borderLeft: '1px solid #1F1F1F' }}>
