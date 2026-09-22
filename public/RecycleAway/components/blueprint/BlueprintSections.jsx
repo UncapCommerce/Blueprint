@@ -1809,8 +1809,7 @@ function BPB2B() {
     { t: 'Quotes & approvals', d: 'Request, negotiate, and convert quotes to orders inside Shopify.' },
     { t: 'Payment terms', d: 'NET-30/45/60, PO numbers, and credit limits at checkout.' },
     { t: 'Quick order & reorder', d: 'One-click reorders, saved lists, and fast repeat ordering.' },
-    { t: 'Sales rep tools', d: 'Order on behalf of, account dashboards, and assisted selling.' },
-    { t: 'Quote request management', d: 'Capture, review, negotiate, and convert quote requests into orders — powered by the Uncap Quotes Shopify app.' }
+    { t: 'Sales rep tools', d: 'Order on behalf of, account dashboards, and assisted selling.' }
   ];
   const channels = ['DTC Storefront', 'B2B Portal', 'Point of Sale', 'Sales Reps'];
   return (
