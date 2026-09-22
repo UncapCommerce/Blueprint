@@ -1811,7 +1811,7 @@ function BPB2B() {
     { t: 'Quick order & reorder', d: 'One-click reorders, saved lists, and fast repeat ordering.' },
     { t: 'Sales rep tools', d: 'Order on behalf of, account dashboards, and assisted selling.' }
   ];
-  const channels = ['DTC Storefront', 'B2B Portal', 'Point of Sale', 'Sales Reps'];
+  const channels = ['DTC Storefront', 'B2B Portal', 'Markets (CA)', 'Sales Reps'];
   return (
     <BPSection id="b2b" n="09" label="Unified" paper tail="ONE OPERATION">
       <BPHeadline>
