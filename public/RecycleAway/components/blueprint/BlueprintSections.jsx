@@ -2392,7 +2392,7 @@ function BPInvestment() {
             <h3 style={{ margin: 0, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(22px, 2.4vw, 36px)', letterSpacing: '-0.04em', lineHeight: 0.95, color: 'var(--uc-paper)' }}>Trashcans Warehouse <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, fontSize: '0.62em', letterSpacing: '-0.02em' }}>Replatforming</span></h3>
             <div style={{ marginTop: 'clamp(12px, 1.4vw, 16px)', fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 'clamp(15px, 1.4vw, 20px)', lineHeight: 1.3, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>Your Trashcans Warehouse storefront, built on the Recycle Away foundation.</div>
           </div>
-          <div style={{ marginTop: 'auto', alignSelf: 'flex-start', padding: 'clamp(14px, 1.6vw, 20px) clamp(20px, 2.2vw, 28px)', background: 'var(--uc-signal)', borderRadius: 12, boxShadow: '0 22px 60px -26px rgba(232,255,82,0.45)' }}>
+          <div style={{ marginTop: 'auto', padding: 'clamp(18px, 2vw, 26px) clamp(20px, 2.2vw, 28px)', background: 'var(--uc-signal)', borderRadius: 12, boxShadow: '0 22px 60px -26px rgba(232,255,82,0.45)' }}>
             <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--uc-black)' }}>Fixed price</div>
             <div style={{ marginTop: 4, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(40px, 4.4vw, 64px)', letterSpacing: '-0.05em', lineHeight: 0.85, color: 'var(--uc-black)' }}>$34k</div>
           </div>
