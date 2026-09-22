@@ -2390,7 +2390,7 @@ function BPInvestment() {
         <div style={{ padding: 'clamp(24px, 3vw, 44px)', display: 'flex', flexDirection: 'column', gap: 'clamp(16px, 1.8vw, 22px)' }}>
           <div>
             <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--uc-stone-500)', marginBottom: 12 }}>Cloning</div>
-            <h3 style={{ margin: 0, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(30px, 3.6vw, 54px)', letterSpacing: '-0.045em', lineHeight: 0.9, color: 'var(--uc-paper)' }}>Trashcans Warehouse <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, fontSize: '0.62em', letterSpacing: '-0.02em' }}>Replatforming</span></h3>
+            <h3 style={{ margin: 0, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(22px, 2.4vw, 36px)', letterSpacing: '-0.04em', lineHeight: 0.95, color: 'var(--uc-paper)' }}>Trashcans Warehouse <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, fontSize: '0.62em', letterSpacing: '-0.02em' }}>Replatforming</span></h3>
             <div style={{ marginTop: 'clamp(12px, 1.4vw, 16px)', fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 'clamp(15px, 1.4vw, 20px)', lineHeight: 1.3, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>Your Trashcans Warehouse storefront, built on the Recycle Away foundation.</div>
           </div>
           <div style={{ marginTop: 'auto', alignSelf: 'flex-start', padding: 'clamp(14px, 1.6vw, 20px) clamp(20px, 2.2vw, 28px)', background: 'var(--uc-signal)', borderRadius: 12, boxShadow: '0 22px 60px -26px rgba(232,255,82,0.45)' }}>
