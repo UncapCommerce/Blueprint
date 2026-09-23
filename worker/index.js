@@ -966,7 +966,7 @@ async function listBlueprintEvents(env, blueprintId) {
 // discoveries. The key carries an inverted timestamp so a plain prefix scan
 // returns newest-first (same trick as access:/discovery:). Best-effort — a
 // failed write must never block the action that triggered it.
-async function logActivity(env, ctx, ev) {
+async function logActivity(env, ctx, ev, request) {
   const ts = Date.now();
   const key = `activity:${(9_999_999_999_999 - ts).toString(36).padStart(10, '0')}:${genRandSlug()}`;
   const rec = {
@@ -979,6 +979,8 @@ async function logActivity(env, ctx, ev) {
     detail: (ev.detail || '').toString().slice(0, 300),
   };
   if (ev.ref) rec.ref = ev.ref.toString().slice(0, 120);
+  const cf = (request && request.cf) || null;
+  if (cf && cf.city) { rec.city = cf.city.toString().slice(0, 60); rec.region = (cf.regionCode || cf.region || '').toString().slice(0, 40); }
   const write = env.BLUEPRINT_AUTH.put(key, JSON.stringify(rec), { expirationTtl: ACCESS_LOG_TTL_SECONDS }).catch(() => {});
   if (ctx && ctx.waitUntil) ctx.waitUntil(write); else await write;
 }
@@ -1058,7 +1060,7 @@ async function handleSign(request, env, ctx) {
   // Self-test sessions write the record but never email.
   if (sess.selfTest) return json(200, { ok: true, skipped: 'self-test' });
 
-  await logActivity(env, ctx, { type: 'signed', entity: 'blueprint', id: sess.blueprintId, name: await bpDisplayName(env, sess.blueprintId), actor: sess.email, detail: `${name}${title ? ', ' + title : ''}` });
+  await logActivity(env, ctx, { type: 'signed', entity: 'blueprint', id: sess.blueprintId, name: await bpDisplayName(env, sess.blueprintId), actor: sess.email, detail: `${name}${title ? ', ' + title : ''}` }, request);
 
   const subject = `[Blueprint] ${sess.blueprintId} APPROVED by ${name} (${sess.email})`;
   const text =
@@ -1552,7 +1554,7 @@ async function handleShopifyCallback(request, env) {
 
   await env.BLUEPRINT_AUTH.put(SHOPIFY_TOKEN_KEY, accessToken);
   await env.BLUEPRINT_AUTH.put(SHOPIFY_SHOP_KEY, shop.toLowerCase());
-  await logActivity(env, null, { type: 'status', entity: 'company', id: 'shopify', name: 'Shopify', actor: 'system', detail: `Shopify connected (OAuth) — ${shop.toLowerCase()}` });
+  await logActivity(env, null, { type: 'status', entity: 'company', id: 'shopify', name: 'Shopify', actor: 'system', detail: `Shopify connected (OAuth) — ${shop.toLowerCase()}` }, request);
   return finish('Recurring revenue is now pulling paid orders from Shopify.', true);
 }
 
@@ -1792,7 +1794,7 @@ async function handleQboCallback(request, env) {
     expiresAt: Date.now() + ((d.expires_in || 3600) * 1000),
     realmId,
   }));
-  await logActivity(env, null, { type: 'status', entity: 'company', id: 'quickbooks', name: 'QuickBooks', actor: 'system', detail: `QuickBooks connected (OAuth) — realm ${realmId}` });
+  await logActivity(env, null, { type: 'status', entity: 'company', id: 'quickbooks', name: 'QuickBooks', actor: 'system', detail: `QuickBooks connected (OAuth) — realm ${realmId}` }, request);
   return finish('Fixed revenue is now syncing invoices and payments from QuickBooks.', true);
 }
 
@@ -1960,7 +1962,7 @@ async function handleGustoCallback(request, env) {
   if (!companyId) return finish('No payroll-admin company found on this Gusto account.', false);
 
   await env.BLUEPRINT_AUTH.put(GUSTO_TOKENS_KEY, JSON.stringify({ ...tokens, companyId }));
-  await logActivity(env, null, { type: 'status', entity: 'company', id: 'gusto', name: 'Gusto', actor: 'system', detail: `Gusto connected (OAuth) — company ${companyId}` });
+  await logActivity(env, null, { type: 'status', entity: 'company', id: 'gusto', name: 'Gusto', actor: 'system', detail: `Gusto connected (OAuth) — company ${companyId}` }, request);
   return finish('Payroll is now pulling from Gusto onto the P&L.', true);
 }
 
@@ -2708,11 +2710,11 @@ async function handleAdminBlueprintMeta(request, env) {
   await env.BLUEPRINT_AUTH.put(`bpmeta:${id}`, JSON.stringify(meta));
   const metaName = await bpDisplayName(env, id);
   if (typeof body.disabled !== 'undefined') {
-    await logActivity(env, null, { type: 'status', entity: 'blueprint', id, name: metaName, actor: sess.email, detail: meta.disabled ? 'Put on hold (disabled)' : 'Re-enabled' });
+    await logActivity(env, null, { type: 'status', entity: 'blueprint', id, name: metaName, actor: sess.email, detail: meta.disabled ? 'Put on hold (disabled)' : 'Re-enabled' }, request);
   } else if (typeof body.expiresAt !== 'undefined') {
-    await logActivity(env, null, { type: 'edited', entity: 'blueprint', id, name: metaName, actor: sess.email, detail: meta.expiresAt ? `Expiration set to ${meta.expiresAt}` : 'Expiration cleared' });
+    await logActivity(env, null, { type: 'edited', entity: 'blueprint', id, name: metaName, actor: sess.email, detail: meta.expiresAt ? `Expiration set to ${meta.expiresAt}` : 'Expiration cleared' }, request);
   } else if (typeof body.channel !== 'undefined') {
-    await logActivity(env, null, { type: 'edited', entity: 'blueprint', id, name: metaName, actor: sess.email, detail: meta.channel ? `Channel set to ${meta.channel}` : 'Channel cleared' });
+    await logActivity(env, null, { type: 'edited', entity: 'blueprint', id, name: metaName, actor: sess.email, detail: meta.channel ? `Channel set to ${meta.channel}` : 'Channel cleared' }, request);
   }
   return json(200, { ok: true, meta: { expiresAt: meta.expiresAt || '', disabled: !!meta.disabled, channel: meta.channel || '', expired: isBpExpired(meta) } });
 }
@@ -2795,7 +2797,7 @@ async function handleAdminSaveTos(request, env) {
     // Empty save = revert to this blueprint's own default rendering.
     await env.BLUEPRINT_AUTH.delete(`bptos:${id}`);
   }
-  await logActivity(env, null, { type: 'edited', entity: 'blueprint', id, name: await bpDisplayName(env, id), actor: sess.email, detail: (sections && sections.length) ? 'Terms of Service updated' : 'Terms reverted to standard' });
+  await logActivity(env, null, { type: 'edited', entity: 'blueprint', id, name: await bpDisplayName(env, id), actor: sess.email, detail: (sections && sections.length) ? 'Terms of Service updated' : 'Terms reverted to standard' }, request);
   return json(200, { ok: true, blueprintId: id, sections: sections && sections.length ? sections : DEFAULT_MSA_SECTIONS, isDefault: !(sections && sections.length) });
 }
 
@@ -2823,7 +2825,7 @@ async function handleAdminMarkSigned(request, env) {
       return json(403, { ok: false, error: 'Only Admin or Management can reopen a signed blueprint.' });
     }
     await env.BLUEPRINT_AUTH.delete(`bpsigned:${id}`);
-    await logActivity(env, null, { type: 'status', entity: 'blueprint', id, name: await bpDisplayName(env, id), actor: sess.email, detail: 'Marked open (signature cleared)' });
+    await logActivity(env, null, { type: 'status', entity: 'blueprint', id, name: await bpDisplayName(env, id), actor: sess.email, detail: 'Marked open (signature cleared)' }, request);
     return json(200, { ok: true, blueprintId: id, signature: null });
   }
 
@@ -2837,7 +2839,7 @@ async function handleAdminMarkSigned(request, env) {
     userAgent: 'manual-admin-entry',
   };
   await env.BLUEPRINT_AUTH.put(`bpsigned:${id}`, JSON.stringify(record));
-  await logActivity(env, null, { type: 'signed', entity: 'blueprint', id, name: await bpDisplayName(env, id), actor: sess.email, detail: 'Marked signed (on paper)' });
+  await logActivity(env, null, { type: 'signed', entity: 'blueprint', id, name: await bpDisplayName(env, id), actor: sess.email, detail: 'Marked signed (on paper)' }, request);
   return json(200, { ok: true, blueprintId: id, signature: record });
 }
 
@@ -3017,7 +3019,7 @@ async function handleAdminApproveUser(request, env) {
     : { approved: true, role: rawRole, approvedBy: sess.email, approvedAt: new Date().toISOString() };
   const user = await upsertAdminUser(env, email, patch);
   user.role = roleFromRecord(email, user);
-  await logActivity(env, null, { type: revoke ? 'deleted' : 'created', entity: 'user', id: email, name: email, actor: sess.email, detail: revoke ? 'User access revoked' : `User approved as ${rawRole}` });
+  await logActivity(env, null, { type: revoke ? 'deleted' : 'created', entity: 'user', id: email, name: email, actor: sess.email, detail: revoke ? 'User access revoked' : `User approved as ${rawRole}` }, request);
   return json(200, { ok: true, user });
 }
 
@@ -3202,7 +3204,7 @@ async function handleAdminCreateBlueprint(request, env, ctx) {
   const templateTos = await env.BLUEPRINT_AUTH.get(`bptos:${TOS_TEMPLATE_BLUEPRINT_ID}`);
   if (templateTos) await env.BLUEPRINT_AUTH.put(`bptos:${slug}`, templateTos);
 
-  await logActivity(env, null, { type: 'created', entity: 'blueprint', id: slug, name, actor: sess.email, detail: 'Blueprint draft created' });
+  await logActivity(env, null, { type: 'created', entity: 'blueprint', id: slug, name, actor: sess.email, detail: 'Blueprint draft created' }, request);
 
   // Draft the templated proposal content in the background from the company's
   // discovery answers, so the admin opens the editor to a filled-in draft
@@ -3422,7 +3424,7 @@ async function handleAdminDeleteBlueprint(request, env) {
   const owner = await findCompanyByBlueprintId(env, id);
   if (owner) { owner.blueprintId = ''; await putCompany(env, owner).catch(() => {}); }
 
-  await logActivity(env, null, { type: 'deleted', entity: 'blueprint', id, name: rec.name || id, actor: sess.email, detail: 'Blueprint draft deleted' });
+  await logActivity(env, null, { type: 'deleted', entity: 'blueprint', id, name: rec.name || id, actor: sess.email, detail: 'Blueprint draft deleted' }, request);
   return json(200, { ok: true });
 }
 
@@ -3444,14 +3446,14 @@ async function handleAdminCompanyArtifactDelete(request, env) {
   if (what === 'estimate') {
     await env.BLUEPRINT_AUTH.delete(`estimate:${co.id}`).catch(() => {});
     co.hasEstimate = false; co.estimateReady = false;
-    await logActivity(env, null, { type: 'deleted', entity: 'company', id: co.id, name: co.name, actor: sess.email, detail: 'Estimate deleted' });
+    await logActivity(env, null, { type: 'deleted', entity: 'company', id: co.id, name: co.name, actor: sess.email, detail: 'Estimate deleted' }, request);
   } else if (what === 'discovery') {
     if (co.discoveryHandle) {
       const discId = (await env.BLUEPRINT_AUTH.get(`dischandle:${co.discoveryHandle}`)) || co.discoveryHandle;
       await purgeDiscoveryById(env, discId).catch(() => {});
     }
     co.discoveryHandle = '';
-    await logActivity(env, null, { type: 'deleted', entity: 'company', id: co.id, name: co.name, actor: sess.email, detail: 'Discovery deleted' });
+    await logActivity(env, null, { type: 'deleted', entity: 'company', id: co.id, name: co.name, actor: sess.email, detail: 'Discovery deleted' }, request);
   } else if (what === 'blueprint') {
     if (co.blueprintId) {
       const clean = normalizeBlueprintId(co.blueprintId);
@@ -3459,7 +3461,7 @@ async function handleAdminCompanyArtifactDelete(request, env) {
       if (!BLUEPRINT_REGISTRY.some((b) => b.id === clean)) await purgeBlueprintDraft(env, clean).catch(() => {});
     }
     co.blueprintId = '';
-    await logActivity(env, null, { type: 'deleted', entity: 'company', id: co.id, name: co.name, actor: sess.email, detail: 'Blueprint removed' });
+    await logActivity(env, null, { type: 'deleted', entity: 'company', id: co.id, name: co.name, actor: sess.email, detail: 'Blueprint removed' }, request);
   } else {
     return json(400, { ok: false, error: 'Unknown artifact' });
   }
@@ -3948,7 +3950,7 @@ async function handleAdminDiscoveryTranscriptFill(request, env) {
     updatedAt: new Date().toISOString(),
     updatedBy: sess.email,
   }));
-  await logActivity(env, null, { type: 'disc-update', entity: 'discovery', id: disc.id, name: disc.company || disc.id, actor: sess.email, detail: `Filled ${filled} answers from the live call transcript` });
+  await logActivity(env, null, { type: 'disc-update', entity: 'discovery', id: disc.id, name: disc.company || disc.id, actor: sess.email, detail: `Filled ${filled} answers from the live call transcript` }, request);
   return json(200, { ok: true, filled, answers: merged });
 }
 
@@ -4034,7 +4036,7 @@ async function handleAdminDiscoveryPrefill(request, env) {
     updatedBy: sess.email,
   }));
   const docName = ((body.doc && body.doc.name) || 'document').toString().slice(0, 80);
-  await logActivity(env, null, { type: 'disc-update', entity: 'discovery', id, name: rec.company || id, actor: sess.email, detail: `Pre-filled ${Object.keys(clean).length} answers from ${docName}` });
+  await logActivity(env, null, { type: 'disc-update', entity: 'discovery', id, name: rec.company || id, actor: sess.email, detail: `Pre-filled ${Object.keys(clean).length} answers from ${docName}` }, request);
   return json(200, { ok: true, filled: Object.keys(clean).length });
 }
 
@@ -4064,7 +4066,7 @@ async function handleAdminDeleteDiscovery(request, env) {
     if (owner) { owner.discoveryHandle = ''; await putCompany(env, owner).catch(() => {}); }
   }
 
-  await logActivity(env, null, { type: 'deleted', entity: 'discovery', id, name: rec.company || id, actor: sess.email, detail: 'Discovery deleted' });
+  await logActivity(env, null, { type: 'deleted', entity: 'discovery', id, name: rec.company || id, actor: sess.email, detail: 'Discovery deleted' }, request);
   return json(200, { ok: true });
 }
 
@@ -4128,7 +4130,7 @@ async function handleAdminCreateDiscovery(request, env, ctx) {
   if (logo) await env.BLUEPRINT_AUTH.put(`disclogo:${id}`, JSON.stringify(logo)).catch(() => {});
   // Link it back so the customer's portal Discovery tab lights up.
   try { portalCo.discoveryHandle = handle; await putCompany(env, portalCo); } catch (_) {}
-  await logActivity(env, null, { type: 'created', entity: 'discovery', id, name: company, actor: sess.email, detail: 'Discovery created' });
+  await logActivity(env, null, { type: 'created', entity: 'discovery', id, name: company, actor: sess.email, detail: 'Discovery created' }, request);
 
   // Upgrade the wireframe profile with Claude-written content in the
   // background, so creation stays fast. The deterministic profile above is
@@ -4606,9 +4608,9 @@ async function handleDiscoverySaveAnswers(request, env, ctx) {
   await writeDiscoveryStatus(env, disc, status);
 
   if (complete && prev.status !== 'complete') {
-    await logActivity(env, ctx, { type: 'status', entity: 'discovery', id: disc.id, name: disc.company || disc.handle, actor: actor.email, detail: 'Discovery completed' });
+    await logActivity(env, ctx, { type: 'status', entity: 'discovery', id: disc.id, name: disc.company || disc.handle, actor: actor.email, detail: 'Discovery completed' }, request);
   } else if (prev.status === 'new') {
-    await logActivity(env, ctx, { type: 'edited', entity: 'discovery', id: disc.id, name: disc.company || disc.handle, actor: actor.email, detail: 'Discovery started' });
+    await logActivity(env, ctx, { type: 'edited', entity: 'discovery', id: disc.id, name: disc.company || disc.handle, actor: actor.email, detail: 'Discovery started' }, request);
   }
   return json(200, { ok: true, status });
 }
@@ -4669,7 +4671,7 @@ async function handleDiscoverySubmit(request, env, ctx) {
       name: disc.company || disc.handle, actor: who,
       detail: `${changes.length} ${changes.length === 1 ? 'entry' : 'entries'} updated`,
       ref: `${disc.id}:${ref}`,
-    });
+    }, request);
   }
   return json(200, { ok: true, changed: changes.length });
 }
@@ -4803,7 +4805,7 @@ async function handleAdminCompanyInvite(request, env) {
   const sent = results.filter((r) => r.ok).length;
   if (sent) {
     await putCompany(env, rec);
-    await logActivity(env, null, { type: 'view', entity: 'company', id: rec.id, name: rec.name, actor: sess.email, detail: `Portal invite sent to ${sent} contact${sent === 1 ? '' : 's'}` });
+    await logActivity(env, null, { type: 'view', entity: 'company', id: rec.id, name: rec.name, actor: sess.email, detail: `Portal invite sent to ${sent} contact${sent === 1 ? '' : 's'}` }, request);
   }
   return json(200, { ok: true, results, invites: rec.invites });
 }
@@ -5396,7 +5398,7 @@ async function handleAdminCompanyDecline(request, env) {
   const declined = body.declined !== false;
   rec.declined = declined;
   await putCompany(env, rec);
-  await logActivity(env, null, { type: declined ? 'deleted' : 'status', entity: 'company', id: rec.id, name: rec.name, actor: sess.email, detail: declined ? 'Declined — Hub access disabled' : 'Restored to pipeline — Hub access re-enabled' });
+  await logActivity(env, null, { type: declined ? 'deleted' : 'status', entity: 'company', id: rec.id, name: rec.name, actor: sess.email, detail: declined ? 'Declined — Hub access disabled' : 'Restored to pipeline — Hub access re-enabled' }, request);
   return json(200, { ok: true, declined });
 }
 
@@ -5505,7 +5507,7 @@ async function handleAdminCreateCompany(request, env) {
     rec.hasLogo = true;
   }
   await putCompany(env, rec);
-  await logActivity(env, null, { type: 'created', entity: 'company', id, name: rec.name, actor: sess.email, detail: 'Company added to portal' });
+  await logActivity(env, null, { type: 'created', entity: 'company', id, name: rec.name, actor: sess.email, detail: 'Company added to portal' }, request);
   return json(200, { ok: true, company: rec });
 }
 
@@ -5585,7 +5587,7 @@ async function handleAdminUpdateCompany(request, env) {
   if (typeof body.blueprintId === 'string') rec.blueprintId = normalizeBlueprintId(body.blueprintId) === 'unknown' && body.blueprintId.trim() === '' ? '' : body.blueprintId.trim().toLowerCase().replace(/[^a-z0-9_-]/g, '').slice(0, 60);
 
   await putCompany(env, rec);
-  await logActivity(env, null, { type: 'disc-update', entity: 'company', id: rec.id, name: rec.name, actor: sess.email, detail: 'Company profile updated' });
+  await logActivity(env, null, { type: 'disc-update', entity: 'company', id: rec.id, name: rec.name, actor: sess.email, detail: 'Company profile updated' }, request);
   return json(200, { ok: true, company: rec });
 }
 
@@ -5604,7 +5606,7 @@ async function handleAdminDeleteCompany(request, env) {
     await env.BLUEPRINT_AUTH.delete(`cofile:${rec.id}:${f.fid}`).catch(() => {});
   }
   await bustPipelineCache(env);
-  await logActivity(env, null, { type: 'deleted', entity: 'company', id: rec.id, name: rec.name, actor: sess.email, detail: 'Company removed from portal' });
+  await logActivity(env, null, { type: 'deleted', entity: 'company', id: rec.id, name: rec.name, actor: sess.email, detail: 'Company removed from portal' }, request);
   return json(200, { ok: true });
 }
 
@@ -5820,7 +5822,7 @@ async function handlePortalVerify(request, env, ctx) {
     JSON.stringify({ email, name, companyId: company.id, ts: Date.now() }),
     { expirationTtl: PORTAL_SESSION_TTL_SECONDS }
   );
-  await logActivity(env, ctx, { type: 'view', entity: 'company', id: company.id, name: company.name, actor: email, detail: 'Portal sign-in' });
+  await logActivity(env, ctx, { type: 'view', entity: 'company', id: company.id, name: company.name, actor: email, detail: 'Portal sign-in' }, request);
   return withSecurityHeaders(new Response(JSON.stringify({ ok: true, name }), {
     status: 200,
     headers: {

@@ -61,11 +61,22 @@
     if (isNaN(d.getTime())) return iso;
     return `${fmtDateShort(d)} ${pad2(d.getHours())}:${pad2(d.getMinutes())}`;
   };
+  // Relative day label for feeds: today / yesterday / N days ago / months / years.
+  const relDay = (d) => {
+    const day = (x) => Math.floor((x - new Date(x).getTimezoneOffset() * 60000) / 86400000);
+    const diff = day(Date.now()) - day(d.getTime());
+    if (diff <= 0) return 'today';
+    if (diff === 1) return 'yesterday';
+    if (diff < 30) return diff + ' days ago';
+    if (diff < 60) return 'a month ago';
+    if (diff < 365) return Math.floor(diff / 30) + ' months ago';
+    return diff < 730 ? 'a year ago' : Math.floor(diff / 365) + ' years ago';
+  };
   const fmtWhenTime = (iso) => {
     if (!iso) return '';
     const d = new Date(iso);
     if (isNaN(d.getTime())) return iso;
-    return `${pad2(d.getHours())}:${pad2(d.getMinutes())} · ${fmtDateShort(d)}`;
+    return `${relDay(d)} · ${pad2(d.getHours())}:${pad2(d.getMinutes())} · ${fmtDateShort(d)}`;
   };
   // Date-only strings: YYYY-MM-DD reformats directly (no Date.parse, so no
   // timezone drift); anything else parses, or passes through untouched.
@@ -2786,7 +2797,7 @@
                   <div style={{ fontFamily: T.sans, fontSize: 13, fontWeight: 650, color: T.fg1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{actionText(ev)}</div>
                   <div style={{ fontFamily: T.mono, fontSize: 10.5, color: T.fg3, marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{nameFor(ev.actor)}</div>
                 </div>
-                <div style={{ flexShrink: 0, fontFamily: T.mono, fontSize: 10, color: T.fg3, textAlign: 'right' }}>{fmtWhenTime(ev.ts)}</div>
+                <div style={{ flexShrink: 0, fontFamily: T.mono, fontSize: 10, color: T.fg3, textAlign: 'right' }}>{fmtWhenTime(ev.ts)}{ev.city ? ' · ' + ev.city + (ev.region ? ', ' + ev.region : '') : ''}</div>
               </div>
             );
           })
@@ -4298,7 +4309,7 @@
                         {ev.actor ? (
                           <div style={{ fontFamily: T.mono, fontSize: 10.5, color: T.fg2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{ev.actor}</div>
                         ) : null}
-                        <div style={{ fontFamily: T.mono, fontSize: 10, color: T.fg3, marginTop: 1 }}>{fmtWhenTime(ev.ts)}</div>
+                        <div style={{ fontFamily: T.mono, fontSize: 10, color: T.fg3, marginTop: 1 }}>{fmtWhenTime(ev.ts)}{ev.city ? ' · ' + ev.city + (ev.region ? ', ' + ev.region : '') : ''}</div>
                       </div>
                     </a>
                   );
