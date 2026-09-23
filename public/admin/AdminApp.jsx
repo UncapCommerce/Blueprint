@@ -4280,7 +4280,12 @@
                 {pageRows.map((ev, i) => {
                   const a = actStyle(ev.type);
                   const hasChanges = ev.type === 'disc-update' && ev.ref;
-                  const path = ev.entity === 'discovery' ? '/admin/discoveries' : ev.entity === 'company' ? '/admin/companies' : '/admin/blueprints';
+                  // Land on the entity itself, not its section list. Discoveries
+                  // have no admin detail page, so they keep the list.
+                  const path = ev.entity === 'discovery' ? '/admin/discoveries'
+                    : ev.entity === 'company' ? (ev.id ? '/admin/company/' + encodeURIComponent(ev.id) : '/admin/companies')
+                    : ev.entity === 'estimate' ? (ev.id ? '/admin/estimate/' + encodeURIComponent(ev.id) : '/admin/companies')
+                    : (ev.id ? '/admin/blueprint/' + encodeURIComponent(ev.id) : '/admin/blueprints');
                   const onRowClick = hasChanges
                     ? (e) => { e.preventDefault(); setChangesRef(ev.ref); }
                     : navClick(path);
@@ -4296,7 +4301,7 @@
                         <div style={{ fontFamily: T.sans, fontSize: 13, fontWeight: 700, color: T.fg1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                           {ev.name || ev.id}
                           <span style={{ fontFamily: T.mono, fontSize: 8.5, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: T.fg3, marginLeft: 7 }}>
-                            {ev.entity === 'discovery' ? 'Disc' : 'BP'}
+                            {ev.entity === 'discovery' ? 'Disc' : ev.entity === 'company' ? 'Co' : ev.entity === 'estimate' ? 'Est' : 'BP'}
                           </span>
                         </div>
                         {ev.detail ? (
