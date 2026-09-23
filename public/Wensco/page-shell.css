@@ -109,6 +109,9 @@ html { scroll-behavior: smooth; scroll-padding-top: 96px; }
     .uc-rise { opacity: 1 !important; transform: none !important; }
   }
 
+  /* Wensco brand theme for the Commerce/Content wireframes (from the design handoff) */
+  .wx-theme{--uc-signal:#C92934;--uc-brand:#C92934;--uc-brand-hover:#A8212B}
+
   /* ── Mobile (<=720px): collapse the fixed section-nav overlay, stack the
      multi-column content grids, and reclaim the desktop side padding.
      Grids are inline-styled; the browser serializes minmax(0,…) as
