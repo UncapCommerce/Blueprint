@@ -1540,6 +1540,8 @@ function BPTechStack() {
     { name: 'Shopify Digital Downloads', fn: 'Digital product delivery',          pri: 'start',  cost: 'Free' },
     { name: 'Shopify Knowledge Base',    fn: 'Help center + product docs',        pri: 'start',  cost: 'Free' },
     { name: 'Google & Facebook Apps',    fn: 'Free Shopify channels for catalog + ads',pri: 'start',  cost: '$0' },
+    { name: 'Google Analytics',          fn: 'Traffic + conversion analytics',    pri: 'launch', cost: '-' },
+    { name: 'Facebook Pixel',            fn: 'Ad tracking + retargeting',         pri: 'launch', cost: '-' },
     { name: 'Uncap Quotes',              fn: 'Quote management + B2B sales',      pri: 'start',  cost: '$100/mo' },
     { name: 'TaxCloud App',              fn: 'Tax compliance',                    pri: 'launch', cost: 'Free' },
     { name: 'Brightpearl App',           fn: 'ERP + inventory sync',              pri: 'launch', cost: 'Free' },
@@ -1655,11 +1657,11 @@ function BPTechStack() {
           );
         })}
         {/* Footer total */}
-        <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1.1fr) minmax(0,1.6fr) minmax(0,1.1fr) 120px', gap:16, padding:'14px 18px', borderTop:'1px solid #2B2B2B', background:'#0F0F0F', alignItems:'center' }}>
+        <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1.1fr) minmax(0,1.6fr) minmax(0,1.1fr) auto', gap:16, padding:'14px 18px', borderTop:'1px solid #2B2B2B', background:'#0F0F0F', alignItems:'center' }}>
           <span style={{ fontFamily:'var(--font-mono)', fontSize:10, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'var(--uc-signal)' }}>Est. monthly</span>
           <span style={{ fontFamily:'var(--font-serif)', fontSize:13, color:'var(--uc-stone-500)' }}>Start + launch stack, before optional &amp; future phases</span>
           <span/>
-          <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:'clamp(18px,1.8vw,24px)', letterSpacing:'-0.03em', color:'var(--uc-paper)', textAlign:'right' }}>~$2,505/mo</span>
+          <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:'clamp(18px,1.8vw,24px)', letterSpacing:'-0.03em', color:'var(--uc-paper)', textAlign:'right', whiteSpace:'nowrap' }}>~$2,505/mo</span>
         </div>
       </div>
       <div style={{ marginTop:16, display:'flex', gap:18, flexWrap:'wrap', fontFamily:'var(--font-mono)', fontSize:10, color:'var(--uc-stone-500)', letterSpacing:'0.06em' }}>
