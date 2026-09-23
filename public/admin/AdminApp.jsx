@@ -4258,9 +4258,13 @@
 
     const actStyle = actBadge;
 
-    const totalPages = events ? Math.max(1, Math.ceil(events.length / ACT_PAGE_SIZE)) : 1;
+    // Customer activity only: team (@uncap.com) and system events stay out of
+    // the dashboard feed. Events with no actor (client gate views) stay in.
+    const visible = events ? events.filter((ev) => !/@uncap\.com$/i.test(ev.actor || '') && ev.actor !== 'system') : null;
+
+    const totalPages = visible ? Math.max(1, Math.ceil(visible.length / ACT_PAGE_SIZE)) : 1;
     const pageSafe = Math.min(page, totalPages);
-    const pageRows = events ? events.slice((pageSafe - 1) * ACT_PAGE_SIZE, pageSafe * ACT_PAGE_SIZE) : [];
+    const pageRows = visible ? visible.slice((pageSafe - 1) * ACT_PAGE_SIZE, pageSafe * ACT_PAGE_SIZE) : [];
 
     return (
       <Page>
@@ -4270,9 +4274,9 @@
             <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>Loading…</div>
           ) : error ? (
             <div style={{ ...S.card, padding: 24, color: '#B3261E', fontFamily: T.sans, fontSize: 14 }}>{error}</div>
-          ) : events.length === 0 ? (
+          ) : visible.length === 0 ? (
             <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>
-              No activity yet. Creating, editing, viewing, or signing a blueprint or discovery will show up here.
+              No customer activity yet. Once a client views, updates, or signs something, it shows up here.
             </div>
           ) : (
             <>
@@ -4320,7 +4324,7 @@
                   );
                 })}
               </div>
-              {events.length > ACT_PAGE_SIZE && (
+              {visible.length > ACT_PAGE_SIZE && (
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 14, padding: '16px 0 4px' }}>
                   <button type="button" style={{ ...S.btnGhost, opacity: pageSafe <= 1 ? 0.5 : 1 }} disabled={pageSafe <= 1}
                     onClick={() => setPage((p) => Math.max(1, p - 1))}>← Prev</button>
