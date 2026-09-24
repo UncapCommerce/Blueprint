@@ -2617,6 +2617,7 @@ const BLUEPRINT_REGISTRY = [
   { id: 'northwest', dir: 'NorthWest', name: 'The North West Company', num: '023', channel: 'Inbound' },
   { id: 'recycleaway', dir: 'RecycleAway', name: 'Recycle Away', num: '024', channel: 'Inbound' },
   { id: 'wensco', dir: 'Wensco', name: 'WENSCO', num: '025', channel: 'Inbound' },
+  { id: 'oakwoodveneer', dir: 'OakwoodVeneer', name: 'Oakwood Veneer', num: '026', channel: 'Inbound' },
 ];
 
 function getCookie(request, name) {
