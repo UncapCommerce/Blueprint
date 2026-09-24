@@ -1505,8 +1505,8 @@ function BPTechStack() {
     { name: 'Shopify Search & Discovery',  fn: 'Search, filters & recommendations',   pri: 'launch', cost: 'Free' },
     { name: 'Shopify Checkout Blocks',     fn: 'Checkout customizations',             pri: 'launch', cost: 'Free' },
     { name: 'Shopify Knowledge Base',      fn: 'Help center & self-service',          pri: 'launch', cost: 'Free' },
-    { name: 'Shopify Marketplace Connect', fn: 'Sync to marketplaces',                pri: 'future', cost: 'Free' },
     { name: 'Shopify Flow',                fn: 'Workflow automation',                 pri: 'launch', cost: 'Free' },
+    { name: 'Shopify Forms',               fn: 'Lead capture & custom forms',         pri: 'launch', cost: 'Free' },
     { name: 'Shopify Bundles',             fn: 'Bundled & grouped products',          pri: 'launch', cost: 'Free' },
     { name: 'Shopify Inbox',               fn: 'Live chat & customer messaging',      pri: 'launch', cost: 'Free' },
     { name: 'Uncap Quotes',                fn: 'B2B quote management',                pri: 'start',  cost: '$90/mo' },
@@ -1541,7 +1541,7 @@ function BPTechStack() {
 
         {(() => {
           const layers = [
-            { tier:'04', name:'Growth & Intelligence', note:'After launch', tools:[['Shopify Flow','launch'],['JudgeMe','launch'],['Love Loyalty','launch'],['Shopify Marketplace Connect','future'],['Shopify Knowledge Base','launch']] },
+            { tier:'04', name:'Growth & Intelligence', note:'After launch', tools:[['Shopify Flow','launch'],['Shopify Forms','launch'],['JudgeMe','launch'],['Love Loyalty','launch'],['Shopify Knowledge Base','launch']] },
             { tier:'03', name:'Experience & Engagement', note:'Customer-facing', tools:[['Shopify Search & Discovery','launch'],['Shopify Checkout Blocks','launch'],['Shopify Bundles','launch'],['Shopify Inbox','launch'],['ShipperHQ','launch'],['Uncap Quotes','start']] },
             { tier:'02', name:'Data & Integration', note:'System of record', tools:[['Uncap Connect','start'],['Matrixify','start']] },
             { tier:'01', name:'Commerce Core', note:'Foundation', tools:[['Shopify','start']], core:true }
