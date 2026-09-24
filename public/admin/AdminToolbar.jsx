@@ -438,11 +438,11 @@
   }
 
   // ── Floating team toolbar ─────────────────────────────────────────────
-  // Rendered only for admin/preview sessions (clients never see it): a slim
-  // pill top-right with the three print modes and a hop back to the admin.
-  // Blueprint pages are opened from the Pipeline, the company profile, and
-  // the Blueprints list — the toolbar makes print available from all of
-  // them without hunting for the list's Print menu.
+  // Rendered only for admin/preview sessions (clients never see it): a
+  // single print icon top-right that opens a dropdown with the three
+  // print modes. Blueprint pages are opened from the Pipeline, the
+  // company profile, and the Blueprints list — the icon makes print
+  // available from all of them without hunting for the list's Print menu.
   const TOOLBAR_ID = 'bp-admin-toolbar';
   function mountAdminBar(session) {
     if (!session || (!session.admin && !session.selfTest)) return;
@@ -457,47 +457,67 @@
 
     const bar = document.createElement('div');
     bar.id = TOOLBAR_ID;
-    bar.style.cssText = [
-      'position:fixed', 'top:12px', 'right:12px', 'z-index:2000',
-      'display:flex', 'align-items:center', 'gap:6px', 'flex-wrap:wrap', 'justify-content:flex-end',
-      'max-width:calc(100vw - 24px)',
+    bar.style.cssText = 'position:fixed;top:12px;right:12px;z-index:2000;font-family:ui-monospace,SFMono-Regular,Menlo,monospace';
+
+    const trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.title = 'Print';
+    trigger.setAttribute('aria-label', 'Print');
+    trigger.style.cssText = [
+      'display:flex', 'align-items:center', 'justify-content:center',
+      'width:42px', 'height:42px', 'border-radius:999px', 'cursor:pointer',
       'background:rgba(10,10,10,0.92)', 'backdrop-filter:blur(6px)',
-      'border:1px solid #2B2B2B', 'border-radius:999px', 'padding:6px 8px 6px 14px',
+      'border:1px solid #2B2B2B', 'color:#F2EFE7',
       'box-shadow:0 14px 34px -16px rgba(10,10,10,0.6)',
-      "font-family:ui-monospace,SFMono-Regular,Menlo,monospace", 'font-size:10px',
-      'letter-spacing:0.08em', 'color:#F2EFE7',
     ].join(';');
+    trigger.innerHTML = '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9V3h12v6"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="7"/></svg>';
+    trigger.addEventListener('mouseenter', () => { trigger.style.borderColor = '#4D4D4D'; });
+    trigger.addEventListener('mouseleave', () => { trigger.style.borderColor = '#2B2B2B'; });
+    bar.appendChild(trigger);
 
-    const label = document.createElement('span');
-    label.textContent = 'UNCAP · ADMIN';
-    label.style.cssText = 'font-weight:700;color:#E8FF4E;margin-right:4px;white-space:nowrap';
-    bar.appendChild(label);
-
-    const btn = (text, onClick) => {
+    const menu = document.createElement('div');
+    menu.style.cssText = [
+      'position:absolute', 'top:48px', 'right:0', 'display:none', 'min-width:150px',
+      'background:rgba(10,10,10,0.96)', 'backdrop-filter:blur(6px)',
+      'border:1px solid #2B2B2B', 'border-radius:10px', 'padding:5px',
+      'box-shadow:0 14px 34px -16px rgba(10,10,10,0.6)',
+    ].join(';');
+    const item = (text, onClick) => {
       const b = document.createElement('button');
       b.type = 'button';
       b.textContent = text;
       b.style.cssText = [
-        'border:1px solid #4D4D4D', 'background:transparent', 'color:#F2EFE7',
-        'border-radius:999px', 'padding:7px 12px', 'cursor:pointer',
-        'font-family:inherit', 'font-size:10px', 'letter-spacing:0.06em', 'white-space:nowrap',
+        'display:block', 'width:100%', 'text-align:left', 'border:none',
+        'background:transparent', 'color:#F2EFE7', 'border-radius:6px',
+        'padding:9px 12px', 'cursor:pointer', 'font-family:inherit',
+        'font-size:11px', 'letter-spacing:0.05em', 'white-space:nowrap',
       ].join(';');
       b.addEventListener('mouseenter', () => { b.style.background = '#2B2B2B'; });
       b.addEventListener('mouseleave', () => { b.style.background = 'transparent'; });
-      b.addEventListener('click', (e) => { e.preventDefault(); onClick(); });
-      bar.appendChild(b);
-      return b;
+      b.addEventListener('click', (e) => { e.preventDefault(); close(); onClick(); });
+      menu.appendChild(b);
     };
+    item('For Delivery', () => printDeliveryDocument());
+    item('For Shopify', () => printShopifyPartnerDocument());
+    item('For Client', () => printClientDocument());
+    bar.appendChild(menu);
 
-    btn('PRINT · DELIVERY', () => printDeliveryDocument());
-    btn('PRINT · SHOPIFY', () => printShopifyPartnerDocument());
-    btn('PRINT · CLIENT', () => printClientDocument());
-
-    const link = document.createElement('a');
-    link.href = '/admin/blueprints';
-    link.textContent = 'ADMIN ↗';
-    link.style.cssText = 'color:#E8FF4E;text-decoration:none;font-weight:700;padding:7px 8px;white-space:nowrap';
-    bar.appendChild(link);
+    const onDocClick = (e) => { if (!bar.contains(e.target)) close(); };
+    const onKey = (e) => { if (e.key === 'Escape') close(); };
+    function open() {
+      menu.style.display = 'block';
+      document.addEventListener('click', onDocClick, true);
+      document.addEventListener('keydown', onKey);
+    }
+    function close() {
+      menu.style.display = 'none';
+      document.removeEventListener('click', onDocClick, true);
+      document.removeEventListener('keydown', onKey);
+    }
+    trigger.addEventListener('click', (e) => {
+      e.preventDefault();
+      menu.style.display === 'block' ? close() : open();
+    });
 
     document.body.appendChild(bar);
   }
