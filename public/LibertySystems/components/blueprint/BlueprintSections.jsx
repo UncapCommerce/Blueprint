@@ -339,7 +339,7 @@ function BPWhereCell({ it, i }) {
 
 function BPWhere() {
   const items = [
-    { n: '01', t: 'Aging storefront', tag: 'Storefront', impact: 'High', pct: 82, d: 'Custom-built, patched for years, costing more every renewal cycle.' },
+    { n: '01', t: 'No ecommerce', tag: 'Storefront', impact: 'High', pct: 82, d: 'No way to buy online today. Every order runs through phone, email, and reps, so revenue is capped by manual selling and customers shop where checkout is easy.' },
     { n: '02', t: 'Outdated experience', tag: 'Storefront', impact: 'High', pct: 82, d: 'Unfriendly shopping experience and no mobile optimization.' },
     { n: '03', t: 'No optionality', tag: 'Systems', impact: 'Critical', pct: 94, d: 'Lack of ability to integrate and plug and play with modern advanced commerce tools and solutions.' },
     { n: '04', t: 'Zero agentic optimisation', tag: 'AI', impact: 'High', pct: 78, d: 'No in-site technical components and integrations with AI discovery platforms.' }
@@ -408,7 +408,7 @@ function BPObjectives() {
 // ── 04 RECOMMENDED APPROACH ────────────────────────────────────────────────
 function BPApproach() {
   const steps = [
-    { n: 'Phase 1', t: 'Blueprint', d: 'Architecture, data model, integration map. A plan that holds up under scrutiny.', wk: '2–4 weeks' },
+    { n: 'Phase 1', t: 'Blueprint', d: 'Architecture, data model, integration map. A plan that holds up under scrutiny.', wk: '2 weeks' },
     { n: 'Phase 2', t: 'Build', d: 'Storefront, B2B, ERP sync. Fixed scope, senior team, no surprises.', wk: 'Weeks 16+' },
     { n: 'Phase 3', t: 'Grow', d: 'Migrate, go live, then optimize conversion, AOV, and automation.', wk: 'Months 6–12' }
   ];
