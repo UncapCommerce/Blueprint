@@ -1507,8 +1507,7 @@ function BPTechStack() {
     { name: 'Shopify Marketplace Connect', fn: 'Sync to marketplaces',                pri: 'future', cost: 'Free' },
     { name: 'Shopify Flow',                fn: 'Workflow automation',                 pri: 'launch', cost: 'Free' },
     { name: 'Shopify Bundles',             fn: 'Bundled & grouped products',          pri: 'launch', cost: 'Free' },
-    { name: 'Uncap Quotes',                fn: 'B2B quote management',                pri: 'start',  cost: '$100/mo' },
-    { name: 'Uncap Connect',               fn: 'ERP ↔ Shopify integration',           pri: 'start',  cost: '–' },
+    { name: 'Uncap Quotes',                fn: 'B2B quote management',                pri: 'start',  cost: '$90/mo' },
     { name: 'Matrixify',                   fn: 'Bulk import / export & migration',    pri: 'start',  cost: '$50/mo' }
   ];
   const priMeta = {
@@ -1538,7 +1537,7 @@ function BPTechStack() {
           const layers = [
             { tier:'04', name:'Growth & Intelligence', note:'After launch', tools:[['Shopify Flow','launch'],['Shopify Marketplace Connect','future'],['Shopify Knowledge Base','launch']] },
             { tier:'03', name:'Experience & Engagement', note:'Customer-facing', tools:[['Shopify Search & Discovery','launch'],['Shopify Checkout Blocks','launch'],['Shopify Bundles','launch'],['Uncap Quotes','start']] },
-            { tier:'02', name:'Data & Integration', note:'System of record', tools:[['Uncap Connect','start'],['Matrixify','start']] },
+            { tier:'02', name:'Data & Integration', note:'System of record', tools:[['Matrixify','start']] },
             { tier:'01', name:'Commerce Core', note:'Foundation', tools:[['Shopify','start']], core:true }
           ];
           const chip = { start:{ bg:'var(--uc-signal)', fg:'var(--uc-black)' }, launch:{ bg:'#FF8B37', fg:'var(--uc-black)' }, future:{ bg:'transparent', fg:'var(--uc-stone-300)', outline:true } };
@@ -1616,11 +1615,11 @@ function BPTechStack() {
           );
         })}
         {/* Footer total */}
-        <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1.2fr) minmax(0,1.5fr) minmax(0,1fr) 120px', gap:16, padding:'14px 18px', borderTop:'1px solid #2B2B2B', background:'#0F0F0F', alignItems:'center' }}>
+        <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1.2fr) minmax(0,1.5fr) minmax(0,1fr) auto', gap:16, padding:'14px 18px', borderTop:'1px solid #2B2B2B', background:'#0F0F0F', alignItems:'center' }}>
           <span style={{ fontFamily:'var(--font-mono)', fontSize:10, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'var(--uc-signal)' }}>Est. monthly</span>
           <span style={{ fontFamily:'var(--font-serif)', fontSize:13, color:'var(--uc-stone-500)' }}>Platform + apps, before ERP integration</span>
           <span/>
-          <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:'clamp(18px,1.8vw,24px)', letterSpacing:'-0.03em', color:'var(--uc-paper)', textAlign:'right' }}>~$2,450/mo</span>
+          <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:'clamp(18px,1.8vw,24px)', letterSpacing:'-0.03em', color:'var(--uc-paper)', textAlign:'right', whiteSpace:'nowrap' }}>~$2,440/mo</span>
         </div>
       </div>
       <div style={{ marginTop:16, display:'flex', gap:18, flexWrap:'wrap', fontFamily:'var(--font-mono)', fontSize:10, color:'var(--uc-stone-500)', letterSpacing:'0.06em' }}>
@@ -1982,139 +1981,6 @@ function BPAgentic() {
   );
 }
 
-// ── 09 SYSTEM INTEGRATIONS ──────────────────────────────────────────────────
-function BPIntegrations() {
-  const pFont = '-apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
-  const maps = [
-    { l:'Order',       d:'→', r:'Sales Order' },
-    { l:'Customer',    d:'→', r:'Account' },
-    { l:'Line items',  d:'→', r:'SO Lines' },
-    { l:'Inventory',   d:'←', r:'Stock on hand' },
-    { l:'Fulfillment', d:'←', r:'Item Fulfillment' }
-  ];
-  const activity = [
-    ['Order #SO-48217 pushed to NetSuite', '2 min ago'],
-    ['Inventory delta · 1,284 items reconciled', '9 min ago'],
-    ['Customer ACME Contracting created in ERP', '14 min ago']
-  ];
-  const Card = ({ children, pad=true }) => (
-    <div style={{ background:'#FFFFFF', border:'1px solid #E3E3E3', borderRadius:12, boxShadow:'0 1px 0 rgba(0,0,0,0.05)', padding: pad ? '14px 16px' : 0 }}>{children}</div>
-  );
-  const Badge = ({ children, tone='info' }) => {
-    const t = tone==='success' ? { bg:'#CDFEE1', fg:'#014B40' } : tone==='attention' ? { bg:'#FFF1E3', fg:'#5E3B00' } : { bg:'#EBF5FA', fg:'#00527C' };
-    return <span style={{ display:'inline-flex', alignItems:'center', gap:5, fontFamily:pFont, fontSize:11, fontWeight:600, color:t.fg, background:t.bg, borderRadius:8, padding:'2px 8px', whiteSpace:'nowrap' }}>{children}</span>;
-  };
-  return (
-    <BPSection id="integrations" n="11" label="Integrated" tail="HOW IT CONNECTS">
-      <BPHeadline>
-        One operation,{' '}
-        <BPSerif>not five silos.</BPSerif>
-      </BPHeadline>
-      <p style={{ marginTop:'clamp(18px, 2.2vw, 26px)', maxWidth:640, fontFamily:'var(--font-serif)', fontSize:'clamp(15px, 1.3vw, 18px)', lineHeight:1.5, color:'var(--fg-2)' }}>
-        Uncap Connect runs as a Shopify-embedded app — a real-time, bidirectional ERP
-        integration with field-level mapping and a live sync log, managed right inside admin.
-      </p>
-
-      {/* Shopify-embedded app (Polaris) */}
-      <div style={{ marginTop:'clamp(30px, 4vw, 52px)', border:'1px solid var(--line-2)', borderRadius:12, overflow:'hidden', boxShadow:'0 24px 60px -32px rgba(10,10,10,0.45)' }}>
-        {/* Shopify admin top bar */}
-        <div style={{ display:'flex', alignItems:'center', gap:12, padding:'9px 14px', background:'#1A1A1A' }}>
-          <span style={{ display:'inline-flex', alignItems:'center', gap:7 }}>
-            <span style={{ width:20, height:20, borderRadius:5, background:'#95BF47', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:pFont, fontSize:12, fontWeight:800, color:'#1A1A1A' }}>S</span>
-            <span style={{ fontFamily:pFont, fontSize:11.5, fontWeight:600, color:'#E3E3E3' }}>{brandHandle()}-supply</span>
-          </span>
-          <span style={{ flex:1, maxWidth:360, margin:'0 auto', display:'flex', alignItems:'center', gap:7, background:'#303030', borderRadius:8, padding:'6px 11px' }}>
-            <span style={{ color:'#8A8A8A', fontSize:11 }}>⌕</span>
-            <span style={{ fontFamily:pFont, fontSize:11, color:'#8A8A8A' }}>Search</span>
-          </span>
-          <span style={{ width:22, height:22, borderRadius:999, background:'linear-gradient(135deg,#5C6AC4,#202E78)', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:pFont, fontSize:10, fontWeight:700, color:'#fff' }}>D</span>
-        </div>
-
-        {/* admin nav + Polaris page */}
-        <div style={{ display:'flex', background:'#F1F1F1' }}>
-          {/* Shopify standard left navigation */}
-          <ShopAdminNav activeApp="connect"/>
-
-          {/* Polaris page */}
-          <div style={{ flex:1, minWidth:0, padding:'clamp(16px,2vw,24px)', display:'flex', flexDirection:'column', gap:14 }}>
-          {/* page header */}
-          <div style={{ display:'flex', alignItems:'flex-start', justifyContent:'space-between', gap:14, flexWrap:'wrap' }}>
-            <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
-              <span style={{ fontFamily:pFont, fontSize:11.5, color:'#005BD3', fontWeight:600 }}>‹ Apps</span>
-              <span style={{ display:'inline-flex', alignItems:'center', gap:10 }}>
-                <span style={{ fontFamily:pFont, fontSize:'clamp(18px,1.8vw,22px)', fontWeight:700, color:'#1A1A1A', letterSpacing:'-0.01em' }}>Uncap Connect</span>
-                <Badge tone="success"><span style={{ width:6, height:6, borderRadius:999, background:'#29845A' }}/>Connected</Badge>
-              </span>
-              <span style={{ fontFamily:pFont, fontSize:12.5, color:'#616161' }}>NetSuite ERP integration</span>
-            </div>
-            <div style={{ display:'flex', gap:8 }}>
-              <span style={{ fontFamily:pFont, fontSize:12, fontWeight:600, color:'#303030', background:'#FFFFFF', border:'1px solid #E3E3E3', borderRadius:8, padding:'7px 13px', boxShadow:'0 1px 0 rgba(0,0,0,0.05)' }}>View logs</span>
-              <span style={{ fontFamily:pFont, fontSize:12, fontWeight:600, color:'#FFFFFF', background:'#303030', borderRadius:8, padding:'7px 13px' }}>Sync now</span>
-            </div>
-          </div>
-
-          {/* connection card */}
-          <Card>
-            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, flexWrap:'wrap' }}>
-              <div style={{ display:'flex', alignItems:'center', gap:11 }}>
-                <span style={{ width:34, height:34, borderRadius:8, background:'#101A2B', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:pFont, fontSize:13, fontWeight:800, color:'#9FB4FF' }}>NS</span>
-                <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
-                  <span style={{ fontFamily:pFont, fontSize:13.5, fontWeight:700, color:'#1A1A1A' }}>NetSuite ERP</span>
-                  <span style={{ fontFamily:pFont, fontSize:11.5, color:'#616161' }}>Account 4827-PROD · Last sync 2 min ago</span>
-                </div>
-              </div>
-              <div style={{ display:'flex', alignItems:'center', gap:10, flexWrap:'wrap' }}>
-                <Badge tone="info">Real-time</Badge>
-                <Badge tone="info">Bidirectional</Badge>
-                <span style={{ display:'inline-flex', border:'1px solid #E3E3E3', borderRadius:8, overflow:'hidden' }}>
-                  {['Real-time','Scheduled'].map((m,i)=>(<span key={m} style={{ fontFamily:pFont, fontSize:11, fontWeight:600, padding:'6px 11px', background:i===0?'#303030':'#FFFFFF', color:i===0?'#FFFFFF':'#616161' }}>{m}</span>))}
-                </span>
-              </div>
-            </div>
-          </Card>
-
-          {/* field mapping card */}
-          <Card pad={false}>
-            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:10, padding:'13px 16px', borderBottom:'1px solid #E3E3E3' }}>
-              <span style={{ fontFamily:pFont, fontSize:13.5, fontWeight:700, color:'#1A1A1A' }}>Field mapping · Order ⇄ Sales Order</span>
-              <span style={{ fontFamily:pFont, fontSize:12, fontWeight:600, color:'#005BD3' }}>Edit</span>
-            </div>
-            {/* table header */}
-            <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1.3fr) clamp(48px,6vw,72px) minmax(0,1.3fr) minmax(0,90px)', gap:'clamp(8px,1.2vw,16px)', padding:'8px 16px', background:'#FAFAFA', borderBottom:'1px solid #E3E3E3' }}>
-              {['Shopify','','NetSuite','Status'].map((h,i)=>(<span key={i} style={{ fontFamily:pFont, fontSize:10.5, fontWeight:600, color:'#616161', textAlign:i===3?'right':'left' }}>{h}</span>))}
-            </div>
-            {maps.map((m,i)=>(
-              <div key={i} style={{ display:'grid', gridTemplateColumns:'minmax(0,1.3fr) clamp(48px,6vw,72px) minmax(0,1.3fr) minmax(0,90px)', gap:'clamp(8px,1.2vw,16px)', padding:'10px 16px', borderBottom: i<maps.length-1?'1px solid #F1F1F1':'none', alignItems:'center' }}>
-                <span style={{ fontFamily:pFont, fontSize:12.5, fontWeight:600, color:'#1A1A1A', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{m.l}</span>
-                <span style={{ fontFamily:pFont, fontSize:13, fontWeight:700, color: m.d==='←' ? '#B98900' : '#616161', textAlign:'center' }}>{m.d}</span>
-                <span style={{ fontFamily:pFont, fontSize:12.5, color:'#303030', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{m.r}</span>
-                <span style={{ justifySelf:'end' }}><Badge tone="success">Synced</Badge></span>
-              </div>
-            ))}
-          </Card>
-
-          {/* activity card */}
-          <Card pad={false}>
-            <div style={{ padding:'13px 16px', borderBottom:'1px solid #E3E3E3', fontFamily:pFont, fontSize:13.5, fontWeight:700, color:'#1A1A1A' }}>Recent activity</div>
-            {activity.map((a,i)=>(
-              <div key={i} style={{ display:'flex', alignItems:'center', gap:11, padding:'10px 16px', borderBottom: i<activity.length-1?'1px solid #F1F1F1':'none' }}>
-                <span style={{ width:7, height:7, borderRadius:999, background:'#29845A', flexShrink:0 }}/>
-                <span style={{ fontFamily:pFont, fontSize:12.5, color:'#303030', flex:1, minWidth:0, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{a[0]}</span>
-                <span style={{ fontFamily:pFont, fontSize:11.5, color:'#8A8A8A', whiteSpace:'nowrap' }}>{a[1]}</span>
-              </div>
-            ))}
-          </Card>
-          </div>
-        </div>
-      </div>
-
-      <div style={{ marginTop:20, fontFamily:'var(--font-mono)', fontSize:11, color:'var(--fg-3)', letterSpacing:'0.06em' }}>
-        ↳ Native Shopify-embedded app · field maps owned and versioned · no manual re-keying
-      </div>
-    </BPSection>
-  );
-}
-
 function BPMigration() {
   const steps = [
     { t: 'Audit & map', s: 'Catalogue every record — products, customers, orders, content, redirects.' },
@@ -2124,7 +1990,7 @@ function BPMigration() {
   ];
   const stats = ['Products', 'Collections', 'Pages', 'Blogs', 'Customers', 'Companies', 'Orders'];
   return (
-    <BPSection id="migration" n="12" label="Migration" paper tail="MOVE WITHOUT LOSS" vec="bgVector2">
+    <BPSection id="migration" n="11" label="Migration" paper tail="MOVE WITHOUT LOSS" vec="bgVector2">
       <BPHeadline>
         Replatform{' '}
         <BPSerif>without losing a thing.</BPSerif>
@@ -2233,7 +2099,7 @@ function BPDelivery() {
     { wk: 'WK 12', t: 'Launch', s: 'Go live + 30-day support begins.' }
   ];
   return (
-    <BPSection id="delivery" n="13" label="Delivery" paper tail="TIMELINE">
+    <BPSection id="delivery" n="12" label="Delivery" paper tail="TIMELINE">
       <BPHeadline>
         Sixteen weeks,{' '}
         <BPSerif>phase by phase.</BPSerif>
@@ -2295,7 +2161,7 @@ function BPRiskAssessment() {
       m: 'Fixed scope up front, with a pre-approved buffer allowance for out-of-scope asks.' }
   ];
   return (
-    <BPSection id="risks" n="14" label="Risks" tail="EYES OPEN">
+    <BPSection id="risks" n="13" label="Risks" tail="EYES OPEN">
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr)', gap: 'clamp(28px, 5vw, 80px)', alignItems: 'end' }}>
         <BPHeadline>
           Named upfront,{' '}
@@ -2343,7 +2209,7 @@ function BPTeam() {
     { n: 'Jack Patel', r: 'Head of Solutions', img: 'assets/team-jack.webp' }
   ];
   return (
-    <BPSection id="team" n="17" label="Team" tail="WHO DOES THE WORK">
+    <BPSection id="team" n="16" label="Team" tail="WHO DOES THE WORK">
       <BPHeadline>
         Senior from{' '}
         <BPSerif>day one.</BPSerif>
@@ -2455,7 +2321,7 @@ function BPInvestment() {
     { n: '03', amount: '$16,000', due: 'Due at project completion' }
   ];
   return (
-    <BPSection id="investment" n="15" label="Investment" dark tail="FIXED · NO SURPRISES">
+    <BPSection id="investment" n="14" label="Investment" dark tail="FIXED · NO SURPRISES">
       {/* One package — split panel */}
       <div style={{
         position: 'relative', overflow: 'hidden',
@@ -2612,7 +2478,7 @@ function BPGrowth() {
     <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6 L5 9 L10 3" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
   );
   return (
-    <BPSection id="growth" n="16" label="Growth" paper tail="AFTER LAUNCH">
+    <BPSection id="growth" n="15" label="Growth" paper tail="AFTER LAUNCH">
       <BPHeadline>
         Launch is the start.{' '}
         <BPSerif>Growth is the work.</BPSerif>
@@ -2701,7 +2567,7 @@ function BPWhy() {
   ];
   const clients = ['blueroot','canon','e3sparkplugs','eea','farmers','garrison','genuinescooter','industryrailway','kbs','microfiberwholesale','pawstruck','phoenixmecano','sanitaire','signwarehouse','thermosoft','ulegroup','vermontwoods','vosges','weldingstore','warehouselighting'];
   return (
-    <BPSection id="why" n="18" label="Uncap" dark tail="THE CASE">
+    <BPSection id="why" n="17" label="Uncap" dark tail="THE CASE">
       <BPHeadline dark>
         Uncap Commerce.{' '}
         <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, color: 'var(--uc-stone-300)' }}>Unified.</span>
@@ -2806,7 +2672,7 @@ function BPProof() {
   );
   const initials = (n) => n.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
   return (
-    <BPSection id="proof" n="19" label="Proof" paper tail="ON THE RECORD">
+    <BPSection id="proof" n="18" label="Proof" paper tail="ON THE RECORD">
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr)', gap: 'clamp(28px, 5vw, 80px)', alignItems: 'end' }}>
         <BPHeadline>
           Don&rsquo;t take{' '}
@@ -3127,7 +2993,7 @@ function BPNext() {
     { n: '03', t: 'Ship in 20 weeks', d: 'Launch live, then move into Growth.' }
   ];
   return (
-    <BPSection id="next" n="20" label="Next" paper tail="LET'S GO">
+    <BPSection id="next" n="19" label="Next" paper tail="LET'S GO">
       <BPHeadline>
         Three steps{' '}
         <BPSerif>to start.</BPSerif>
@@ -3179,16 +3045,15 @@ function BPNav() {
     { id: 'techstack',   n: '08', l: 'Architecture' },
     { id: 'b2b',         n: '09', l: 'Unified' },
     { id: 'agentic',     n: '10', l: 'Agentic' },
-    { id: 'integrations',n: '11', l: 'Integrated' },
-    { id: 'migration',   n: '12', l: 'Migration' },
-    { id: 'delivery',    n: '13', l: 'Delivery' },
-    { id: 'risks',       n: '14', l: 'Risks' },
-    { id: 'investment',  n: '15', l: 'Investment' },
-    { id: 'growth',      n: '16', l: 'Growth' },
-    { id: 'team',        n: '17', l: 'Team' },
-    { id: 'why',         n: '18', l: 'Uncap' },
-    { id: 'proof',       n: '19', l: 'Proof' },
-    { id: 'next',        n: '20', l: 'Next' }
+    { id: 'migration',   n: '11', l: 'Migration' },
+    { id: 'delivery',    n: '12', l: 'Delivery' },
+    { id: 'risks',       n: '13', l: 'Risks' },
+    { id: 'investment',  n: '14', l: 'Investment' },
+    { id: 'growth',      n: '15', l: 'Growth' },
+    { id: 'team',        n: '16', l: 'Team' },
+    { id: 'why',         n: '17', l: 'Uncap' },
+    { id: 'proof',       n: '18', l: 'Proof' },
+    { id: 'next',        n: '19', l: 'Next' }
   ];
   const [active, setActive] = React.useState('intro');
   const [open, setOpen] = React.useState(false);
@@ -3284,7 +3149,6 @@ window.BPPerformance = BPPerformance;
 window.BPContent = BPContent;
 window.BPTechStack = BPTechStack;
 window.BPB2B = BPB2B;
-window.BPIntegrations = BPIntegrations;
 window.BPGantt = BPGantt;
 window.BPDelivery = BPDelivery;
 window.BPTeam = BPTeam;
