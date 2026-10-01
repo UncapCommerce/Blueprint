@@ -194,7 +194,7 @@ export default {
     // unchanged, just under the new host).
     if (request.method === 'GET' || request.method === 'HEAD') {
       const legacyPath = legacyBlueprintRedirectPath(url.pathname);
-      if (url.hostname !== GO_HOST || legacyPath) {
+      if (url.hostname !== GO_HOST || legacyPath || url.protocol === 'http:') {
         const dest = new URL(url.toString());
         dest.protocol = 'https:';
         dest.hostname = GO_HOST;
@@ -204,6 +204,10 @@ export default {
           return Response.redirect(dest.toString(), 301);
         }
       }
+    } else if (url.hostname !== GO_HOST || legacyBlueprintRedirectPath(url.pathname)) {
+      // Non-GET traffic has no business on the legacy host or the old
+      // bare-brand paths; refuse it instead of falling through to assets.
+      return withSecurityHeaders(new Response('Method Not Allowed', { status: 405 }));
     }
 
     if (url.pathname === '/api/auth/sign' && request.method === 'POST') {
@@ -517,7 +521,7 @@ export default {
     if (legalMatch && (request.method === 'GET' || request.method === 'HEAD')) {
       const assetUrl = new URL(url.toString());
       assetUrl.pathname = `/legal/${legalMatch[1]}.html`;
-      return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
+      return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)), url);
     }
 
     // The admin dashboard lives at /admin (client-side routes /admin/
@@ -526,7 +530,7 @@ export default {
     if (/^\/admin(\/(sales(\/(process|items))?|discoveries|blueprints|companies|users|projects|retainers|dashboard|pnl|revenues(\/(fixed|recurring|apps|referrals))?|company\/[a-z0-9-]+|estimate\/[a-z0-9-]+|blueprint\/[a-z0-9-]+))?\/?$/.test(url.pathname) && (request.method === 'GET' || request.method === 'HEAD')) {
       const assetUrl = new URL(url.toString());
       assetUrl.pathname = '/admin/index.html';
-      return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
+      return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)), url);
     }
 
     // ── Per-company portal folders ───────────────────────────────────────
@@ -552,13 +556,13 @@ export default {
             if ((est && est.status === 'ready') || (admin && await adminIsApproved(env, admin.email))) {
               const assetUrl = new URL(url.toString());
               assetUrl.pathname = '/estimate-template/index.html';
-              return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
+              return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)), url);
             }
           }
           if (coApp[2] === 'discovery' && co.discoveryHandle) {
             const assetUrl = new URL(url.toString());
             assetUrl.pathname = '/discovery/index.html';
-            return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
+            return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)), url);
           }
           if (coApp[2] === 'blueprint') {
             // Bespoke shipped page wins; else the dynamic templated page when
@@ -569,14 +573,19 @@ export default {
             const entry = BLUEPRINT_REGISTRY.find((b) => b.id === co.blueprintId)
               || BLUEPRINT_REGISTRY.find((b) => b.id === co.id);
             if (entry) {
+              // A disabled blueprint stays reachable for the team only.
+              const meta = await getBpMeta(env, entry.id);
+              if (meta.disabled && !(await getApprovedAdmin(request, env))) {
+                return disabledBlueprintPage();
+              }
               const assetUrl = new URL(url.toString());
               assetUrl.pathname = `/${entry.dir}/index.html`;
-              return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
+              return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)), url);
             }
             if (co.blueprintId && await blueprintIsViewable(env, co.blueprintId)) {
               const assetUrl = new URL(url.toString());
               assetUrl.pathname = '/blueprint-template/index.html';
-              return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
+              return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)), url);
             }
           }
         }
@@ -590,7 +599,7 @@ export default {
           if (!coMatch[2]) return Response.redirect(`${url.origin}/${co.id}/company`, 302);
           const assetUrl = new URL(url.toString());
           assetUrl.pathname = '/index.html';
-          return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
+          return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)), url);
         }
       }
       // Blueprint sub-assets under the company folder: /<id>/blueprint/<rest>
@@ -601,9 +610,19 @@ export default {
         const entry = co ? (BLUEPRINT_REGISTRY.find((b) => b.id === co.blueprintId)
           || BLUEPRINT_REGISTRY.find((b) => b.id === co.id)) : null;
         if (entry) {
+          // Proposal component bundles require a signed-in viewer; the page
+          // shell, styles, and images stay public for the gate UI.
+          if (isBlueprintContentPath(coBpSub[2])) {
+            if (!(await canViewBlueprintContent(request, env, entry))) return blueprintContentDenied();
+            const assetUrl = new URL(url.toString());
+            assetUrl.pathname = `/${entry.dir}/${coBpSub[2]}`;
+            const resp = withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)), url);
+            resp.headers.set('cache-control', 'private, no-store');
+            return resp;
+          }
           const assetUrl = new URL(url.toString());
           assetUrl.pathname = `/${entry.dir}/${coBpSub[2]}`;
-          return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
+          return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)), url);
         }
       }
     }
@@ -615,12 +634,12 @@ export default {
       // Admins previewing from the dashboard get the raw page (no redirect)
       // so it can render framed inside the admin shell.
       const owner = await findCompanyByDiscoveryHandle(env, discMatch[1]);
-      if (owner && !(await getAdminSession(request, env))) {
+      if (owner && !(await getApprovedAdmin(request, env))) {
         return Response.redirect(`${url.origin}/${owner.id}/discovery`, 301);
       }
       const assetUrl = new URL(url.toString());
       assetUrl.pathname = '/discovery/index.html';
-      return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
+      return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)), url);
     }
 
     // /blueprint/<id>/<rest> is a transparent alias for the blueprint's
@@ -640,18 +659,28 @@ export default {
         const rest = bpMatch[2] || '/';
         if (request.method === 'GET' && (rest === '/' || rest === '/index.html')) {
           // Old-style blueprint URL: redirect the document to its company
-          // folder; sub-assets keep serving from here untouched. Admins
-          // previewing from the dashboard get the raw page (no redirect) so
-          // it can render framed inside the admin shell.
+          // folder; sub-assets keep serving from here untouched. Approved
+          // admins previewing from the dashboard get the raw page (no
+          // redirect) so it can render framed inside the admin shell.
           const owner = await findCompanyByBlueprintId(env, entry.id);
-          if (owner && !(await getAdminSession(request, env))) {
+          if (owner && !(await getApprovedAdmin(request, env))) {
             return Response.redirect(`${url.origin}/${owner.id}/blueprint/`, 301);
           }
           const meta = await getBpMeta(env, entry.id);
-          if (meta.disabled) {
-            const adminSess = await getAdminSession(request, env);
-            if (!adminSess) return disabledBlueprintPage();
+          if (meta.disabled && !(await getApprovedAdmin(request, env))) {
+            return disabledBlueprintPage();
           }
+        }
+        // Proposal component bundles require a signed-in viewer (approved
+        // admin, or the portal of the company that owns this blueprint).
+        // The page shell, styles, and images stay public for the gate UI.
+        if (isBlueprintContentPath(rest)) {
+          if (!(await canViewBlueprintContent(request, env, entry))) return blueprintContentDenied();
+          const assetUrl = new URL(url.toString());
+          assetUrl.pathname = `/${entry.dir}${rest}`;
+          const resp = withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)), url);
+          resp.headers.set('cache-control', 'private, no-store');
+          return resp;
         }
         // Resolve the directory-index case ourselves rather than relying
         // on Static Assets' automatic index.html-for-trailing-slash
@@ -660,7 +689,7 @@ export default {
         const assetPath = rest === '/' ? '/index.html' : rest;
         const assetUrl = new URL(url.toString());
         assetUrl.pathname = `/${entry.dir}${assetPath}`;
-        return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
+        return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)), url);
       }
       // Not in the registry: an admin previewing a templated draft gets the
       // dynamic page here (even before it's marked ready), so the editor's
@@ -669,17 +698,17 @@ export default {
       const rest = bpMatch[2] || '/';
       if (request.method === 'GET' && (rest === '/' || rest === '/index.html')) {
         const draft = await blueprintDraft(env, bpMatch[1]);
-        if (draft && draft.content && await getAdminSession(request, env)) {
+        if (draft && draft.content && await getApprovedAdmin(request, env)) {
           const assetUrl = new URL(url.toString());
           assetUrl.pathname = '/blueprint-template/index.html';
-          return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)));
+          return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)), url);
         }
       }
       // Unknown slug under /blueprint/ — fall through to the normal
       // static-asset/SPA-fallback handling below (same as any other 404).
     }
 
-    return withSecurityHeaders(await env.ASSETS.fetch(request));
+    return withSecurityHeaders(await env.ASSETS.fetch(request), url);
   },
 };
 
@@ -713,38 +742,51 @@ h1{font-size:24px;letter-spacing:-.02em;margin:0 0 10px}p{font-size:14.5px;line-
 // from other origins, and script/style/font
 // origins are pinned to the three known externals (Google Sign-In, Google
 // Fonts, and unpkg for the two SRI-pinned print/demo pages).
-const CSP = [
-  "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://unpkg.com",
-  "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
-  "font-src 'self' data: https://fonts.gstatic.com",
-  "img-src 'self' data: blob: https:",
-  "media-src 'self' data: https:",
-  // wss://api.deepgram.com: the discovery live-transcription stream (admin
-  // mints a short-lived key server-side; audio goes browser → Deepgram).
-  "connect-src 'self' https://accounts.google.com wss://api.deepgram.com",
-  "frame-src 'self' https://accounts.google.com",
-  "frame-ancestors 'self'",
-  "base-uri 'self'",
-  "form-action 'self'",
-  "object-src 'none'",
-].join('; ');
+// 'unsafe-eval' is only needed where the page transpiles JSX in the browser
+// with @babel/standalone — i.e. local `wrangler dev`. Production ships
+// precompiled plain .js (the deploy step drops Babel), so the live CSP omits
+// it. unpkg.com is not referenced anywhere and is dropped from both.
+function cspFor(url) {
+  const isProd = !url || url.hostname === GO_HOST;
+  const scriptSrc = isProd
+    ? "script-src 'self' 'unsafe-inline' https://accounts.google.com"
+    : "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com";
+  return [
+    "default-src 'self'",
+    scriptSrc,
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' data: https://fonts.gstatic.com",
+    "img-src 'self' data: blob: https:",
+    "media-src 'self' data: https:",
+    // wss://api.deepgram.com: the discovery live-transcription stream (admin
+    // mints a short-lived key server-side; audio goes browser → Deepgram).
+    "connect-src 'self' https://accounts.google.com wss://api.deepgram.com",
+    "frame-src 'self' https://accounts.google.com",
+    "frame-ancestors 'self'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "object-src 'none'",
+  ].join('; ');
+}
 
 const SECURITY_HEADERS = {
-  'Content-Security-Policy': CSP,
   'X-Frame-Options': 'SAMEORIGIN',
   'X-Content-Type-Options': 'nosniff',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   'Strict-Transport-Security': 'max-age=31536000; includeSubDomains; preload',
   // microphone=(self): discovery live transcription mixes the rep's mic into
   // the captured call audio; everything else stays denied.
-  'Permissions-Policy': 'geolocation=(), camera=(), microphone=(self), payment=()',
+  'Permissions-Policy': 'geolocation=(), camera=(), microphone=(self), payment=(), display-capture=(), usb=(), serial=()',
+  // Isolate the browsing context from any popup it opens (and vice versa),
+  // while staying compatible with the Google Sign-In popup.
+  'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
 };
 
 // Reattach headers on a (possibly immutable) response by rebuilding it.
-function withSecurityHeaders(resp) {
+function withSecurityHeaders(resp, url) {
   const headers = new Headers(resp.headers);
   for (const k in SECURITY_HEADERS) headers.set(k, SECURITY_HEADERS[k]);
+  headers.set('Content-Security-Policy', cspFor(url));
   return new Response(resp.body, { status: resp.status, statusText: resp.statusText, headers });
 }
 
@@ -773,21 +815,105 @@ const clientUa = (request) => request.headers.get('User-Agent') || '';
 // Not a precise quota — it exists to blunt brute-force and email-bombing.
 // Returns true if the caller is under the limit (and counts this hit),
 // false if the window is exhausted.
-async function rateLimit(env, key, max, windowSec) {
+async function rateLimit(env, key, max, windowSec, { strict = false } = {}) {
   const bucket = Math.floor(Date.now() / 1000 / windowSec);
   const k = `rl:${key}:${bucket}`;
   let n = 0;
-  try { n = parseInt(await env.BLUEPRINT_AUTH.get(k), 10) || 0; } catch { n = 0; }
+  // strict: a KV error counts as over-limit (used on code verification,
+  // where silently skipping the counter would be worse than a retry).
+  try { n = parseInt(await env.BLUEPRINT_AUTH.get(k), 10) || 0; } catch { if (strict) return false; n = 0; }
   if (n >= max) return false;
   await env.BLUEPRINT_AUTH.put(k, String(n + 1), { expirationTtl: windowSec + 60 }).catch(() => {});
   return true;
 }
 
+// In-isolate fixed-window counter. KV counters are eventually consistent, so
+// a concurrent burst can read stale counts; this map is atomic within the
+// isolate and stops single-source bursts cold. It complements, never
+// replaces, the KV counters.
+const _memHits = new Map();
+function memoryLimit(key, max, windowSec) {
+  const now = Date.now();
+  if (_memHits.size > 5000) _memHits.clear();
+  const e = _memHits.get(key);
+  if (!e || e.reset <= now) { _memHits.set(key, { n: 1, reset: now + windowSec * 1000 }); return true; }
+  e.n += 1;
+  return e.n <= max;
+}
+
+// Constant-time string comparison for short secrets (codes).
+function timingSafeEqual(a, b) {
+  const x = String(a || ''), y = String(b || '');
+  if (x.length !== y.length) return false;
+  let diff = 0;
+  for (let i = 0; i < x.length; i++) diff |= x.charCodeAt(i) ^ y.charCodeAt(i);
+  return diff === 0;
+}
+
 // Fetch + parse a blueprint bearer session, tolerating a corrupt record.
+// Discovery sessions share the `session:` prefix but carry `kind`; they are
+// not valid on blueprint endpoints, and a blueprint session always names
+// its blueprint.
 async function getBlueprintSession(env, token) {
+  if (!/^[a-f0-9]{48}$/.test(String(token || ''))) return null;
   const raw = await env.BLUEPRINT_AUTH.get(`session:${token}`);
   if (!raw) return null;
-  try { return JSON.parse(raw); } catch { return null; }
+  try {
+    const s = JSON.parse(raw);
+    if (!s || s.kind || !s.blueprintId) return null;
+    return s;
+  } catch { return null; }
+}
+
+// Admin session that is also still approved (Pending/revoked accounts hold a
+// cookie so /api/admin/me can show their status, but they must not pass any
+// content or token gate).
+async function getApprovedAdmin(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return null;
+  return (await adminIsApproved(env, sess.email)) ? sess : null;
+}
+
+// Portal session re-validated against the company's current state: the
+// company must still exist, not be declined, and the session email must
+// still be one of its contacts. Returns { sess, co } or null.
+async function getFreshPortalSession(request, env) {
+  const sess = await getPortalSession(request, env);
+  if (!sess || !sess.companyId) return null;
+  const co = await getCompany(env, sess.companyId);
+  if (!co || co.declined) return null;
+  if (!companyEmails(co).includes(sess.email)) return null;
+  return { sess, co };
+}
+
+// Shipped (bespoke) blueprint pages are static files, but their component
+// bundles carry the proposal itself. Serving those requires an approved
+// admin or a portal session whose company owns the blueprint; the page
+// shell, styles, and images stay public so the sign-in gate can render.
+async function canViewBlueprintContent(request, env, entry) {
+  if (await getApprovedAdmin(request, env)) return true;
+  const fresh = await getFreshPortalSession(request, env);
+  if (!fresh) return false;
+  return fresh.co.blueprintId === entry.id || fresh.co.id === entry.id;
+}
+
+// Paths under a blueprint dir that carry proposal content (vs the public
+// page shell/assets). Decoded and slash-collapsed so an encoded or doubled
+// separator can't slip past the prefix check (dot segments are already
+// normalized by `new URL`).
+function isBlueprintContentPath(rest) {
+  let p = String(rest || '');
+  try { p = decodeURIComponent(p); } catch { /* keep raw */ }
+  p = ('/' + p).replace(/\/+/g, '/');
+  return p.startsWith('/components/');
+}
+
+function blueprintContentDenied() {
+  const resp = withSecurityHeaders(new Response('Sign in to view this blueprint.', {
+    status: 401,
+    headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'private, no-store' },
+  }));
+  return resp;
 }
 
 // Blueprint bearer sessions are bound to the IP + User-Agent they were
@@ -891,6 +1017,10 @@ async function handleAccessLog(request, env) {
   if (!sess) return json(401, { ok: false, error: 'Session expired' });
   if (!sessionBindingOk(sess, request)) return json(401, { ok: false, error: 'Session expired' });
   if (!sess.admin && !sess.selfTest) return json(403, { ok: false, error: 'Not authorised' });
+  // The token only unlocks the blueprint it was minted for, and the minting
+  // admin must still be approved (tokens outlive revocation by up to 2h).
+  if (sess.blueprintId !== blueprintId) return json(403, { ok: false, error: 'Not authorised' });
+  if (!sess.email || !(await adminIsApproved(env, sess.email))) return json(403, { ok: false, error: 'Not authorised' });
 
   const events = await listBlueprintEvents(env, blueprintId);
   return json(200, { ok: true, blueprintId, events });
@@ -1023,6 +1153,20 @@ async function handleSign(request, env, ctx) {
   if (!sessionBindingOk(sess, request)) return json(401, { ok: false, error: 'Session expired' });
 
   if (sess.admin) return json(200, { ok: true, skipped: 'admin' });
+
+  // A disabled or non-viewable blueprint can't be signed.
+  const meta = await getBpMeta(env, sess.blueprintId);
+  if (meta && meta.disabled) return json(403, { ok: false, error: 'This blueprint is no longer available.' });
+
+  // Idempotent: a token that already signed just returns ok, without a
+  // second KV write, activity row, or notification email (anti-spam).
+  const existingSig = await env.BLUEPRINT_AUTH.get(`signature:${sess.blueprintId}:${token}`);
+  if (existingSig) return json(200, { ok: true, already: true });
+
+  // One signing attempt burst per session token.
+  if (!memoryLimit(`sign:${token}`, 5, 10 * 60)) {
+    return json(429, { ok: false, error: 'Too many attempts. Wait a few minutes.' });
+  }
 
   const ip        = request.headers.get('CF-Connecting-IP') || '';
   const userAgent = request.headers.get('User-Agent') || '';
@@ -1266,6 +1410,9 @@ async function shopifyFetchPaidOrders(env, shop, token, fromISO, toISO, pageCap 
     const link = resp.headers.get('Link') || resp.headers.get('link') || '';
     const m = link.match(/<([^>]+)>;\s*rel="next"/);
     if (!m) break;
+    // The next-page URL comes from an upstream header; pin its host to the
+    // shop so a spoofed Link can't redirect the access token elsewhere.
+    try { if (new URL(m[1]).host.toLowerCase() !== shop.toLowerCase()) break; } catch { break; }
     url = m[1];
     if (page === pageCap - 1) truncated = true;
   }
@@ -1472,15 +1619,19 @@ function shopifyOAuthRedirectUri(request) {
 // and redirects the browser to Shopify's authorize screen.
 async function handleShopifyInstall(request, env) {
   const sess = await getAdminSession(request, env);
-  if (!sess || !(await adminIsApproved(env, sess.email))) {
-    return new Response('Sign in to the Uncap admin first, then retry.', { status: 401 });
+  // Connecting a revenue source overwrites the single global token, so limit
+  // it to the owner (Staff/Management can't see revenue at all).
+  if (!sess || !isSuperAdmin(sess.email)) {
+    return new Response('Only the account owner can connect Shopify.', { status: 403 });
   }
   const cfg = shopifyConfig(env);
   if (!cfg.domain || !cfg.clientId || !cfg.clientSecret) {
     return new Response('Shopify is not configured: set SHOPIFY_SHOP_DOMAIN, SHOPIFY_CLIENT_ID, and SHOPIFY_CLIENT_SECRET.', { status: 400 });
   }
   const state = genToken();
-  await env.BLUEPRINT_AUTH.put(`shopify_oauth_state:${state}`, cfg.domain, { expirationTtl: 600 });
+  // Bind the state to the admin session that started the flow, so a planted
+  // callback link can't complete an install the owner never began.
+  await env.BLUEPRINT_AUTH.put(`shopify_oauth_state:${state}`, JSON.stringify({ domain: cfg.domain, sid: sess.token }), { expirationTtl: 600 });
   const authorize = `https://${cfg.domain}/admin/oauth/authorize?client_id=${encodeURIComponent(cfg.clientId)}`
     + `&scope=${encodeURIComponent(cfg.scopes)}`
     + `&redirect_uri=${encodeURIComponent(shopifyOAuthRedirectUri(request))}`
@@ -1514,23 +1665,30 @@ async function handleShopifyCallback(request, env) {
   const code = (url.searchParams.get('code') || '').toString();
   const state = (url.searchParams.get('state') || '').toString();
 
-  const finish = (msg, okFlag) => new Response(
+  const finish = (msg, okFlag) => withSecurityHeaders(new Response(
     `<!doctype html><meta charset="utf-8"><body style="font-family:system-ui;max-width:520px;margin:80px auto;padding:0 20px;color:#0A0A0A">`
     + `<h2 style="margin:0 0 8px">${okFlag ? 'Shopify connected' : 'Shopify connection failed'}</h2>`
     + `<p style="color:#555;line-height:1.5">${escapeHtml(msg)}</p>`
     + `<p><a href="/admin/revenues/recurring" style="color:#0A0A0A;font-weight:700">Back to Recurring revenue &rarr;</a></p></body>`,
-    { status: okFlag ? 200 : 400, headers: { 'content-type': 'text/html; charset=utf-8' } }
-  );
+    { status: okFlag ? 200 : 400, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } }
+  ), url);
 
   // Shop must be a real myshopify domain; its authenticity is proven by the
   // HMAC below (signed with our client secret), so we trust whatever canonical
   // shop Shopify reports rather than requiring it to equal the configured hint.
   if (!/^[a-z0-9][a-z0-9-]*\.myshopify\.com$/i.test(shop)) return finish('Invalid shop domain in the callback.', false);
-  // State is CSRF-only: confirm we issued this install (existence), don't tie it
-  // to a specific domain string.
+  // State proves we issued this install AND that the same owner session is
+  // completing it (bound at install time).
   const stateVal = await env.BLUEPRINT_AUTH.get(`shopify_oauth_state:${state}`);
   if (!stateVal) return finish('Expired or invalid install state. Start the connect flow again.', false);
   await env.BLUEPRINT_AUTH.delete(`shopify_oauth_state:${state}`);
+  let stateObj = null; try { stateObj = JSON.parse(stateVal); } catch { /* legacy plain-domain state */ }
+  if (stateObj && stateObj.sid) {
+    const sess = await getAdminSession(request, env);
+    if (!sess || sess.token !== stateObj.sid || !isSuperAdmin(sess.email)) {
+      return finish('This install must be completed in the same owner session that started it.', false);
+    }
+  }
   if (!(await shopifyVerifyHmac(url, cfg.clientSecret))) return finish('Signature check failed (client secret mismatch).', false);
   if (!code) return finish('Missing authorization code.', false);
 
@@ -1727,15 +1885,15 @@ async function handleAdminFixedRevenue(request, env) {
 // GET /api/qbo/install — admin-only. Redirects to Intuit's OAuth screen.
 async function handleQboInstall(request, env) {
   const sess = await getAdminSession(request, env);
-  if (!sess || !(await adminIsApproved(env, sess.email))) {
-    return new Response('Sign in to the Uncap admin first, then retry.', { status: 401 });
+  if (!sess || !isSuperAdmin(sess.email)) {
+    return new Response('Only the account owner can connect QuickBooks.', { status: 403 });
   }
   const cfg = qboConfig(env);
   if (!cfg.clientId || !cfg.clientSecret) {
     return new Response('QuickBooks is not configured: set QBO_CLIENT_ID and QBO_CLIENT_SECRET.', { status: 400 });
   }
   const state = genToken();
-  await env.BLUEPRINT_AUTH.put(`qbo_oauth_state:${state}`, '1', { expirationTtl: 600 });
+  await env.BLUEPRINT_AUTH.put(`qbo_oauth_state:${state}`, JSON.stringify({ sid: sess.token }), { expirationTtl: 600 });
   const redirect = `${new URL(request.url).origin}/api/qbo/callback`;
   const authorize = 'https://appcenter.intuit.com/connect/oauth2?client_id=' + encodeURIComponent(cfg.clientId)
     + '&response_type=code&scope=' + encodeURIComponent('com.intuit.quickbooks.accounting')
@@ -1752,19 +1910,28 @@ async function handleQboCallback(request, env) {
   const state = (url.searchParams.get('state') || '').toString();
   const realmId = (url.searchParams.get('realmId') || '').toString();
 
-  const finish = (msg, okFlag) => new Response(
+  const finish = (msg, okFlag) => withSecurityHeaders(new Response(
     `<!doctype html><meta charset="utf-8"><body style="font-family:system-ui;max-width:520px;margin:80px auto;padding:0 20px;color:#0A0A0A">`
     + `<h2 style="margin:0 0 8px">${okFlag ? 'QuickBooks connected' : 'QuickBooks connection failed'}</h2>`
     + `<p style="color:#555;line-height:1.5">${escapeHtml(msg)}</p>`
     + `<p><a href="/admin/revenues/fixed" style="color:#0A0A0A;font-weight:700">Back to Fixed revenue &rarr;</a></p></body>`,
-    { status: okFlag ? 200 : 400, headers: { 'content-type': 'text/html; charset=utf-8' } }
-  );
+    { status: okFlag ? 200 : 400, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } }
+  ), url);
 
   const stateVal = await env.BLUEPRINT_AUTH.get(`qbo_oauth_state:${state}`);
   if (!stateVal) return finish('Expired or invalid install state. Start the connect flow again.', false);
   await env.BLUEPRINT_AUTH.delete(`qbo_oauth_state:${state}`);
+  let stateObj = null; try { stateObj = JSON.parse(stateVal); } catch { /* legacy */ }
+  if (stateObj && stateObj.sid) {
+    const sess = await getAdminSession(request, env);
+    if (!sess || sess.token !== stateObj.sid || !isSuperAdmin(sess.email)) {
+      return finish('This install must be completed in the same owner session that started it.', false);
+    }
+  }
   if (!code) return finish('Missing authorization code.', false);
-  if (!realmId) return finish('Missing realmId (company id) in the callback.', false);
+  // realmId is interpolated into the Intuit API path; pin it to digits so a
+  // crafted value can't reshape the request URL.
+  if (!/^\d{1,20}$/.test(realmId)) return finish('Missing or invalid realmId (company id) in the callback.', false);
 
   const redirect = `${url.origin}/api/qbo/callback`;
   let tokenResp;
@@ -1928,13 +2095,13 @@ async function handleGustoCallback(request, env) {
   const code = (url.searchParams.get('code') || '').toString();
   const state = (url.searchParams.get('state') || '').toString();
 
-  const finish = (msg, okFlag) => new Response(
+  const finish = (msg, okFlag) => withSecurityHeaders(new Response(
     `<!doctype html><meta charset="utf-8"><body style="font-family:system-ui;max-width:520px;margin:80px auto;padding:0 20px;color:#0A0A0A">`
     + `<h2 style="margin:0 0 8px">${okFlag ? 'Gusto connected' : 'Gusto connection failed'}</h2>`
     + `<p style="color:#555;line-height:1.5">${escapeHtml(msg)}</p>`
     + `<p><a href="/admin/pnl" style="color:#0A0A0A;font-weight:700">Back to the P&amp;L &rarr;</a></p></body>`,
-    { status: okFlag ? 200 : 400, headers: { 'content-type': 'text/html; charset=utf-8' } }
-  );
+    { status: okFlag ? 200 : 400, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } }
+  ), url);
 
   const stateVal = await env.BLUEPRINT_AUTH.get(`gusto_oauth_state:${state}`);
   if (!stateVal) return finish('Expired or invalid install state. Start the connect flow again.', false);
@@ -2885,7 +3052,10 @@ async function verifyGoogleIdToken(credential, clientId) {
   const now = Date.now();
   const stale = !googleJwks.keys || now - googleJwks.fetchedAt > 60 * 60 * 1000;
   const kidMissing = googleJwks.keys && !googleJwks.keys.some((k) => k.kid === header.kid);
-  if (stale || kidMissing) {
+  // A forged `kid` would otherwise force a Google fetch on every request;
+  // only honor a kid-miss refetch at most once a minute.
+  const kidRefetchOk = kidMissing && (now - googleJwks.fetchedAt > 60 * 1000);
+  if (stale || kidRefetchOk) {
     const resp = await fetch('https://www.googleapis.com/oauth2/v3/certs');
     if (!resp.ok) throw new Error('Could not fetch Google signing keys');
     const jwks = await resp.json();
@@ -2917,6 +3087,12 @@ async function verifyGoogleIdToken(credential, clientId) {
 
 async function handleGoogleLogin(request, env) {
   if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+  // Verifying a credential can trigger an outbound Google JWKS fetch on an
+  // unknown key id; cap attempts per IP so a forged-kid flood can't amplify.
+  const ip = clientIp(request);
+  if (!memoryLimit(`glogin:${ip}`, 30, 10 * 60)) {
+    return json(429, { ok: false, error: 'Too many attempts. Wait a few minutes and try again.' });
+  }
   const clientId = getGoogleClientId(env);
   if (!clientId) return json(503, { ok: false, error: 'Google login is not configured yet' });
 
@@ -2931,6 +3107,15 @@ async function handleGoogleLogin(request, env) {
   const email = payload.email.toLowerCase();
   if (!email.endsWith('@uncap.com')) {
     return json(403, { ok: false, error: 'Reserved for the Uncap team (@uncap.com).' });
+  }
+  // Require the Google Workspace hosted-domain claim: a consumer Google
+  // account created on an @uncap.com address (e.g. a departed employee's,
+  // or a look-alike) carries no `hd`, so this blocks impersonation that the
+  // email suffix alone would allow. The hardcoded owner + seeded managers
+  // are exempt so a Workspace quirk can never lock them out.
+  const isSeeded = isSuperAdmin(email) || SEED_MANAGEMENT.includes(email);
+  if (!isSeeded && payload.hd !== 'uncap.com') {
+    return json(403, { ok: false, error: 'Use your managed uncap.com Google Workspace account.' });
   }
   if (isRemovedAdmin(email)) {
     return json(403, { ok: false, error: 'This account no longer has access.' });
@@ -2948,11 +3133,20 @@ async function handleGoogleLogin(request, env) {
   const approved = role !== ROLE_PENDING;
 
   const token = genToken();
-  await env.BLUEPRINT_AUTH.put(
-    `admin_session:${token}`,
-    JSON.stringify({ email, name: payload.name || '', picture: payload.picture || '', ts: Date.now() }),
-    { expirationTtl: ADMIN_SESSION_TTL_SECONDS }
-  );
+  await Promise.all([
+    env.BLUEPRINT_AUTH.put(
+      `admin_session:${token}`,
+      JSON.stringify({ email, name: payload.name || '', picture: payload.picture || '', ts: Date.now() }),
+      { expirationTtl: ADMIN_SESSION_TTL_SECONDS }
+    ),
+    // Per-email index so revoking a teammate can end their live sessions
+    // immediately instead of waiting out the cookie TTL.
+    env.BLUEPRINT_AUTH.put(
+      `adminsessidx:${encodeURIComponent(email)}:${token}`,
+      '1',
+      { expirationTtl: ADMIN_SESSION_TTL_SECONDS }
+    ).catch(() => {}),
+  ]);
 
   return withSecurityHeaders(new Response(JSON.stringify({ ok: true, email, name: payload.name || '', picture: payload.picture || '', approved, role, isSuper: isSuperAdmin(email), canDelete: role === ROLE_ADMIN || role === ROLE_MANAGEMENT }), {
     status: 200,
@@ -3022,6 +3216,20 @@ async function handleAdminApproveUser(request, env) {
     : { approved: true, role: rawRole, approvedBy: sess.email, approvedAt: new Date().toISOString() };
   const user = await upsertAdminUser(env, email, patch);
   user.role = roleFromRecord(email, user);
+  if (revoke) {
+    // End the teammate's live sessions right away — the cookie alone would
+    // otherwise stay valid for up to 7 days.
+    try {
+      const idx = await env.BLUEPRINT_AUTH.list({ prefix: `adminsessidx:${encodeURIComponent(email)}:`, limit: 100 });
+      await Promise.all(idx.keys.flatMap((k) => {
+        const tok = k.name.slice(k.name.lastIndexOf(':') + 1);
+        return [
+          env.BLUEPRINT_AUTH.delete(`admin_session:${tok}`).catch(() => {}),
+          env.BLUEPRINT_AUTH.delete(k.name).catch(() => {}),
+        ];
+      }));
+    } catch (_) { /* best-effort */ }
+  }
   await logActivity(env, null, { type: revoke ? 'deleted' : 'created', entity: 'user', id: email, name: email, actor: sess.email, detail: revoke ? 'User access revoked' : `User approved as ${rawRole}` }, request);
   return json(200, { ok: true, user });
 }
@@ -3030,7 +3238,11 @@ async function handleAdminLogout(request, env) {
   if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
   const token = getCookie(request, ADMIN_COOKIE);
   if (/^[a-f0-9]{48}$/.test(token)) {
+    const sess = await getAdminSession(request, env);
     await env.BLUEPRINT_AUTH.delete(`admin_session:${token}`).catch(() => {});
+    if (sess && sess.email) {
+      await env.BLUEPRINT_AUTH.delete(`adminsessidx:${encodeURIComponent(sess.email)}:${token}`).catch(() => {});
+    }
   }
   return withSecurityHeaders(new Response(JSON.stringify({ ok: true }), {
     status: 200,
@@ -3287,8 +3499,8 @@ async function handleBlueprintContent(request, env) {
   const isAdmin = !!(admin && await adminIsApproved(env, admin.email));
   let ok = isAdmin;
   if (!ok) {
-    const portal = await getPortalSession(request, env);
-    ok = !!(portal && company && portal.companyId === company.id);
+    const fresh = await getFreshPortalSession(request, env);
+    ok = !!(fresh && company && fresh.co.id === company.id);
   }
   if (!ok) return json(401, { ok: false, error: 'Not authorised' });
 
@@ -3500,7 +3712,7 @@ async function handleAdminBpToken(request, env) {
   // runs when a legacy draft id differs from the company id.
   const [bpMeta, sess, coDirect] = await Promise.all([
     getBpMeta(env, blueprintId),
-    getAdminSession(request, env),
+    getApprovedAdmin(request, env),
     getCompany(env, blueprintId),
   ]);
   const bpCo = coDirect || await findCompanyByBlueprintId(env, blueprintId);
@@ -3520,11 +3732,13 @@ async function handleAdminBpToken(request, env) {
     return json(200, { ok: true, token, expiresAt, company });
   }
   // Signed-in portal customers pass their own company's blueprint gate
-  // silently — the gate already calls this endpoint on load.
-  const portal = await getPortalSession(request, env);
-  if (portal) {
-    const co = await getCompany(env, portal.companyId);
-    if (co && !co.declined && co.blueprintId === blueprintId) {
+  // silently — the gate already calls this endpoint on load. The session is
+  // re-validated against the company's current contacts, and a disabled
+  // blueprint mints no client tokens.
+  const fresh = await getFreshPortalSession(request, env);
+  if (fresh) {
+    const { sess: portal, co } = fresh;
+    if (co.blueprintId === blueprintId && !(bpMeta && bpMeta.disabled)) {
       const token = genToken();
       await env.BLUEPRINT_AUTH.put(
         `session:${token}`,
@@ -4380,11 +4594,11 @@ function sanitizeAnswers(raw) {
     const key = k.toString().slice(0, 80);
     const v = raw[k];
     if (Array.isArray(v)) {
-      out[key] = v.slice(0, 40).map((x) => x.toString().slice(0, 400));
+      out[key] = v.slice(0, 40).map((x) => String(x == null ? '' : x).slice(0, 400));
     } else if (v == null) {
       out[key] = '';
     } else {
-      out[key] = v.toString().slice(0, 8000);
+      out[key] = String(v).slice(0, 8000);
     }
   }
   return out;
@@ -4405,14 +4619,15 @@ async function getDiscoverySession(env, token) {
 // Resolve who's acting on a discovery: an admin (cookie) or a passcode
 // client (token in the body). Returns { role, email, name } or null.
 async function resolveDiscoveryActor(request, env, body, disc) {
-  const admin = await getAdminSession(request, env);
+  const admin = await getApprovedAdmin(request, env);
   if (admin) return { role: 'admin', email: admin.email, name: admin.name || admin.email };
   // A signed-in portal customer opens their own company's discovery with
-  // no extra gate — the portal cookie is the session.
-  const portal = await getPortalSession(request, env);
-  if (portal) {
-    const co = await getCompany(env, portal.companyId);
-    if (co && (co.discoveryHandle === disc.handle || (disc.companyId && disc.companyId === co.id))) {
+  // no extra gate — the portal cookie is the session, re-validated against
+  // the company's current contacts.
+  const fresh = await getFreshPortalSession(request, env);
+  if (fresh) {
+    const { sess: portal, co } = fresh;
+    if (co.discoveryHandle === disc.handle || (disc.companyId && disc.companyId === co.id)) {
       return { role: 'client', email: portal.email || '', name: portal.name || portal.email || 'Client' };
     }
   }
@@ -4429,26 +4644,29 @@ async function handleDiscoveryMeta(request, env) {
   const url = new URL(request.url);
   const disc = await getDiscoveryByHandle(env, url.searchParams.get('handle'));
   if (!disc) return json(404, { ok: false, error: 'Discovery not found' });
-  const admin = await getAdminSession(request, env);
+  const admin = await getApprovedAdmin(request, env);
+  // Pre-auth, expose only what the welcome/gate screen needs to brand itself.
+  // The address and AI business profile are shown to the team (admin) only,
+  // so a guessable handle can't leak a client's details before sign-in.
   return json(200, {
     ok: true,
     handle: disc.handle,
     company: disc.company || '',
     clientName: disc.company || disc.client || '',
-    address: disc.address || '',
-    profile: disc.profile || null,
     palette: disc.palette || null,
     hasLogo: !!disc.hasLogo,
     status: disc.status || 'new',
     isAdmin: !!admin,
+    ...(admin ? { address: disc.address || '', profile: disc.profile || null } : {}),
   });
 }
 
 async function handleDiscoveryRequestCode(request, env) {
   let body;
   try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
   const emailRaw = (body.email || '').toString().trim();
-  if (!emailRaw || !EMAIL_RE.test(emailRaw)) return json(400, { ok: false, error: 'Enter a valid email' });
+  if (!emailRaw || emailRaw.length > 254 || !EMAIL_RE.test(emailRaw)) return json(400, { ok: false, error: 'Enter a valid email' });
   const email = emailRaw.toLowerCase();
   const disc = await getDiscoveryByHandle(env, body.handle);
   if (!disc) return json(404, { ok: false, error: 'Discovery not found' });
@@ -4464,11 +4682,13 @@ async function handleDiscoveryRequestCode(request, env) {
   }
   {
     const ip = clientIp(request);
-    const [okEmail, okIp] = await Promise.all([
-      rateLimit(env, `disccode:email:${disc.id}:${encodeURIComponent(email)}`, 3, 15 * 60),
-      ip ? rateLimit(env, `disccode:ip:${ip}`, 10, 15 * 60) : Promise.resolve(true),
-    ]);
-    if (!okEmail || !okIp) return json(429, { ok: false, error: 'Too many code requests. Wait a few minutes and try again.' });
+    if (!memoryLimit(`disccode:${ip}`, 10, 15 * 60)) return json(429, { ok: false, error: 'Too many code requests. Wait a few minutes and try again.' });
+    if (ip && !(await rateLimit(env, `disccode:ip:${ip}`, 10, 15 * 60))) {
+      return json(429, { ok: false, error: 'Too many code requests. Wait a few minutes and try again.' });
+    }
+    const okEmail = await rateLimit(env, `disccode:email:${disc.id}:${encodeURIComponent(email)}`, 3, 15 * 60);
+    const okDay = await rateLimit(env, `disccode:day:${disc.id}:${encodeURIComponent(email)}`, 10, 24 * 60 * 60);
+    if (!okEmail || !okDay) return json(429, { ok: false, error: 'Too many code requests. Wait a few minutes and try again.' });
   }
   const code = genCode();
   await env.BLUEPRINT_AUTH.put(`disccode:${disc.id}:${encodeURIComponent(email)}`, code, { expirationTtl: CODE_TTL_SECONDS });
@@ -4485,9 +4705,11 @@ async function handleDiscoveryRequestCode(request, env) {
 async function handleDiscoveryVerify(request, env) {
   let body;
   try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
   const email = (body.email || '').toString().trim().toLowerCase();
   const code = (body.code || '').toString().trim();
   if (!email || !code) return json(400, { ok: false, error: 'Enter your code' });
+  if (email.length > 254 || !EMAIL_RE.test(email)) return json(400, { ok: false, error: 'Enter a valid email' });
   const disc = await getDiscoveryByHandle(env, body.handle);
   if (!disc) return json(404, { ok: false, error: 'Discovery not found' });
   // Only assigned contacts hold a code, but re-check the allowlist here too.
@@ -4497,17 +4719,28 @@ async function handleDiscoveryVerify(request, env) {
   const name = stripHeaderValue(discoveryContactName(disc, email)).slice(0, 200) || email.split('@')[0];
 
   const ip = clientIp(request);
-  if (ip && !(await rateLimit(env, `discverify:${ip}`, 20, 10 * 60))) {
+  if (!memoryLimit(`discverify:${ip}`, 20, 10 * 60) || !memoryLimit(`discverify:em:${disc.id}:${email}`, 10, 10 * 60)) {
     return json(429, { ok: false, error: 'Too many attempts. Wait a few minutes and try again.' });
+  }
+  if (ip && !(await rateLimit(env, `discverify:${ip}`, 20, 10 * 60, { strict: true }))) {
+    return json(429, { ok: false, error: 'Too many attempts. Wait a few minutes and try again.' });
+  }
+  if (!(await rateLimit(env, `discverify:em:${disc.id}:${encodeURIComponent(email)}`, 10, 10 * 60, { strict: true }))) {
+    return json(429, { ok: false, error: 'Too many attempts. Wait a few minutes and try again.' });
+  }
+  const lockKey = `disclock:${disc.id}:${encodeURIComponent(email)}`;
+  if (await env.BLUEPRINT_AUTH.get(lockKey).catch(() => '1')) {
+    return json(429, { ok: false, error: 'Too many attempts. Request a new code in a few minutes.' });
   }
   const key = `disccode:${disc.id}:${encodeURIComponent(email)}`;
   const triesKey = `disctries:${disc.id}:${encodeURIComponent(email)}`;
   const stored = await env.BLUEPRINT_AUTH.get(key);
-  if (!stored || stored !== code) {
+  if (!stored || !timingSafeEqual(stored, code)) {
     const tries = (parseInt(await env.BLUEPRINT_AUTH.get(triesKey), 10) || 0) + 1;
     if (stored && tries >= MAX_CODE_ATTEMPTS) {
       await env.BLUEPRINT_AUTH.delete(key).catch(() => {});
       await env.BLUEPRINT_AUTH.delete(triesKey).catch(() => {});
+      await env.BLUEPRINT_AUTH.put(lockKey, '1', { expirationTtl: 15 * 60 }).catch(() => {});
     } else {
       await env.BLUEPRINT_AUTH.put(triesKey, String(tries), { expirationTtl: CODE_TTL_SECONDS }).catch(() => {});
     }
@@ -4540,8 +4773,6 @@ async function handleDiscoveryGetAnswers(request, env) {
         handle: disc.handle,
         company: disc.company || '',
         clientName: disc.company || disc.client || '',
-        address: disc.address || '',
-        profile: disc.profile || null,
         palette: disc.palette || null,
         hasLogo: !!disc.hasLogo,
         status: disc.status || 'new',
@@ -4621,12 +4852,17 @@ async function handleDiscoverySaveAnswers(request, env, ctx) {
 // Client submit — diff against what's stored, save, and report the change
 // set on the dashboard activity feed with a viewable payload.
 async function handleDiscoverySubmit(request, env, ctx) {
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
   let body;
   try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
   const disc = await getDiscoveryByHandle(env, body.handle);
   if (!disc) return json(404, { ok: false, error: 'Discovery not found' });
   const actor = await resolveDiscoveryActor(request, env, body, disc);
   if (!actor) return json(401, { ok: false, error: 'Not authorised' });
+  // Blunt a submit flood: the write + activity row per call is the cost.
+  if (!memoryLimit(`discsubmit:${disc.id}:${actor.email}`, 12, 10 * 60)) {
+    return json(429, { ok: false, error: 'Too many submissions. Wait a few minutes.' });
+  }
   // Training demo: accept the submit but never persist or report it.
   if (disc.demo) return json(200, { ok: true, changed: 0, demo: true });
 
@@ -4981,6 +5217,8 @@ async function getCompany(env, id) {
     return hit.json ? JSON.parse(hit.json) : null; // fresh copy; callers may mutate
   }
   const raw = await env.BLUEPRINT_AUTH.get(`company:${clean}`);
+  // Bound the memo so probing many random slugs can't grow it without limit.
+  if (_companyMemo.size > 2000) _companyMemo.clear();
   _companyMemo.set(clean, { at: Date.now(), json: raw || null });
   if (!raw) return null;
   try { return JSON.parse(raw); } catch { return null; }
@@ -5313,14 +5551,15 @@ async function handleEstimateContent(request, env) {
   const cid = (new URL(request.url).searchParams.get('company') || '').toString().trim().toLowerCase();
   // Authorize like the hub: the company's own portal session, or an approved admin.
   const sess = await getPortalSession(request, env);
+  const co = await getCompany(env, cid);
+  if (!co) return json(404, { ok: false, error: 'Company not found' });
   let isAdmin = false;
-  if (!(sess && sess.companyId === cid)) {
+  const portalOk = sess && sess.companyId === cid && !co.declined && companyEmails(co).includes(sess.email);
+  if (!portalOk) {
     const admin = await getAdminSession(request, env);
     if (admin && (await adminIsApproved(env, admin.email))) isAdmin = true;
     else return json(401, { ok: false, error: 'Not signed in' });
   }
-  const co = await getCompany(env, cid);
-  if (!co) return json(404, { ok: false, error: 'Company not found' });
   if (co.declined && !isAdmin) return json(403, { ok: false, error: 'Hub access is disabled.' });
   const est = await getEstimate(env, cid);
   if (!est || (est.status !== 'ready' && !isAdmin)) return json(404, { ok: false, error: 'No estimate yet' });
@@ -5334,10 +5573,10 @@ async function handleEstimateContent(request, env) {
 async function handleEstimateApprove(request, env, ctx) {
   if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
   let body = {}; try { body = await request.json(); } catch { /* body optional */ }
-  const sess = await getPortalSession(request, env);
+  const fresh = await getFreshPortalSession(request, env);
   let cid = '', who = '', email = '', isAdmin = false;
-  if (sess && sess.companyId) {
-    cid = sess.companyId; email = sess.email || ''; who = sess.name || email || 'A contact';
+  if (fresh) {
+    cid = fresh.co.id; email = fresh.sess.email || ''; who = fresh.sess.name || email || 'A contact';
   } else {
     const admin = await getAdminSession(request, env);
     if (admin && (await adminIsApproved(env, admin.email))) {
@@ -5352,6 +5591,10 @@ async function handleEstimateApprove(request, env, ctx) {
   if (co.declined && !isAdmin) return json(403, { ok: false, error: 'Hub access is disabled.' });
   const est = await getEstimate(env, cid);
   if (!est || est.status !== 'ready') return json(404, { ok: false, error: 'No estimate yet' });
+
+  // Idempotent: an already-approved estimate returns ok without re-writing
+  // or re-emailing, so a client can't flood the inbox by re-clicking.
+  if (co.estimateApproved) return json(200, { ok: true, already: true });
 
   const approvedAt = new Date().toISOString();
   co.estimateApproved = true;
@@ -5703,11 +5946,20 @@ async function handleAdminCompanyFileGet(request, env) {
 // logo changes show up within that hour, same as the old browser-only TTL.
 async function cachedImage(request, ctx, compute) {
   const cache = caches.default;
-  const hit = await cache.match(request).catch(() => null);
+  // Normalize the cache key to the identifying params only, so junk query
+  // strings can't each force an uncached compute (KV read + base64 decode).
+  const u = new URL(request.url);
+  const id = u.searchParams.get('id') || '';
+  const handle = u.searchParams.get('handle') || '';
+  const keyUrl = new URL(u.origin + u.pathname);
+  if (id) keyUrl.searchParams.set('id', id);
+  if (handle) keyUrl.searchParams.set('handle', handle);
+  const cacheKey = new Request(keyUrl.toString(), { method: 'GET' });
+  const hit = await cache.match(cacheKey).catch(() => null);
   if (hit) return hit;
   const resp = await compute();
   if (resp.status === 200 && ctx && ctx.waitUntil) {
-    ctx.waitUntil(cache.put(request, resp.clone()).catch(() => {}));
+    ctx.waitUntil(cache.put(cacheKey, resp.clone()).catch(() => {}));
   }
   return resp;
 }
@@ -5759,17 +6011,22 @@ function portalContactName(rec, email) {
 async function handlePortalRequestCode(request, env) {
   let body;
   try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
   const emailRaw = (body.email || '').toString().trim();
-  if (!emailRaw || !EMAIL_RE.test(emailRaw)) return json(400, { ok: false, error: 'Enter a valid email' });
+  if (!emailRaw || emailRaw.length > 254 || !EMAIL_RE.test(emailRaw)) return json(400, { ok: false, error: 'Enter a valid email' });
   const email = emailRaw.toLowerCase();
 
   {
+    // IP first and sequentially: once an address is over its limit no new
+    // per-email counter keys get written on its behalf.
     const ip = clientIp(request);
-    const [okEmail, okIp] = await Promise.all([
-      rateLimit(env, `pocode:rl:${encodeURIComponent(email)}`, 3, 15 * 60),
-      ip ? rateLimit(env, `pocode:ip:${ip}`, 10, 15 * 60) : Promise.resolve(true),
-    ]);
-    if (!okEmail || !okIp) return json(429, { ok: false, error: 'Too many code requests. Wait a few minutes and try again.' });
+    if (!memoryLimit(`pocode:${ip}`, 10, 15 * 60)) return json(429, { ok: false, error: 'Too many code requests. Wait a few minutes and try again.' });
+    if (ip && !(await rateLimit(env, `pocode:ip:${ip}`, 10, 15 * 60))) {
+      return json(429, { ok: false, error: 'Too many code requests. Wait a few minutes and try again.' });
+    }
+    const okEmail = await rateLimit(env, `pocode:rl:${encodeURIComponent(email)}`, 3, 15 * 60);
+    const okDay = await rateLimit(env, `pocode:day:${encodeURIComponent(email)}`, 10, 24 * 60 * 60);
+    if (!okEmail || !okDay) return json(429, { ok: false, error: 'Too many code requests. Wait a few minutes and try again.' });
   }
 
   const company = await findCompanyByEmail(env, email);
@@ -5792,22 +6049,35 @@ async function handlePortalRequestCode(request, env) {
 async function handlePortalVerify(request, env, ctx) {
   let body;
   try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
   const email = (body.email || '').toString().trim().toLowerCase();
   const code = (body.code || '').toString().trim();
   if (!email || !code) return json(400, { ok: false, error: 'Enter your code' });
+  if (email.length > 254 || !EMAIL_RE.test(email)) return json(400, { ok: false, error: 'Enter a valid email' });
 
   const ip = clientIp(request);
-  if (ip && !(await rateLimit(env, `poverify:${ip}`, 20, 10 * 60))) {
+  if (!memoryLimit(`poverify:${ip}`, 20, 10 * 60) || !memoryLimit(`poverify:em:${email}`, 10, 10 * 60)) {
     return json(429, { ok: false, error: 'Too many attempts. Wait a few minutes and try again.' });
+  }
+  if (ip && !(await rateLimit(env, `poverify:${ip}`, 20, 10 * 60, { strict: true }))) {
+    return json(429, { ok: false, error: 'Too many attempts. Wait a few minutes and try again.' });
+  }
+  if (!(await rateLimit(env, `poverify:em:${encodeURIComponent(email)}`, 10, 10 * 60, { strict: true }))) {
+    return json(429, { ok: false, error: 'Too many attempts. Wait a few minutes and try again.' });
+  }
+  const lockKey = `polock:${encodeURIComponent(email)}`;
+  if (await env.BLUEPRINT_AUTH.get(lockKey).catch(() => '1')) {
+    return json(429, { ok: false, error: 'Too many attempts. Request a new code in a few minutes.' });
   }
   const key = `pocode:${encodeURIComponent(email)}`;
   const triesKey = `potries:${encodeURIComponent(email)}`;
   const stored = await env.BLUEPRINT_AUTH.get(key);
-  if (!stored || stored !== code) {
+  if (!stored || !timingSafeEqual(stored, code)) {
     const tries = (parseInt(await env.BLUEPRINT_AUTH.get(triesKey), 10) || 0) + 1;
     if (stored && tries >= MAX_CODE_ATTEMPTS) {
       await env.BLUEPRINT_AUTH.delete(key).catch(() => {});
       await env.BLUEPRINT_AUTH.delete(triesKey).catch(() => {});
+      await env.BLUEPRINT_AUTH.put(lockKey, '1', { expirationTtl: 15 * 60 }).catch(() => {});
     } else {
       await env.BLUEPRINT_AUTH.put(triesKey, String(tries), { expirationTtl: CODE_TTL_SECONDS }).catch(() => {});
     }
@@ -5854,6 +6124,9 @@ async function handlePortalMe(request, env) {
     rec = await getCompany(env, sess.companyId);
     if (!rec) return json(401, { ok: false, error: 'No portal access' });
     if (rec.declined) return json(403, { ok: false, error: 'Hub access is disabled.' });
+    // A contact removed from the company loses Hub access immediately,
+    // instead of riding out the 7-day cookie.
+    if (!companyEmails(rec).includes(sess.email)) return json(401, { ok: false, error: 'No portal access' });
     viewer = { email: sess.email, name: sess.name || '' };
   } else {
     // Admin preview: an approved Uncap admin can view any company's hub exactly
@@ -5919,6 +6192,7 @@ async function handlePortalFile(request, env) {
   if (sess) {
     rec = await getCompany(env, sess.companyId);
     if (rec && rec.declined) return new Response('Hub access is disabled', { status: 403 });
+    if (rec && !companyEmails(rec).includes(sess.email)) return new Response('Not signed in', { status: 401 });
   } else {
     // Admin preview: approved admins can pull files for the company they're
     // previewing (?company=<id>), matching the hub preview in handlePortalMe.

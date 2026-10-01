@@ -494,7 +494,10 @@
         .finally(() => { startAuto(); });
 
       const onMsg = (ev) => {
-        if (ev.origin !== location.origin && ev.source !== window) return;
+        // The capture bridge posts from this same window (the content script
+        // runs in the page's context), so require BOTH same-origin AND
+        // same-window — not either-or.
+        if (ev.source !== window || ev.origin !== location.origin) return;
         const m = ev.data;
         if (!m || m.source !== 'uncap-capture') return;
         if (m.kind === 'final' && typeof m.text === 'string') onFinalSegment(m.text.trim());

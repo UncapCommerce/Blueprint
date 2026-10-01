@@ -6,7 +6,9 @@
 // the page-minted Deepgram key back to the extension. The page mints the key
 // with its own admin session, so the extension holds no secrets.
 
-const IS_DISCOVERY = /\/(discovery\/[a-z0-9-]+|[a-z0-9-]+\/discovery)/.test(location.pathname);
+// Anchored so only a real discovery-experience document counts — not
+// /admin/discoveries or the portal shell at /<co>/discovery.
+const IS_DISCOVERY = /^\/(discovery\/[a-z0-9-]+|[a-z0-9-]+\/discovery\/app)\/?$/.test(location.pathname);
 
 if (IS_DISCOVERY) {
   try { chrome.runtime.sendMessage({ kind: 'discovery-tab' }); } catch (_) {}
@@ -26,7 +28,7 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
   if (msg.kind === 'mint-key') {
     // Ask the page to mint a Deepgram key; it answers via postMessage.
     const onKey = (ev) => {
-      if (ev.source !== window || !ev.data || ev.data.source !== 'uncap-page' || ev.data.kind !== 'key') return;
+      if (ev.source !== window || ev.origin !== location.origin || !ev.data || ev.data.source !== 'uncap-page' || ev.data.kind !== 'key') return;
       window.removeEventListener('message', onKey);
       clearTimeout(timer);
       sendResponse({ key: ev.data.key || '' });

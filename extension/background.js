@@ -23,7 +23,10 @@ async function findDiscoveryTab() {
     try { await chrome.tabs.get(discoveryTabId); return discoveryTabId; } catch (_) { discoveryTabId = null; }
   }
   const tabs = await chrome.tabs.query({ url: 'https://go.uncap.com/*' });
-  const disc = tabs.find((t) => /\/(discovery\/[a-z0-9-]+|[a-z0-9-]+\/discovery)/.test(t.url || ''));
+  const disc = tabs.find((t) => {
+    try { return /^\/(discovery\/[a-z0-9-]+|[a-z0-9-]+\/discovery\/app)\/?$/.test(new URL(t.url || '').pathname); }
+    catch { return false; }
+  });
   return disc ? disc.id : null;
 }
 
@@ -77,8 +80,16 @@ chrome.action.onClicked.addListener(async (tab) => {
 chrome.runtime.onMessage.addListener((msg, sender) => {
   if (!msg) return;
   // A discovery tab's content script announces itself so segment routing
-  // always has a fresh target.
-  if (msg.kind === 'discovery-tab' && sender.tab) { discoveryTabId = sender.tab.id; return; }
+  // always has a fresh target — but never re-point mid-capture, or a call
+  // in progress would start feeding whichever discovery the rep clicks next.
+  if (msg.kind === 'discovery-tab' && sender.tab) {
+    if (!capturing) discoveryTabId = sender.tab.id;
+    return;
+  }
+  // Offscreen messages come from our extension's own offscreen document,
+  // which has no sender.tab; ignore anything claiming to be offscreen that
+  // actually originates from a page/content script.
+  if (msg.from === 'offscreen' && sender.tab) return;
   // Transcript segments from the offscreen recorder → the discovery page.
   if (msg.from === 'offscreen' && msg.kind === 'segment' && discoveryTabId != null) {
     chrome.tabs.sendMessage(discoveryTabId, { kind: 'segment', final: !!msg.final, text: msg.text || '' }).catch(() => {});
