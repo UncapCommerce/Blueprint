@@ -1258,7 +1258,7 @@ const SUPER_ADMIN_EMAIL = 'denis@uncap.com';
 // Admin). Not revocable or downgradable.
 const SEED_MANAGEMENT = ['mj@uncap.com', 'vishal@uncap.com'];
 // Teammates removed from the app entirely: blocked from signing in, denied all
-// access, and purged from KV (record + sessions) by a one-time cleanup.
+// access, and purged from KV (record + sessions) when the Admin next opens Users.
 // Reversible — remove an email here to let them request access again.
 const REMOVED_ADMINS = ['ryan@uncap.com'];
 const isSuperAdmin = (email) => (email || '').toString().toLowerCase() === SUPER_ADMIN_EMAIL;
@@ -3171,6 +3171,27 @@ async function handleAdminMe(request, env) {
   });
 }
 
+// Delete every live admin session for an email, via the per-email index.
+// `scan` also sweeps unindexed sessions (minted before the index existed),
+// used once when a teammate is removed outright.
+async function endAdminSessions(env, email, { scan = false } = {}) {
+  try {
+    const idx = await env.BLUEPRINT_AUTH.list({ prefix: `adminsessidx:${encodeURIComponent(email)}:`, limit: 100 });
+    const toks = new Set(idx.keys.map((k) => k.name.slice(k.name.lastIndexOf(':') + 1)));
+    if (scan) {
+      const all = await env.BLUEPRINT_AUTH.list({ prefix: 'admin_session:', limit: 1000 });
+      const vals = await Promise.all(all.keys.map((k) => env.BLUEPRINT_AUTH.get(k.name).then((v) => [k.name, v])));
+      for (const [name, v] of vals) {
+        try { if (JSON.parse(v).email === email) toks.add(name.slice('admin_session:'.length)); } catch { /* skip */ }
+      }
+    }
+    await Promise.all([
+      ...[...toks].map((t) => env.BLUEPRINT_AUTH.delete(`admin_session:${t}`).catch(() => {})),
+      ...idx.keys.map((k) => env.BLUEPRINT_AUTH.delete(k.name).catch(() => {})),
+    ]);
+  } catch (_) { /* best-effort */ }
+}
+
 // ── User management (Admin only) ──────────────────────────────────────────
 async function handleAdminListUsers(request, env) {
   const sess = await getAdminSession(request, env);
@@ -3178,7 +3199,16 @@ async function handleAdminListUsers(request, env) {
   if (!isSuperAdmin(sess.email)) return json(403, { ok: false, error: 'Admin only' });
   await seedAdminUsers(env);
   const list = await env.BLUEPRINT_AUTH.list({ prefix: 'adminuser:', limit: 500 });
-  const users = (await Promise.all(list.keys.map((k) => env.BLUEPRINT_AUTH.get(k.name).then((v) => {
+  // Teammates removed from the company: purge their record and every session
+  // the first time the list sees them (the record's presence is the marker,
+  // and sign-in is refused before a record could be recreated).
+  const removed = list.keys.filter((k) => isRemovedAdmin(k.name.slice('adminuser:'.length)));
+  await Promise.all(removed.map(async (k) => {
+    await endAdminSessions(env, k.name.slice('adminuser:'.length), { scan: true });
+    await env.BLUEPRINT_AUTH.delete(k.name).catch(() => {});
+  }));
+  const keep = list.keys.filter((k) => !removed.includes(k));
+  const users = (await Promise.all(keep.map((k) => env.BLUEPRINT_AUTH.get(k.name).then((v) => {
     try { return JSON.parse(v); } catch { return null; }
   })))).filter(Boolean);
   const rank = { [ROLE_ADMIN]: 0, [ROLE_MANAGEMENT]: 1, [ROLE_STAFF]: 2, [ROLE_PENDING]: 3 };
@@ -3217,18 +3247,9 @@ async function handleAdminApproveUser(request, env) {
   const user = await upsertAdminUser(env, email, patch);
   user.role = roleFromRecord(email, user);
   if (revoke) {
-    // End the teammate's live sessions right away — the cookie alone would
+    // End the teammate's live sessions right away; the cookie alone would
     // otherwise stay valid for up to 7 days.
-    try {
-      const idx = await env.BLUEPRINT_AUTH.list({ prefix: `adminsessidx:${encodeURIComponent(email)}:`, limit: 100 });
-      await Promise.all(idx.keys.flatMap((k) => {
-        const tok = k.name.slice(k.name.lastIndexOf(':') + 1);
-        return [
-          env.BLUEPRINT_AUTH.delete(`admin_session:${tok}`).catch(() => {}),
-          env.BLUEPRINT_AUTH.delete(k.name).catch(() => {}),
-        ];
-      }));
-    } catch (_) { /* best-effort */ }
+    await endAdminSessions(env, email);
   }
   await logActivity(env, null, { type: revoke ? 'deleted' : 'created', entity: 'user', id: email, name: email, actor: sess.email, detail: revoke ? 'User access revoked' : `User approved as ${rawRole}` }, request);
   return json(200, { ok: true, user });
