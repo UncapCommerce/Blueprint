@@ -1256,7 +1256,7 @@ const ADMIN_COOKIE = '__Host-bp_admin';
 const SUPER_ADMIN_EMAIL = 'denis@uncap.com';
 // Seeded teammates are auto-approved and land as Management (one tier below
 // Admin). Not revocable or downgradable.
-const SEED_MANAGEMENT = ['mj@uncap.com'];
+const SEED_MANAGEMENT = ['mj@uncap.com', 'vishal@uncap.com'];
 // Teammates removed from the app entirely: blocked from signing in, denied all
 // access, and purged from KV (record + sessions) by a one-time cleanup.
 // Reversible — remove an email here to let them request access again.

@@ -117,7 +117,7 @@ JSX with a `babel.transform` (that's exactly what the deploy runs).
   **Pending** has no access. Role lives on the `adminuser:<email>` KV
   record (`role`), resolved by `getAdminRole`/`roleFromRecord` (legacy
   approved records with no role default to Staff). `SEED_MANAGEMENT`
-  (`ryan@uncap.com`, `mj@uncap.com`) are auto-approved as Management and
+  (`mj@uncap.com`, `vishal@uncap.com`) are auto-approved as Management and
   can't be revoked or downgraded. The worker gates every `/api/admin/*`
   route (except config/login/me/logout and the dual-auth bp-token) on
   approval, the delete/reopen endpoints on `adminCanDelete`
