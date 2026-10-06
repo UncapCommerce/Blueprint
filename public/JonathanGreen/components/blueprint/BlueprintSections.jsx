@@ -929,7 +929,7 @@ function BPTechStack() {
   const rows = [
     { name: 'Shopify', fn: 'Commerce platform + B2B',            pri: 'start',  cost: '$2,300/mo' },
     { name: 'Shopify Search & Discovery',  fn: 'Search, filters & recommendations',   pri: 'launch', cost: 'Free' },
-    { name: 'Shopify Checkout Blocks',     fn: 'Checkout customizations',             pri: 'launch', cost: 'Free' },
+    { name: 'Shopify Inbox',               fn: 'Live chat & customer messaging',      pri: 'launch', cost: 'Free' },
     { name: 'Shopify Knowledge Base',      fn: 'Help center & self-service',          pri: 'launch', cost: 'Free' },
     { name: 'Shopify Marketplace Connect', fn: 'Sync to marketplaces',                pri: 'future', cost: 'Free' },
     { name: 'Shopify Flow',                fn: 'Workflow automation',                 pri: 'launch', cost: 'Free' },
@@ -962,7 +962,7 @@ function BPTechStack() {
         {(() => {
           const layers = [
             { tier:'04', name:'Growth & Intelligence', note:'After launch', tools:[['Shopify Flow','launch'],['Shopify Marketplace Connect','future'],['Shopify Knowledge Base','launch']] },
-            { tier:'03', name:'Experience & Engagement', note:'Customer-facing', tools:[['Shopify Search & Discovery','launch'],['Shopify Checkout Blocks','launch'],['Shopify Bundles','launch']] },
+            { tier:'03', name:'Experience & Engagement', note:'Customer-facing', tools:[['Shopify Search & Discovery','launch'],['Shopify Inbox','launch'],['Shopify Bundles','launch']] },
             { tier:'02', name:'Data & Integration', note:'System of record', tools:[['Matrixify','start']] },
             { tier:'01', name:'Commerce Core', note:'Foundation', tools:[['Shopify','start']], core:true }
           ];
@@ -1041,11 +1041,11 @@ function BPTechStack() {
           );
         })}
         {/* Footer total */}
-        <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1.2fr) minmax(0,1.5fr) minmax(0,1fr) 120px', gap:16, padding:'14px 18px', borderTop:'1px solid #2B2B2B', background:'#0F0F0F', alignItems:'center' }}>
+        <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1.2fr) minmax(0,1.5fr) minmax(0,1fr) auto', gap:16, padding:'14px 18px', borderTop:'1px solid #2B2B2B', background:'#0F0F0F', alignItems:'center' }}>
           <span style={{ fontFamily:'var(--font-mono)', fontSize:10, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'var(--uc-signal)' }}>Est. monthly</span>
           <span style={{ fontFamily:'var(--font-serif)', fontSize:13, color:'var(--uc-stone-500)' }}>Platform + apps, before system integration</span>
           <span/>
-          <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:'clamp(18px,1.8vw,24px)', letterSpacing:'-0.03em', color:'var(--uc-paper)', textAlign:'right' }}>~$2,350/mo</span>
+          <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:'clamp(18px,1.8vw,24px)', letterSpacing:'-0.03em', color:'var(--uc-paper)', textAlign:'right', whiteSpace:'nowrap' }}>~$2,350/mo</span>
         </div>
       </div>
       <div style={{ marginTop:16, display:'flex', gap:18, flexWrap:'wrap', fontFamily:'var(--font-mono)', fontSize:10, color:'var(--uc-stone-500)', letterSpacing:'0.06em' }}>
