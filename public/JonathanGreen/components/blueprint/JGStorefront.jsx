@@ -220,12 +220,22 @@ function GfxPDP() {
             <div style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:4 }}>WEIGHT</div>
             <div style={{ display:'flex', gap:4 }}>{[['1 lb',false],['3 lb',false],['7 lb',true],['25 lb',false],['50 lb',false]].map(([l,on],i)=>(<span key={i} style={{ flex:1, padding:'5px 2px', textAlign:'center', border:'1px solid', borderColor:on?JG.green:'var(--line-1)', borderRadius:3, fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, color:on?'#fff':'var(--fg-2)', background:on?JG.green:'transparent', whiteSpace:'nowrap' }}>{l}</span>))}</div>
           </div>
-          <div style={{ marginTop:2, border:'1px solid var(--line-1)', borderRadius:3, overflow:'hidden' }}>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)' }}>{[['5+','$37'],['20+','$35'],['50+','$33'],['100+','$30']].map((t,i)=>(
-              <div key={i} style={{ padding:'4px 2px', textAlign:'center', borderLeft:i?'1px solid var(--line-1)':'none' }}>
-                <div style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, color:'var(--fg-3)', letterSpacing:'0.04em' }}>{t[0]}</div>
-                <div style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--fg-1)', marginTop:2 }}>{t[1]}</div>
-              </div>))}</div>
+          <div style={{ marginTop:2 }}>
+            <div style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:4 }}>PURCHASE OPTIONS</div>
+            <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
+              {[['One-time purchase','$39.99',false,''],['Subscribe & save 10%','$35.99',true,'Deliver every 8 weeks · skip or cancel anytime']].map(([l,pr,on,note],i)=>(
+                <div key={i} style={{ display:'flex', alignItems:'flex-start', gap:6, padding:'6px 7px', border:'1px solid', borderColor:on?JG.green:'var(--line-1)', borderRadius:3, background:on?JG.tint:'var(--uc-paper)' }}>
+                  <span style={{ width:9, height:9, marginTop:1, borderRadius:999, border:`1.5px solid ${on?JG.green:'var(--line-2)'}`, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>{on && <span style={{ width:4, height:4, borderRadius:999, background:JG.green }}/>}</span>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ display:'flex', justifyContent:'space-between', gap:6 }}>
+                      <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:8.5, color:'var(--fg-1)' }}>{l}</span>
+                      <span style={{ fontFamily:'var(--font-mono)', fontSize:8, fontWeight:700, color:on?JG.green:'var(--fg-1)' }}>{pr}</span>
+                    </div>
+                    {note && <div style={{ fontFamily:'var(--font-mono)', fontSize:6.5, color:'var(--fg-3)', marginTop:2 }}>{note}</div>}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
           <div style={{ display:'flex', flexDirection:'column', gap:6, marginTop:2 }}>
             <div style={{ display:'flex', gap:6 }}>
@@ -234,9 +244,8 @@ function GfxPDP() {
                 <span style={{ padding:'8px 4px', minWidth:18, textAlign:'center', fontFamily:'var(--font-mono)', fontSize:9, fontWeight:700, color:'var(--fg-1)', borderLeft:'1px solid var(--line-1)', borderRight:'1px solid var(--line-1)' }}>1</span>
                 <span style={{ padding:'0 8px', fontFamily:'var(--font-mono)', fontSize:11, fontWeight:700, color:'var(--fg-2)' }}>+</span>
               </div>
-              <Btn style={{ flex:1 }}>Add to cart</Btn>
+              <Btn style={{ flex:1 }}>Subscribe · $35.99</Btn>
             </div>
-            <Btn outline style={{ padding:'7px', fontSize:9, fontWeight:700 }}>Find a retailer near you</Btn>
           </div>
           <div style={{ display:'flex', gap:8, marginTop:3, flexWrap:'wrap' }}>{['✓ Safe for kids & pets','✓ Establishes quickly','✓ Family-owned since 1881'].map(t=>(<span key={t} style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, color:'var(--fg-3)' }}>{t}</span>))}</div>
           <div style={{ marginTop:7, paddingTop:9, borderTop:'1px solid var(--line-1)' }}>

@@ -757,7 +757,8 @@ function BPPerformance() {
       points: [
         { t: 'Robust Product Page', d: 'Rich, tailored sections with side-by-side comparisons, detailed spec tables, and downloadable assets.' },
         { t: 'Bundles & Grouped Products', d: 'Curated product linking and configured products bundled and checked out together as one seamless order.' },
-        { t: 'Customer Engagement', d: 'Social proof, verified reviews, how-to videos, and proprietary installation instructions that build buyer confidence.' }
+        { t: 'Customer Engagement', d: 'Social proof, verified reviews, how-to videos, and proprietary installation instructions that build buyer confidence.' },
+        { t: 'Subscribe & Save', d: 'Seed, fertilizer, and soil amendments on a recurring schedule at a member price, with skip, swap, and cancel in the customer account.' }
       ],
       gfx: <GfxPDP/>
     },
