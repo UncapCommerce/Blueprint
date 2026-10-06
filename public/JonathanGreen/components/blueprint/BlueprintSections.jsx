@@ -934,6 +934,7 @@ function BPTechStack() {
     { name: 'Shopify Marketplace Connect', fn: 'Sync to marketplaces',                pri: 'future', cost: 'Free' },
     { name: 'Shopify Flow',                fn: 'Workflow automation',                 pri: 'launch', cost: 'Free' },
     { name: 'Shopify Bundles',             fn: 'Bundled & grouped products',          pri: 'launch', cost: 'Free' },
+    { name: 'Shopify Subscriptions',       fn: 'Subscribe & save, recurring orders',  pri: 'launch', cost: 'Free' },
     { name: 'JudgeMe',                     fn: 'Product reviews & social proof',      pri: 'launch', cost: '$15/mo' },
     { name: 'Matrixify',                   fn: 'Bulk import / export & migration',    pri: 'start',  cost: '$50/mo' }
   ];
@@ -963,7 +964,7 @@ function BPTechStack() {
         {(() => {
           const layers = [
             { tier:'04', name:'Growth & Intelligence', note:'After launch', tools:[['Shopify Flow','launch'],['JudgeMe','launch'],['Shopify Marketplace Connect','future'],['Shopify Knowledge Base','launch']] },
-            { tier:'03', name:'Experience & Engagement', note:'Customer-facing', tools:[['Shopify Search & Discovery','launch'],['Shopify Inbox','launch'],['Shopify Bundles','launch']] },
+            { tier:'03', name:'Experience & Engagement', note:'Customer-facing', tools:[['Shopify Search & Discovery','launch'],['Shopify Inbox','launch'],['Shopify Bundles','launch'],['Shopify Subscriptions','launch']] },
             { tier:'02', name:'Data & Integration', note:'System of record', tools:[['Matrixify','start']] },
             { tier:'01', name:'Commerce Core', note:'Foundation', tools:[['Shopify','start']], core:true }
           ];
