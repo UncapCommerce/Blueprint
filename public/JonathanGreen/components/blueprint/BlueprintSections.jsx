@@ -576,10 +576,8 @@ function BPScope() {
     { code: '01', t: 'Commerce Strategy', d: 'Strategy, R&D, optimisation, and a plan the board can trust.' },
     { code: '02', t: 'Experience Design', d: 'A modern, conversion-focused storefront, built to scale.' },
     { code: '03', t: 'Solution Architecture', d: 'Solution architecture, roadmap and integration.' },
-    { code: '04', t: 'B2B Enablement',    d: 'Catalogs, pricing tiers, NET terms, and account portals.' },
-    { code: '05', t: 'System Integration', d: 'Bidirectional, real-time sync native to Shopify.' },
-    { code: '06', t: 'Data Migration',    d: 'Products, customers, order history, and SEO redirects.' },
-    { code: '07', t: 'Launch & Hypercare Support',  d: 'QA, a go-live runbook, and 30-day post-launch care.', kind: 'base' }
+    { code: '04', t: 'Data Migration',    d: 'Products, customers, order history, and SEO redirects.' },
+    { code: '05', t: 'Launch & Hypercare Support',  d: 'QA, a go-live runbook, and 30-day post-launch care.', kind: 'base' }
   ];
   return (
     <BPSection id="scope" n="05" label="Scope of Work" tail="THE SYSTEM">
@@ -593,7 +591,7 @@ function BPScope() {
           fontFamily: 'var(--font-serif)', fontSize: 'clamp(15px, 1.3vw, 18px)',
           lineHeight: 1.55, color: 'var(--fg-2)', textWrap: 'pretty'
         }}>
-          Seven workstreams, stacked into one Shopify Plus system — from the storefront
+          Five workstreams, stacked into one Shopify Plus system — from the storefront
           down to the platform it ships on.
         </p>
       </div>
