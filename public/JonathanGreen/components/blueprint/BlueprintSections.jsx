@@ -250,7 +250,7 @@ function BPSummary() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           <p style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: 'clamp(16px, 1.4vw, 20px)', lineHeight: 1.55, color: 'var(--fg-2)' }}>
             {brandName()} is running a capable operation on a stack that no longer keeps up.
-            This blueprint lays out how we unify storefront, B2B, and back-office on
+            This blueprint lays out how we unify storefront, subscriptions, and back-office on
             Shopify — in a fixed scope, on a fixed timeline.
           </p>
           <p style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: 'clamp(16px, 1.4vw, 20px)', lineHeight: 1.55, color: 'var(--fg-2)' }}>
@@ -268,7 +268,7 @@ function BPSummary() {
       }}>
         {[
           { v: '12 wk', l: 'Estimated timeline to launch on Shopify' },
-          { v: 'Unified', l: 'B2C, B2B, POS on Shopify with system integration' },
+          { v: 'Unified', l: 'Storefront, subscriptions, and POS on Shopify with system integration' },
           { v: 'Speed', l: 'Sidekick-friendly system to self-manage your store' },
           { v: 'Growth', l: 'Experience optimized for conversion and retention' }
         ].map((s, i) => (
@@ -367,7 +367,7 @@ function BPWhere() {
 function BPObjectives() {
   const items = [
     { n: '01', t: 'Seamless replatforming', d: 'Migrate to Shopify without losing what works — while optimizing for growth.', metric: 'Zero',   unit: 'disruption',       tag: 'Migration' },
-    { n: '02', t: 'Unify commerce',   d: 'One platform for storefront, B2B, and back-office. No reconciling.',           metric: 'One',    unit: 'system of record', tag: 'Revenue' },
+    { n: '02', t: 'Unify commerce',   d: 'One platform for storefront, subscriptions, and back-office. No reconciling.',           metric: 'One',    unit: 'system of record', tag: 'Revenue' },
     { n: '03', t: 'Low cost of ownership', d: 'Fewer tools, one partner. Retire the legacy stack and its renewals.',          metric: 'Lower',  unit: 'total cost',       tag: 'Finance' },
     { n: '04', t: 'Growth-ready foundation', d: 'Conversion, AOV, retention — engineered in, not bolted on.',                  metric: 'Higher', unit: 'AOV + LTV',        tag: 'Growth' },
     { n: '05', t: 'Free the team',         d: 'Automate the robot work. Let people do the work that grows the business.',     metric: 'Faster', unit: 'daily ops',        tag: 'Operations' }
@@ -409,7 +409,7 @@ function BPObjectives() {
 function BPApproach() {
   const steps = [
     { n: 'Phase 1', t: 'Blueprint', d: 'Architecture, data model, integration map. A plan that holds up under scrutiny.', wk: 'Weeks 1–3' },
-    { n: 'Phase 2', t: 'Build', d: 'Storefront, B2B, system sync. Fixed scope, senior team, no surprises.', wk: 'Weeks 3–12' },
+    { n: 'Phase 2', t: 'Build', d: 'Storefront, subscriptions, system sync. Fixed scope, senior team, no surprises.', wk: 'Weeks 3–12' },
     { n: 'Phase 3', t: 'Grow', d: 'Migrate, go live, then optimize conversion, AOV, and automation.', wk: 'Months 4–12' }
   ];
   return (
@@ -926,7 +926,7 @@ function BPContent() {
 // ── 07 TECH STACK ──────────────────────────────────────────────────────────
 function BPTechStack() {
   const rows = [
-    { name: 'Shopify', fn: 'Commerce platform + B2B',            pri: 'start',  cost: '$399/mo' },
+    { name: 'Shopify', fn: 'Commerce platform',                  pri: 'start',  cost: '$399/mo' },
     { name: 'Shopify Search & Discovery',  fn: 'Search, filters & recommendations',   pri: 'launch', cost: 'Free' },
     { name: 'Shopify Inbox',               fn: 'Live chat & customer messaging',      pri: 'launch', cost: 'Free' },
     { name: 'Shopify Knowledge Base',      fn: 'Help center & self-service',          pri: 'launch', cost: 'Free' },
@@ -1275,7 +1275,7 @@ function BPDelivery() {
     { wk: 'WK 01', t: 'Kickoff + Blueprint start', s: 'Discovery, architecture, data model.' },
     { wk: 'WK 03', t: 'Blueprint sign-off', s: 'Plan, prototype, and budget locked.' },
     { wk: 'WK 06', t: 'Storefront alpha', s: 'Core theme + catalog in staging.' },
-    { wk: 'WK 09', t: 'Integrations live', s: 'System sync + B2B flows validated.' },
+    { wk: 'WK 09', t: 'Integrations live', s: 'System sync + subscription flows validated.' },
     { wk: 'WK 11', t: 'Migration + QA', s: 'Data moved, redirects, full QA pass.' },
     { wk: 'WK 12', t: 'Launch', s: 'Go live + 30-day support begins.' }
   ];
@@ -1487,7 +1487,6 @@ function BPInvestment() {
     'Essential integrations: payments, shipping, core tools',
     'Data migration: products, customers, orders, content',
     'Shopify-side system integration guidance',
-    'Full B2B enablement: companies, catalogs, checkout',
     'Enriched customer account experience',
     'Workflow automation across your systems',
     'SEO and GEO, so you launch findable',
@@ -1516,7 +1515,7 @@ function BPInvestment() {
             <div style={{ marginTop: 'clamp(14px, 1.6vw, 20px)', fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 'clamp(17px, 1.6vw, 24px)', lineHeight: 1.25, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>Your store and your integrated systems, working as one.</div>
           </div>
           <p style={{ margin: 0, maxWidth: 460, fontFamily: 'var(--font-serif)', fontSize: 'clamp(14.5px, 1.2vw, 17px)', lineHeight: 1.55, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>
-            A modern unified B2C/B2B storefront on Shopify Plus with a tech stack and customer
+            A modern direct-to-consumer storefront on Shopify Plus with a tech stack and customer
             experience — everything {brandName()} needs to launch and scale.
           </p>
 
@@ -1740,7 +1739,7 @@ function BPWhy() {
         gap: 'clamp(24px, 4vw, 64px)', alignItems: 'center'
       }}>
         <p style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: 'clamp(17px, 1.7vw, 24px)', lineHeight: 1.45, color: 'var(--uc-paper)', textWrap: 'pretty' }}>
-          <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700 }}>Uncap</span> is the Shopify Platinum Partner behind hundreds of operator-led brands, manufacturers, and distributors — uncapping growth across B2B and B2C.
+          <span style={{ fontFamily: 'var(--font-display)', fontWeight: 700 }}>Uncap</span> is the Shopify Platinum Partner behind hundreds of operator-led brands, manufacturers, and distributors — uncapping growth across every channel they sell through.
         </p>
         <div style={{ display: 'flex', flexDirection: 'column', borderTop: '1px solid #1F1F1F' }}>
           {[
