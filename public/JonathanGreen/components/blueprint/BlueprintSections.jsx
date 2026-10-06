@@ -1331,13 +1331,10 @@ function BPRiskAssessment() {
     High:   { c: 'var(--uc-error)',  label: 'High' }
   };
   const risks = [
-    { t: 'Data migration integrity', sev: 'High',
+    { t: 'Data migration integrity', sev: 'Medium',
       d: 'Products, customers, and orders don\u2019t map cleanly off the legacy stack.',
       m: 'Dry-run into staging, reconcile counts, and spot-check edge cases before cutover.' },
-    { t: 'System integration complexity', sev: 'High',
-      d: 'Bidirectional system sync is the hardest dependency — mismatches can block orders.',
-      m: 'Field-level mapping validated early in staging, with a live sync log.' },
-    { t: 'Scope creep mid-build', sev: 'Medium',
+    { t: 'Scope creep mid-build', sev: 'Low',
       d: 'New requests surface once the build is underway and pull at budget and timeline.',
       m: 'Fixed scope up front, with a pre-approved buffer allowance for out-of-scope asks.' }
   ];
