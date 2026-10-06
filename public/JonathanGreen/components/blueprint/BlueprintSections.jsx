@@ -927,7 +927,7 @@ function BPContent() {
 // ── 07 TECH STACK ──────────────────────────────────────────────────────────
 function BPTechStack() {
   const rows = [
-    { name: 'Shopify', fn: 'Commerce platform + B2B',            pri: 'start',  cost: '$2,300/mo' },
+    { name: 'Shopify', fn: 'Commerce platform + B2B',            pri: 'start',  cost: '$399/mo' },
     { name: 'Shopify Search & Discovery',  fn: 'Search, filters & recommendations',   pri: 'launch', cost: 'Free' },
     { name: 'Shopify Inbox',               fn: 'Live chat & customer messaging',      pri: 'launch', cost: 'Free' },
     { name: 'Shopify Knowledge Base',      fn: 'Help center & self-service',          pri: 'launch', cost: 'Free' },
@@ -1046,7 +1046,7 @@ function BPTechStack() {
           <span style={{ fontFamily:'var(--font-mono)', fontSize:10, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'var(--uc-signal)' }}>Est. monthly</span>
           <span style={{ fontFamily:'var(--font-serif)', fontSize:13, color:'var(--uc-stone-500)' }}>Platform + apps, before system integration</span>
           <span/>
-          <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:'clamp(18px,1.8vw,24px)', letterSpacing:'-0.03em', color:'var(--uc-paper)', textAlign:'right', whiteSpace:'nowrap' }}>~$2,365/mo</span>
+          <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:'clamp(18px,1.8vw,24px)', letterSpacing:'-0.03em', color:'var(--uc-paper)', textAlign:'right', whiteSpace:'nowrap' }}>~$464/mo</span>
         </div>
       </div>
       <div style={{ marginTop:16, display:'flex', gap:18, flexWrap:'wrap', fontFamily:'var(--font-mono)', fontSize:10, color:'var(--uc-stone-500)', letterSpacing:'0.06em' }}>
