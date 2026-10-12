@@ -961,14 +961,6 @@ function GfxPDP() {
             <div style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:4 }}>CONFIGURATION</div>
             <div style={{ display:'flex', gap:4 }}>{[['Parka only',false],['Parka + bibs',true],['Full winter kit',false]].map(([l,on],i)=>(<span key={i} style={{ flex:1, padding:'5px 2px', textAlign:'center', border:'1px solid', borderColor:on?'var(--nw-green)':'var(--line-1)', borderRadius:3, fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, color:on?'var(--uc-paper)':'var(--fg-2)', background:on?'var(--nw-green)':'transparent', whiteSpace:'nowrap' }}>{l}</span>))}</div>
           </div>
-          {/* tier pricing — minimalist table */}
-          <div style={{ marginTop:2, border:'1px solid var(--line-1)', borderRadius:3, overflow:'hidden' }}>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)' }}>{[['5+','$279'],['20+','$265'],['50+','$249'],['100+','$229']].map((t,i)=>(
-              <div key={i} style={{ padding:'4px 2px', textAlign:'center', borderLeft:i?'1px solid var(--line-1)':'none' }}>
-                <div style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, color:'var(--fg-3)', letterSpacing:'0.04em' }}>{t[0]}</div>
-                <div style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--fg-1)', marginTop:2 }}>{t[1]}</div>
-              </div>))}</div>
-          </div>
           {/* CTAs */}
           <div style={{ display:'flex', flexDirection:'column', gap:6, marginTop:2 }}>
             <div style={{ display:'flex', gap:6 }}>
@@ -983,26 +975,6 @@ function GfxPDP() {
           </div>
           {/* trust row */}
           <div style={{ display:'flex', gap:8, marginTop:3, flexWrap:'wrap' }}>{['✓ 1-yr warranty','✓ Free store pickup','✓ Easy returns'].map(t=>(<span key={t} style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, color:'var(--fg-3)' }}>{t}</span>))}</div>
-          {/* frequently bought together (compact, in buy box) */}
-          <div style={{ marginTop:7, paddingTop:9, borderTop:'1px solid var(--line-1)' }}>
-            <div style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:6 }}>FREQUENTLY BOUGHT TOGETHER</div>
-            <div style={{ display:'flex', alignItems:'center', gap:5, marginBottom:8 }}>
-              {[['Arctic Work Parka','$299','#1F3A4D'],['Insulated Bibs','$149','#4A4F57'],['Wool Liner Gloves','$24','#7C8B7A']].map((p,i)=>(
-                <React.Fragment key={i}>
-                  {i>0 && <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:11, color:'var(--fg-3)', flexShrink:0 }}>+</span>}
-                  <div style={{ flex:1, display:'flex', flexDirection:'column', gap:3 }}>
-                    <div style={{ aspectRatio:'1/0.82', borderRadius:3, background:`linear-gradient(140deg, ${p[2]}, var(--uc-bone))` }}/>
-                    <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:6.5, letterSpacing:'-0.01em', color:'var(--fg-1)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{p[0]}</span>
-                    <span style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, color:'var(--fg-1)' }}>{p[1]}</span>
-                  </div>
-                </React.Fragment>
-              ))}
-            </div>
-            <div style={{ display:'flex', alignItems:'center', gap:8 }}>
-              <span style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, color:'var(--fg-3)', whiteSpace:'nowrap' }}>Bundle <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:12, color:'var(--fg-1)' }}>$449</span></span>
-              <span style={{ flex:1, padding:'6px', textAlign:'center', background:'var(--nw-green)', color:'var(--uc-paper)', borderRadius:3, fontFamily:'var(--font-display)', fontSize:8.5, fontWeight:700 }}>Add all 3</span>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -1014,7 +986,7 @@ function GfxPDP() {
         </div>
         <div style={{ background:'var(--uc-cream)', padding:'11px 14px' }}>
           <div style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:7 }}>WHY BUYERS CHOOSE IT</div>
-          <div style={{ display:'flex', flexDirection:'column', gap:6 }}>{['Built for real northern winters — wind, −40°C, and long days outside.','Commercial pricing and NET terms unlock at 5+ units.','Free pickup at any Northern or NorthMart store.'].map((t,i)=>(<div key={i} style={{ display:'grid', gridTemplateColumns:'12px 1fr', gap:7, alignItems:'start' }}><span style={{ width:10, height:10, borderRadius:999, background:'var(--nw-green)', marginTop:1, display:'flex', alignItems:'center', justifyContent:'center' }}><svg width="6" height="6" viewBox="0 0 12 12" fill="none"><path d="M2 6 L5 9 L10 3" stroke="var(--uc-paper)" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg></span><span style={{ fontFamily:'var(--font-serif)', fontSize:9, lineHeight:1.35, color:'var(--fg-2)' }}>{t}</span></div>))}</div>
+          <div style={{ fontFamily:'var(--font-serif)', fontSize:9, lineHeight:1.45, color:'var(--fg-2)' }}>Built for real northern winters, rated to −40°C for long days outside, with free pickup at any Northern or NorthMart store.</div>
         </div>
       </div>
 
@@ -1033,6 +1005,62 @@ function GfxPDP() {
         <div style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:8 }}>COMPLETE THE SET</div>
         <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:7 }}>{[['Balaclava','$18','#2B2B2B'],['Wool Socks 3-pk','$29','#7C8B7A'],['Hi-Vis Vest','$22','#E8742B'],['Knit Toque','$16','#1F3A4D']].map((p,i)=>(<div key={i} style={{ display:'flex', flexDirection:'column', gap:4 }}><div style={{ aspectRatio:'1/1', borderRadius:3, background:`linear-gradient(140deg, ${p[2]}, var(--uc-bone))` }}/><span style={{ fontFamily:'var(--font-display)', fontWeight:600, fontSize:7.5, color:'var(--fg-1)' }}>{p[0]}</span><span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--fg-1)' }}>{p[1]}</span></div>))}</div>
       </div>
+    </div>
+  );
+}
+
+function GfxPortal() {
+  const rows=[['#PO-9421','24 SKUs','Approved'],['#PO-9420','8 SKUs','Picking'],['#PO-9419','142 SKUs','Pending'],['#PO-9418','36 SKUs','Shipped'],['#PO-9417','12 SKUs','Delivered'],['#PO-9416','64 SKUs','Delivered']];
+  const nav=[['◧','Dashboard',true],['▤','Orders',false],['❏','Quotes',false],['♡','Saved lists',false],['⚙','Team',false]];
+  return (
+    <div style={{ background:'var(--uc-paper)', border:'1px solid var(--line-1)', borderRadius:5, overflow:'hidden' }}>
+      {/* chrome */}
+      <div style={{ background:'var(--nw-green-deep)', color:'var(--uc-paper)', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>COMMERCIAL SALES PORTAL · NET-45 TERMS ACTIVE</div>
+      <div style={{ display:'flex', alignItems:'center', gap:11, padding:'8px 14px', borderBottom:'1px solid var(--line-1)' }}>
+        
+        <BrandMark fontSize={11}/>
+        <span style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:7 }}>
+          <span style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, color:'var(--fg-3)' }}>KIVALLIQ HEALTH CENTRE</span>
+          <span style={{ width:18, height:18, borderRadius:999, background:'linear-gradient(135deg,var(--nw-green-mid),var(--nw-green-deep))', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:800, color:'#fff' }}>K</span>
+        </span>
+      </div>
+
+      {/* body: sidebar + content */}
+      <div style={{ display:'grid', gridTemplateColumns:'112px 1fr', gap:1, background:'var(--line-1)' }}>
+        {/* sidebar */}
+        <div style={{ background:'var(--uc-bone)', padding:'11px 10px', display:'flex', flexDirection:'column', gap:3 }}>
+          {nav.map((n,i)=>(<div key={i} style={{ display:'flex', alignItems:'center', gap:7, padding:'5px 7px', borderRadius:3, background:n[2]?'var(--nw-green)':'transparent' }}><span style={{ fontSize:9, color:n[2]?'var(--uc-paper)':'var(--fg-3)' }}>{n[0]}</span><span style={{ fontFamily:'var(--font-mono)', fontSize:8, fontWeight:700, color:n[2]?'var(--uc-paper)':'var(--fg-2)' }}>{n[1]}</span></div>))}
+          <div style={{ marginTop:'auto', padding:'8px 7px 0' }}><div style={{ fontFamily:'var(--font-mono)', fontSize:6.5, color:'var(--fg-3)', lineHeight:1.5 }}>CREDIT LINE<br/><span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:13, letterSpacing:'-0.02em', color:'var(--fg-1)' }}>$118k</span> open</div></div>
+        </div>
+
+        {/* content */}
+        <div style={{ background:'var(--uc-paper)', display:'flex', flexDirection:'column' }}>
+          {/* welcome */}
+          <div style={{ padding:'11px 14px 9px', display:'flex', alignItems:'flex-end', justifyContent:'space-between' }}>
+            <div>
+              <div style={{ fontFamily:'var(--font-mono)', fontSize:7, letterSpacing:'0.1em', color:'var(--fg-3)' }}>WELCOME BACK</div>
+              <div style={{ fontFamily:'var(--font-hero)', fontWeight:700, fontSize:17, letterSpacing:'-0.035em', color:'var(--fg-1)' }}>Dana</div>
+            </div>
+            <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:800, color:'var(--uc-paper)', background:'var(--nw-green)', padding:'4px 9px', borderRadius:3 }}>+ New order</span>
+          </div>
+          {/* stat tiles */}
+          <div style={{ padding:'0 14px 10px', display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8 }}>
+            {[['14','OPEN ORDERS'],['4','QUOTES'],['$612k','YTD SPEND']].map((s,i)=>(<div key={i} style={{ border:'1px solid var(--line-1)', borderRadius:4, padding:'8px 10px' }}><div style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:18, letterSpacing:'-0.03em', color:'var(--fg-1)' }}>{s[0]}</div><div style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.08em', color:'var(--fg-3)', marginTop:2 }}>{s[1]}</div></div>))}
+          </div>
+          {/* recent orders / quick reorder */}
+          <div style={{ padding:'0 14px 12px' }}>
+            <div style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', paddingBottom:6 }}>RECENT ORDERS · QUICK REORDER</div>
+            {rows.map((r,i)=>(<div key={i} style={{ display:'grid', gridTemplateColumns:'70px 1fr auto auto', gap:8, alignItems:'center', padding:'6px 0', borderTop:'1px solid var(--line-1)' }}>
+              <span style={{ fontFamily:'var(--font-mono)', fontSize:9, fontWeight:600, color:'var(--fg-1)' }}>{r[0]}</span>
+              <span style={{ fontFamily:'var(--font-mono)', fontSize:8.5, color:'var(--fg-3)' }}>{r[1]}</span>
+              <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color: r[2]==='Approved'?'var(--uc-paper)':'var(--fg-3)', background: r[2]==='Approved'?'var(--nw-green)':'transparent', border: r[2]==='Approved'?'none':'1px solid var(--line-1)', padding:'2px 6px', borderRadius:2 }}>{r[2]}</span>
+              <span style={{ fontFamily:'var(--font-mono)', fontSize:8, fontWeight:700, color:'var(--nw-green)', background:'var(--nw-green-soft)', padding:'2px 7px', borderRadius:2 }}>Reorder</span>
+            </div>))}
+          </div>
+        </div>
+      </div>
+
+      {/* SMS / email commerce strip */}
     </div>
   );
 }
@@ -1159,6 +1187,16 @@ function BPPerformance() {
         { t: 'Customer Engagement', d: 'Social proof, verified reviews, how-to videos, and proprietary installation instructions that build buyer confidence.' }
       ],
       gfx: <GfxPDP/>
+    },
+    {
+      kpi: 'Retention & Loyalty',
+      sub: 'Make the second order easier than the first.',
+      points: [
+        { t: 'Self-Serve Ordering Portal', d: 'A logged-in account experience for reorders, quotes, and team management.' },
+        { t: 'Quick Order & Reorder', d: 'One-click reorders, saved lists, bulk SKU upload, and easy orders that run themselves.' },
+        { t: 'Quote Requests', d: 'Review quote requests and statuses, negotiate prices and rates, approve and check out.' }
+      ],
+      gfx: <GfxPortal/>
     }
   ];
   return (
@@ -1168,7 +1206,7 @@ function BPPerformance() {
         <BPSerif>numbers that matter.</BPSerif>
       </BPHeadline>
       <p style={{ marginTop:'clamp(20px, 2.4vw, 28px)', maxWidth:640, fontFamily:'var(--font-serif)', fontSize:'clamp(15px, 1.3vw, 18px)', lineHeight:1.5, color:'var(--fg-2)' }}>
-        Every design decision maps back to a KPI. Four levers, engineered into the build from day one.
+        Every design decision maps back to a KPI. Five levers, engineered into the build from day one.
       </p>
       <div style={{ marginTop:'clamp(36px, 4.5vw, 64px)', display:'flex', flexDirection:'column', gap:0 }}>
         {groups.map((g, i) => (
