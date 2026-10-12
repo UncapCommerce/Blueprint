@@ -1065,6 +1065,59 @@ function GfxPortal() {
   );
 }
 
+function GfxRegistration() {
+  const steps=[['1','Company',true],['2','Contacts',false],['3','Tax & terms',false],['4','Review',false]];
+  const fields=[['Legal business name','Kivalliq Health Centre',false],['Business type','Health & community ▾',false],['GST / HST number','12345 6789 RT0001',false],['Phone','(867) 645-2171',false],['Billing address','1 Sivulliq Ave, Rankin Inlet, NU X0C 0G0',true],['Home store','NorthMart Rankin Inlet ▾',false],['Est. monthly spend','$10k–$25k ▾',false]];
+  const check=(on)=>(<span style={{ width:10, height:10, borderRadius:2, flexShrink:0, background:on?'var(--nw-green)':'var(--uc-paper)', border:on?'none':'1px solid var(--line-2)', display:'flex', alignItems:'center', justifyContent:'center' }}>{on && <svg width="6" height="6" viewBox="0 0 12 12" fill="none"><path d="M2 6 L5 9 L10 3" stroke="#fff" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"/></svg>}</span>);
+  return (
+    <div style={{ background:'var(--uc-paper)', border:'1px solid var(--line-1)', borderRadius:5, overflow:'hidden' }}>
+      {/* chrome */}
+      <div style={{ background:'var(--nw-green-deep)', color:'var(--uc-paper)', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>OPEN A COMMERCIAL ACCOUNT · APPROVAL IN 1 BUSINESS DAY</div>
+      <div style={{ display:'flex', alignItems:'center', gap:11, padding:'8px 14px', borderBottom:'1px solid var(--line-1)' }}>
+        <BrandMark fontSize={11}/>
+        <span style={{ marginLeft:'auto', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, color:'var(--fg-3)' }}>Have an account? <span style={{ color:'var(--nw-green)' }}>Sign in</span></span>
+      </div>
+
+      {/* body: steps + form */}
+      <div style={{ display:'grid', gridTemplateColumns:'112px 1fr', gap:1, background:'var(--line-1)' }}>
+        {/* steps + benefits */}
+        <div style={{ background:'var(--uc-bone)', padding:'11px 10px', display:'flex', flexDirection:'column', gap:3 }}>
+          {steps.map((st,i)=>(<div key={i} style={{ display:'flex', alignItems:'center', gap:7, padding:'5px 7px', borderRadius:3, background:st[2]?'var(--nw-green)':'transparent' }}>
+            <span style={{ width:13, height:13, borderRadius:999, flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:800, color:st[2]?'var(--nw-green)':'var(--fg-3)', background:st[2]?'var(--uc-paper)':'transparent', border:st[2]?'none':'1px solid var(--line-2)' }}>{st[0]}</span>
+            <span style={{ fontFamily:'var(--font-mono)', fontSize:8, fontWeight:700, color:st[2]?'var(--uc-paper)':'var(--fg-2)', whiteSpace:'nowrap' }}>{st[1]}</span>
+          </div>))}
+          <div style={{ marginTop:'auto', padding:'8px 7px 0', display:'flex', flexDirection:'column', gap:5 }}>
+            <div style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, letterSpacing:'0.08em', color:'var(--fg-3)' }}>ONCE APPROVED</div>
+            {['Commercial pricing','NET terms & credit','Free store pickup'].map(b=>(<div key={b} style={{ display:'flex', alignItems:'center', gap:5, fontFamily:'var(--font-mono)', fontSize:7, color:'var(--fg-2)' }}><span style={{ color:'var(--nw-green)', fontWeight:800 }}>✓</span>{b}</div>))}
+          </div>
+        </div>
+
+        {/* form */}
+        <div style={{ background:'var(--uc-paper)', display:'flex', flexDirection:'column', padding:'11px 14px 12px', gap:9 }}>
+          <div>
+            <div style={{ fontFamily:'var(--font-mono)', fontSize:7, letterSpacing:'0.1em', color:'var(--fg-3)' }}>STEP 1 OF 4 · COMPANY DETAILS</div>
+            <div style={{ fontFamily:'var(--font-hero)', fontWeight:700, fontSize:17, letterSpacing:'-0.035em', color:'var(--fg-1)' }}>Register your business</div>
+          </div>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:'7px 8px' }}>
+            {fields.map(([l,v,full],i)=>(<div key={i} style={{ gridColumn:full?'1 / -1':'auto', minWidth:0 }}>
+              <div style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, letterSpacing:'0.06em', color:'var(--fg-3)', marginBottom:3 }}>{l.toUpperCase()}</div>
+              <div style={{ border:'1px solid var(--line-2)', borderRadius:3, padding:'5px 7px', fontFamily:'var(--font-mono)', fontSize:8, color:'var(--fg-1)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{v}</div>
+            </div>))}
+          </div>
+          <div style={{ display:'flex', flexDirection:'column', gap:6, paddingTop:2, borderTop:'1px solid var(--line-1)' }}>
+            <div style={{ display:'flex', alignItems:'center', gap:6, paddingTop:7, fontFamily:'var(--font-mono)', fontSize:7.5, color:'var(--fg-1)' }}>{check(true)}Request NET-30 terms and a credit line</div>
+            <div style={{ display:'flex', alignItems:'center', gap:6, fontFamily:'var(--font-mono)', fontSize:7.5, color:'var(--fg-1)' }}>{check(true)}Tax-exempt organization<span style={{ marginLeft:'auto', fontSize:7, fontWeight:700, color:'var(--nw-green)', background:'var(--nw-green-soft)', padding:'2px 7px', borderRadius:2, whiteSpace:'nowrap' }}>exemption.pdf ✓</span></div>
+          </div>
+          <div style={{ display:'flex', gap:6, marginTop:2 }}>
+            <span style={{ padding:'7px 10px', border:'1px solid var(--line-2)', borderRadius:3, fontFamily:'var(--font-display)', fontSize:9, fontWeight:700, color:'var(--fg-2)' }}>Back</span>
+            <span style={{ flex:1, padding:'7px', textAlign:'center', background:'var(--nw-green)', color:'var(--uc-paper)', borderRadius:3, fontFamily:'var(--font-display)', fontSize:9, fontWeight:800 }}>Save & continue →</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function GfxHomepage() {
   const nav = ['Grocery','Apparel','Outdoor','Commercial'];
   const mega = [
@@ -1197,6 +1250,16 @@ function BPPerformance() {
         { t: 'Quote Requests', d: 'Review quote requests and statuses, negotiate prices and rates, approve and check out.' }
       ],
       gfx: <GfxPortal/>
+    },
+    {
+      kpi: 'Registration',
+      sub: 'Onboard new business customers without the back-and-forth.',
+      points: [
+        { t: 'Self-Serve Business Signup', d: 'Companies apply online with their legal name, tax number, and home store, so every account is set up right the first time.' },
+        { t: 'Approval Workflow', d: 'Each application routes to the sales team to review, approve, and assign pricing, terms, and credit limits inside Shopify.' },
+        { t: 'Tax & Terms Captured', d: 'Tax-exempt certificates and NET terms requests are collected at signup and applied automatically once the account is approved.' }
+      ],
+      gfx: <GfxRegistration/>
     }
   ];
   return (
@@ -1206,7 +1269,7 @@ function BPPerformance() {
         <BPSerif>numbers that matter.</BPSerif>
       </BPHeadline>
       <p style={{ marginTop:'clamp(20px, 2.4vw, 28px)', maxWidth:640, fontFamily:'var(--font-serif)', fontSize:'clamp(15px, 1.3vw, 18px)', lineHeight:1.5, color:'var(--fg-2)' }}>
-        Every design decision maps back to a KPI. Five levers, engineered into the build from day one.
+        Every design decision maps back to a KPI. Six levers, engineered into the build from day one.
       </p>
       <div style={{ marginTop:'clamp(36px, 4.5vw, 64px)', display:'flex', flexDirection:'column', gap:0 }}>
         {groups.map((g, i) => (
