@@ -1010,8 +1010,8 @@ function GfxPDP() {
 }
 
 function GfxPortal() {
-  const rows=[['#PO-9421','24 SKUs','Approved'],['#PO-9420','8 SKUs','Picking'],['#PO-9419','142 SKUs','Pending'],['#PO-9418','36 SKUs','Shipped'],['#PO-9417','12 SKUs','Delivered'],['#PO-9416','64 SKUs','Delivered']];
-  const nav=[['◧','Dashboard',true],['▤','Orders',false],['❏','Quotes',false],['♡','Saved lists',false],['⚙','Team',false]];
+  const rows=[['#PO-9420','8 SKUs','Picking'],['#PO-9419','142 SKUs','Pending'],['#PO-9418','36 SKUs','Shipped'],['#PO-9417','12 SKUs','Delivered'],['#PO-9416','64 SKUs','Delivered']];
+  const nav=[['◧','Dashboard',true],['▤','Orders',false],['❏','Quotes',false]];
   return (
     <div style={{ background:'var(--uc-paper)', border:'1px solid var(--line-1)', borderRadius:5, overflow:'hidden' }}>
       {/* chrome */}
@@ -1183,7 +1183,7 @@ function BPPerformance() {
       sub: 'Turn more visits into orders.',
       points: [
         { t: 'Robust Product Page', d: 'Rich, tailored sections with side-by-side comparisons, detailed spec tables, and downloadable assets.' },
-        { t: 'Bundles & Grouped Products', d: 'Curated product linking and configured products bundled and checked out together as one seamless order.' },
+        { t: 'Product Alignment', d: 'Curated product linking and configured products bundled and checked out together as one seamless order.' },
         { t: 'Customer Engagement', d: 'Social proof, verified reviews, how-to videos, and proprietary installation instructions that build buyer confidence.' }
       ],
       gfx: <GfxPDP/>
@@ -1193,7 +1193,7 @@ function BPPerformance() {
       sub: 'Make the second order easier than the first.',
       points: [
         { t: 'Self-Serve Ordering Portal', d: 'A logged-in account experience for reorders, quotes, and team management.' },
-        { t: 'Quick Order & Reorder', d: 'One-click reorders, saved lists, bulk SKU upload, and easy orders that run themselves.' },
+        { t: 'Quick Order & Reorder', d: 'One-click reorders and easy repeat orders that run themselves.' },
         { t: 'Quote Requests', d: 'Review quote requests and statuses, negotiate prices and rates, approve and check out.' }
       ],
       gfx: <GfxPortal/>
