@@ -2167,9 +2167,9 @@ function BPInvestment() {
     'Dry-runs in staging, then a monitored cutover'
   ];
   const schedule = [
-    { n: '01', amount: '$54,000', due: 'Due at signup', share: '1/2' },
-    { n: '02', amount: '$27,000', due: 'Due at design approval', share: '1/4' },
-    { n: '03', amount: '$27,000', due: 'Due at project completion', share: '1/4' }
+    { n: '01', amount: '$59,000', due: 'Due at signup', share: '1/2' },
+    { n: '02', amount: '$29,500', due: 'Due at design approval', share: '1/4' },
+    { n: '03', amount: '$29,500', due: 'Due at project completion', share: '1/4' }
   ];
   return (
     <BPSection id="investment" n="13" label="Investment" dark tail="FIXED · NO SURPRISES">
@@ -2196,7 +2196,7 @@ function BPInvestment() {
           {/* price — standout box */}
           <div style={{ padding: 'clamp(18px, 2vw, 26px) clamp(20px, 2.2vw, 28px)', background: 'var(--uc-signal)', borderRadius: 12, boxShadow: '0 22px 60px -26px rgba(232,255,82,0.45)' }}>
             <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--uc-black)' }}>Fixed price</div>
-            <div style={{ marginTop: 4, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(52px, 6vw, 88px)', letterSpacing: '-0.05em', lineHeight: 0.85, color: 'var(--uc-black)' }}>$76k</div>
+            <div style={{ marginTop: 4, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(52px, 6vw, 88px)', letterSpacing: '-0.05em', lineHeight: 0.85, color: 'var(--uc-black)' }}>$84k</div>
           </div>
 
           {/* walk away */}
@@ -2235,7 +2235,7 @@ function BPInvestment() {
           </div>
           <div style={{ marginTop: 'auto', alignSelf: 'flex-start', padding: 'clamp(14px, 1.6vw, 20px) clamp(20px, 2.2vw, 28px)', background: 'var(--uc-signal)', borderRadius: 12, boxShadow: '0 22px 60px -26px rgba(232,255,82,0.45)' }}>
             <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--uc-black)' }}>Fixed price</div>
-            <div style={{ marginTop: 4, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(40px, 4.4vw, 64px)', letterSpacing: '-0.05em', lineHeight: 0.85, color: 'var(--uc-black)' }}>$32k</div>
+            <div style={{ marginTop: 4, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(40px, 4.4vw, 64px)', letterSpacing: '-0.05em', lineHeight: 0.85, color: 'var(--uc-black)' }}>$34k</div>
           </div>
         </div>
         <div style={{ padding: 'clamp(24px, 3vw, 44px)', borderLeft: '1px solid #1F1F1F' }}>
