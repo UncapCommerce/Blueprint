@@ -1517,7 +1517,7 @@ function BPB2B() {
     { t: 'Quick order & reorder', d: 'One-click reorders, saved lists, and fast repeat ordering.' },
     { t: 'Sales rep tools', d: 'Order on behalf of, account dashboards, and assisted selling.' }
   ];
-  const channels = ['DTC Storefront', 'B2B Portal', 'Point of Sale', 'Sales Reps'];
+  const channels = ['Storefront', 'B2B Portal', 'Sales Reps'];
   return (
     <BPSection id="b2b" n="08" label="Unified" paper tail="ONE OPERATION">
       <BPHeadline>
@@ -1539,7 +1539,7 @@ function BPB2B() {
           </div>
           {/* connectors */}
           <svg viewBox="0 0 60 200" preserveAspectRatio="none" style={{ width:'clamp(36px,5vw,60px)', height:'100%', alignSelf:'stretch' }}>
-            {[28, 76, 124, 172].map((y, i) => (
+            {channels.map((_, i) => (2 * i + 1) * 100 / channels.length).map((y, i) => (
               <path key={i} d={`M0 ${y} C 30 ${y}, 30 100, 60 100`} fill="none" stroke="var(--uc-stone-500)" strokeWidth="1.4"/>
             ))}
             <circle cx="58" cy="100" r="3" fill="var(--uc-signal)" stroke="var(--uc-black)" strokeWidth="1"/>
