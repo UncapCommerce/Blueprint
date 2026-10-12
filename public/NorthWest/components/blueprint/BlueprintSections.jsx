@@ -672,10 +672,10 @@ function BPGantt() {
       { n: '03', t: 'Experience Design',  tag: 'UX/UI Design · Web · Mobile',   s: 2, e: 6,  range: 'W2–6' },
       { n: '04', t: 'Approval',                   tag: 'Tech Stack Review & Design Sign-off', s: 6, e: 7,  range: 'W6–7' }
     ] },
-    { name: 'Production', range: 'WK 07–18', tasks: [
+    { name: 'Production', range: 'WK 06–18', tasks: [
       { n: '05', t: 'Development',                tag: 'Build',    s: 7,  e: 15, range: 'W7–15' },
-      { n: '06', t: 'Data Migration',             tag: 'Migrate',  s: 11, e: 15, range: 'W11–15' },
-      { n: '07', t: 'Integration',                tag: 'Connect',  s: 11, e: 16, range: 'W11–16' },
+      { n: '06', t: 'Data Migration',             tag: 'Migrate',  s: 6,  e: 15, range: 'W6–15' },
+      { n: '07', t: 'Integration',                tag: 'Connect',  s: 6,  e: 16, range: 'W6–16' },
       { n: '08', t: 'QA & Testing',               tag: 'Verify',   s: 15, e: 18, range: 'W15–18' }
     ] },
     { name: 'Audit', range: 'WK 18–20', tasks: [
