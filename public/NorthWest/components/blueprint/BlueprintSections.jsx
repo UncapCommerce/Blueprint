@@ -1576,7 +1576,7 @@ function BPB2B() {
           <BPSerif>start to signed.</BPSerif>
         </BPHeadline>
         <p style={{ marginTop:'clamp(16px, 2vw, 24px)', maxWidth:680, fontFamily:'var(--font-serif)', fontSize:'clamp(15px, 1.3vw, 18px)', lineHeight:1.5, color:'var(--fg-2)', textWrap:'pretty' }}>
-          Capture requests, build and send quotes, run approvals, negotiate line by line with threaded comments, collect payment against invoices, and collaborate with your team and buyers — every quote, end to end, inside Shopify.
+          For orders over a defined dollar value, the cart converts to a quote instead of going to checkout, and lands with your sales team to process manually. Reps review each request, adjust pricing and terms line by line, run internal approvals, and send the quote back for the buyer to accept. Threaded comments, payment against the invoice, and the full history stay on every quote, all inside Shopify.
         </p>
         <div style={{ marginTop:'clamp(24px, 3vw, 40px)' }}>
           <GfxQuotes/>
