@@ -270,7 +270,7 @@ function BPSummary() {
         borderTop: '1px solid var(--line-1)', borderBottom: '1px solid var(--line-1)'
       }}>
         {[
-          { v: '16 wk', l: 'Estimated timeline to launch on Shopify' },
+          { v: '20 wk', l: 'Estimated timeline to launch on Shopify' },
           { v: 'Unified', l: 'B2C, B2B, POS on Shopify integrated with ERP' },
           { v: 'Speed', l: 'Sidekick-friendly system to self-manage your store' },
           { v: 'Growth', l: 'Experience optimized for conversion and retention' }
@@ -412,7 +412,7 @@ function BPObjectives() {
 function BPApproach() {
   const steps = [
     { n: 'Phase 1', t: 'Blueprint', d: 'Architecture, data model, integration map. A plan that holds up under scrutiny.', wk: '2 weeks' },
-    { n: 'Phase 2', t: 'Build', d: 'Storefront, B2B, ERP sync. Fixed scope, senior team, no surprises.', wk: 'Weeks 16+' },
+    { n: 'Phase 2', t: 'Build', d: 'Storefront, B2B, ERP sync. Fixed scope, senior team, no surprises.', wk: 'Weeks 3–20' },
     { n: 'Phase 3', t: 'Grow', d: 'Migrate, go live, then optimize conversion, AOV, and automation.', wk: 'Months 6–12' }
   ];
   return (
@@ -614,7 +614,7 @@ function BPScope() {
 
 // ── 06 DELIVERY ─────────────────────────────────────────────────────────────
 const BP_GRID = 'minmax(0, 32px) minmax(0, 244px) minmax(0, 1fr) minmax(0, 58px)';
-const BP_WEEKS = 16;
+const BP_WEEKS = 20;
 const BP_GAP = 'clamp(12px, 1.6vw, 22px)';
 // faint week gridlines across the chart column
 const BP_GRIDLINES = 'repeating-linear-gradient(90deg, var(--line-1) 0, var(--line-1) 1px, transparent 1px, transparent calc(100% / ' + BP_WEEKS + '))';
@@ -666,20 +666,20 @@ function BPGanttRow({ task }) {
 
 function BPGantt() {
   const groups = [
-    { name: 'Foundation', range: 'WK 01–06', tasks: [
+    { name: 'Foundation', range: 'WK 01–07', tasks: [
       { n: '01', t: 'Onboarding & Kickoff',       tag: 'Setup',    s: 1, e: 2,  range: 'W1–2' },
       { n: '02', t: 'Deep Dive Workshops',        tag: 'Strategy · Solutions · Design',   s: 1, e: 3,  range: 'W1–3' },
-      { n: '03', t: 'Experience Design',  tag: 'UX/UI Design · Web · Mobile',   s: 2, e: 5,  range: 'W2–5' },
-      { n: '04', t: 'Approval',                   tag: 'Tech Stack Review & Design Sign-off', s: 5, e: 6,  range: 'W5–6' }
+      { n: '03', t: 'Experience Design',  tag: 'UX/UI Design · Web · Mobile',   s: 2, e: 6,  range: 'W2–6' },
+      { n: '04', t: 'Approval',                   tag: 'Tech Stack Review & Design Sign-off', s: 6, e: 7,  range: 'W6–7' }
     ] },
-    { name: 'Production', range: 'WK 06–14', tasks: [
-      { n: '05', t: 'Development',                tag: 'Build',    s: 6,  e: 12, range: 'W6–12' },
-      { n: '06', t: 'Data Migration',             tag: 'Migrate',  s: 9,  e: 12, range: 'W9–12' },
-      { n: '07', t: 'Integration',                tag: 'Connect',  s: 9,  e: 13, range: 'W9–13' },
-      { n: '08', t: 'QA & Testing',               tag: 'Verify',   s: 12, e: 14, range: 'W12–14' }
+    { name: 'Production', range: 'WK 07–18', tasks: [
+      { n: '05', t: 'Development',                tag: 'Build',    s: 7,  e: 15, range: 'W7–15' },
+      { n: '06', t: 'Data Migration',             tag: 'Migrate',  s: 11, e: 15, range: 'W11–15' },
+      { n: '07', t: 'Integration',                tag: 'Connect',  s: 11, e: 16, range: 'W11–16' },
+      { n: '08', t: 'QA & Testing',               tag: 'Verify',   s: 15, e: 18, range: 'W15–18' }
     ] },
-    { name: 'Audit', range: 'WK 14–16', tasks: [
-      { n: '09', t: 'Client UAT',                 tag: 'Go-live',  s: 14, e: 16, range: 'W14–16' }
+    { name: 'Audit', range: 'WK 18–20', tasks: [
+      { n: '09', t: 'Client UAT',                 tag: 'Go-live',  s: 18, e: 20, range: 'W18–20' }
     ] }
   ];
   return (
@@ -713,7 +713,7 @@ function BPGantt() {
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-3)'
       }}>
-        <span>WK 01 → WK 16 · ~4 Months</span>
+        <span>WK 01 → WK 20 · ~5 Months</span>
         <span>Overlapping phases · single team</span>
       </div>
     </div>
@@ -1835,15 +1835,15 @@ function BPDelivery() {
   const milestones = [
     { wk: 'WK 01', t: 'Kickoff + Blueprint start', s: 'Discovery, architecture, data model.' },
     { wk: 'WK 03', t: 'Blueprint sign-off', s: 'Plan, prototype, and budget locked.' },
-    { wk: 'WK 06', t: 'Storefront alpha', s: 'Core theme + catalog in staging.' },
-    { wk: 'WK 09', t: 'Integrations live', s: 'ERP sync + B2B flows validated.' },
-    { wk: 'WK 11', t: 'Migration + QA', s: 'Data moved, redirects, full QA pass.' },
-    { wk: 'WK 12', t: 'Launch', s: 'Go live + 30-day support begins.' }
+    { wk: 'WK 07', t: 'Storefront alpha', s: 'Core theme + catalog in staging.' },
+    { wk: 'WK 13', t: 'Integrations live', s: 'ERP sync + B2B flows validated.' },
+    { wk: 'WK 18', t: 'Migration + QA', s: 'Data moved, redirects, full QA pass.' },
+    { wk: 'WK 20', t: 'Launch', s: 'Go live + 30-day support begins.' }
   ];
   return (
     <BPSection id="delivery" n="11" label="Delivery" paper tail="TIMELINE">
       <BPHeadline>
-        Sixteen weeks,{' '}
+        Twenty weeks,{' '}
         <BPSerif>phase by phase.</BPSerif>
       </BPHeadline>
 
