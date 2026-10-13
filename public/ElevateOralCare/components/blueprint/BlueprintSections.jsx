@@ -2984,6 +2984,17 @@ function BPNav() {
   { id: 'next', n: '20', l: 'Next' }];
 
   const [active, setActive] = React.useState('intro');
+  // Collapsible: on narrower screens the floating nav covers content. The
+  // choice is shared by every blueprint in this browser; with no saved
+  // choice it starts collapsed below 1280px.
+  const [navCollapsed, setNavCollapsed] = React.useState(() => {
+    try { const v = window.localStorage.getItem('bp_nav_collapsed'); if (v !== null) return v === '1'; } catch (_) {}
+    return typeof window !== 'undefined' && window.innerWidth < 1280;
+  });
+  const toggleNav = () => setNavCollapsed((c) => {
+    try { window.localStorage.setItem('bp_nav_collapsed', c ? '0' : '1'); } catch (_) {}
+    return !c;
+  });
   const [open, setOpen] = React.useState(false);
 
   React.useEffect(() => {
@@ -3023,21 +3034,27 @@ function BPNav() {
       backdropFilter: 'blur(12px)',
       WebkitBackdropFilter: 'blur(12px)',
       boxShadow: '0 12px 32px -16px rgba(10,10,10,0.28)',
-      width: 220
+      width: navCollapsed ? 'auto' : 220
     }}>
       
       <div style={{
         display: 'flex', alignItems: 'center', gap: 9,
-        padding: '2px 8px 12px', marginBottom: 6,
-        borderBottom: '1px solid var(--line-1)'
+        padding: navCollapsed ? '2px 2px 2px 6px' : '2px 8px 12px', marginBottom: navCollapsed ? 0 : 6,
+        borderBottom: navCollapsed ? 'none' : '1px solid var(--line-1)'
       }}>
         <img src={window.__resources.uncapLogoBlack} alt="Uncap" style={{ height: 18, display: 'block' }} />
         <span style={{
           fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700,
-          letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--fg-3)'
+          letterSpacing: '0.18em', textTransform: 'uppercase', color: 'var(--fg-3)', display: navCollapsed ? 'none' : 'inline'
         }}>Blueprint</span>
+        <button type="button" onClick={toggleNav} aria-label={navCollapsed ? 'Open navigation' : 'Close navigation'} aria-expanded={!navCollapsed} title={navCollapsed ? 'Open navigation' : 'Close navigation'}
+          style={{ marginLeft: 'auto', width: 26, height: 26, flexShrink: 0, border: '1px solid var(--line-2)', borderRadius: 6, background: 'transparent', color: 'var(--fg-2)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 0 }}>
+          {navCollapsed
+            ? <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round"><path d="M2.5 4h11M2.5 8h11M2.5 12h11"/></svg>
+            : <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M10 3.5 5.5 8l4.5 4.5"/></svg>}
+        </button>
       </div>
-      {items.map((it) => {
+      {!navCollapsed && items.map((it) => {
         const on = active === it.id;
         return (
           <button key={it.id} type="button" onClick={() => go(it.id)}
