@@ -1896,7 +1896,6 @@ function BPB2B() {
 function BPAgentic() {
   const caps = [
     { t: 'AI storefront search', d: 'Shoppers ask in plain language — "3-inch roller for a car door" — and land on the right SKU.' },
-    { t: 'Conversational assistant', d: 'An on-site agent that answers spec questions, compares products, and builds the cart.' },
     { t: 'Agent-ready catalog', d: 'A machine-readable storefront so external agents — ChatGPT, Perplexity — can find and buy your products.' },
     { t: 'Agentic checkout', d: 'Universal Cart and delegated checkout let trusted agents transact, securely, on Shopify rails.' },
     { t: 'AEO optimized', d: 'FAQ content, JSON-LD, and the technical components that make products discoverable to AI.' }
