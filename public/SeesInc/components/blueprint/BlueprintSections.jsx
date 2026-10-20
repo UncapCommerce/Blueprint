@@ -1545,7 +1545,7 @@ function BPTechStack() {
     { name: 'Shopify Bundles',             fn: 'Bundled & grouped products',          pri: 'launch', cost: 'Free' },
     { name: 'Uncap Quotes',                fn: 'B2B quote management',                pri: 'start',  cost: '$90/mo' },
     { name: 'Uncap Connect',               fn: 'SYSPRO ↔ Shopify integration',           pri: 'start',  cost: '$390/mo' },
-    { name: 'PunchOut2Go',                 fn: 'Punch-out catalogs for procurement',  pri: 'launch', cost: '–' },
+    { name: 'TradeCentric',                fn: 'Punch-out catalogs for procurement',  pri: 'launch', cost: '–' },
     { name: 'Avalara AvaTax',              fn: 'Sales tax automation',                pri: 'start',  cost: '–' },
     { name: 'ShipperHQ',                   fn: 'LTL & dimensional shipping rates',    pri: 'launch', cost: '–' },
     { name: 'Mailchimp',                   fn: 'Email marketing & order notifications', pri: 'launch', cost: '–' },
@@ -1579,7 +1579,7 @@ function BPTechStack() {
           const layers = [
             { tier:'04', name:'Growth & Intelligence', note:'After launch', tools:[['Shopify Flow','launch'],['Shopify Subscriptions','future'],['Shopify Knowledge Base','launch'],['Mailchimp','launch'],['JudgeMe','launch']] },
             { tier:'03', name:'Experience & Engagement', note:'Customer-facing', tools:[['Shopify Search & Discovery','launch'],['Shopify Checkout Blocks','launch'],['Shopify Bundles','launch'],['Uncap Quotes','start']] },
-            { tier:'02', name:'Data & Integration', note:'System of record', tools:[['Uncap Connect','start'],['Avalara AvaTax','start'],['ShipperHQ','launch'],['PunchOut2Go','launch'],['Matrixify','start']] },
+            { tier:'02', name:'Data & Integration', note:'System of record', tools:[['Uncap Connect','start'],['Avalara AvaTax','start'],['ShipperHQ','launch'],['TradeCentric','launch'],['Matrixify','start']] },
             { tier:'01', name:'Commerce Core', note:'Foundation', tools:[['Shopify','start']], core:true }
           ];
           const chip = { start:{ bg:'var(--uc-signal)', fg:'var(--uc-black)' }, launch:{ bg:'#FF8B37', fg:'var(--uc-black)' }, future:{ bg:'transparent', fg:'var(--uc-stone-300)', outline:true } };
