@@ -731,10 +731,10 @@ function CoLogo({ h }) {
 function GfxChrome({ children }) {
   return (
     <div style={{ background: 'var(--uc-paper)', border: '1px solid var(--line-1)', borderRadius: 5, overflow: 'hidden' }}>
-      <div style={{ background:'var(--uc-black)', color:'var(--uc-paper)', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>SHIPS SAME DAY FROM FL + TX · SINCE 1977</div>
+      <div style={{ background:'var(--uc-black)', color:'var(--uc-paper)', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>SERVING THE INDUSTRY SINCE 1977 · FLORIDA + TEXAS</div>
       <div style={{ display:'flex', alignItems:'center', gap:12, padding:'9px 14px', borderBottom:'1px solid var(--line-1)' }}>
         <CoLogo h={15}/>
-        <div style={{ display:'flex', gap:11, marginLeft:6 }}>{['Elevator','Escalator','Door Equipment','Electrical'].map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:8.5, fontWeight:700, letterSpacing:'0.04em', color:i===0?'var(--fg-1)':'var(--fg-3)' }}>{x}</span>))}</div>
+        <div style={{ display:'flex', gap:11, marginLeft:6 }}>{['Elevator','Escalator','Hydraulic','Door Parts'].map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:8.5, fontWeight:700, letterSpacing:'0.04em', color:i===0?'var(--fg-1)':'var(--fg-3)' }}>{x}</span>))}</div>
         <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
           <span style={{ fontFamily:'var(--font-mono)', fontSize:8, color:'var(--fg-3)' }}>Search…</span>
           <span style={{ fontFamily:'var(--font-mono)', fontSize:8, fontWeight:700, color:'var(--uc-paper)', background:'var(--uc-black)', padding:'3px 8px', borderRadius:3 }}>Cart 2</span>
@@ -746,10 +746,10 @@ function GfxChrome({ children }) {
 }
 function GfxMegaNav() {
   const cols = [
-    { h: 'Elevator', items: ['Door Operators','Rollers & Gibs','Guide Shoes','Fixtures & Buttons'] },
-    { h: 'Escalator', items: ['Step Chains','Handrails','Comb Plates','Step Rollers'] },
-    { h: 'Electrical', items: ['PC Boards','Relays & Contactors','Limit Switches','Encoders'] },
-    { h: 'Featured', items: ['2026 Parts Catalog','Hard-to-Find Parts','Cross-Reference Tool'] }
+    { h: 'Door Equipment', items: ['Door Operators','Door Rollers','Interlock Parts','Door Clutches'] },
+    { h: 'Fixtures', items: ['Hall Fixtures','Position Indicators','Pushbuttons','Key Switches'] },
+    { h: 'Universal Parts', items: ['Rollers & Guides','Car Top & Rails','Pit','Signs & Braille'] },
+    { h: 'Featured', items: ['SEES Smooth Operator','SEES Power Unit','Download Catalog'] }
   ];
   return (
     <GfxChrome>
@@ -766,25 +766,25 @@ function GfxMegaNav() {
 }
 function GfxCollection() {
   const prods = [
-    ['Door Gibs · 10 pk','$42.10','/pack','#F2A33C','BULK','4.8','212'],
-    ['Hoistway Door Roller','$36.40','/ea','color-mix(in srgb, var(--co-prime) 60%, #fff)',null,'4.6','158'],
-    ['Car Door Interlock','$189.00','/ea','#7BB661','NEW','4.9','64'],
-    ['Pickup Roller Assembly','$54.00','/ea','#7C6FB0',null,'4.7','309'],
-    ['Door Closer Arm','$131.00','/ea','#E9B44C','PRO','4.9','47'],
-    ['Track Cleaner','$18.00','/ea','#E8C87E',null,'4.5','521']
+    ['Door Gibs','$42.10','/pack','#F2A33C','BULK','4.8','212'],
+    ['Door Roller Assembly','$36.40','/ea','color-mix(in srgb, var(--co-prime) 60%, #fff)',null,'4.6','158'],
+    ['Electric Door Latch Assembly','$189.00','/ea','#7BB661','NEW','4.9','64'],
+    ['Hanger w/ Safety Retainer','$54.00','/ea','#7C6FB0',null,'4.7','309'],
+    ['Door Closer','$131.00','/ea','#E9B44C','PRO','4.9','47'],
+    ['Safety Edge','$218.00','/ea','#E8C87E',null,'4.5','521']
   ];
   const facets = [
-    { h: 'Category', items: [['Door Equipment', true],['Rollers', true],['Interlocks', false],['Operators', false],['Hardware', false]] },
-    { h: 'Equipment', items: [['Elevator', true],['Escalator', false],['Dumbwaiter', false]] },
-    { h: 'Availability', items: [['In stock · FL', true],['In stock · TX', false],['Made to order', false]] }
+    { h: 'Category', items: [['Door Rollers', true],['Interlock Parts', false],['Door Operators', false],['Door Cables', false],['Closers', false]] },
+    { h: 'Manufacturer', items: [['GAL', true],['Otis', false],['Dover', false]] },
+    { h: 'Availability', items: [['Florida', true],['Texas', false],['Will call · TX', false]] }
   ];
   return (
     <div style={{ background:'var(--uc-paper)', border:'1px solid var(--line-1)', borderRadius:5, overflow:'hidden' }}>
       {/* chrome */}
-      <div style={{ background:'var(--uc-black)', color:'var(--uc-paper)', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>SHIPS SAME DAY FROM FL + TX · SINCE 1977</div>
+      <div style={{ background:'var(--uc-black)', color:'var(--uc-paper)', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>SERVING THE INDUSTRY SINCE 1977 · FLORIDA + TEXAS</div>
       <div style={{ display:'flex', alignItems:'center', gap:11, padding:'8px 14px', borderBottom:'1px solid var(--line-1)' }}>
         <CoLogo h={13}/>
-        <div style={{ display:'flex', gap:9, marginLeft:4 }}>{['Elevator','Escalator','Door Equipment','Electrical'].map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:i===1?'var(--fg-1)':'var(--fg-3)' }}>{x}</span>))}</div>
+        <div style={{ display:'flex', gap:9, marginLeft:4 }}>{['Elevator','Escalator','Hydraulic','Door Parts'].map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:i===1?'var(--fg-1)':'var(--fg-3)' }}>{x}</span>))}</div>
         <span style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:7 }}>
           <span style={{ width:110, height:18, borderRadius:999, border:'1px solid var(--line-2)', display:'flex', alignItems:'center', gap:4, padding:'0 9px', fontFamily:'var(--font-mono)', fontSize:7, color:'var(--fg-3)', whiteSpace:'nowrap', overflow:'hidden' }}><span style={{ fontSize:8 }}>⌕</span>Search products…</span>
           <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--uc-paper)', background:'var(--uc-black)', padding:'3px 8px', borderRadius:3 }}>Cart 0</span>
@@ -794,8 +794,8 @@ function GfxCollection() {
       {/* breadcrumb + title + sort */}
       <div style={{ padding:'11px 14px 9px', display:'flex', alignItems:'flex-end', justifyContent:'space-between', gap:10 }}>
         <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
-          <span style={{ fontFamily:'var(--font-mono)', fontSize:7, letterSpacing:'0.1em', color:'var(--fg-3)' }}>HOME / DOOR EQUIPMENT</span>
-          <span style={{ fontFamily:'var(--font-hero)', fontWeight:700, fontSize:19, letterSpacing:'-0.035em', color:'var(--fg-1)' }}>Door Equipment</span>
+          <span style={{ fontFamily:'var(--font-mono)', fontSize:7, letterSpacing:'0.1em', color:'var(--fg-3)' }}>HOME / ELEVATOR / GAL / DOOR EQUIPMENT</span>
+          <span style={{ fontFamily:'var(--font-hero)', fontWeight:700, fontSize:19, letterSpacing:'-0.035em', color:'var(--fg-1)' }}>Door Rollers &amp; Assemblies</span>
         </div>
         <div style={{ display:'flex', alignItems:'center', gap:6 }}>
           <span style={{ fontFamily:'var(--font-mono)', fontSize:7, color:'var(--fg-3)' }}>1,284 results</span>
@@ -805,7 +805,7 @@ function GfxCollection() {
 
       {/* applied filter chips */}
       <div style={{ padding:'0 14px 10px', display:'flex', gap:5, flexWrap:'wrap', alignItems:'center' }}>
-        {['Door Equipment ✕','Rollers ✕','In stock ✕'].map((c,i)=>(<span key={i} style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, color:'var(--fg-1)', background:'var(--uc-bone)', border:'1px solid var(--line-2)', borderRadius:999, padding:'2px 8px' }}>{c}</span>))}
+        {['GAL ✕','Door Rollers ✕','Florida ✕'].map((c,i)=>(<span key={i} style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, color:'var(--fg-1)', background:'var(--uc-bone)', border:'1px solid var(--line-2)', borderRadius:999, padding:'2px 8px' }}>{c}</span>))}
         <span style={{ fontFamily:'var(--font-mono)', fontSize:7, color:'var(--co-accent)', fontWeight:700 }}>Clear all</span>
       </div>
 
@@ -850,16 +850,16 @@ function GfxCollection() {
   );
 }
 function GfxCart() {
-  const lines=[['Hoistway Door Roller','12+','$31.20','$374'],['Door Gibs · 10 pk','4+','$39.00','$156'],['Limit Switch','5+','$20.00','$100']];
-  const grid=[['Door Rollers','$36.40','#E8C87E','BULK'],['Door Gibs','$42.10','#F2A33C',null],['Car Door Interlock','$189.00','#7BB661','NEW'],['Gate Switches','$64.00','#7C6FB0',null],['Pickup Rollers','$54.00','#E9B44C',null],['Door Closers','$131.00','color-mix(in srgb, var(--co-prime) 60%, #fff)',null]];
+  const lines=[['Door Roller Assembly','12+','$31.20','$374'],['Door Gibs','4+','$39.00','$156'],['Toggle Switch','5+','$20.00','$100']];
+  const grid=[['Door Rollers','$36.40','#E8C87E','BULK'],['Door Gibs','$42.10','#F2A33C',null],['Interlock Parts','$189.00','#7BB661','NEW'],['Door Cables','$64.00','#7C6FB0',null],['Hangers','$54.00','#E9B44C',null],['Closers','$131.00','color-mix(in srgb, var(--co-prime) 60%, #fff)',null]];
   return (
     <div style={{ position:'relative', background:'var(--uc-paper)', border:'1px solid var(--line-1)', borderRadius:5, overflow:'hidden' }}>
       {/* Full CATEGORY page behind */}
       <div>
-        <div style={{ background:'var(--uc-black)', color:'var(--uc-paper)', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>SHIPS SAME DAY FROM FL + TX · SINCE 1977</div>
+        <div style={{ background:'var(--uc-black)', color:'var(--uc-paper)', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>SERVING THE INDUSTRY SINCE 1977 · FLORIDA + TEXAS</div>
         <div style={{ display:'flex', alignItems:'center', gap:11, padding:'8px 14px', borderBottom:'1px solid var(--line-1)' }}>
           <CoLogo h={13}/>
-          <div style={{ display:'flex', gap:9, marginLeft:4 }}>{['Elevator','Escalator','Door Equipment','Electrical'].map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:i===0?'var(--fg-1)':'var(--fg-3)' }}>{x}</span>))}</div>
+          <div style={{ display:'flex', gap:9, marginLeft:4 }}>{['Elevator','Escalator','Hydraulic','Door Parts'].map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:i===0?'var(--fg-1)':'var(--fg-3)' }}>{x}</span>))}</div>
           <span style={{ marginLeft:'auto', fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--uc-paper)', background:'var(--uc-black)', padding:'3px 8px', borderRadius:3 }}>Cart 3</span>
         </div>
         {/* category title + breadcrumb */}
@@ -871,7 +871,7 @@ function GfxCart() {
           <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, color:'var(--fg-3)' }}>48 products · Sort ▾</span>
         </div>
         {/* filter chips */}
-        <div style={{ display:'flex', gap:6, padding:'0 14px 11px' }}>{['Rollers','Interlocks','Elevator','In stock'].map((f,i)=>(<span key={f} style={{ padding:'3px 9px', borderRadius:999, border:'1px solid', borderColor:i===0?'var(--uc-black)':'var(--line-1)', background:i===0?'var(--uc-black)':'transparent', color:i===0?'var(--uc-paper)':'var(--fg-2)', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700 }}>{f}</span>))}</div>
+        <div style={{ display:'flex', gap:6, padding:'0 14px 11px' }}>{['Door Rollers','Interlocks','Otis','Florida'].map((f,i)=>(<span key={f} style={{ padding:'3px 9px', borderRadius:999, border:'1px solid', borderColor:i===0?'var(--uc-black)':'var(--line-1)', background:i===0?'var(--uc-black)':'transparent', color:i===0?'var(--uc-paper)':'var(--fg-2)', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700 }}>{f}</span>))}</div>
         {/* product grid */}
         <div style={{ padding:'0 14px 14px', display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:9 }}>
           {grid.map((p,i)=>(
@@ -915,7 +915,7 @@ function GfxCart() {
         {/* upsells */}
         <div style={{ padding:'9px 13px', background:'var(--uc-cream)', borderBottom:'1px solid var(--line-1)' }}>
           <div style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:6 }}>PAIRS WELL WITH</div>
-          <div style={{ display:'flex', gap:6 }}>{[['Door Gibs','$42'],['Track Cleaner','$18'],['Fasteners','$12']].map((u,i)=>(<div key={i} style={{ flex:1, border:'1px solid var(--line-1)', borderRadius:3, padding:5, display:'flex', flexDirection:'column', gap:3, background:'var(--uc-paper)' }}><div style={{ aspectRatio:'1/1', background:'var(--uc-stone-200)', borderRadius:2 }}/><span style={{ fontFamily:'var(--font-display)', fontWeight:600, fontSize:7, color:'var(--fg-1)' }}>{u[0]}</span><span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--uc-black)' }}>+ {u[1]}</span></div>))}</div>
+          <div style={{ display:'flex', gap:6 }}>{[['Astragal','$28'],['Door Cable','$19'],['Escutcheon','$12']].map((u,i)=>(<div key={i} style={{ flex:1, border:'1px solid var(--line-1)', borderRadius:3, padding:5, display:'flex', flexDirection:'column', gap:3, background:'var(--uc-paper)' }}><div style={{ aspectRatio:'1/1', background:'var(--uc-stone-200)', borderRadius:2 }}/><span style={{ fontFamily:'var(--font-display)', fontWeight:600, fontSize:7, color:'var(--fg-1)' }}>{u[0]}</span><span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--uc-black)' }}>+ {u[1]}</span></div>))}</div>
         </div>
         {/* StorePro subscription upgrade */}
         <div style={{ padding:'10px 13px', background:'var(--uc-black)', color:'var(--uc-paper)', borderBottom:'1px solid var(--line-1)', display:'flex', gap:9, alignItems:'center' }}>
@@ -937,14 +937,14 @@ function GfxPDP() {
   return (
     <div style={{ background:'var(--uc-paper)', border:'1px solid var(--line-1)', borderRadius:5, overflow:'hidden' }}>
       {/* chrome */}
-      <div style={{ background:'var(--uc-black)', color:'var(--uc-paper)', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>SHIPS SAME DAY FROM FL + TX · SINCE 1977</div>
+      <div style={{ background:'var(--uc-black)', color:'var(--uc-paper)', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>SERVING THE INDUSTRY SINCE 1977 · FLORIDA + TEXAS</div>
       <div style={{ display:'flex', alignItems:'center', gap:11, padding:'8px 14px', borderBottom:'1px solid var(--line-1)' }}>
         <CoLogo h={13}/>
-        <div style={{ display:'flex', gap:9, marginLeft:4 }}>{['Elevator','Escalator','Door Equipment','Electrical'].map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:i===0?'var(--fg-1)':'var(--fg-3)' }}>{x}</span>))}</div>
+        <div style={{ display:'flex', gap:9, marginLeft:4 }}>{['Elevator','Escalator','Hydraulic','Door Parts'].map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:i===0?'var(--fg-1)':'var(--fg-3)' }}>{x}</span>))}</div>
         <span style={{ marginLeft:'auto', fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--uc-paper)', background:'var(--uc-black)', padding:'3px 8px', borderRadius:3 }}>Cart 2</span>
       </div>
       {/* breadcrumb */}
-      <div style={{ padding:'8px 14px 0', fontFamily:'var(--font-mono)', fontSize:7, letterSpacing:'0.08em', color:'var(--fg-3)' }}>HOME / DOOR EQUIPMENT / ROLLERS</div>
+      <div style={{ padding:'8px 14px 0', fontFamily:'var(--font-mono)', fontSize:7, letterSpacing:'0.08em', color:'var(--fg-3)' }}>HOME / ESCALATOR / UNIVERSAL PARTS / WHEELS &amp; ROLLERS</div>
 
       {/* gallery + buy box */}
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:13, padding:'9px 14px 13px' }}>
@@ -961,14 +961,14 @@ function GfxPDP() {
         {/* buy box */}
         <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
           <div style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em', color:'var(--co-prime)' }}>SEES · IN STOCK · SHIPS TODAY</div>
-          <div style={{ fontFamily:'var(--font-hero)', fontWeight:700, fontSize:21, letterSpacing:'-0.04em', lineHeight:0.9, color:'var(--fg-1)' }}>Hoistway Door<br/><span style={{ fontFamily:'var(--font-serif)', fontWeight:400, fontSize:16 }}>Roller · 3″ Poly</span></div>
+          <div style={{ fontFamily:'var(--font-hero)', fontWeight:700, fontSize:21, letterSpacing:'-0.04em', lineHeight:0.9, color:'var(--fg-1)' }}>Escalator Roller<br/><span style={{ fontFamily:'var(--font-serif)', fontWeight:400, fontSize:16 }}>MISWH-1 · 76 × 20 mm</span></div>
           <div style={{ display:'flex', alignItems:'center', gap:6, fontFamily:'var(--font-mono)', fontSize:8 }}><span style={{ color:'var(--co-accent)' }}>★★★★★</span><span style={{ color:'var(--fg-3)' }}>4.9 · 128 reviews</span></div>
           {/* swatches */}
           <div style={{ display:'flex', gap:5, marginTop:1 }}>{['var(--co-prime)','#1F1F1F','#E9B44C','#7C6FB0'].map((c,i)=>(<span key={i} style={{ width:16, height:16, borderRadius:999, background:c, border:i===0?'1.5px solid var(--uc-black)':'1px solid var(--line-1)', boxShadow:i===0?'0 0 0 2px var(--uc-paper) inset':'none' }}/>))}</div>
           {/* configuration — configurable product */}
           <div style={{ marginTop:1 }}>
             <div style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:4 }}>CONFIGURATION</div>
-            <div style={{ display:'flex', gap:4 }}>{[['2½″ · 6201',false],['3″ · 6202',true],['3½″ · 6203',false]].map(([l,on],i)=>(<span key={i} style={{ flex:1, padding:'5px 2px', textAlign:'center', border:'1px solid', borderColor:on?'var(--uc-black)':'var(--line-1)', borderRadius:3, fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, color:on?'var(--uc-paper)':'var(--fg-2)', background:on?'var(--uc-black)':'transparent', whiteSpace:'nowrap' }}>{l}</span>))}</div>
+            <div style={{ display:'flex', gap:4 }}>{[['Each',false],['Pack of 10',true],['Pack of 50',false]].map(([l,on],i)=>(<span key={i} style={{ flex:1, padding:'5px 2px', textAlign:'center', border:'1px solid', borderColor:on?'var(--uc-black)':'var(--line-1)', borderRadius:3, fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, color:on?'var(--uc-paper)':'var(--fg-2)', background:on?'var(--uc-black)':'transparent', whiteSpace:'nowrap' }}>{l}</span>))}</div>
           </div>
           {/* live stock by warehouse (SYSPRO) + account price */}
           <div style={{ marginTop:2, border:'1px solid var(--line-1)', borderRadius:3, overflow:'hidden' }}>
@@ -991,12 +991,12 @@ function GfxPDP() {
             <span style={{ padding:'7px', textAlign:'center', border:'1px solid var(--uc-black)', borderRadius:3, fontFamily:'var(--font-display)', fontSize:9, fontWeight:700, color:'var(--fg-1)' }}>Request a Quote</span>
           </div>
           {/* trust row */}
-          <div style={{ display:'flex', gap:8, marginTop:3, flexWrap:'wrap' }}>{['✓ OEM-equivalent','✓ Ships from FL + TX','✓ Since 1977'].map(t=>(<span key={t} style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, color:'var(--fg-3)' }}>{t}</span>))}</div>
+          <div style={{ display:'flex', gap:8, marginTop:3, flexWrap:'wrap' }}>{['✓ ISO 9001:2008','✓ FL + TX stock','✓ Since 1977'].map(t=>(<span key={t} style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, color:'var(--fg-3)' }}>{t}</span>))}</div>
           {/* frequently bought together (compact, in buy box) */}
           <div style={{ marginTop:7, paddingTop:9, borderTop:'1px solid var(--line-1)' }}>
             <div style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:6 }}>FREQUENTLY BOUGHT TOGETHER</div>
             <div style={{ display:'flex', alignItems:'center', gap:5, marginBottom:8 }}>
-              {[['Door Roller','$36.40','var(--co-prime)'],['Door Gibs · 10 pk','$42.10','#F2A33C'],['Track Cleaner','$18.00','#7BB661']].map((p,i)=>(
+              {[['MISWH-1 Roller','$36.40','var(--co-prime)'],['Step Cleaner','$42.10','#F2A33C'],['LED Demarcation Light','$18.00','#7BB661']].map((p,i)=>(
                 <React.Fragment key={i}>
                   {i>0 && <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:11, color:'var(--fg-3)', flexShrink:0 }}>+</span>}
                   <div style={{ flex:1, display:'flex', flexDirection:'column', gap:3 }}>
@@ -1019,11 +1019,11 @@ function GfxPDP() {
       <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:1, background:'var(--line-1)', borderTop:'1px solid var(--line-1)' }}>
         <div style={{ background:'var(--uc-paper)', padding:'11px 14px' }}>
           <div style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:7 }}>SPECIFICATIONS</div>
-          {[['Wheel','3″ polyurethane'],['Bearing','6202-2RS'],['Shaft','M10 × 30 mm'],['Equipment','Elevator doors']].map((r,i)=>(<div key={i} style={{ display:'flex', justifyContent:'space-between', padding:'4px 0', borderTop:i?'1px solid var(--line-1)':'none', fontFamily:'var(--font-mono)', fontSize:8 }}><span style={{ color:'var(--fg-3)' }}>{r[0]}</span><span style={{ color:'var(--fg-1)', fontWeight:700 }}>{r[1]}</span></div>))}
+          {[['Part #','MISWH-1'],['Size','76 mm × 20 mm'],['Bore (ID)','15 mm'],['Bearing','6202']].map((r,i)=>(<div key={i} style={{ display:'flex', justifyContent:'space-between', padding:'4px 0', borderTop:i?'1px solid var(--line-1)':'none', fontFamily:'var(--font-mono)', fontSize:8 }}><span style={{ color:'var(--fg-3)' }}>{r[0]}</span><span style={{ color:'var(--fg-1)', fontWeight:700 }}>{r[1]}</span></div>))}
         </div>
         <div style={{ background:'var(--uc-cream)', padding:'11px 14px' }}>
           <div style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:7 }}>WHY BUYERS CHOOSE IT</div>
-          <div style={{ display:'flex', flexDirection:'column', gap:6 }}>{['Exact-fit replacements cut callbacks and downtime.','Account pricing and NET terms apply at login.','Stocked in Florida and Texas for same-day shipping.'].map((t,i)=>(<div key={i} style={{ display:'grid', gridTemplateColumns:'12px 1fr', gap:7, alignItems:'start' }}><span style={{ width:10, height:10, borderRadius:999, background:'var(--co-prime)', marginTop:1, display:'flex', alignItems:'center', justifyContent:'center' }}><svg width="6" height="6" viewBox="0 0 12 12" fill="none"><path d="M2 6 L5 9 L10 3" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg></span><span style={{ fontFamily:'var(--font-serif)', fontSize:9, lineHeight:1.35, color:'var(--fg-2)' }}>{t}</span></div>))}</div>
+          <div style={{ display:'flex', flexDirection:'column', gap:6 }}>{['Independent manufacturer and distributor since 1977.','ISO 9001:2008 certified quality on every part.','Stocked in Florida and Texas, with will call in Irving.'].map((t,i)=>(<div key={i} style={{ display:'grid', gridTemplateColumns:'12px 1fr', gap:7, alignItems:'start' }}><span style={{ width:10, height:10, borderRadius:999, background:'var(--co-prime)', marginTop:1, display:'flex', alignItems:'center', justifyContent:'center' }}><svg width="6" height="6" viewBox="0 0 12 12" fill="none"><path d="M2 6 L5 9 L10 3" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg></span><span style={{ fontFamily:'var(--font-serif)', fontSize:9, lineHeight:1.35, color:'var(--fg-2)' }}>{t}</span></div>))}</div>
         </div>
       </div>
 
@@ -1032,7 +1032,7 @@ function GfxPDP() {
         <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:24, letterSpacing:'-0.04em', color:'var(--fg-1)' }}>4.9</span>
         <div style={{ flex:1 }}>
           <div style={{ fontFamily:'var(--font-mono)', fontSize:8, color:'var(--co-accent)' }}>★★★★★</div>
-          <div style={{ fontFamily:'var(--font-serif)', fontStyle:'italic', fontSize:9, lineHeight:1.35, color:'var(--fg-2)', marginTop:2 }}>“Right part, shipped same day. Our mechanics stopped waiting on OEM lead times.”</div>
+          <div style={{ fontFamily:'var(--font-serif)', fontStyle:'italic', fontSize:9, lineHeight:1.35, color:'var(--fg-2)', marginTop:2 }}>“Right roller, right size, on the truck the same day. SEES is our first call.”</div>
         </div>
         <span style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, color:'var(--fg-3)', whiteSpace:'nowrap' }}>VERIFIED ✓</span>
       </div>
@@ -1040,15 +1040,15 @@ function GfxPDP() {
       {/* you may also like */}
       <div style={{ padding:'11px 14px', borderTop:'1px solid var(--line-1)', background:'var(--uc-bone)' }}>
         <div style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:8 }}>COMPLETE THE SET</div>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:7 }}>{[['Door Gibs · 10 pk','$42.10','#F2A33C'],['Track Cleaner','$18.00','#7BB661'],['Pickup Roller','$54.00','#7C6FB0'],['Door Closer Arm','$131.00','#E9B44C']].map((p,i)=>(<div key={i} style={{ display:'flex', flexDirection:'column', gap:4 }}><div style={{ aspectRatio:'1/1', borderRadius:3, background:`linear-gradient(140deg, ${p[2]}, var(--uc-bone))` }}/><span style={{ fontFamily:'var(--font-display)', fontWeight:600, fontSize:7.5, color:'var(--fg-1)' }}>{p[0]}</span><span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--fg-1)' }}>{p[1]}</span></div>))}</div>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:7 }}>{[['Step Cleaner','$42.10','#F2A33C'],['LED Demarcation Light','$18.00','#7BB661'],['Barricade','$96.00','#7C6FB0'],['Pressure Gauge','$64.00','#E9B44C']].map((p,i)=>(<div key={i} style={{ display:'flex', flexDirection:'column', gap:4 }}><div style={{ aspectRatio:'1/1', borderRadius:3, background:`linear-gradient(140deg, ${p[2]}, var(--uc-bone))` }}/><span style={{ fontFamily:'var(--font-display)', fontWeight:600, fontSize:7.5, color:'var(--fg-1)' }}>{p[0]}</span><span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--fg-1)' }}>{p[1]}</span></div>))}</div>
       </div>
 
       {/* compare products */}
       <div style={{ padding:'11px 14px 13px', borderTop:'1px solid var(--line-1)', background:'var(--uc-paper)' }}>
         <div style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:8 }}>COMPARE</div>
         {(() => {
-          const cols = [['Door Roller · 3″','$36.40','var(--co-prime)',true],['Door Roller · 2½″','$32.10','#F2A33C',false],['HD Roller · 3½″','$48.60','#7BB661',false]];
-          const feats = [['Wheel','3″','2½″','3½″'],['Bearing','6202','6201','6203'],['Tread','Poly','Poly','Steel'],['Heavy duty','—','—','✓'],['FL + TX stock','✓','✓','✓']];
+          const cols = [['MISWH-1 Roller','$36.40','var(--co-prime)',true],['MISWH-2 Roller','$38.90','#F2A33C',false],['MISWH-3 Roller','$41.20','#7BB661',false]];
+          const feats = [['Category','Escalator','Escalator','Escalator'],['Florida stock','✓','✓','✓'],['Texas stock','✓','✓','—'],['Will call · TX','✓','✓','✓'],['Spec sheet','✓','✓','✓']];
           return (
             <div style={{ border:'1px solid var(--line-1)', borderRadius:3, overflow:'hidden' }}>
               <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr', background:'var(--uc-bone)' }}>
@@ -1131,18 +1131,18 @@ function GfxPortal() {
 }
 
 function GfxHomepage() {
-  const nav = ['Elevator','Escalator','Door Equipment','Electrical','Hardware'];
+  const nav = ['Elevator','Escalator','Hydraulic','Door Parts','Universal Parts'];
   const mega = [
-    { h: 'Elevator', items: ['Door Operators','Rollers & Gibs','Guide Shoes','Fixtures & Buttons'] },
-    { h: 'Escalator', items: ['Step Chains','Handrails','Comb Plates','Step Rollers'] },
-    { h: 'Electrical', items: ['PC Boards','Relays & Contactors','Limit Switches','Encoders'] }
+    { h: 'Door Equipment', items: ['Door Operators','Door Rollers','Interlock Parts','Door Clutches'] },
+    { h: 'Fixtures', items: ['Hall Fixtures','Position Indicators','Pushbuttons','Key Switches'] },
+    { h: 'Hydraulic', items: ['SEES Power Unit','Hydraulic Accessories','Pressure Gauges','Wire Rope'] }
   ];
-  const brands = ['DOORS','CONTROLLERS','FIXTURES','MACHINES','HOISTWAY','ESCALATORS'];
-  const feat = [['Door Gibs · 10 pk','$42.10','#F2A33C','BULK'],['Hoistway Door Roller','$36.40','#E8C87E',null],['Car Door Interlock','$189.00','#7BB661','NEW'],['Door Operator PC Board','$1,240','color-mix(in srgb, var(--co-prime) 60%, #fff)','PRO']];
+  const brands = ['OTIS','KONE','SCHINDLER','DOVER','GAL','HAUGHTON'];
+  const feat = [['SEES Smooth Operator','Quote','#F2A33C','NEW'],['SEES Power Unit','Quote','#E8C87E',null],['Door Gibs','$42.10','#7BB661','BULK'],['Door Roller Assembly','$36.40','color-mix(in srgb, var(--co-prime) 60%, #fff)',null]];
   return (
     <div style={{ background:'var(--uc-paper)', border:'1px solid var(--line-1)', borderRadius:5, overflow:'hidden' }}>
       {/* announcement */}
-      <div style={{ background:'var(--uc-black)', color:'var(--uc-paper)', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>SHIPS SAME DAY FROM FL + TX · SINCE 1977</div>
+      <div style={{ background:'var(--uc-black)', color:'var(--uc-paper)', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>SERVING THE INDUSTRY SINCE 1977 · FLORIDA + TEXAS</div>
       {/* header */}
       <div style={{ display:'flex', alignItems:'center', gap:11, padding:'8px 14px', borderBottom:'1px solid var(--line-1)' }}>
         <CoLogo h={15}/>
@@ -1158,9 +1158,9 @@ function GfxHomepage() {
         <svg viewBox="0 0 200 90" preserveAspectRatio="none" style={{ position:'absolute', right:-10, bottom:-10, width:220, opacity:0.16 }}><path d="M5 85 L5 34 L52 34 L52 12 L104 12 L104 34 L195 34 L195 85 Z" fill="none" stroke="#fff" strokeWidth="1.6"/><path d="M28 85 L28 52 M78 85 L78 34 M150 85 L150 50" stroke="#fff" strokeWidth="1"/></svg>
         {/* hero copy (right 1/3) */}
         <div style={{ position:'absolute', right:18, top:0, bottom:0, width:'34%', display:'flex', flexDirection:'column', justifyContent:'center', gap:7 }}>
-          <span style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.16em', color:'var(--co-prime)' }}>NEW · 2026 PARTS CATALOG</span>
-          <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:24, letterSpacing:'-0.04em', lineHeight:0.9, color:'#fff' }}>The right part.<br/><span style={{ fontFamily:'var(--font-serif)', fontWeight:400 }}>Today.</span></span>
-          <span style={{ alignSelf:'flex-start', marginTop:2, padding:'5px 13px', background:'var(--co-accent)', color:'#fff', borderRadius:999, fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:800 }}>Shop elevator parts →</span>
+          <span style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.16em', color:'var(--co-prime)' }}>NEW · SEES SMOOTH OPERATOR</span>
+          <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:24, letterSpacing:'-0.04em', lineHeight:0.9, color:'#fff' }}>Smooth<br/><span style={{ fontFamily:'var(--font-serif)', fontWeight:400 }}>Operator.</span></span>
+          <span style={{ alignSelf:'flex-start', marginTop:2, padding:'5px 13px', background:'var(--co-accent)', color:'#fff', borderRadius:999, fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:800 }}>Shop door operators →</span>
         </div>
         {/* mega menu over 2/3 */}
         <div style={{ position:'absolute', left:0, top:0, bottom:0, width:'64%', background:'rgba(248,246,240,0.97)', borderRight:'1px solid var(--line-2)', boxShadow:'10px 0 30px -16px rgba(0,0,0,0.5)', padding:'14px 16px', display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:14 }}>
@@ -1176,7 +1176,7 @@ function GfxHomepage() {
       {/* Year / Make / Model fitment */}
       <div style={{ background:'var(--uc-black)', padding:'10px 14px', display:'flex', alignItems:'center', gap:8 }}>
         <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, letterSpacing:'0.08em', color:'var(--co-prime)', whiteSpace:'nowrap' }}>MATCH YOUR SYSTEM</span>
-        {['Equipment','Part type','Model'].map((f,i)=>(<span key={f} style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'space-between', height:22, background:'var(--uc-paper)', borderRadius:4, padding:'0 9px', fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--fg-2)' }}>{f}<span style={{ color:'var(--fg-3)' }}>▾</span></span>))}
+        {['Manufacturer','Equipment','Part type'].map((f,i)=>(<span key={f} style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'space-between', height:22, background:'var(--uc-paper)', borderRadius:4, padding:'0 9px', fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--fg-2)' }}>{f}<span style={{ color:'var(--fg-3)' }}>▾</span></span>))}
         <span style={{ display:'inline-flex', alignItems:'center', height:22, padding:'0 12px', background:'var(--co-accent)', color:'#fff', borderRadius:4, fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:800, whiteSpace:'nowrap' }}>Find parts →</span>
       </div>
 
@@ -1203,7 +1203,7 @@ function GfxHomepage() {
         <div style={{ background:'linear-gradient(150deg, color-mix(in srgb, var(--co-prime) 70%, #000), color-mix(in srgb, var(--co-prime) 28%, #000))', minHeight:96, position:'relative' }}><span style={{ position:'absolute', bottom:8, left:10, padding:'2px 7px', background:'var(--uc-paper)', borderRadius:3, fontFamily:'var(--font-mono)', fontSize:5.5, fontWeight:800, letterSpacing:'0.1em', color:'var(--fg-3)' }}>EST. 1977</span></div>
         <div style={{ padding:'16px 16px', display:'flex', flexDirection:'column', justifyContent:'center', gap:7, background:'var(--uc-bone)' }}>
           <span style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, letterSpacing:'0.14em', color:'var(--fg-3)' }}>OUR STORY</span>
-          <span style={{ fontFamily:'var(--font-serif)', fontStyle:'italic', fontSize:14, lineHeight:1.3, letterSpacing:'-0.01em', color:'var(--fg-1)' }}>Made in South Florida and Dallas: 30,000 elevator and escalator parts, shipped same day to 5,000 accounts.</span>
+          <span style={{ fontFamily:'var(--font-serif)', fontStyle:'italic', fontSize:14, lineHeight:1.3, letterSpacing:'-0.01em', color:'var(--fg-1)' }}>Since 1977, an independent manufacturer and distributor of quality elevator and escalator parts and supplies.</span>
           <span style={{ alignSelf:'flex-start', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, color:'var(--fg-1)', borderBottom:'1.5px solid var(--co-prime)', paddingBottom:1 }}>Read our story →</span>
         </div>
       </div>
@@ -1219,7 +1219,7 @@ function BPPerformance() {
       points: [
         { t: 'Customer Journey', d: 'Streamlined and tailored paths from landing to checkout, for mechanics, contractors, and building owners.' },
         { t: 'Information Architecture', d: 'Mega navigation with multi-level menus built around how elevator mechanics actually search.' },
-        { t: 'Product Finding', d: 'Equipment / part-type / model matching, part-number cross-references, and fast ways to find the right part.' }
+        { t: 'Product Finding', d: 'Shop by manufacturer (Otis, Kone, Schindler, Dover, GAL), equipment, and part type, plus part-number search.' }
       ],
       gfx: <GfxHomepage/>
     },
@@ -1348,21 +1348,21 @@ function GfxPhone({ kind }) {
         {kind === 'home' && (
           <div style={{ display:'flex', flexDirection:'column' }}>
             {/* contractor announcement */}
-            <div style={{ background:'var(--uc-black)', color:'var(--uc-paper)', padding:'4px 0', textAlign:'center', fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, letterSpacing:'0.12em' }}>SHIPS SAME DAY FROM FL + TX · SINCE 1977</div>
+            <div style={{ background:'var(--uc-black)', color:'var(--uc-paper)', padding:'4px 0', textAlign:'center', fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, letterSpacing:'0.12em' }}>SERVING THE INDUSTRY SINCE 1977 · FLORIDA + TEXAS</div>
             {/* SHORT hero banner */}
             <div style={{ margin:'10px 12px 0', borderRadius:8, background:'linear-gradient(100deg, color-mix(in srgb, var(--co-prime) 18%, #000) 0%, color-mix(in srgb, var(--co-prime) 40%, #000) 55%, color-mix(in srgb, var(--co-prime) 35%, #000) 135%)', position:'relative', overflow:'hidden', padding:'12px 13px', display:'flex', flexDirection:'column', gap:5, minHeight:96 }}>
               <svg viewBox="0 0 120 60" style={{ position:'absolute', right:-6, bottom:-6, width:120, opacity:0.18 }}><path d="M5 55 L5 22 L32 22 L32 8 L62 8 L62 22 L115 22 L115 55 Z" fill="none" stroke="#fff" strokeWidth="1.6"/><path d="M16 55 L16 33 M46 55 L46 22 M88 55 L88 32" stroke="#fff" strokeWidth="1"/></svg>
-              <span style={{ fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, letterSpacing:'0.16em', color:'var(--co-prime)' }}>NEW · 2026 PARTS CATALOG</span>
+              <span style={{ fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, letterSpacing:'0.16em', color:'var(--co-prime)' }}>SEE US AT NAEC 2026</span>
               <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:18, letterSpacing:'-0.04em', lineHeight:0.9, color:'#fff' }}>The right part.<br/><span style={{ fontFamily:'var(--font-serif)', fontWeight:400 }}>Today.</span></span>
-              <span style={{ alignSelf:'flex-start', marginTop:2, padding:'5px 12px', background:'var(--co-accent)', color:'#fff', borderRadius:999, fontFamily:'var(--font-mono)', fontSize:7, fontWeight:800 }}>Shop elevator parts →</span>
+              <span style={{ alignSelf:'flex-start', marginTop:2, padding:'5px 12px', background:'var(--co-accent)', color:'#fff', borderRadius:999, fontFamily:'var(--font-mono)', fontSize:7, fontWeight:800 }}>Download the catalog →</span>
             </div>
             {/* brand strip */}
-            <div style={{ display:'flex', alignItems:'center', gap:0, margin:'11px 0 0', padding:'8px 12px', borderTop:'1px solid var(--line-1)', borderBottom:'1px solid var(--line-1)', justifyContent:'space-between' }}>{['DOORS','CABS','DRIVES','RAILS','STEPS'].map(b=>(<span key={b} style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:9, letterSpacing:'-0.02em', color:'var(--fg-3)' }}>{b}</span>))}</div>
+            <div style={{ display:'flex', alignItems:'center', gap:0, margin:'11px 0 0', padding:'8px 12px', borderTop:'1px solid var(--line-1)', borderBottom:'1px solid var(--line-1)', justifyContent:'space-between' }}>{['OTIS','KONE','GAL','DOVER','ARMOR'].map(b=>(<span key={b} style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:9, letterSpacing:'-0.02em', color:'var(--fg-3)' }}>{b}</span>))}</div>
             {/* product tabs */}
             <div style={{ display:'flex', gap:13, padding:'10px 12px 8px' }}>{['Best Sellers','New','Deals'].map((t,i)=>(<span key={t} style={{ paddingBottom:4, fontFamily:'var(--font-display)', fontWeight:700, fontSize:9, color:i===0?'var(--fg-1)':'var(--fg-3)', borderBottom:i===0?'2px solid var(--uc-black)':'2px solid transparent' }}>{t}</span>))}</div>
             {/* product grid */}
             <div style={{ padding:'0 12px 11px', display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
-              {[['Door Gibs · 10 pk','$42.10','#F2A33C','BULK'],['Door Roller','$36.40','#E8C87E',null],['Car Door Interlock','$189.00','#7BB661','NEW'],['Limit Switch','$20.00','#E9B44C','DEAL']].map((p,i)=>(
+              {[['Door Gibs','$42.10','#F2A33C','BULK'],['Door Roller Assembly','$36.40','#E8C87E',null],['SEES Power Unit','Quote','#7BB661','NEW'],['Toggle Switch','$20.00','#E9B44C','DEAL']].map((p,i)=>(
                 <div key={i} style={{ display:'flex', flexDirection:'column', gap:4 }}>
                   <div style={{ aspectRatio:'1/0.86', borderRadius:5, background:`linear-gradient(150deg, ${p[2]}, var(--uc-bone))`, position:'relative' }}>{p[3] && <span style={{ position:'absolute', top:5, left:5, padding:'1px 6px', background:p[3]==='DEAL'?'var(--co-accent)':(p[3]==='NEW'?'var(--uc-black)':'var(--co-prime)'), color:'#fff', borderRadius:2, fontFamily:'var(--font-mono)', fontSize:5, fontWeight:800 }}>{p[3]}</span>}<span style={{ position:'absolute', bottom:5, right:5, width:16, height:16, borderRadius:999, background:'var(--uc-paper)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, color:'var(--fg-1)' }}>＋</span></div>
                   <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:8, color:'var(--fg-1)', letterSpacing:'-0.01em' }}>{p[0]}</span>
@@ -1373,7 +1373,7 @@ function GfxPhone({ kind }) {
             {/* categories */}
             <div style={{ padding:'0 12px 12px' }}>
               <div style={{ fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:6 }}>SHOP BY DEPARTMENT</div>
-              <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:6 }}>{[['Elevator','#E8C87E'],['Escalator','#F2A33C'],['Doors','#7BB661'],['Electrical','color-mix(in srgb, var(--co-prime) 60%, #fff)']].map((c,i)=>(<div key={i} style={{ display:'flex', flexDirection:'column', gap:3 }}><div style={{ aspectRatio:'1/1', borderRadius:4, background:`linear-gradient(140deg, ${c[1]}, var(--uc-bone))` }}/><span style={{ fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, textAlign:'center', color:'var(--fg-2)' }}>{c[0]}</span></div>))}</div>
+              <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:6 }}>{[['Elevator','#E8C87E'],['Escalator','#F2A33C'],['Hydraulic','#7BB661'],['Door Parts','color-mix(in srgb, var(--co-prime) 60%, #fff)']].map((c,i)=>(<div key={i} style={{ display:'flex', flexDirection:'column', gap:3 }}><div style={{ aspectRatio:'1/1', borderRadius:4, background:`linear-gradient(140deg, ${c[1]}, var(--uc-bone))` }}/><span style={{ fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, textAlign:'center', color:'var(--fg-2)' }}>{c[0]}</span></div>))}</div>
             </div>
           </div>
         )}
@@ -1381,19 +1381,19 @@ function GfxPhone({ kind }) {
           <div style={{ display:'flex', flexDirection:'column' }}>
             {/* editorial hero */}
             <div style={{ padding:'14px 13px 10px', display:'flex', flexDirection:'column', gap:6 }}>
-              <span style={{ display:'inline-flex', alignItems:'center', gap:5, fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, letterSpacing:'0.16em', color:'var(--fg-3)' }}><span style={{ width:5, height:5, borderRadius:999, background:'var(--co-prime)' }}/>EST. 1977 · MADE IN FLORIDA</span>
+              <span style={{ display:'inline-flex', alignItems:'center', gap:5, fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, letterSpacing:'0.16em', color:'var(--fg-3)' }}><span style={{ width:5, height:5, borderRadius:999, background:'var(--co-prime)' }}/>EST. 1977 · FORT LAUDERDALE, FL</span>
               <span style={{ fontFamily:'var(--font-hero)', fontWeight:700, fontSize:21, letterSpacing:'-0.045em', lineHeight:0.9, color:'var(--fg-1)' }}>Parts made right<br/><span style={{ fontFamily:'var(--font-serif)', fontWeight:400 }}>since 1977.</span></span>
             </div>
             {/* overlapping image cards */}
             <div style={{ position:'relative', height:112, margin:'2px 13px 8px' }}>
               <div style={{ position:'absolute', left:0, top:8, width:'58%', aspectRatio:'4/3', borderRadius:5, background:'linear-gradient(150deg, #F2A33C, var(--uc-bone))', transform:'rotate(-4deg)', boxShadow:'0 8px 16px -10px rgba(10,10,10,0.45)' }}/>
               <div style={{ position:'absolute', right:6, top:0, width:'52%', aspectRatio:'3/4', borderRadius:5, background:'linear-gradient(150deg, color-mix(in srgb, var(--co-prime) 35%, #000), var(--uc-bone))', transform:'rotate(6deg)', boxShadow:'0 8px 16px -10px rgba(10,10,10,0.4)' }}/>
-              <span style={{ position:'absolute', left:'33%', bottom:2, padding:'3px 8px', background:'var(--uc-paper)', border:'1px solid var(--line-1)', borderRadius:3, fontFamily:'var(--font-mono)', fontSize:5.5, fontWeight:800, letterSpacing:'0.1em', color:'var(--fg-3)', transform:'rotate(-3deg)' }}>POMPANO BEACH, FL · HQ</span>
+              <span style={{ position:'absolute', left:'33%', bottom:2, padding:'3px 8px', background:'var(--uc-paper)', border:'1px solid var(--line-1)', borderRadius:3, fontFamily:'var(--font-mono)', fontSize:5.5, fontWeight:800, letterSpacing:'0.1em', color:'var(--fg-3)', transform:'rotate(-3deg)' }}>FLORIDA · TEXAS</span>
             </div>
             {/* manifesto */}
-            <div style={{ padding:'4px 13px 8px' }}><span style={{ fontFamily:'var(--font-serif)', fontStyle:'italic', fontSize:10.5, lineHeight:1.45, color:'var(--fg-2)' }}>“The right elevator and escalator part, in stock and on its way the same day.”</span></div>
+            <div style={{ padding:'4px 13px 8px' }}><span style={{ fontFamily:'var(--font-serif)', fontStyle:'italic', fontSize:10.5, lineHeight:1.45, color:'var(--fg-2)' }}>“An independent manufacturer and distributor of quality elevator and escalator parts and supplies.”</span></div>
             {/* stat strip */}
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:6, padding:'8px 13px', borderTop:'1px solid var(--line-1)', background:'var(--uc-paper)' }}>{[['30k','Parts stocked'],['5,000','Accounts'],['FL + TX','Warehouses']].map((s,i)=>(<div key={i}><div style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:14, letterSpacing:'-0.035em', color:'var(--fg-1)' }}>{s[0]}</div><div style={{ fontFamily:'var(--font-mono)', fontSize:5.5, color:'var(--fg-3)', letterSpacing:'0.08em', textTransform:'uppercase' }}>{s[1]}</div></div>))}</div>
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:6, padding:'8px 13px', borderTop:'1px solid var(--line-1)', background:'var(--uc-paper)' }}>{[['1977','Serving since'],['ISO','9001:2008'],['FL + TX','Locations']].map((s,i)=>(<div key={i}><div style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:14, letterSpacing:'-0.035em', color:'var(--fg-1)' }}>{s[0]}</div><div style={{ fontFamily:'var(--font-mono)', fontSize:5.5, color:'var(--fg-3)', letterSpacing:'0.08em', textTransform:'uppercase' }}>{s[1]}</div></div>))}</div>
           </div>
         )}
         {kind === 'blog' && (
@@ -1404,12 +1404,12 @@ function GfxPhone({ kind }) {
               <div style={{ aspectRatio:'16/9', background:'radial-gradient(120% 100% at 30% 10%, #F2A33C, color-mix(in srgb, var(--co-prime) 70%, #000))', position:'relative' }}><span style={{ position:'absolute', top:7, left:7, padding:'2px 7px', background:'var(--co-accent)', color:'#fff', borderRadius:999, fontFamily:'var(--font-mono)', fontSize:6, fontWeight:800, letterSpacing:'0.06em' }}>FEATURED</span></div>
               <div style={{ padding:'9px 11px', background:'var(--uc-paper)', display:'flex', flexDirection:'column', gap:4 }}>
                 <span style={{ fontFamily:'var(--font-mono)', fontSize:5.5, fontWeight:700, letterSpacing:'0.12em', color:'var(--fg-3)' }}>MAINTENANCE · 7 MIN</span>
-                <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:12.5, letterSpacing:'-0.018em', lineHeight:1.08, color:'var(--fg-1)' }}>Door rollers: when to replace them.</span>
+                <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:12.5, letterSpacing:'-0.018em', lineHeight:1.08, color:'var(--fg-1)' }}>Escalator rollers: when to replace them.</span>
               </div>
             </div>
             {/* article list */}
             <div style={{ padding:'10px 13px', display:'flex', flexDirection:'column', gap:9 }}>
-              {[['Reading controller fault codes','5 min','#E8C87E'],['Choosing escalator step rollers','4 min','#7C6FB0'],['Cross-referencing OEM part numbers','6 min','#E9B44C']].map((a,i)=>(
+              {[['Escalator step cleaners, explained','5 min','#E8C87E'],['Choosing hall fixtures','4 min','#7C6FB0'],['Ordering parts by OEM','6 min','#E9B44C']].map((a,i)=>(
                 <div key={i} style={{ display:'grid', gridTemplateColumns:'42px 1fr', gap:9, alignItems:'center' }}>
                   <div style={{ aspectRatio:'1/1', borderRadius:4, background:`linear-gradient(150deg, ${a[2]}, var(--uc-bone))` }}/>
                   <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
@@ -1444,7 +1444,7 @@ function BPContent() {
         fontFamily:'var(--font-serif)', fontSize:'clamp(15px, 1.3vw, 18px)',
         lineHeight:1.55, color:'var(--fg-2)'
       }}>
-        We build the full mobile content surface for a 30,000-part catalog: homepage,
+        We build the full mobile content surface for a full elevator and escalator parts catalog: homepage,
         brand story, and field guides. Each screen is structured for SEO and generative
         (GEO) discovery, and tuned as a destination for paid media.
       </p>
