@@ -1516,9 +1516,9 @@ function BPTechStack() {
     { name: 'Shopify Bundles',             fn: 'Bundled & grouped products',          pri: 'launch', cost: 'Free' },
     { name: 'Uncap Quotes',                fn: 'B2B quote management',                pri: 'start',  cost: '$90/mo' },
     { name: 'Uncap Connect',               fn: 'SYSPRO ↔ Shopify integration',           pri: 'start',  cost: '$390/mo' },
+    { name: 'ShipperHQ',                   fn: 'LTL & dimensional shipping rates',    pri: 'launch', cost: '$75/mo' },
     { name: 'TradeCentric',                fn: 'Punch-out catalogs for procurement',  pri: 'launch', cost: '–' },
     { name: 'Avalara AvaTax',              fn: 'Sales tax automation',                pri: 'start',  cost: '–' },
-    { name: 'ShipperHQ',                   fn: 'LTL & dimensional shipping rates',    pri: 'launch', cost: '–' },
     { name: 'Mailchimp',                   fn: 'Email marketing & order notifications', pri: 'launch', cost: '–' },
     { name: 'JudgeMe',                     fn: 'Product reviews, store reviews, UGC & FAQs', pri: 'launch', cost: '$15/mo' },
     { name: 'Matrixify',                   fn: 'Bulk import / export & migration',    pri: 'start',  cost: '$50/mo' }
@@ -1550,7 +1550,7 @@ function BPTechStack() {
           const layers = [
             { tier:'04', name:'Growth & Intelligence', note:'After launch', tools:[['Shopify Flow','launch'],['Shopify Subscriptions','future'],['Shopify Knowledge Base','launch'],['Mailchimp','launch'],['JudgeMe','launch']] },
             { tier:'03', name:'Experience & Engagement', note:'Customer-facing', tools:[['Shopify Search & Discovery','launch'],['Shopify Checkout Blocks','launch'],['Shopify Bundles','launch'],['Uncap Quotes','start']] },
-            { tier:'02', name:'Data & Integration', note:'System of record', tools:[['Uncap Connect','start'],['Avalara AvaTax','start'],['ShipperHQ','launch'],['TradeCentric','launch'],['Matrixify','start']] },
+            { tier:'02', name:'Data & Integration', note:'System of record', tools:[['Uncap Connect','start'],['ShipperHQ','launch'],['Avalara AvaTax','start'],['TradeCentric','launch'],['Matrixify','start']] },
             { tier:'01', name:'Commerce Core', note:'Foundation', tools:[['Shopify','start']], core:true }
           ];
           const chip = { start:{ bg:'var(--uc-signal)', fg:'var(--uc-black)' }, launch:{ bg:'#FF8B37', fg:'var(--uc-black)' }, future:{ bg:'transparent', fg:'var(--uc-stone-300)', outline:true } };
@@ -1632,7 +1632,7 @@ function BPTechStack() {
           <span style={{ fontFamily:'var(--font-mono)', fontSize:10, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'var(--uc-signal)' }}>Est. monthly</span>
           <span style={{ fontFamily:'var(--font-serif)', fontSize:13, color:'var(--uc-stone-500)' }}>Platform + apps, before SYSPRO integration</span>
           <span/>
-          <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:'clamp(18px,1.8vw,24px)', letterSpacing:'-0.03em', color:'var(--uc-paper)', textAlign:'right' }}>~$2,845/mo</span>
+          <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:'clamp(18px,1.8vw,24px)', letterSpacing:'-0.03em', color:'var(--uc-paper)', textAlign:'right' }}>~$2,920/mo</span>
         </div>
       </div>
       <div style={{ marginTop:16, display:'flex', gap:18, flexWrap:'wrap', fontFamily:'var(--font-mono)', fontSize:10, color:'var(--uc-stone-500)', letterSpacing:'0.06em' }}>
