@@ -411,8 +411,8 @@ function BPObjectives() {
 function BPApproach() {
   const steps = [
     { n: 'Phase 1', t: 'Blueprint', d: 'Architecture, data model, integration map. A plan that holds up under scrutiny.', wk: '2–4 weeks' },
-    { n: 'Phase 2', t: 'Build', d: 'Storefront, B2B, SYSPRO sync. Fixed scope, senior team, no surprises.', wk: 'Weeks 20+' },
-    { n: 'Phase 3', t: 'Grow', d: 'Migrate, go live, then optimize conversion, AOV, and automation.', wk: 'Months 7–12' }
+    { n: 'Phase 2', t: 'Build', d: 'Storefront, B2B, SYSPRO sync. Fixed scope, senior team, no surprises.', wk: 'Weeks 4–20' },
+    { n: 'Phase 3', t: 'Grow', d: 'Migrate, go live, then optimize conversion, AOV, and automation.', wk: 'Months 6–12' }
   ];
   return (
     <BPSection id="approach" n="04" label="Recommended Approach" dark tail="THE PLAN">
@@ -3164,7 +3164,7 @@ function BPNext() {
   const steps = [
     { n: '01', t: 'Approve this Blueprint', d: 'Sign off on scope, timeline, and investment.' },
     { n: '02', t: 'Onboard within one week', d: 'Discovery session + access to systems.' },
-    { n: '03', t: 'Ship in 16 weeks', d: 'Launch live, then move into Growth.' }
+    { n: '03', t: 'Ship in 20 weeks', d: 'Launch live, then move into Growth.' }
   ];
   return (
     <BPSection id="next" n="20" label="Next" paper tail="LET'S GO">
