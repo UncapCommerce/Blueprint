@@ -344,7 +344,7 @@ function BPWhere() {
     { n: '01', t: 'Locked storefront', tag: 'Storefront', impact: 'High', pct: 82, d: 'Every change to the CyberStore cart means editing HTML by hand or paying the vendor.' },
     { n: '02', t: 'Outdated experience', tag: 'Storefront', impact: 'High', pct: 82, d: 'Plain-text order emails, no shipping or tracking notifications, and no mobile optimization.' },
     { n: '03', t: 'Must-keep features', tag: 'Systems', impact: 'Critical', pct: 94, d: 'Punch-out for the largest account and live Florida and Texas stock run on CyberStore today but are not native to Shopify.' },
-    { n: '04', t: 'Zero agentic optimisation', tag: 'AI', impact: 'High', pct: 78, d: 'No in-site technical components and integrations with AI discovery platforms.' }
+    { n: '04', t: 'No agentic optimisation', tag: 'AI', impact: 'High', pct: 78, d: 'No in-site technical components and integrations with AI discovery platforms.' }
   ];
   return (
     <BPSection id="where" n="02" label="Today" tail="CURRENT STATE">
