@@ -1549,7 +1549,7 @@ function BPTechStack() {
     { name: 'Avalara AvaTax',              fn: 'Sales tax automation',                pri: 'start',  cost: '–' },
     { name: 'ShipperHQ',                   fn: 'LTL & dimensional shipping rates',    pri: 'launch', cost: '–' },
     { name: 'Mailchimp',                   fn: 'Email marketing & order notifications', pri: 'launch', cost: '–' },
-    { name: 'JudgeMe',                     fn: 'Product reviews',                     pri: 'launch', cost: '$15/mo' },
+    { name: 'JudgeMe',                     fn: 'Product reviews, store reviews, UGC & FAQs', pri: 'launch', cost: '$15/mo' },
     { name: 'Matrixify',                   fn: 'Bulk import / export & migration',    pri: 'start',  cost: '$50/mo' }
   ];
   const priMeta = {
