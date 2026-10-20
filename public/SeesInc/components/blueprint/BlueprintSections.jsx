@@ -2461,9 +2461,9 @@ function BPInvestment() {
     'Go live, a clean handoff, and a 30-day warranty'
   ];
   const schedule = [
-    { n: '01', amount: '$59,500', due: 'Due at signup' },
-    { n: '02', amount: '$29,750', due: 'Due at design approval' },
-    { n: '03', amount: '$29,750', due: 'Due at project completion' }
+    { n: '01', amount: '$49,000', due: 'Due at signup' },
+    { n: '02', amount: '$24,500', due: 'Due at design approval' },
+    { n: '03', amount: '$24,500', due: 'Due at project completion' }
   ];
   return (
     <BPSection id="investment" n="15" label="Investment" dark tail="FIXED · NO SURPRISES">
@@ -2490,7 +2490,7 @@ function BPInvestment() {
           {/* price — standout box */}
           <div style={{ padding: 'clamp(18px, 2vw, 26px) clamp(20px, 2.2vw, 28px)', background: 'var(--uc-signal)', borderRadius: 12, boxShadow: '0 22px 60px -26px rgba(232,255,82,0.45)' }}>
             <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--uc-black)' }}>Fixed price</div>
-            <div style={{ marginTop: 4, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(52px, 6vw, 88px)', letterSpacing: '-0.05em', lineHeight: 0.85, color: 'var(--uc-black)' }}>$85k</div>
+            <div style={{ marginTop: 4, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(52px, 6vw, 88px)', letterSpacing: '-0.05em', lineHeight: 0.85, color: 'var(--uc-black)' }}>$72k</div>
           </div>
 
           {/* walk away */}
@@ -2534,7 +2534,7 @@ function BPInvestment() {
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--uc-stone-500)' }}>Fixed price</div>
-          <div style={{ marginTop: 6, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(34px, 3.6vw, 52px)', letterSpacing: '-0.045em', lineHeight: 0.9, color: 'var(--uc-signal)' }}>$34k</div>
+          <div style={{ marginTop: 6, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(34px, 3.6vw, 52px)', letterSpacing: '-0.045em', lineHeight: 0.9, color: 'var(--uc-signal)' }}>$26k</div>
         </div>
       </div>
 
