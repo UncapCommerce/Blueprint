@@ -1042,35 +1042,6 @@ function GfxPDP() {
         <div style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:8 }}>COMPLETE THE SET</div>
         <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:7 }}>{[['Step Cleaner','$42.10','#F2A33C'],['LED Demarcation Light','$18.00','#7BB661'],['Barricade','$96.00','#7C6FB0'],['Pressure Gauge','$64.00','#E9B44C']].map((p,i)=>(<div key={i} style={{ display:'flex', flexDirection:'column', gap:4 }}><div style={{ aspectRatio:'1/1', borderRadius:3, background:`linear-gradient(140deg, ${p[2]}, var(--uc-bone))` }}/><span style={{ fontFamily:'var(--font-display)', fontWeight:600, fontSize:7.5, color:'var(--fg-1)' }}>{p[0]}</span><span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--fg-1)' }}>{p[1]}</span></div>))}</div>
       </div>
-
-      {/* compare products */}
-      <div style={{ padding:'11px 14px 13px', borderTop:'1px solid var(--line-1)', background:'var(--uc-paper)' }}>
-        <div style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:8 }}>COMPARE</div>
-        {(() => {
-          const cols = [['MISWH-1 Roller','$36.40','var(--co-prime)',true],['MISWH-2 Roller','$38.90','#F2A33C',false],['MISWH-3 Roller','$41.20','#7BB661',false]];
-          const feats = [['Category','Escalator','Escalator','Escalator'],['Florida stock','✓','✓','✓'],['Texas stock','✓','✓','—'],['Will call · TX','✓','✓','✓'],['Spec sheet','✓','✓','✓']];
-          return (
-            <div style={{ border:'1px solid var(--line-1)', borderRadius:3, overflow:'hidden' }}>
-              <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr', background:'var(--uc-bone)' }}>
-                <div style={{ padding:6 }}/>
-                {cols.map((c,i)=>(
-                  <div key={i} style={{ padding:6, borderLeft:'1px solid var(--line-1)', display:'flex', flexDirection:'column', gap:4, background:c[3]?'var(--uc-paper)':'transparent' }}>
-                    <div style={{ aspectRatio:'1/0.6', borderRadius:2, background:`linear-gradient(140deg, ${c[2]}, var(--uc-bone))` }}/>
-                    <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:6.5, letterSpacing:'-0.01em', color:'var(--fg-1)', lineHeight:1.2 }}>{c[0]}{c[3] && <span style={{ marginLeft:3, padding:'1px 4px', background:'var(--co-prime)', color:'#fff', borderRadius:2, fontFamily:'var(--font-mono)', fontSize:5, fontWeight:800 }}>THIS</span>}</span>
-                    <span style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, color:'var(--fg-1)' }}>{c[1]}</span>
-                  </div>
-                ))}
-              </div>
-              {feats.map((r,ri)=>(
-                <div key={ri} style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr 1fr', borderTop:'1px solid var(--line-1)' }}>
-                  <span style={{ padding:'4px 6px', fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, color:'var(--fg-3)' }}>{r[0]}</span>
-                  {[1,2,3].map(ci=>(<span key={ci} style={{ padding:'4px 6px', borderLeft:'1px solid var(--line-1)', fontFamily:'var(--font-mono)', fontSize:6.5, color:'var(--fg-1)', textAlign:'center', background:ci===1?'var(--uc-cream)':'transparent' }}>{r[ci]}</span>))}
-                </div>
-              ))}
-            </div>
-          );
-        })()}
-      </div>
     </div>
   );
 }
@@ -1247,7 +1218,7 @@ function BPPerformance() {
       kpi: 'Elevated Conversion Rate',
       sub: 'Turn more visits into orders.',
       points: [
-        { t: 'Robust Product Page', d: 'Live Florida and Texas stock, side-by-side comparisons, detailed spec tables, and downloadable assets.' },
+        { t: 'Robust Product Page', d: 'Live Florida and Texas stock, detailed spec tables, and downloadable assets.' },
         { t: 'Bundles & Grouped Products', d: 'Curated product linking and configured products bundled and checked out together as one seamless order.' },
         { t: 'Customer Engagement', d: 'Social proof, verified reviews, how-to videos, and proprietary installation instructions that build buyer confidence.' }
       ],
