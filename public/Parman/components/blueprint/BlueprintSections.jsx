@@ -3140,17 +3140,10 @@ function BPNav() {
     { id: 'next',        n: '20', l: 'Next' }
   ];
   const [active, setActive] = React.useState('intro');
-  // Collapsible: on narrower screens the floating nav covers content. The
-  // choice is shared by every blueprint in this browser; with no saved
-  // choice it starts collapsed below 1280px.
-  const [navCollapsed, setNavCollapsed] = React.useState(() => {
-    try { const v = window.localStorage.getItem('bp_nav_collapsed'); if (v !== null) return v === '1'; } catch (_) {}
-    return typeof window !== 'undefined' && window.innerWidth < 1280;
-  });
-  const toggleNav = () => setNavCollapsed((c) => {
-    try { window.localStorage.setItem('bp_nav_collapsed', c ? '0' : '1'); } catch (_) {}
-    return !c;
-  });
+  // Collapsible: the floating nav opens by default on every load; the
+  // close button tucks it away when it covers content on smaller screens.
+  const [navCollapsed, setNavCollapsed] = React.useState(false);
+  const toggleNav = () => setNavCollapsed((c) => !c);
   const [open, setOpen] = React.useState(false);
 
   React.useEffect(() => {
