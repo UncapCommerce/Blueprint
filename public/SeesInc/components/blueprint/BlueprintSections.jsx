@@ -410,9 +410,9 @@ function BPObjectives() {
 // ── 04 RECOMMENDED APPROACH ────────────────────────────────────────────────
 function BPApproach() {
   const steps = [
-    { n: 'Phase 1', t: 'Blueprint', d: 'Architecture, data model, integration map. A plan that holds up under scrutiny.', wk: '2–4 weeks' },
-    { n: 'Phase 2', t: 'Build', d: 'Storefront, B2B, SYSPRO sync. Fixed scope, senior team, no surprises.', wk: 'Weeks 4–20' },
-    { n: 'Phase 3', t: 'Grow', d: 'Migrate, go live, then optimize conversion, AOV, and automation.', wk: 'Months 6–12' }
+    { n: 'Phase 1', t: 'Blueprint', d: 'Architecture, data model, integration map. A plan that holds up under scrutiny.', wk: '2 weeks' },
+    { n: 'Phase 2', t: 'Build', d: 'Storefront, B2B, SYSPRO sync. Fixed scope, senior team, no surprises.', wk: '20 weeks' },
+    { n: 'Phase 3', t: 'Grow', d: 'Migrate, go live, then optimize conversion, AOV, and automation.', wk: '6–12 months' }
   ];
   return (
     <BPSection id="approach" n="04" label="Recommended Approach" dark tail="THE PLAN">
