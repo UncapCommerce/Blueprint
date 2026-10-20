@@ -2787,6 +2787,7 @@ const BLUEPRINT_REGISTRY = [
   { id: 'oakwoodveneer', dir: 'OakwoodVeneer', name: 'Oakwood Veneer', num: '026', channel: 'Inbound' },
   { id: 'libertysystems', dir: 'LibertySystems', name: 'Liberty Systems', num: '027', channel: 'Inbound' },
   { id: 'jonathangreen', dir: 'JonathanGreen', name: 'Jonathan Green', num: '028', channel: 'Inbound' },
+  { id: 'seesinc', dir: 'SeesInc', name: 'SEES', num: '029', channel: 'Inbound' },
 ];
 
 function getCookie(request, name) {
@@ -3742,6 +3743,10 @@ async function handleAdminBpToken(request, env) {
     name: bpCo.name || '',
     address: bpCo.address || '',
     lead: bpCo.leadContact ? { name: bpCo.leadContact.name || '', title: bpCo.leadContact.title || '', email: bpCo.leadContact.email || '' } : null,
+    // Profile branding, so a page's wireframes can wear the client's logo
+    // and colors straight from the company record.
+    palette: sanitizePalette(bpCo.palette),
+    logoUrl: bpCo.hasLogo ? `/api/company/logo?id=${encodeURIComponent(bpCo.id)}` : '',
   } : null;
   const expiresAt = (bpMeta && bpMeta.expiresAt) || '';
   if (sess) {
