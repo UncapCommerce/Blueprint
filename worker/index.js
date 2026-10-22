@@ -172,24 +172,13 @@ const DEFAULT_MSA_SECTIONS = [
 // breaking.
 const GO_HOST = 'go.uncap.com';
 
-// Geo-fence: the whole app serves the USA and Canada only. The admin app,
-// plus the shared assets and endpoints it loads, also opens from India so
-// the team there can work; client pages, blueprints and the portal never do.
+// Geo-fence: the whole app, admin included, serves the USA and Canada only.
 // Cloudflare sets request.cf on every production request; it is absent only
 // in local tooling, which is left open.
 const GEO_ALLOWED = new Set(['US', 'CA']);
-const GEO_TEAM = new Set(['IN']);
-const GEO_TEAM_PREFIXES = ['/admin/', '/api/admin/', '/vendor/', '/fonts/'];
-const GEO_TEAM_PATHS = new Set(['/admin', '/colors_and_type.css', '/favicon-32.png',
-  '/api/company/logo', '/api/blueprint/content', '/api/discovery/answers', '/discovery/discovery-data.js']);
-function geoBlocked(request, url) {
+function geoBlocked(request) {
   const cf = request.cf;
-  if (!cf) return false;
-  const country = (cf.country || '').toUpperCase();
-  if (GEO_ALLOWED.has(country)) return false;
-  if (!GEO_TEAM.has(country)) return true;
-  const p = url.pathname;
-  return !(GEO_TEAM_PATHS.has(p) || GEO_TEAM_PREFIXES.some((x) => p.startsWith(x)));
+  return !!cf && !GEO_ALLOWED.has((cf.country || '').toUpperCase());
 }
 
 // Old blueprint links were bare /<Brand>/... (e.g. /Mitutoyo/). New ones
@@ -207,7 +196,7 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
 
-    if (geoBlocked(request, url)) {
+    if (geoBlocked(request)) {
       return withSecurityHeaders(new Response(
         '<!doctype html><meta charset="utf-8"><title>Unavailable</title><p style="font:16px system-ui;margin:40px">This service is not available in your region.</p>',
         { status: 403, headers: { 'content-type': 'text/html; charset=utf-8', 'cache-control': 'no-store' } }
