@@ -37,6 +37,11 @@ ships plain `.js` with no in-browser transpile. Source stays `.jsx`; the
 `.js` is generated in CI only, never committed. Keep validating changed
 JSX with a `babel.transform` (that's exactly what the deploy runs).
 
+- **Geo-fence**: the worker 403s every request from outside the USA and
+  Canada (`geoBlocked`, keyed on `request.cf.country`, checked first in
+  `fetch`). India is allowed for the admin app only (`/admin`, `/api/admin/*`
+  and the shared assets/endpoints it loads: `GEO_TEAM_PATHS` /
+  `GEO_TEAM_PREFIXES`); add a path there if the admin starts loading a new one
 - Root page (`/` on `go.uncap.com`): the **customer portal** login
   (`public/index.html` + `public/portal/PortalApp.jsx`). Passwordless
   sign-in (email → 6-digit code) for contacts on portal Companies;
