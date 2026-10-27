@@ -1005,14 +1005,14 @@ function GfxCart() {
         {/* StorePro subscription upgrade */}
         <div style={{ padding:'10px 13px', background:'var(--uc-black)', color:'var(--uc-paper)', borderBottom:'1px solid var(--line-1)', display:'flex', gap:9, alignItems:'center' }}>
           <span style={{ width:18, height:18, borderRadius:999, border:'2px solid var(--co-prime)', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center' }}><span style={{ width:7, height:7, borderRadius:999, background:'var(--co-prime)' }}/></span>
-          <div style={{ flex:1 }}><div style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:9.5, color:'var(--uc-paper)' }}>{brandName()} account <span style={{ color:'var(--co-prime)' }}>#40218</span></div><div style={{ fontFamily:'var(--font-mono)', fontSize:7, color:'var(--uc-stone-300)' }}>Contract pricing + NET terms at checkout</div></div>
+          <div style={{ flex:1 }}><div style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:9.5, color:'var(--uc-paper)' }}>{brandName()} account <span style={{ color:'var(--co-prime)' }}>#40218</span></div><div style={{ fontFamily:'var(--font-mono)', fontSize:7, color:'var(--uc-stone-300)' }}>Contract pricing at checkout</div></div>
           <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:800, color:'#fff', background:'var(--co-accent)', padding:'4px 8px', borderRadius:3 }}>LINK</span>
         </div>
         {/* totals + checkout */}
         <div style={{ marginTop:'auto', padding:'10px 13px', borderTop:'1px solid var(--line-1)' }}>
           <div style={{ display:'flex', justifyContent:'space-between', fontFamily:'var(--font-mono)', fontSize:8.5, color:'var(--fg-3)', marginBottom:3 }}><span>Subtotal</span><span>$630</span></div>
           <div style={{ display:'flex', justifyContent:'space-between', fontFamily:'var(--font-mono)', fontSize:8.5, color:'var(--co-prime)', marginBottom:7 }}><span>Account pricing</span><span>−$78</span></div>
-          <span style={{ display:'block', textAlign:'center', padding:'9px', background:'var(--co-accent)', color:'#fff', borderRadius:3, fontSize:10, fontWeight:700 }}>Checkout · NET-30 · $552</span>
+          <span style={{ display:'block', textAlign:'center', padding:'9px', background:'var(--co-accent)', color:'#fff', borderRadius:3, fontSize:10, fontWeight:700 }}>Checkout · $552</span>
         </div>
       </div>
     </div>
@@ -1031,11 +1031,11 @@ function GfxPDP() {
       {/* breadcrumb */}
       <div style={{ padding:'8px 14px 0', fontFamily:'var(--font-mono)', fontSize:7, letterSpacing:'0.08em', color:'var(--fg-3)' }}>HOME / {bpSite().mega[0].h.toUpperCase()} / {bpSite().mega[0].items[0].toUpperCase()}</div>
 
-      {/* gallery + buy box */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:13, padding:'9px 14px 13px' }}>
-        {/* gallery */}
-        <div style={{ display:'grid', gridTemplateColumns:'26px 1fr', gap:7 }}>
-          <div style={{ display:'flex', flexDirection:'column', gap:6 }}>{['var(--co-prime)','color-mix(in srgb, var(--co-prime) 35%, #000)','#7C6FB0','#E9B44C'].map((c,i)=>(<div key={i} style={{ aspectRatio:'1/1', borderRadius:3, background:`linear-gradient(140deg, ${c}, var(--uc-bone))`, border:i===0?'1.5px solid var(--uc-black)':'1px solid var(--line-1)' }}/>))}</div>
+      {/* gallery + buy box: the gallery holds exactly half the width */}
+      <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1fr) minmax(0,1fr)', gap:13, padding:'9px 14px 13px' }}>
+        {/* gallery: main image across the full half, thumbnails beneath */}
+        <div style={{ display:'flex', flexDirection:'column-reverse', gap:7 }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:6 }}>{['var(--co-prime)','color-mix(in srgb, var(--co-prime) 35%, #000)','#7C6FB0','#E9B44C'].map((c,i)=>(<div key={i} style={{ aspectRatio:'1/1', borderRadius:3, background:`linear-gradient(140deg, ${c}, var(--uc-bone))`, border:i===0?'1.5px solid var(--uc-black)':'1px solid var(--line-1)' }}/>))}</div>
           <div style={{ aspectRatio:'4/4.6', borderRadius:4, background:'radial-gradient(120% 90% at 65% 20%, var(--co-prime), color-mix(in srgb, var(--co-prime) 35%, #000) 60%, color-mix(in srgb, var(--co-prime) 22%, #000))', position:'relative', overflow:'hidden' }}>
             <span style={{ position:'absolute', top:8, left:8, padding:'2px 7px', background:'var(--co-prime)', color:'#fff', borderRadius:999, fontFamily:'var(--font-mono)', fontSize:6, fontWeight:800, letterSpacing:'0.06em' }}>BEST SELLER</span>
             <svg viewBox="0 0 100 100" style={{ position:'absolute', bottom:'4%', right:'2%', width:'80%', opacity:0.92 }}><circle cx="50" cy="52" r="26" fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth="1.7"/><circle cx="50" cy="52" r="11" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1.4"/><circle cx="50" cy="52" r="3.5" fill="rgba(255,255,255,0.3)"/></svg>
@@ -1048,20 +1048,15 @@ function GfxPDP() {
           <div style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em', color:'var(--co-prime)' }}>{brandName().toUpperCase()} · IN STOCK · SHIPS TODAY</div>
           <div style={{ fontFamily:'var(--font-hero)', fontWeight:700, fontSize:21, letterSpacing:'-0.04em', lineHeight:0.9, color:'var(--fg-1)' }}>{P(0).name}<br/><span style={{ fontFamily:'var(--font-serif)', fontWeight:400, fontSize:16 }}>{bpSite().pdp.sub}</span></div>
           <div style={{ display:'flex', alignItems:'center', gap:6, fontFamily:'var(--font-mono)', fontSize:8 }}><span style={{ color:'var(--co-accent)' }}>★★★★★</span><span style={{ color:'var(--fg-3)' }}>4.9 · 128 reviews</span></div>
-          {/* swatches */}
-          <div style={{ display:'flex', gap:5, marginTop:1 }}>{['var(--co-prime)','#1F1F1F','#E9B44C','#7C6FB0'].map((c,i)=>(<span key={i} style={{ width:16, height:16, borderRadius:999, background:c, border:i===0?'1.5px solid var(--uc-black)':'1px solid var(--line-1)', boxShadow:i===0?'0 0 0 2px var(--uc-paper) inset':'none' }}/>))}</div>
+          {/* ring size swatches */}
+          <div style={{ marginTop:1 }}>
+            <div style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:4 }}>RING SIZE</div>
+            <div style={{ display:'flex', gap:4, flexWrap:'wrap' }}>{['5','6','7','8','9','10'].map((z)=>(<span key={z} style={{ width:18, height:18, borderRadius:999, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, color:z==='7'?'var(--uc-paper)':'var(--fg-1)', background:z==='7'?'var(--uc-black)':'var(--uc-paper)', border:'1px solid '+(z==='7'?'var(--uc-black)':'var(--line-2)') }}>{z}</span>))}</div>
+          </div>
           {/* configuration — configurable product */}
           <div style={{ marginTop:1 }}>
             <div style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:4 }}>CONFIGURATION</div>
             <div style={{ display:'flex', gap:4 }}>{[['Each',false],['Pack of 10',true],['Pack of 50',false]].map(([l,on],i)=>(<span key={i} style={{ flex:1, padding:'5px 2px', textAlign:'center', border:'1px solid', borderColor:on?'var(--uc-black)':'var(--line-1)', borderRadius:3, fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, color:on?'var(--uc-paper)':'var(--fg-2)', background:on?'var(--uc-black)':'transparent', whiteSpace:'nowrap' }}>{l}</span>))}</div>
-          </div>
-          {/* live stock (ERP) + account price */}
-          <div style={{ marginTop:2, border:'1px solid var(--line-1)', borderRadius:3, overflow:'hidden' }}>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)' }}>{[['IN STOCK','142'],['WAREHOUSE','Main'],['SHIPS','Today'],['YOUR PRICE',P(0).price]].map((t,i)=>(
-              <div key={i} style={{ padding:'4px 2px', textAlign:'center', borderLeft:i?'1px solid var(--line-1)':'none' }}>
-                <div style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, color:'var(--fg-3)', letterSpacing:'0.04em' }}>{t[0]}</div>
-                <div style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--fg-1)', marginTop:2 }}>{t[1]}</div>
-              </div>))}</div>
           </div>
           {/* CTAs */}
           <div style={{ display:'flex', flexDirection:'column', gap:6, marginTop:2 }}>
@@ -1073,7 +1068,6 @@ function GfxPDP() {
               </div>
               <span style={{ flex:1, padding:'8px', textAlign:'center', background:'var(--co-accent)', color:'#fff', borderRadius:3, fontFamily:'var(--font-display)', fontSize:9.5, fontWeight:800 }}>Add to cart</span>
             </div>
-            <span style={{ padding:'7px', textAlign:'center', border:'1px solid var(--uc-black)', borderRadius:3, fontFamily:'var(--font-display)', fontSize:9, fontWeight:700, color:'var(--fg-1)' }}>Request a Quote</span>
           </div>
           {/* trust row */}
           <div style={{ display:'flex', gap:8, marginTop:3, flexWrap:'wrap' }}>{bpSite().trust.map(t=>(<span key={t} style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, color:'var(--fg-3)' }}>{t}</span>))}</div>
