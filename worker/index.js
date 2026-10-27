@@ -660,7 +660,7 @@ export default {
       }
     }
 
-    if (/^\/BlueprintTemplate\/v\d+\/components\//i.test(safeDecodePath(url.pathname)) && !(await getApprovedAdmin(request, env))) {
+    if (/^\/BlueprintTemplate\/(v\d+|clients\/[^/]+)\/components\//i.test(safeDecodePath(url.pathname)) && !(await getApprovedAdmin(request, env))) {
       return blueprintContentDenied();
     }
 
@@ -2851,9 +2851,15 @@ const BLUEPRINT_REGISTRY = [
 // pulled from the company website (bp.site) reach the page via bp-token.
 const TEMPLATE_VERSION = 1;
 const TEMPLATE_PREVIEW_ID = 'template';
+// Template blueprints customized for one client: a copy of their frozen
+// version under BlueprintTemplate/clients/<id>/. The record, ready gate,
+// number, and website copy stay exactly as for any Template blueprint.
+const TEMPLATE_CUSTOM = new Set(['gabrielny']);
 function templateEntry(draft) {
   const v = draft ? parseInt(draft.templateVersion, 10) : 0;
-  return v > 0 ? { id: draft.id, dir: `BlueprintTemplate/v${v}`, name: draft.name || draft.id, num: '', template: true } : null;
+  if (!(v > 0)) return null;
+  const dir = TEMPLATE_CUSTOM.has(draft.id) ? `BlueprintTemplate/clients/${draft.id}` : `BlueprintTemplate/v${v}`;
+  return { id: draft.id, dir, name: draft.name || draft.id, num: '', template: true };
 }
 const templatePreviewEntry = () => ({ id: TEMPLATE_PREVIEW_ID, dir: `BlueprintTemplate/v${TEMPLATE_VERSION}`, name: 'Template', num: '', template: true });
 // Sample client the admin Template preview renders with: a made-up industrial

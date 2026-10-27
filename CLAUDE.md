@@ -163,6 +163,10 @@ JSX with a `babel.transform` (that's exactly what the deploy runs).
   (`POST /api/admin/blueprint/template`). **Editing the Template = copy the
   latest `vN` folder to `v(N+1)`, edit there, bump `TEMPLATE_VERSION` in
   `worker/index.js`** (never edit a version that blueprints may already use).
+  **Client-specific edits to a Template blueprint** (e.g. gabrielny): copy its
+  frozen `vN` to `BlueprintTemplate/clients/<id>/`, edit there, and add the id
+  to `TEMPLATE_CUSTOM`; it keeps its record, ready gate, number and website
+  copy.
   Serving precedence: `BLUEPRINT_REGISTRY` bespoke page, else the Template
   version, else (legacy only) the old AI-content renderer
   `public/blueprint-template/`. To give a client a hand-designed page, run
