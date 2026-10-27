@@ -1784,10 +1784,8 @@ function BPB2B() {
   const caps = [
     { t: 'Company accounts & roles', d: 'Multi-buyer companies, permissions, and spend limits per seat.' },
     { t: 'Catalog & price lists', d: 'Customer-specific catalogs, contract pricing, and volume breaks.' },
-    { t: 'Quotes & approvals', d: 'Request, negotiate, and convert quotes to orders inside Shopify.' },
     { t: 'Payment terms', d: 'NET terms, PO numbers, and buyer-managed ship-to addresses at checkout.' },
-    { t: 'Quick order & reorder', d: 'One-click reorders, saved lists, and fast repeat ordering.' },
-    { t: 'Sales rep tools', d: 'Order on behalf of, account dashboards, and assisted selling.' }
+    { t: 'Quick order & reorder', d: 'One-click reorders, saved lists, and fast repeat ordering.' }
   ];
   const channels = ['Storefront', 'Native B2B', 'Point of Sale'];
   return (
