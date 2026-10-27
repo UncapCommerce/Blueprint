@@ -2856,11 +2856,39 @@ function templateEntry(draft) {
   return v > 0 ? { id: draft.id, dir: `BlueprintTemplate/v${v}`, name: draft.name || draft.id, num: '', template: true } : null;
 }
 const templatePreviewEntry = () => ({ id: TEMPLATE_PREVIEW_ID, dir: `BlueprintTemplate/v${TEMPLATE_VERSION}`, name: 'Template', num: '', template: true });
-// Sample client the admin Template preview renders with.
+// Sample client the admin Template preview renders with: a made-up industrial
+// distributor, with its own logo and website copy so every frame reads real.
 const TEMPLATE_DEMO_COMPANY = {
-  name: 'Acme Supply Co.', address: '100 Main Street · Chicago, IL 60601',
-  lead: { name: 'Jordan Lee', title: 'Operations Director', email: '' },
-  palette: { prime: '#1F4E79', accent: '#E8A317' }, logoUrl: '',
+  name: 'Northwind Industrial Supply', address: '1200 Commerce Drive · Columbus, OH 43215',
+  lead: { name: 'Jordan Ellis', title: 'VP of Operations', email: '' },
+  palette: { prime: '#1F4E79', accent: '#E8A317' }, logoUrl: '/BlueprintTemplate/assets/demo-logo.svg',
+};
+const TEMPLATE_DEMO_SITE = {
+  announcement: 'Free freight on orders over $500', nav: ['Safety', 'Fasteners', 'Power Tools', 'Material Handling', 'Brands'],
+  mega: [
+    { h: 'Safety', items: ['Gloves', 'Eye Protection', 'Hi-Vis Apparel', 'Respirators'] },
+    { h: 'Fasteners', items: ['Hex Bolts', 'Anchors', 'Washers', 'Threaded Rod'] },
+    { h: 'Power Tools', items: ['Drills', 'Grinders', 'Saws', 'Batteries'] },
+  ],
+  featured: ['Same-Day Shipping', 'Bulk Pricing', 'Download Catalog'],
+  hero: { eyebrow: 'New · 2026 MRO Catalog', title: 'Keep the line', titleSerif: 'running.', cta: 'Shop safety' },
+  finder: ['Category', 'Brand', 'Size'], brands: ['3M', 'Milwaukee', 'DeWalt', 'Honeywell', 'Ansell', 'Stanley'],
+  products: [
+    { name: 'Cut-Resistant Gloves, 12 pk', price: '$42.10' }, { name: 'Safety Glasses, Clear', price: '$6.40' },
+    { name: 'M18 Hammer Drill Kit', price: '$289.00' }, { name: 'Grade 8 Hex Bolts, 50 pk', price: '$24.60' },
+    { name: 'Hi-Vis Vest, Class 2', price: '$11.90' }, { name: 'N95 Respirators, 20 pk', price: '$31.50' },
+    { name: '4.5" Angle Grinder', price: '$129.00' }, { name: 'Wedge Anchors, 25 pk', price: '$18.20' },
+  ],
+  pdp: { sub: 'ANSI A4 · Size L', specs: [['SKU', 'NW-GL-4412'], ['Cut level', 'ANSI A4'], ['Coating', 'Nitrile'], ['Pack', '12 pairs']],
+    why: ['ANSI A4 cut protection with nitrile grip.', 'Account pricing and NET terms at login.', 'In stock in Columbus, ships today.'] },
+  trust: ['Ships same day', 'NET 30 terms', 'Since 1962'],
+  review: 'We order every Monday and it is on the dock by Tuesday. Never a missed shipment.',
+  story: 'Since 1962, Northwind keeps plants, contractors, and facilities stocked with the MRO supplies they run on.',
+  est: 'EST. 1962',
+  about: { eyebrow: 'EST. 1962 · COLUMBUS, OH', title: 'Stocked for', titleSerif: 'the long haul.', location: 'COLUMBUS, OH · HQ',
+    manifesto: 'The right supplies, in stock and on the truck the same day.', stats: [['60+', 'Years'], ['40k', 'SKUs'], ['3', 'Warehouses']] },
+  blog: { tag: 'SAFETY · 6 MIN', featured: 'Choosing the right cut level.', articles: ['Glove sizing for crews', 'Fastener grades, explained', 'Building a PPE program'] },
+  searchExample: 'cut resistant gloves size large', erp: 'Epicor P21', platform: 'Magento',
 };
 
 function getCookie(request, name) {
@@ -3847,7 +3875,7 @@ async function handleAdminBpToken(request, env) {
   // Template pages render their number, dates, and website-sourced wireframe
   // copy from here.
   const blueprint = preview
-    ? { num: '000', createdAt: new Date().toISOString(), site: null }
+    ? { num: '000', createdAt: new Date().toISOString(), site: TEMPLATE_DEMO_SITE }
     : (templateEntry(draft) ? { num: padCompanyNo(bpCo && bpCo.no) || '000', createdAt: draft.createdAt || '', site: draft.site || null } : null);
   const company = preview ? TEMPLATE_DEMO_COMPANY : bpCo ? {
     name: bpCo.name || '',
