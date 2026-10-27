@@ -143,22 +143,32 @@ JSX with a `babel.transform` (that's exactly what the deploy runs).
   this same Worker purely to 301-redirect old bare `/<Brand>/` links
   (some already signed by clients) to their new `/blueprint/<id>/` home
   on `go.uncap.com`
-- **Blueprints are hybrid (templated default + bespoke upgrade).** Every
-  blueprint draft created from the admin gets structured proposal
-  `content` on its `bp:<id>` record, drafted in the background by Claude
-  (`worker/blueprint-content.js`, via the shared `worker/anthropic.js`)
-  from the linked company + discovery answers. The dynamic renderer
-  `public/blueprint-template/` serves it at `/<company>/blueprint` once an
-  admin reviews it in the `/admin/blueprint/<id>` editor and flips
-  `content.status` to `ready` (drafts stay hidden). Serving precedence is
-  **bespoke wins**: `blueprintIsViewable()` and the page routes serve a
-  `BLUEPRINT_REGISTRY` static page if one exists, else the templated page.
-  To upgrade a client to a hand-designed page, run
-  `node scripts/new-blueprint.js` (clones a brand folder) then add the
-  registry row + `stamp-deploy.js` line — the same URL, portal link, and
-  signature history carry over. The sign/approve flow (`/api/auth/sign`,
-  `window.UncapMSA`) is shared by both tiers. Content APIs:
-  `GET /api/blueprint/content`, `POST /api/admin/blueprint/{content,generate}`
+- **Blueprints: the Template (default) + bespoke upgrade.** Denis's
+  **Blueprint Template** ("the template") is a hand-designed page under
+  `public/BlueprintTemplate/v<N>/` (shared images in
+  `public/BlueprintTemplate/assets/`), previewed in admin at **Sales →
+  Template** (`/admin/sales/template` frames `/blueprint/template/`, which
+  renders `TEMPLATE_DEMO_COMPANY`). Every blueprint created from a company
+  (`handleAdminCreateBlueprint`) gets id = company id, `templateVersion =
+  TEMPLATE_VERSION` (frozen: later Template edits never touch it) and
+  `ready:false`; in the background `refreshBlueprintSite`
+  (`worker/blueprint-site.js`) reads the company website and has Claude lift
+  the Commerce/Content wireframe copy (nav, categories, real products/prices,
+  hero, story, guides, ERP/platform) into `bp.site`. The page gets company,
+  contacts, palette, logo (`window.__bpCompany`), number = company `no` and
+  dates (`window.__bpInfo`) and `site` (`window.__bpSite`, merged over
+  `SITE_DEFAULTS` in the JSX) from `/api/admin/bp-token`; wireframe colors use
+  `--co-prime/--co-accent`, logos use `CoLogo`. The `/admin/blueprint/<id>`
+  editor publishes/hides it and can re-read the website
+  (`POST /api/admin/blueprint/template`). **Editing the Template = copy the
+  latest `vN` folder to `v(N+1)`, edit there, bump `TEMPLATE_VERSION` in
+  `worker/index.js`** (never edit a version that blueprints may already use).
+  Serving precedence: `BLUEPRINT_REGISTRY` bespoke page, else the Template
+  version, else (legacy only) the old AI-content renderer
+  `public/blueprint-template/`. To give a client a hand-designed page, run
+  `node scripts/new-blueprint.js` then add the registry row; the URL, portal
+  link and signatures carry over. The sign/approve flow (`/api/auth/sign`,
+  `window.UncapMSA`) is shared by every tier
 - Google OAuth Client ID: `GOOGLE_CLIENT_ID_FALLBACK` constant in
   `worker/index.js` (a public value; hardcoded because `--keep-vars`
   means wrangler.toml var edits never reach the worker). A

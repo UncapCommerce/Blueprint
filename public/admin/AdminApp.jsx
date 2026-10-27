@@ -151,6 +151,7 @@
     if (base[0] === 'blueprint' && base[1]) return 'blueprint-editor';
     if (base[0] === 'sales' && base[1] === 'process') return 'sales-process';
     if (base[0] === 'sales' && base[1] === 'items') return 'sales-items';
+    if (base[0] === 'sales' && base[1] === 'template') return 'sales-template';
     if (base[0] === 'sales') return 'sales';
     if (base[0] === 'discoveries') return 'discoveries';
     if (base[0] === 'blueprints') return 'blueprints';
@@ -354,6 +355,7 @@
         { id: 'sales',         l: 'Pipeline', path: '/admin/sales' },
         { id: 'sales-process', l: 'Process',  path: '/admin/sales/process' },
         { id: 'sales-items',   l: 'Items',    path: '/admin/sales/items' },
+        { id: 'sales-template', l: 'Template', path: '/admin/sales/template' },
       ],
       services: [
         { id: 'projects',  l: 'Projects',  path: '/admin/projects' },
@@ -371,7 +373,7 @@
     // routes back to the owning section.
     const SECTIONS = [
       { id: 'activities', l: 'Activities', path: '/admin', match: ['home'] },
-      { id: 'sales', l: 'Sales', path: '/admin/sales', match: ['sales', 'sales-process', 'sales-items', 'companies', 'discoveries', 'blueprints', 'company-profile', 'estimate-editor', 'blueprint-editor'] },
+      { id: 'sales', l: 'Sales', path: '/admin/sales', match: ['sales', 'sales-process', 'sales-items', 'sales-template', 'companies', 'discoveries', 'blueprints', 'company-profile', 'estimate-editor', 'blueprint-editor'] },
       { id: 'services', l: 'Services', path: '/admin/projects', match: ['projects', 'retainers'] },
       ...(me.canDelete ? [{ id: 'revenues', l: 'Revenues', path: '/admin/revenues', match: ['revenues', 'rev-fixed', 'rev-recurring', 'rev-apps', 'rev-referrals'] }] : []),
       ...(me.isSuper ? [{ id: 'pnl', l: 'P&L', path: '/admin/pnl', match: ['pnl'] }] : []),
@@ -3355,6 +3357,7 @@
     const [name, setName] = useState('');
     const [content, setContent] = useState(null); // null = loading
     const [bespoke, setBespoke] = useState(false);
+    const [tpl, setTpl] = useState(null); // Template-based blueprint info
     const [error, setError] = useState('');
     const [busy, setBusy] = useState('');
     const [saved, setSaved] = useState(false);
@@ -3364,6 +3367,7 @@
         const d = await api('/api/blueprint/content?id=' + encodeURIComponent(id));
         setName(d.name || id);
         setBespoke(!!d.bespoke);
+        setTpl(d.template || null);
         setContent(d.content ? { ...EMPTY_CONTENT, ...d.content } : { ...EMPTY_CONTENT });
       } catch (err) {
         if (err.status === 404) { setName(id); setContent({ ...EMPTY_CONTENT }); }
@@ -3398,6 +3402,45 @@
 
     if (content === null) return <Page><div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>Loading…</div></Page>;
     const isReady = content.status === 'ready';
+
+    // Template-based blueprints: the page is the Template design (frozen at
+    // its version) filled with the company profile and website copy, so the
+    // only controls are publish/hide and re-reading the website.
+    if (tpl) {
+      const act = async (patch, key) => {
+        setBusy(key); setError('');
+        try {
+          const d = await api('/api/admin/blueprint/template', { method: 'POST', body: JSON.stringify({ id, ...patch }) });
+          setTpl(d.template);
+        } catch (err) { setError(err.message); }
+        setBusy('');
+      };
+      return (
+        <Page>
+          <PageHead eyebrow={'Blueprint · Template v' + tpl.version} title={name} action={
+            <a href="/admin/blueprints" onClick={navClick('/admin/blueprints')} style={{ ...S.btnGhost, textDecoration: 'none' }}>← Blueprints</a>
+          }/>
+          <div style={{ ...S.card, padding: 24, display: 'flex', flexDirection: 'column', gap: 16 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', padding: '12px 14px', background: tpl.ready ? '#DFFCE6' : '#FDECC8', borderRadius: 8 }}>
+              <span style={{ fontFamily: T.mono, fontSize: 10, fontWeight: 700, letterSpacing: '0.06em', color: tpl.ready ? '#064E2E' : '#6A4E00' }}>{tpl.ready ? 'READY · VISIBLE TO THE CLIENT' : 'DRAFT · HIDDEN FROM THE CLIENT'}</span>
+              <button type="button" style={{ ...(tpl.ready ? S.btnGhost : S.btn), marginLeft: 'auto', padding: '9px 16px', fontSize: 13 }} disabled={!!busy} onClick={() => act({ ready: !tpl.ready }, 'ready')}>
+                {busy === 'ready' ? 'Saving…' : tpl.ready ? 'Hide from client' : 'Publish to client'}
+              </button>
+            </div>
+            <div style={{ fontFamily: T.sans, fontSize: 14, color: T.fg2, lineHeight: 1.65 }}>
+              Built from the Blueprint Template v{tpl.version}. Contacts, address, logo, and colors come live from the company profile;
+              the Commerce and Content wireframes use copy pulled from the company website
+              {tpl.hasSite ? ' on ' + new Date(tpl.siteAt).toLocaleDateString() + '.' : '. No website copy yet, so those frames show neutral sample text.'}
+            </div>
+            <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+              <button type="button" style={S.btn} onClick={preview}>Open the page</button>
+              <button type="button" style={S.btnGhost} disabled={!!busy} onClick={() => act({ refresh: true }, 'refresh')}>{busy === 'refresh' ? 'Reading the website…' : 'Refresh from website'}</button>
+            </div>
+            {error && <div style={{ color: '#B3261E', fontFamily: T.sans, fontSize: 13 }}>{error}</div>}
+          </div>
+        </Page>
+      );
+    }
 
     // Hand-designed registry pages are always live — there is no draft to
     // save or publish here, so say so instead of showing a dead-end form.
@@ -4424,16 +4467,21 @@
     if (me === null) return <Login onAuthed={check}/>;
     if (!me.approved) return <PendingApproval me={me} onLogout={logout}/>;
 
-    if (viewer) {
+    // Sales → Template shows the Blueprint Template itself, full-bleed like a
+    // preview, rendered with a sample client. New blueprints are created from
+    // its current version.
+    const frame = viewer || (route === 'sales-template'
+      ? { url: '/blueprint/template/', title: 'Blueprint Template · sample client', page: true } : null);
+    if (frame) {
       return (
         <div style={{ height: '100vh', display: 'flex', flexDirection: 'column', background: T.cream }}>
           <TopBar me={me} route={route} onLogout={logout}/>
           <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 12, padding: '4px 14px', background: T.paper, borderBottom: `1px solid ${T.line}` }}>
-            <button type="button" onClick={() => setViewer(null)} style={{ border: `1px solid ${T.line}`, background: 'transparent', color: T.fg2, borderRadius: 5, padding: '4px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>← Back</button>
-            <span style={{ fontFamily: T.sans, fontSize: 12.5, fontWeight: 700, color: T.fg1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{viewer.title}</span>
-            <a href={viewer.url} target="_blank" rel="noreferrer" style={{ marginLeft: 'auto', fontFamily: T.sans, fontSize: 11.5, fontWeight: 600, color: T.fg3, textDecoration: 'none', whiteSpace: 'nowrap' }}>Open in new tab ↗</a>
+            {frame.page ? null : <button type="button" onClick={() => setViewer(null)} style={{ border: `1px solid ${T.line}`, background: 'transparent', color: T.fg2, borderRadius: 5, padding: '4px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>← Back</button>}
+            <span style={{ fontFamily: T.sans, fontSize: 12.5, fontWeight: 700, color: T.fg1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{frame.title}</span>
+            <a href={frame.url} target="_blank" rel="noreferrer" style={{ marginLeft: 'auto', fontFamily: T.sans, fontSize: 11.5, fontWeight: 600, color: T.fg3, textDecoration: 'none', whiteSpace: 'nowrap' }}>Open in new tab ↗</a>
           </div>
-          <iframe title={viewer.title} src={viewer.url} style={{ flex: '1 1 auto', width: '100%', border: 'none', display: 'block', background: T.cream }}/>
+          <iframe title={frame.title} src={frame.url} style={{ flex: '1 1 auto', width: '100%', border: 'none', display: 'block', background: T.cream }}/>
         </div>
       );
     }

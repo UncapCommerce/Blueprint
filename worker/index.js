@@ -22,6 +22,7 @@ import { buildDiscoveryProfile, buildDiscoveryProfileWithAI, STOCK_SEARCH_TOKEN 
 import { prefillAnswersFromDoc, prefillAnswersFromTranscript, b64ToBytes } from "./discovery-prefill.js";
 import { QUESTION_CATALOG } from "./discovery-questions.js";
 import { buildBlueprintContent } from "./blueprint-content.js";
+import { buildBlueprintSite } from "./blueprint-site.js";
 
 const CODE_TTL_SECONDS       = 10 * 60;             // 10 minutes
 const SESSION_TTL_SECONDS    = 2 * 60 * 60;         // 2 hours (client blueprint sessions)
@@ -316,6 +317,9 @@ export default {
     if (url.pathname === '/api/admin/blueprint/content' && request.method === 'POST') {
       return handleAdminSaveBlueprintContent(request, env);
     }
+    if (url.pathname === '/api/admin/blueprint/template' && request.method === 'POST') {
+      return handleAdminBlueprintTemplate(request, env);
+    }
     if (url.pathname === '/api/admin/blueprint/generate' && request.method === 'POST') {
       return handleAdminGenerateBlueprint(request, env);
     }
@@ -543,7 +547,7 @@ export default {
     // The admin dashboard lives at /admin (client-side routes /admin/
     // discoveries|blueprints|companies and the company profile page
     // /admin/company/<id> included); the root is the portal.
-    if (/^\/admin(\/(sales(\/(process|items))?|discoveries|blueprints|companies|users|projects|retainers|dashboard|pnl|revenues(\/(fixed|recurring|apps|referrals))?|company\/[a-z0-9-]+|estimate\/[a-z0-9-]+|blueprint\/[a-z0-9-]+))?\/?$/.test(url.pathname) && (request.method === 'GET' || request.method === 'HEAD')) {
+    if (/^\/admin(\/(sales(\/(process|items|template))?|discoveries|blueprints|companies|users|projects|retainers|dashboard|pnl|revenues(\/(fixed|recurring|apps|referrals))?|company\/[a-z0-9-]+|estimate\/[a-z0-9-]+|blueprint\/[a-z0-9-]+))?\/?$/.test(url.pathname) && (request.method === 'GET' || request.method === 'HEAD')) {
       const assetUrl = new URL(url.toString());
       assetUrl.pathname = '/admin/index.html';
       return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)), url);
@@ -598,7 +602,19 @@ export default {
               assetUrl.pathname = `/${entry.dir}/index.html`;
               return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)), url);
             }
-            if (co.blueprintId && await blueprintIsViewable(env, co.blueprintId)) {
+            const tplDraft = co.blueprintId ? await blueprintDraft(env, co.blueprintId) : null;
+            const tpl = templateEntry(tplDraft);
+            if (tpl) {
+              const admin = await getApprovedAdmin(request, env);
+              const meta = await getBpMeta(env, tpl.id);
+              if (admin || (tplDraft.ready && !meta.disabled)) {
+                const assetUrl = new URL(url.toString());
+                assetUrl.pathname = `/${tpl.dir}/index.html`;
+                return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)), url);
+              }
+              if (meta.disabled) return disabledBlueprintPage();
+            }
+            if (!tpl && co.blueprintId && await blueprintIsViewable(env, co.blueprintId)) {
               const assetUrl = new URL(url.toString());
               assetUrl.pathname = '/blueprint-template/index.html';
               return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)), url);
@@ -624,7 +640,8 @@ export default {
         const co = await getCompany(env, coBpSub[1]);
         // Same two-step registry match as the tab route above.
         const entry = co ? (BLUEPRINT_REGISTRY.find((b) => b.id === co.blueprintId)
-          || BLUEPRINT_REGISTRY.find((b) => b.id === co.id)) : null;
+          || BLUEPRINT_REGISTRY.find((b) => b.id === co.id)
+          || (co.blueprintId ? templateEntry(await blueprintDraft(env, co.blueprintId)) : null)) : null;
         if (entry) {
           // Proposal component bundles require a signed-in viewer; the page
           // shell, styles, and images stay public for the gate UI.
@@ -641,6 +658,10 @@ export default {
           return withSecurityHeaders(await env.ASSETS.fetch(new Request(assetUrl.toString(), request)), url);
         }
       }
+    }
+
+    if (/^\/BlueprintTemplate\/v\d+\/components\//i.test(safeDecodePath(url.pathname)) && !(await getApprovedAdmin(request, env))) {
+      return blueprintContentDenied();
     }
 
     const discMatch = url.pathname.match(/^\/discovery\/([a-z0-9-]+)\/?$/);
@@ -667,7 +688,12 @@ export default {
     // per-blueprint HTML/JS.
     const bpMatch = url.pathname.match(/^\/blueprint\/([a-z0-9-]+)(\/.*)?$/);
     if (bpMatch) {
-      const entry = BLUEPRINT_REGISTRY.find((b) => b.id === bpMatch[1]);
+      let entry = BLUEPRINT_REGISTRY.find((b) => b.id === bpMatch[1]);
+      if (!entry && bpMatch[1] === TEMPLATE_PREVIEW_ID) {
+        if (!(await getApprovedAdmin(request, env))) return blueprintContentDenied();
+        entry = templatePreviewEntry();
+      }
+      if (!entry) entry = templateEntry(await blueprintDraft(env, bpMatch[1]));
       if (entry) {
         // Disabled blueprints: block the page document itself for anyone
         // without an admin session. Only the index path, so regular
@@ -682,6 +708,9 @@ export default {
           if (owner && !(await getApprovedAdmin(request, env))) {
             return Response.redirect(`${url.origin}/${owner.id}/blueprint/`, 301);
           }
+          // Template pages only open here for the team; clients always come
+          // through their company folder, which applies the ready gate.
+          if (entry.template && !(await getApprovedAdmin(request, env))) return blueprintContentDenied();
           const meta = await getBpMeta(env, entry.id);
           if (meta.disabled && !(await getApprovedAdmin(request, env))) {
             return disabledBlueprintPage();
@@ -917,6 +946,12 @@ async function canViewBlueprintContent(request, env, entry) {
 // page shell/assets). Decoded and slash-collapsed so an encoded or doubled
 // separator can't slip past the prefix check (dot segments are already
 // normalized by `new URL`).
+function safeDecodePath(p) {
+  let out = String(p || '');
+  try { out = decodeURIComponent(out); } catch { /* keep raw */ }
+  return out.replace(/\/+/g, '/');
+}
+
 function isBlueprintContentPath(rest) {
   let p = String(rest || '');
   try { p = decodeURIComponent(p); } catch { /* keep raw */ }
@@ -2806,6 +2841,28 @@ const BLUEPRINT_REGISTRY = [
   { id: 'seesinc', dir: 'SeesInc', name: 'SEES', num: '029', channel: 'Inbound' },
 ];
 
+// ── Blueprint Template (admin: Sales → Template) ─────────────────────────
+// New blueprints render the Template design frozen at the version current
+// when they were created: public/BlueprintTemplate/v<N>/ (images shared in
+// public/BlueprintTemplate/assets/). Editing the Template = copy the latest
+// vN to v(N+1), edit that, bump TEMPLATE_VERSION; older versions stay put so
+// a sent or signed proposal never changes under the client. Client facts
+// (company, contacts, palette, logo, number, dates) and the wireframe copy
+// pulled from the company website (bp.site) reach the page via bp-token.
+const TEMPLATE_VERSION = 1;
+const TEMPLATE_PREVIEW_ID = 'template';
+function templateEntry(draft) {
+  const v = draft ? parseInt(draft.templateVersion, 10) : 0;
+  return v > 0 ? { id: draft.id, dir: `BlueprintTemplate/v${v}`, name: draft.name || draft.id, num: '', template: true } : null;
+}
+const templatePreviewEntry = () => ({ id: TEMPLATE_PREVIEW_ID, dir: `BlueprintTemplate/v${TEMPLATE_VERSION}`, name: 'Template', num: '', template: true });
+// Sample client the admin Template preview renders with.
+const TEMPLATE_DEMO_COMPANY = {
+  name: 'Acme Supply Co.', address: '100 Main Street · Chicago, IL 60601',
+  lead: { name: 'Jordan Lee', title: 'Operations Director', email: '' },
+  palette: { prime: '#1F4E79', accent: '#E8A317' }, logoUrl: '',
+};
+
 function getCookie(request, name) {
   const header = request.headers.get('Cookie') || '';
   const m = header.match(new RegExp('(?:^|;\\s*)' + name + '=([^;]+)'));
@@ -3003,7 +3060,7 @@ async function handleAdminMarkSigned(request, env) {
   catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
 
   const id = normalizeBlueprintId(body.blueprintId);
-  const known = BLUEPRINT_REGISTRY.some((b) => b.id === id);
+  const known = BLUEPRINT_REGISTRY.some((b) => b.id === id) || !!templateEntry(await blueprintDraft(env, id));
   if (!known) return json(404, { ok: false, error: 'Unknown blueprint' });
 
   if (body.signed === false) {
@@ -3329,7 +3386,9 @@ async function handleAdminBlueprints(request, env) {
         // Templated-content readiness so the admin list can distinguish a draft
         // that is live to the client ('ready') from one still hidden ('draft'),
         // and 'none' before any content has been generated.
-        contentStatus: rec.content && rec.content.status ? rec.content.status : (rec.content ? 'draft' : 'none'),
+        contentStatus: templateEntry(rec) ? (rec.ready ? 'ready' : 'draft')
+          : (rec.content && rec.content.status ? rec.content.status : (rec.content ? 'draft' : 'none')),
+        template: !!templateEntry(rec),
       });
     } catch { /* skip corrupt record */ }
   }
@@ -3415,7 +3474,9 @@ async function handleAdminCreateBlueprint(request, env, ctx) {
   }
   if (channel && !BP_CHANNELS.includes(channel)) return json(400, { ok: false, error: 'Invalid channel' });
 
-  const slug = normalizeBlueprintId(name);
+  // Template-based blueprints share the company folder id, so the page, its
+  // portal tab, and the sign flow all address the same id.
+  const slug = normalizeBlueprintId(portalCo.id);
   if (BLUEPRINT_REGISTRY.some((b) => b.id === slug)) {
     return json(409, { ok: false, error: `A blueprint with the id "${slug}" already exists` });
   }
@@ -3427,6 +3488,8 @@ async function handleAdminCreateBlueprint(request, env, ctx) {
     id: slug, name, website, leadClient, address,
     companyAttioId, companyId: portalCo.id, leadContact, associatedContacts,
     status: 'draft',
+    templateVersion: TEMPLATE_VERSION,
+    ready: false,
     createdAt: new Date().toISOString(),
     createdBy: sess.email,
   };
@@ -3460,31 +3523,54 @@ async function handleAdminCreateBlueprint(request, env, ctx) {
 
   await logActivity(env, null, { type: 'created', entity: 'blueprint', id: slug, name, actor: sess.email, detail: 'Blueprint draft created' }, request);
 
-  // Draft the templated proposal content in the background from the company's
-  // discovery answers, so the admin opens the editor to a filled-in draft
-  // instead of a blank form. It lands as status:'draft' — never shown to the
-  // customer until an admin reviews and marks it ready.
-  if (ctx && ctx.waitUntil) {
-    ctx.waitUntil((async () => {
-      try {
-        let answers = {};
-        if (portalCo.discoveryHandle) {
-          const disc = await getDiscoveryByHandle(env, portalCo.discoveryHandle);
-          if (disc) answers = (await getDiscoveryAnswers(env, disc.id)).answers || {};
-        }
-        const content = await buildBlueprintContent(env, { company: portalCo, answers });
-        const raw = await env.BLUEPRINT_AUTH.get(`bp:${slug}`);
-        if (!raw) return;
-        const cur = JSON.parse(raw);
-        if (cur.content && cur.content.status) return; // an admin already edited it
-        cur.content = { ...content, status: 'draft', generatedAt: new Date().toISOString(), generatedBy: 'ai' };
-        await env.BLUEPRINT_AUTH.put(`bp:${slug}`, JSON.stringify(cur));
-      } catch (_) { /* editor can still generate on demand */ }
-    })());
-  }
+  // Pull the Commerce/Content wireframe copy from the company website in the
+  // background, so the admin opens the preview already in the client's words.
+  // The page stays hidden from the client until an admin marks it ready.
+  if (ctx && ctx.waitUntil) ctx.waitUntil(refreshBlueprintSite(env, slug, portalCo).catch(() => {}));
 
   return json(200, { ok: true, blueprint: rec });
 }
+
+async function refreshBlueprintSite(env, id, company) {
+  let answers = {};
+  if (company.discoveryHandle) {
+    const disc = await getDiscoveryByHandle(env, company.discoveryHandle);
+    if (disc) answers = (await getDiscoveryAnswers(env, disc.id)).answers || {};
+  }
+  const site = await buildBlueprintSite(env, { company, answers });
+  const cur = await blueprintDraft(env, id);
+  if (!cur) return null;
+  cur.site = site;
+  cur.siteAt = new Date().toISOString();
+  await env.BLUEPRINT_AUTH.put(`bp:${id}`, JSON.stringify(cur));
+  return cur;
+}
+
+// POST /api/admin/blueprint/template { id, ready?, refresh? }: publish or hide
+// a Template-based blueprint, or re-read the company website for its
+// wireframe copy.
+async function handleAdminBlueprintTemplate(request, env) {
+  const sess = await getAdminSession(request, env);
+  if (!sess) return json(401, { ok: false, error: 'Not signed in' });
+  if (!sameOrigin(request)) return json(403, { ok: false, error: 'Bad origin' });
+  let body;
+  try { body = await request.json(); } catch { return json(400, { ok: false, error: 'Invalid JSON' }); }
+  const id = normalizeBlueprintId(body.id);
+  let draft = await blueprintDraft(env, id);
+  if (!templateEntry(draft)) return json(404, { ok: false, error: 'Not a Template blueprint' });
+  if (body.refresh) {
+    const company = (draft.companyId && await getCompany(env, draft.companyId)) || await findCompanyByBlueprintId(env, id);
+    if (!company) return json(400, { ok: false, error: 'No company linked' });
+    draft = (await refreshBlueprintSite(env, id, company)) || draft;
+  }
+  if (typeof body.ready === 'boolean' && body.ready !== !!draft.ready) {
+    draft.ready = body.ready;
+    await env.BLUEPRINT_AUTH.put(`bp:${id}`, JSON.stringify(draft));
+    await logActivity(env, null, { type: 'status', entity: 'blueprint', id, name: draft.name || id, actor: sess.email, detail: body.ready ? 'Template blueprint published' : 'Template blueprint hidden' }, request);
+  }
+  return json(200, { ok: true, template: templateInfo(draft) });
+}
+const templateInfo = (d) => ({ version: parseInt(d.templateVersion, 10), ready: !!d.ready, siteAt: d.siteAt || '', hasSite: !!d.site });
 
 // Sanitize the structured blueprint content an admin saves from the editor.
 // Mirrors the generator's shape; clamps lengths and strips banned dashes.
@@ -3551,13 +3637,14 @@ async function handleBlueprintContent(request, env) {
   if (!draft && !(registryEntry && isAdmin)) return json(404, { ok: false, error: 'Not found' });
   // Admins may open a not-yet-generated draft (content: null) so the editor
   // can render a Generate button. Customers get 404 until it's ready.
-  if (draft && !draft.content && !isAdmin) return json(404, { ok: false, error: 'No content yet' });
+  if (draft && !draft.content && !isAdmin && !templateEntry(draft)) return json(404, { ok: false, error: 'No content yet' });
   if (draft && draft.content && draft.content.status !== 'ready' && !isAdmin) return json(404, { ok: false, error: 'Not ready' });
 
   return json(200, {
     ok: true,
     id,
     bespoke: !!registryEntry,
+    template: templateEntry(draft) ? templateInfo(draft) : null,
     name: (company && company.name) || (draft && draft.name) || (registryEntry && registryEntry.name) || id,
     content: (draft && draft.content) || null,
     branding: company ? {
@@ -3749,13 +3836,20 @@ async function handleAdminBpToken(request, env) {
   // fetch them together. Bespoke registry ids equal the company folder id,
   // so the memoized getCompany covers the common case; the list scan only
   // runs when a legacy draft id differs from the company id.
-  const [bpMeta, sess, coDirect] = await Promise.all([
+  const [bpMeta, sess, coDirect, draft] = await Promise.all([
     getBpMeta(env, blueprintId),
     getApprovedAdmin(request, env),
     getCompany(env, blueprintId),
+    blueprintDraft(env, blueprintId),
   ]);
-  const bpCo = coDirect || await findCompanyByBlueprintId(env, blueprintId);
-  const company = bpCo ? {
+  const preview = blueprintId === TEMPLATE_PREVIEW_ID && !!sess;
+  const bpCo = preview ? null : (coDirect || await findCompanyByBlueprintId(env, blueprintId));
+  // Template pages render their number, dates, and website-sourced wireframe
+  // copy from here.
+  const blueprint = preview
+    ? { num: '000', createdAt: new Date().toISOString(), site: null }
+    : (templateEntry(draft) ? { num: padCompanyNo(bpCo && bpCo.no) || '000', createdAt: draft.createdAt || '', site: draft.site || null } : null);
+  const company = preview ? TEMPLATE_DEMO_COMPANY : bpCo ? {
     name: bpCo.name || '',
     address: bpCo.address || '',
     lead: bpCo.leadContact ? { name: bpCo.leadContact.name || '', title: bpCo.leadContact.title || '', email: bpCo.leadContact.email || '' } : null,
@@ -3772,7 +3866,7 @@ async function handleAdminBpToken(request, env) {
       JSON.stringify({ email: sess.email, admin: true, selfTest: true, blueprintId, ip: clientIp(request), userAgent: clientUa(request), ts: Date.now() }),
       { expirationTtl: SESSION_TTL_SECONDS }
     );
-    return json(200, { ok: true, token, expiresAt, company });
+    return json(200, { ok: true, token, expiresAt, company, blueprint });
   }
   // Signed-in portal customers pass their own company's blueprint gate
   // silently — the gate already calls this endpoint on load. The session is
@@ -3781,14 +3875,14 @@ async function handleAdminBpToken(request, env) {
   const fresh = await getFreshPortalSession(request, env);
   if (fresh) {
     const { sess: portal, co } = fresh;
-    if (co.blueprintId === blueprintId && !(bpMeta && bpMeta.disabled)) {
+    if (co.blueprintId === blueprintId && !(bpMeta && bpMeta.disabled) && (!templateEntry(draft) || draft.ready)) {
       const token = genToken();
       await env.BLUEPRINT_AUTH.put(
         `session:${token}`,
         JSON.stringify({ email: portal.email, name: portal.name || '', portal: true, blueprintId, ip: clientIp(request), userAgent: clientUa(request), ts: Date.now() }),
         { expirationTtl: SESSION_TTL_SECONDS }
       );
-      return json(200, { ok: true, token, expiresAt, company });
+      return json(200, { ok: true, token, expiresAt, company, blueprint });
     }
   }
   return json(401, { ok: false, error: 'Not signed in' });
@@ -5720,10 +5814,11 @@ async function handleAdminPipeline(request, env) {
         // (bespoke) pages are always viewable, but still show a value if their
         // content record carries one.
         const draft = await blueprintDraft(env, clean).catch(() => null);
-        if (!reg && !(draft && draft.content && draft.content.status === 'ready')) return null;
+        const tplLive = !!(templateEntry(draft) && draft.ready);
+        if (!reg && !tplLive && !(draft && draft.content && draft.content.status === 'ready')) return null;
         const value = (draft && draft.content && draft.content.investment && draft.content.investment.total) || '';
         const signed = !!(await env.BLUEPRINT_AUTH.get(`bpsigned:${clean}`));
-        return { id: co.blueprintId, num: reg ? reg.num : '', signed, value, url: `/blueprint/${co.blueprintId}/` };
+        return { id: co.blueprintId, num: reg ? reg.num : (tplLive ? padCompanyNo(co.no) : ''), signed, value, url: `/blueprint/${co.blueprintId}/` };
       })(),
       (async () => {
         if (!co.hasEstimate) return null;
@@ -6324,6 +6419,7 @@ async function blueprintIsViewable(env, id) {
   const clean = normalizeBlueprintId(id);
   if (BLUEPRINT_REGISTRY.some((b) => b.id === clean)) return true;
   const draft = await blueprintDraft(env, clean);
+  if (templateEntry(draft)) return !!draft.ready;
   return !!(draft && draft.content && draft.content.status === 'ready');
 }
 

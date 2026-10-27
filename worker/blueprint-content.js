@@ -26,7 +26,7 @@ function contentSchema() {
 
 const SYSTEM = 'You write a concise, credible B2B ecommerce project proposal (an Uncap "blueprint") for a prospective client, grounded strictly in their discovery answers and company profile. Be specific and concrete; never invent facts the inputs do not support; when unsure, stay general. Uncap builds on Shopify for B2B/wholesale distributors. Hard rules: never use em dashes or en dashes (use commas or periods); keep every string tight (headline under 90 chars, summary 2 to 4 sentences, each body 1 to 2 sentences); amounts as plain strings like "$50,000"; return only JSON matching the schema.';
 
-function answersTranscript(answers) {
+export function answersTranscript(answers) {
   if (!answers || typeof answers !== 'object') return '';
   const byId = new Map(QUESTION_CATALOG.map((q) => [q.id, q]));
   const lines = [];
