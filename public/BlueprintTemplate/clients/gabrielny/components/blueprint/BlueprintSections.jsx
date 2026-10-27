@@ -432,9 +432,9 @@ function BPWhereCell({ it, i }) {
 function BPWhere() {
   const items = [
     { n: '01', t: 'Aging storefront', tag: 'Storefront', impact: 'High', pct: 82, d: 'Every change to the current storefront means custom code or paying the vendor.' },
-    { n: '02', t: 'Complex design', tag: 'Storefront', impact: 'High', pct: 82, d: 'Unfriendly shopping experience and no mobile optimization.' },
+    { n: '02', t: 'Complex design', tag: 'Storefront', impact: 'High', pct: 82, d: 'Cluttered pages and too many steps make it hard to find products and check out, especially on mobile.' },
     { n: '03', t: 'No optionality', tag: 'Systems', impact: 'Critical', pct: 94, d: 'No easy way to integrate, or to plug in modern commerce tools and solutions.' },
-    { n: '04', t: 'Limited agentic optimisation', tag: 'AI', impact: 'High', pct: 78, d: 'No in-site technical components and integrations with AI discovery platforms.' }
+    { n: '04', t: 'Limited agentic optimisation', tag: 'AI', impact: 'High', pct: 78, d: 'Few technical components and integrations in place for AI discovery platforms to find and recommend products.' }
   ];
   return (
     <BPSection id="where" n="02" label="Today" tail="CURRENT STATE">
