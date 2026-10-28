@@ -845,7 +845,7 @@ function GfxMegaNav() {
   ];
   return (
     <GfxChrome>
-      <div style={{ display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:1, background:'var(--line-1)' }}>
+      <div style={{ display:'grid', gridTemplateColumns:'repeat(4, minmax(0,1fr))', gap:1, background:'var(--line-1)' }}>
         {cols.map((c,ci)=>(
           <div key={ci} style={{ background:'var(--uc-paper)', padding:'12px 13px 16px', display:'flex', flexDirection:'column', gap:7 }}>
             <div style={{ fontFamily:'var(--font-mono)', fontSize:8, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color: ci===3?'var(--uc-black)':'var(--fg-3)' }}>{c.h}</div>
@@ -898,7 +898,7 @@ function GfxCollection() {
         <span style={{ fontFamily:'var(--font-mono)', fontSize:7, color:'var(--co-accent)', fontWeight:700 }}>Clear all</span>
       </div>
 
-      <div style={{ display:'grid', gridTemplateColumns:'104px 1fr', borderTop:'1px solid var(--line-1)' }}>
+      <div style={{ display:'grid', gridTemplateColumns:'104px minmax(0,1fr)', borderTop:'1px solid var(--line-1)' }}>
         {/* faceted sidebar */}
         <div style={{ borderRight:'1px solid var(--line-1)', background:'var(--uc-bone)', padding:'11px 10px', display:'flex', flexDirection:'column', gap:11 }}>
           {facets.map((f,fi)=>(
@@ -915,7 +915,7 @@ function GfxCollection() {
         </div>
 
         {/* product grid */}
-        <div style={{ padding:10, display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:8 }}>
+        <div style={{ padding:10, display:'grid', gridTemplateColumns:'repeat(3, minmax(0,1fr))', gap:8 }}>
           {prods.map((p,i)=>(
             <div key={i} style={{ border:'1px solid var(--line-1)', borderRadius:3, padding:6, display:'flex', flexDirection:'column', gap:4, background:'var(--uc-paper)' }}>
               <div style={{ aspectRatio:'1/1', background:`linear-gradient(140deg, ${p[3]}, var(--uc-bone))`, borderRadius:2, position:'relative' }}>
@@ -962,7 +962,7 @@ function GfxCart() {
         {/* filter chips */}
         <div style={{ display:'flex', gap:6, padding:'0 14px 11px' }}>{[...bpSite().mega[0].items.slice(0, 3), 'In stock'].map((f,i)=>(<span key={f} style={{ padding:'3px 9px', borderRadius:999, border:'1px solid', borderColor:i===0?'var(--uc-black)':'var(--line-1)', background:i===0?'var(--uc-black)':'transparent', color:i===0?'var(--uc-paper)':'var(--fg-2)', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700 }}>{f}</span>))}</div>
         {/* product grid */}
-        <div style={{ padding:'0 14px 14px', display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:9 }}>
+        <div style={{ padding:'0 14px 14px', display:'grid', gridTemplateColumns:'repeat(3, minmax(0,1fr))', gap:9 }}>
           {grid.map((p,i)=>(
             <div key={i} style={{ display:'flex', flexDirection:'column', gap:5 }}>
               <div style={{ aspectRatio:'1/1', borderRadius:3, background:`linear-gradient(140deg, ${p[2]}, var(--uc-bone))`, position:'relative' }}>{p[3] && <span style={{ position:'absolute', top:5, left:5, padding:'1px 6px', background:p[3]==='BEST'?'var(--co-prime)':'var(--co-accent)', color:'#fff', borderRadius:2, fontFamily:'var(--font-mono)', fontSize:5.5, fontWeight:800 }}>{p[3]}</span>}<span style={{ position:'absolute', bottom:5, right:5, width:16, height:16, borderRadius:999, background:'var(--uc-paper)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:10, color:'var(--fg-1)' }}>＋</span></div>
@@ -995,7 +995,7 @@ function GfxCart() {
         </div>
         {/* lines */}
         {lines.map((l,i)=>(
-          <div key={i} style={{ padding:'8px 13px', borderBottom:'1px solid var(--line-1)', display:'grid', gridTemplateColumns:'26px 1fr auto', gap:9, alignItems:'center' }}>
+          <div key={i} style={{ padding:'8px 13px', borderBottom:'1px solid var(--line-1)', display:'grid', gridTemplateColumns:'26px minmax(0,1fr) auto', gap:9, alignItems:'center' }}>
             <div style={{ width:26, height:26, borderRadius:3, background:'linear-gradient(135deg, var(--uc-stone-200), var(--uc-bone))' }}/>
             <div><div style={{ fontFamily:'var(--font-display)', fontWeight:600, fontSize:10, color:'var(--fg-1)' }}>{l[0]}</div><div style={{ fontFamily:'var(--font-mono)', fontSize:8, color:'var(--fg-3)' }}>qty {l[1]} · <span style={{ color:'var(--co-accent)', fontWeight:700 }}>{l[2]}</span></div></div>
             <span style={{ fontFamily:'var(--font-mono)', fontSize:9.5, fontWeight:700 }}>{l[3]}</span>
@@ -1036,10 +1036,10 @@ function GfxPDP() {
       <div style={{ padding:'8px 14px 0', fontFamily:'var(--font-mono)', fontSize:7, letterSpacing:'0.08em', color:'var(--fg-3)' }}>HOME / {bpSite().mega[0].h.toUpperCase()} / {bpSite().mega[0].items[0].toUpperCase()}</div>
 
       {/* gallery + buy box */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:13, padding:'9px 14px 13px' }}>
-        {/* gallery */}
-        <div style={{ display:'grid', gridTemplateColumns:'26px 1fr', gap:7 }}>
-          <div style={{ display:'flex', flexDirection:'column', gap:6 }}>{['var(--co-prime)','color-mix(in srgb, var(--co-prime) 35%, #000)','#7C6FB0','#E9B44C'].map((c,i)=>(<div key={i} style={{ aspectRatio:'1/1', borderRadius:3, background:`linear-gradient(140deg, ${c}, var(--uc-bone))`, border:i===0?'1.5px solid var(--uc-black)':'1px solid var(--line-1)' }}/>))}</div>
+      <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1fr) minmax(0,1fr)', gap:13, padding:'9px 14px 13px' }}>
+        {/* gallery: half the frame, main image full width, thumbnails beneath */}
+        <div style={{ display:'flex', flexDirection:'column-reverse', gap:7, minWidth:0, alignSelf:'start' }}>
+          <div style={{ display:'grid', gridTemplateColumns:'repeat(4, minmax(0,1fr))', gap:6 }}>{['var(--co-prime)','color-mix(in srgb, var(--co-prime) 35%, #000)','#7C6FB0','#E9B44C'].map((c,i)=>(<div key={i} style={{ aspectRatio:'1/1', borderRadius:3, background:`linear-gradient(140deg, ${c}, var(--uc-bone))`, border:i===0?'1.5px solid var(--uc-black)':'1px solid var(--line-1)' }}/>))}</div>
           <div style={{ aspectRatio:'4/4.6', borderRadius:4, background:'radial-gradient(120% 90% at 65% 20%, var(--co-prime), color-mix(in srgb, var(--co-prime) 35%, #000) 60%, color-mix(in srgb, var(--co-prime) 22%, #000))', position:'relative', overflow:'hidden' }}>
             <span style={{ position:'absolute', top:8, left:8, padding:'2px 7px', background:'var(--co-prime)', color:'#fff', borderRadius:999, fontFamily:'var(--font-mono)', fontSize:6, fontWeight:800, letterSpacing:'0.06em' }}>BEST SELLER</span>
             <svg viewBox="0 0 100 100" style={{ position:'absolute', bottom:'4%', right:'2%', width:'80%', opacity:0.92 }}><circle cx="50" cy="52" r="26" fill="none" stroke="rgba(255,255,255,0.55)" strokeWidth="1.7"/><circle cx="50" cy="52" r="11" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1.4"/><circle cx="50" cy="52" r="3.5" fill="rgba(255,255,255,0.3)"/></svg>
@@ -1048,7 +1048,7 @@ function GfxPDP() {
         </div>
 
         {/* buy box */}
-        <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
+        <div style={{ display:'flex', flexDirection:'column', gap:7, minWidth:0, overflowWrap:'anywhere' }}>
           <div style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em', color:'var(--co-prime)' }}>{brandName().toUpperCase()} · IN STOCK · SHIPS TODAY</div>
           <div style={{ fontFamily:'var(--font-hero)', fontWeight:700, fontSize:21, letterSpacing:'-0.04em', lineHeight:0.9, color:'var(--fg-1)' }}>{P(0).name}<br/><span style={{ fontFamily:'var(--font-serif)', fontWeight:400, fontSize:16 }}>{bpSite().pdp.sub}</span></div>
           <div style={{ display:'flex', alignItems:'center', gap:6, fontFamily:'var(--font-mono)', fontSize:8 }}><span style={{ color:'var(--co-accent)' }}>★★★★★</span><span style={{ color:'var(--fg-3)' }}>4.9 · 128 reviews</span></div>
@@ -1057,11 +1057,11 @@ function GfxPDP() {
           {/* configuration — configurable product */}
           <div style={{ marginTop:1 }}>
             <div style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:4 }}>CONFIGURATION</div>
-            <div style={{ display:'flex', gap:4 }}>{[['Each',false],['Pack of 10',true],['Pack of 50',false]].map(([l,on],i)=>(<span key={i} style={{ flex:1, padding:'5px 2px', textAlign:'center', border:'1px solid', borderColor:on?'var(--uc-black)':'var(--line-1)', borderRadius:3, fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, color:on?'var(--uc-paper)':'var(--fg-2)', background:on?'var(--uc-black)':'transparent', whiteSpace:'nowrap' }}>{l}</span>))}</div>
+            <div style={{ display:'flex', gap:4 }}>{[['Each',false],['Pack of 10',true],['Pack of 50',false]].map(([l,on],i)=>(<span key={i} style={{ flex:1, minWidth:0, overflow:'hidden', textOverflow:'ellipsis', padding:'5px 2px', textAlign:'center', border:'1px solid', borderColor:on?'var(--uc-black)':'var(--line-1)', borderRadius:3, fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, color:on?'var(--uc-paper)':'var(--fg-2)', background:on?'var(--uc-black)':'transparent', whiteSpace:'nowrap' }}>{l}</span>))}</div>
           </div>
           {/* live stock (ERP) + account price */}
           <div style={{ marginTop:2, border:'1px solid var(--line-1)', borderRadius:3, overflow:'hidden' }}>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)' }}>{[['IN STOCK','142'],['WAREHOUSE','Main'],['SHIPS','Today'],['YOUR PRICE',P(0).price]].map((t,i)=>(
+            <div style={{ display:'grid', gridTemplateColumns:'repeat(4, minmax(0,1fr))' }}>{[['IN STOCK','142'],['WAREHOUSE','Main'],['SHIPS','Today'],['YOUR PRICE',P(0).price]].map((t,i)=>(
               <div key={i} style={{ padding:'4px 2px', textAlign:'center', borderLeft:i?'1px solid var(--line-1)':'none' }}>
                 <div style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, color:'var(--fg-3)', letterSpacing:'0.04em' }}>{t[0]}</div>
                 <div style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--fg-1)', marginTop:2 }}>{t[1]}</div>
@@ -1088,7 +1088,7 @@ function GfxPDP() {
               {[[P(0).name,P(0).price,'var(--co-prime)'],[P(1).name,P(1).price,'#F2A33C'],[P(2).name,P(2).price,'#7BB661']].map((p,i)=>(
                 <React.Fragment key={i}>
                   {i>0 && <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:11, color:'var(--fg-3)', flexShrink:0 }}>+</span>}
-                  <div style={{ flex:1, display:'flex', flexDirection:'column', gap:3 }}>
+                  <div style={{ flex:1, minWidth:0, display:'flex', flexDirection:'column', gap:3 }}>
                     <div style={{ aspectRatio:'1/0.82', borderRadius:3, background:`linear-gradient(140deg, ${p[2]}, var(--uc-bone))` }}/>
                     <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:6.5, letterSpacing:'-0.01em', color:'var(--fg-1)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{p[0]}</span>
                     <span style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, color:'var(--fg-1)' }}>{p[1]}</span>
@@ -1105,14 +1105,14 @@ function GfxPDP() {
       </div>
 
       {/* specs + highlights */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:1, background:'var(--line-1)', borderTop:'1px solid var(--line-1)' }}>
+      <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1fr) minmax(0,1fr)', gap:1, background:'var(--line-1)', borderTop:'1px solid var(--line-1)' }}>
         <div style={{ background:'var(--uc-paper)', padding:'11px 14px' }}>
           <div style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:7 }}>SPECIFICATIONS</div>
           {bpSite().pdp.specs.map((r,i)=>(<div key={i} style={{ display:'flex', justifyContent:'space-between', padding:'4px 0', borderTop:i?'1px solid var(--line-1)':'none', fontFamily:'var(--font-mono)', fontSize:8 }}><span style={{ color:'var(--fg-3)' }}>{r[0]}</span><span style={{ color:'var(--fg-1)', fontWeight:700 }}>{r[1]}</span></div>))}
         </div>
         <div style={{ background:'var(--uc-cream)', padding:'11px 14px' }}>
           <div style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:7 }}>WHY BUYERS CHOOSE IT</div>
-          <div style={{ display:'flex', flexDirection:'column', gap:6 }}>{bpSite().pdp.why.map((t,i)=>(<div key={i} style={{ display:'grid', gridTemplateColumns:'12px 1fr', gap:7, alignItems:'start' }}><span style={{ width:10, height:10, borderRadius:999, background:'var(--co-prime)', marginTop:1, display:'flex', alignItems:'center', justifyContent:'center' }}><svg width="6" height="6" viewBox="0 0 12 12" fill="none"><path d="M2 6 L5 9 L10 3" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg></span><span style={{ fontFamily:'var(--font-serif)', fontSize:9, lineHeight:1.35, color:'var(--fg-2)' }}>{t}</span></div>))}</div>
+          <div style={{ display:'flex', flexDirection:'column', gap:6 }}>{bpSite().pdp.why.map((t,i)=>(<div key={i} style={{ display:'grid', gridTemplateColumns:'12px minmax(0,1fr)', gap:7, alignItems:'start' }}><span style={{ width:10, height:10, borderRadius:999, background:'var(--co-prime)', marginTop:1, display:'flex', alignItems:'center', justifyContent:'center' }}><svg width="6" height="6" viewBox="0 0 12 12" fill="none"><path d="M2 6 L5 9 L10 3" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg></span><span style={{ fontFamily:'var(--font-serif)', fontSize:9, lineHeight:1.35, color:'var(--fg-2)' }}>{t}</span></div>))}</div>
         </div>
       </div>
 
@@ -1129,7 +1129,7 @@ function GfxPDP() {
       {/* you may also like */}
       <div style={{ padding:'11px 14px', borderTop:'1px solid var(--line-1)', background:'var(--uc-bone)' }}>
         <div style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:8 }}>COMPLETE THE SET</div>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)', gap:7 }}>{[[P(4).name,P(4).price,'#F2A33C'],[P(5).name,P(5).price,'#7BB661'],[P(6).name,P(6).price,'#7C6FB0'],[P(7).name,P(7).price,'#E9B44C']].map((p,i)=>(<div key={i} style={{ display:'flex', flexDirection:'column', gap:4 }}><div style={{ aspectRatio:'1/1', borderRadius:3, background:`linear-gradient(140deg, ${p[2]}, var(--uc-bone))` }}/><span style={{ fontFamily:'var(--font-display)', fontWeight:600, fontSize:7.5, color:'var(--fg-1)' }}>{p[0]}</span><span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--fg-1)' }}>{p[1]}</span></div>))}</div>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(4, minmax(0,1fr))', gap:7 }}>{[[P(4).name,P(4).price,'#F2A33C'],[P(5).name,P(5).price,'#7BB661'],[P(6).name,P(6).price,'#7C6FB0'],[P(7).name,P(7).price,'#E9B44C']].map((p,i)=>(<div key={i} style={{ display:'flex', flexDirection:'column', gap:4 }}><div style={{ aspectRatio:'1/1', borderRadius:3, background:`linear-gradient(140deg, ${p[2]}, var(--uc-bone))` }}/><span style={{ fontFamily:'var(--font-display)', fontWeight:600, fontSize:7.5, color:'var(--fg-1)' }}>{p[0]}</span><span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--fg-1)' }}>{p[1]}</span></div>))}</div>
       </div>
     </div>
   );
@@ -1169,7 +1169,7 @@ function GfxPortal() {
             <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:800, color:'#fff', background:'var(--co-accent)', padding:'4px 9px', borderRadius:3 }}>+ New order</span>
           </div>
           {/* stat tiles */}
-          <div style={{ padding:'0 14px 10px', display:'grid', gridTemplateColumns:'repeat(3,1fr)', gap:8 }}>
+          <div style={{ padding:'0 14px 10px', display:'grid', gridTemplateColumns:'repeat(3, minmax(0,1fr))', gap:8 }}>
             {[['14','OPEN ORDERS'],['4','QUOTES'],['$612k','YTD SPEND']].map((s,i)=>(<div key={i} style={{ border:'1px solid var(--line-1)', borderRadius:4, padding:'8px 10px' }}><div style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:18, letterSpacing:'-0.03em', color:'var(--fg-1)' }}>{s[0]}</div><div style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.08em', color:'var(--fg-3)', marginTop:2 }}>{s[1]}</div></div>))}
           </div>
           {/* recent orders / quick reorder */}
@@ -1221,7 +1221,7 @@ function GfxHomepage() {
           <span style={{ alignSelf:'flex-start', marginTop:2, padding:'5px 13px', background:'var(--co-accent)', color:'#fff', borderRadius:999, fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:800 }}>{bpSite().hero.cta} →</span>
         </div>
         {/* mega menu over 2/3 */}
-        <div style={{ position:'absolute', left:0, top:0, bottom:0, width:'64%', background:'rgba(248,246,240,0.97)', borderRight:'1px solid var(--line-2)', boxShadow:'10px 0 30px -16px rgba(0,0,0,0.5)', padding:'14px 16px', display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:14 }}>
+        <div style={{ position:'absolute', left:0, top:0, bottom:0, width:'64%', background:'rgba(248,246,240,0.97)', borderRight:'1px solid var(--line-2)', boxShadow:'10px 0 30px -16px rgba(0,0,0,0.5)', padding:'14px 16px', display:'grid', gridTemplateColumns:'repeat(3, minmax(0,1fr))', gap:14 }}>
           {mega.map((col,ci)=>(
             <div key={ci} style={{ display:'flex', flexDirection:'column', gap:6 }}>
               <div style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', paddingBottom:4, borderBottom:'1px solid var(--line-1)' }}>{col.h.toUpperCase()}</div>
@@ -1246,7 +1246,7 @@ function GfxHomepage() {
         <span style={{ fontFamily:'var(--font-hero)', fontWeight:700, fontSize:14, letterSpacing:'-0.03em', color:'var(--fg-1)' }}>Featured products</span>
         <span style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, color:'var(--fg-3)' }}>View all →</span>
       </div>
-      <div style={{ padding:'0 14px 14px', display:'grid', gridTemplateColumns:'repeat(4, 1fr)', gap:9 }}>
+      <div style={{ padding:'0 14px 14px', display:'grid', gridTemplateColumns:'repeat(4, minmax(0,1fr))', gap:9 }}>
         {feat.map((p,i)=>(
           <div key={i} style={{ display:'flex', flexDirection:'column', gap:4 }}>
             <div style={{ aspectRatio:'1/0.9', borderRadius:4, background:`linear-gradient(150deg, ${p[2]}, var(--uc-bone))`, position:'relative' }}>{p[3] && <span style={{ position:'absolute', top:5, left:5, padding:'1px 6px', background:p[3]==='DEAL'?'var(--co-accent)':(p[3]==='NEW'?'var(--uc-black)':(p[3]==='PRO'?'var(--uc-black)':'var(--co-prime)')), color:'#fff', borderRadius:2, fontFamily:'var(--font-mono)', fontSize:5.5, fontWeight:800 }}>{p[3]}</span>}<span style={{ position:'absolute', bottom:5, right:5, width:16, height:16, borderRadius:999, background:'var(--uc-paper)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:9, color:'var(--fg-1)', boxShadow:'0 1px 3px rgba(0,0,0,0.18)' }}>＋</span></div>
@@ -1257,7 +1257,7 @@ function GfxHomepage() {
       </div>
 
       {/* brand story — image + text */}
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:0, borderTop:'1px solid var(--line-1)' }}>
+      <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1fr) minmax(0,1fr)', gap:0, borderTop:'1px solid var(--line-1)' }}>
         <div style={{ background:'linear-gradient(150deg, color-mix(in srgb, var(--co-prime) 70%, #000), color-mix(in srgb, var(--co-prime) 28%, #000))', minHeight:96, position:'relative' }}><span style={{ position:'absolute', bottom:8, left:10, padding:'2px 7px', background:'var(--uc-paper)', borderRadius:3, fontFamily:'var(--font-mono)', fontSize:5.5, fontWeight:800, letterSpacing:'0.1em', color:'var(--fg-3)' }}>{bpSite().est}</span></div>
         <div style={{ padding:'16px 16px', display:'flex', flexDirection:'column', justifyContent:'center', gap:7, background:'var(--uc-bone)' }}>
           <span style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, letterSpacing:'0.14em', color:'var(--fg-3)' }}>OUR STORY</span>
