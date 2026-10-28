@@ -2161,8 +2161,22 @@ async function handleAdminCreateBlueprint(request, env, ctx) {
   if (BLUEPRINT_REGISTRY.some((b) => b.id === slug)) {
     return json(409, { ok: false, error: `A blueprint with the id "${slug}" already exists` });
   }
-  if (await env.BLUEPRINT_AUTH.get(`bp:${slug}`)) {
-    return json(409, { ok: false, error: `A draft with the id "${slug}" already exists` });
+  const existing = await blueprintDraft(env, slug);
+  if (existing) {
+    if (portalCo.blueprintId && normalizeBlueprintId(portalCo.blueprintId) === slug) {
+      return json(409, { ok: false, error: 'This company already has a blueprint' });
+    }
+    // A draft left over from an earlier attempt that never got linked to the
+    // company: adopt it (moving a never-published one onto the Template)
+    // instead of blocking every retry with a conflict.
+    const live = existing.content && existing.content.status === 'ready';
+    if (!templateEntry(existing) && !live) { existing.templateVersion = TEMPLATE_VERSION; existing.ready = false; }
+    await env.BLUEPRINT_AUTH.put(`bp:${slug}`, JSON.stringify(existing));
+    portalCo.blueprintId = slug;
+    await putCompany(env, portalCo);
+    if (templateEntry(existing) && !existing.site && ctx && ctx.waitUntil) ctx.waitUntil(refreshBlueprintSite(env, slug, portalCo).catch(() => {}));
+    await logActivity(env, null, { type: 'created', entity: 'blueprint', id: slug, name, actor: sess.email, detail: 'Blueprint draft relinked' }, request);
+    return json(200, { ok: true, blueprint: existing });
   }
 
   const rec = {

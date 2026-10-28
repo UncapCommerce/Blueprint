@@ -1726,9 +1726,10 @@
       if (!co.leadContact) { window.alert('Set a Client Lead on this company first — the blueprint gate and signature need one.'); return; }
       setBpBusy('Creating…');
       try {
-        await api('/api/admin/blueprints', { method: 'POST', body: JSON.stringify({ companyId: co.id }) });
-        const fresh = await api('/api/admin/company?id=' + encodeURIComponent(co.id));
-        if (fresh.company) setCo(fresh.company);
+        const d = await api('/api/admin/blueprints', { method: 'POST', body: JSON.stringify({ companyId: co.id }) });
+        // Use the id the server just linked: a re-read can hit a cached copy
+        // of the company that predates the link.
+        if (d.blueprint && d.blueprint.id) setCo((c) => ({ ...c, blueprintId: d.blueprint.id }));
       } catch (err) { window.alert(err.message); }
       finally { setBpBusy(''); }
     };
