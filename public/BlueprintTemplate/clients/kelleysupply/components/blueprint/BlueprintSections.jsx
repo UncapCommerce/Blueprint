@@ -84,7 +84,7 @@ function bpSite() {
     blog: { tag: str(blog.tag, d.blog.tag).toUpperCase(), featured: str(blog.featured, d.blog.featured), articles: fill(list(blog.articles, 3, d.blog.articles), 3) },
     searchExample: str(s.searchExample, d.searchExample),
     erp: 'Epicor P21',
-    platform: str(s.platform, d.platform)
+    platform: 'SimpleWeb'
   };
   return _site;
 }
@@ -2227,7 +2227,7 @@ function BPMigration() {
         <BPSerif>without losing a thing.</BPSerif>
       </BPHeadline>
       <p style={{ marginTop: 18, maxWidth: 600, fontFamily: 'var(--font-serif)', fontSize: 'clamp(15px, 1.3vw, 18px)', lineHeight: 1.5, color: 'var(--fg-2)' }}>
-        We migrate cart-to-cart — every product, customer, and order — and re-map the
+        We migrate from SimpleWeb to Shopify cart-to-cart, every product, customer, and order, and re-map the
         messy parts: legacy categories become tags, custom attributes become metafields,
         old URLs become 301s. Nothing copied blind, nothing lost.
       </p>
@@ -2247,7 +2247,7 @@ function BPMigration() {
                 <span style={{ width:26, height:26, borderRadius:6, background:'#121118', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'var(--font-hero)', fontSize:12, fontWeight:800, color:'#8FA0FF' }}>W</span>
                 <div style={{ display:'flex', flexDirection:'column', gap:1 }}>
                   <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:14, letterSpacing:'-0.01em', color:'var(--fg-1)' }}>{bpSite().platform}</span>
-                  <span style={{ fontFamily:'var(--font-mono)', fontSize:9, color:'var(--fg-3)' }}>Legacy store · 12,480 records</span>
+                  <span style={{ fontFamily:'var(--font-mono)', fontSize:9, color:'var(--fg-3)' }}>SimpleWeb store · 12,480 records</span>
                 </div>
               </div>
               <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:2 }}>
