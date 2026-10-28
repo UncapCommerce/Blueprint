@@ -77,9 +77,12 @@ JSX with a `babel.transform` (that's exactly what the deploy runs).
   discoveries|blueprints`). Google sign-in (Google Identity Services),
   reserved for `@uncap.com` accounts. Sessions live in KV
   (`admin_session:<token>`) behind an HttpOnly `__Host-bp_admin` cookie.
-  Sections: Companies / Discoveries / Blueprints. Owner-only **Settings**
-  opens from the gear by the profile (`/admin/settings/users`, first tab
-  Users; old `/admin/users` maps there)
+  One nav level: Home (activity) · Pipeline (`/admin/pipeline`, also hosts
+  company/discovery/blueprint detail routes) · Products (`/admin/products`,
+  the Items catalog) · + Add (new company). **Settings** opens from the gear
+  by the profile with tabs Users (owner-only, `/admin/settings/users`) and
+  Template (`/admin/settings/template`). Old `/admin/sales*` and
+  `/admin/users` paths map onto these
 - **Admin hierarchy (4 roles)**: any `@uncap.com` Google account can sign
   in but is **Pending** (no access) until the Admin approves them into a
   role. Roles, most to least privileged: **Admin** (`SUPER_ADMIN_EMAIL` =
@@ -115,8 +118,8 @@ JSX with a `babel.transform` (that's exactly what the deploy runs).
 - **Blueprints: the Template (default) + bespoke upgrade.** Denis's
   **Blueprint Template** ("the template") is a hand-designed page under
   `public/BlueprintTemplate/v<N>/` (shared images in
-  `public/BlueprintTemplate/assets/`), previewed in admin at **Sales →
-  Template** (`/admin/sales/template` frames `/blueprint/template/`, which
+  `public/BlueprintTemplate/assets/`), previewed in admin at **Settings →
+  Template** (`/admin/settings/template` frames `/blueprint/template/`, which
   renders `TEMPLATE_DEMO_COMPANY`). Every blueprint created from a company
   (`handleAdminCreateBlueprint`) gets id = company id, `templateVersion =
   TEMPLATE_VERSION` (frozen: later Template edits never touch it) and

@@ -149,10 +149,9 @@
     if (base[0] === 'company' && base[1]) return 'company-profile';
     if (base[0] === 'estimate' && base[1]) return 'estimate-editor';
     if (base[0] === 'blueprint' && base[1]) return 'blueprint-editor';
-    if (base[0] === 'sales' && base[1] === 'process') return 'sales-process';
-    if (base[0] === 'sales' && base[1] === 'items') return 'sales-items';
-    if (base[0] === 'sales' && base[1] === 'template') return 'sales-template';
-    if (base[0] === 'sales') return 'sales';
+    if (base[0] === 'products' || (base[0] === 'sales' && base[1] === 'items')) return 'sales-items';
+    if ((base[0] === 'settings' || base[0] === 'sales') && base[1] === 'template') return 'settings-template';
+    if (base[0] === 'pipeline' || base[0] === 'sales') return 'sales';
     if (base[0] === 'discoveries') return 'discoveries';
     if (base[0] === 'blueprints') return 'blueprints';
     if (base[0] === 'companies') return 'companies';
@@ -339,25 +338,21 @@
     const MONO = 'var(--font-mono, "JetBrains Mono", ui-monospace, monospace)';
     const isMobile = useIsMobile();
 
-    // Sub-navs per section (the second row). Sales lands on its first sub-page.
+    // One navigation level; match[] maps detail routes back to their tab.
+    const SECTIONS = [
+      { id: 'home', l: 'Home', path: '/admin', match: ['home'] },
+      { id: 'pipeline', l: 'Pipeline', path: '/admin/pipeline', match: ['sales', 'companies', 'discoveries', 'blueprints', 'company-profile', 'estimate-editor', 'blueprint-editor'] },
+      { id: 'products', l: 'Products', path: '/admin/products', match: ['sales-items'] },
+    ];
+    // Settings opens from the gear by the profile; its tabs are the only
+    // second row. Users is owner-only.
     const SUB = {
-      sales: [
-        { id: 'sales',         l: 'Pipeline', path: '/admin/sales' },
-        { id: 'sales-process', l: 'Process',  path: '/admin/sales/process' },
-        { id: 'sales-items',   l: 'Items',    path: '/admin/sales/items' },
-        { id: 'sales-template', l: 'Template', path: '/admin/sales/template' },
-      ],
       settings: [
-        { id: 'settings-users', l: 'Users', path: '/admin/settings/users' },
+        ...(me.isSuper ? [{ id: 'settings-users', l: 'Users', path: '/admin/settings/users' }] : []),
+        { id: 'settings-template', l: 'Template', path: '/admin/settings/template' },
       ],
     };
-    // First row. Clicking a section lands on its main page; its match[] maps
-    // routes back to the owning section.
-    const SECTIONS = [
-      { id: 'activities', l: 'Activities', path: '/admin', match: ['home'] },
-      { id: 'sales', l: 'Sales', path: '/admin/sales', match: ['sales', 'sales-process', 'sales-items', 'sales-template', 'companies', 'discoveries', 'blueprints', 'company-profile', 'estimate-editor', 'blueprint-editor'] },
-    ];
-    // Settings (owner-only) opens from the gear by the profile, not a section.
+    const settingsHome = SUB.settings[0].path;
     const inSettings = route.startsWith('settings');
     const activeSection = inSettings ? { id: 'settings' } : (SECTIONS.find((s) => s.match.includes(route)) || SECTIONS[0]);
     const subs = SUB[activeSection.id] || [];
@@ -382,12 +377,10 @@
     );
     const account = (
       <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 10 }}>
-        {me.isSuper && (
-          <a href="/admin/settings/users" onClick={navClick('/admin/settings/users')} aria-label="Settings" title="Settings"
-            style={{ width: 32, height: 32, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6, color: inSettings ? '#0A0A0A' : '#CFCFCF', background: inSettings ? T.signal : 'transparent', flexShrink: 0 }}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
-          </a>
-        )}
+        <a href={settingsHome} onClick={navClick(settingsHome)} aria-label="Settings" title="Settings"
+          style={{ width: 32, height: 32, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6, color: inSettings ? '#0A0A0A' : '#CFCFCF', background: inSettings ? T.signal : 'transparent', flexShrink: 0 }}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+        </a>
         {me.picture
           ? <img src={me.picture} alt="" referrerPolicy="no-referrer" style={{ width: 22, height: 22, borderRadius: 999, border: '1px solid #4D4D4D' }}/>
           : <span style={{ width: 22, height: 22, borderRadius: 999, background: T.signal, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontFamily: MONO, fontSize: 10, fontWeight: 700, color: '#0A0A0A' }}>{(me.email || '?')[0].toUpperCase()}</span>}
@@ -396,6 +389,11 @@
       </div>
     );
     const scroll = { overflowX: 'auto', WebkitOverflowScrolling: 'touch' };
+    // Add opens the new-company modal (hosted by the app shell).
+    const addBtn = (
+      <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('os:add-company'))}
+        style={{ ...S.btnLime, flexShrink: 0, marginLeft: 6, padding: '8px 13px', fontSize: 12, background: T.signal, color: '#0A0A0A', borderColor: T.signal }}>+ Add</button>
+    );
 
     return (
       <header style={{ position: 'sticky', top: 0, zIndex: 50, background: '#0A0A0A' }}>
@@ -404,27 +402,23 @@
           {brand}
           {!isMobile && (
             <nav style={{ flex: '1 1 auto', display: 'flex', alignItems: 'center', gap: 4, overflow: 'visible' }}>
-              {SECTIONS.map(sectionPill)}
+              {SECTIONS.map(sectionPill)}{addBtn}
             </nav>
           )}
           {account}
         </div>
         {isMobile && (
           <nav style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '0 10px 6px', ...scroll }}>
-            {SECTIONS.map(sectionPill)}
+            {SECTIONS.map(sectionPill)}{addBtn}
           </nav>
         )}
-        {/* Row 2 — sub-navs of the active section (+ the Sales quick action) */}
+        {/* Row 2 — Settings tabs */}
         {subs.length > 0 && (
           <div style={{ background: T.paper, borderBottom: `1px solid ${T.line}` }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: isMobile ? '6px 10px' : '6px 16px' }}>
               <nav style={{ display: 'flex', alignItems: 'center', gap: 4, flex: '1 1 auto', minWidth: 0, ...scroll }}>
                 {subs.map(subPill)}
               </nav>
-              {activeSection.id === 'sales' && (
-                <button type="button" onClick={() => window.dispatchEvent(new CustomEvent('os:add-company'))}
-                  style={{ ...S.btnLime, flexShrink: 0, padding: '7px 13px', fontSize: 12.5 }}>+ Add company</button>
-              )}
             </div>
           </div>
         )}
@@ -1109,7 +1103,7 @@
     const items = (data && data.items) || [];
     return (
       <Page>
-        <PageHead eyebrow="Sales" title="Items" action={<button type="button" style={S.btnLime} onClick={() => setEditing(null)}>+ Add item</button>}/>
+        <PageHead eyebrow="Catalog" title="Products" action={<button type="button" style={S.btnLime} onClick={() => setEditing(null)}>+ Add product</button>}/>
         {data === null ? (
           <div style={{ ...S.card, padding: 40, textAlign: 'center', color: T.fg3, fontFamily: T.sans, fontSize: 14 }}>Loading…</div>
         ) : items.length === 0 ? (
@@ -1149,72 +1143,6 @@
           })
         )}
         {editing !== undefined && <ItemEditor initial={editing} groups={groups} rate={rate} onClose={() => setEditing(undefined)} onSaved={() => { setEditing(undefined); load(); }}/>}
-      </Page>
-    );
-  }
-
-  // Internal reference: how our sales process works, stage by stage. Mirrors
-  // the Pipeline columns so the team knows what each stage means and what to do.
-  function SalesProcess() {
-    const STEPS = [
-      { n: '01', label: 'Estimate', dot: '#E4A11B',
-        what: 'A ballpark investment and timeline so the client can gut-check budget before we invest in discovery. Every engagement starts here.',
-        trigger: 'A company is created with “+ Add company” on the Pipeline; build its estimate from the items catalog.',
-        todo: ['Confirm the fit, set the lead contact, and capture the store URL + key people.', 'Rough-scope the work and send a range, not a fixed price — that comes after discovery.', 'Get a verbal go-ahead to proceed to discovery.'] },
-      { n: '02', label: 'Discovery', dot: '#3A44C4',
-        what: 'A structured deep-dive into the client’s systems, catalog, and requirements — the raw material for the blueprint.',
-        trigger: 'A discovery is started and linked to the company (its status shows on the card and in the Hub).',
-        todo: ['Send the discovery, or run it live with the client.', 'Map the current platform, ERP, and integrations.', 'Nail down scope so the blueprint holds up under scrutiny.'] },
-      { n: '03', label: 'Blueprint', dot: '#0A7A3B',
-        what: 'The fixed-scope proposal — architecture, scope, timeline, and investment — for the client to review and approve.',
-        trigger: 'A blueprint is created for the company and marked ready; it appears in the client’s Hub.',
-        todo: ['Draft and review the blueprint internally.', 'Share it through the Hub and walk the client through it.', 'Answer questions and revise until they’re ready to sign.'] },
-      { n: '04', label: 'Signed', dot: '#16A34A',
-        what: 'The client has approved the blueprint. The deal is won and the project is a go.',
-        trigger: 'The client signs and approves the blueprint in the Hub.',
-        todo: ['Kick off onboarding and collect access.', 'Hand off to the delivery team with the signed scope.', 'Confirm the payment schedule and start dates.'] },
-      { n: '05', label: 'Declined', dot: '#B3261E',
-        what: 'The client passed, or the deal went cold. Kept on record so we can re-engage later.',
-        trigger: 'The company is moved to Declined from its profile.',
-        todo: ['Their Hub access is fully disabled — no estimate, discovery, or blueprint.', 'Note why it was declined for future context.', 'Restore access from the profile if they come back.'] },
-    ];
-    return (
-      <Page>
-        <PageHead eyebrow="Sales" title="Process"/>
-        <div style={{ ...S.card, padding: 'clamp(20px, 3vw, 30px)', marginBottom: 20 }}>
-          <div style={{ fontFamily: T.sans, fontSize: 15, lineHeight: 1.65, color: T.fg2, maxWidth: 720 }}>
-            How a deal moves through Uncap, stage by stage. Each stage matches a column on the Pipeline: a company advances automatically as its estimate, discovery, and blueprint come to life. Use this as the shared playbook for what each stage means and what we do in it.
-          </div>
-        </div>
-        <div style={{ ...S.card, padding: 'clamp(20px, 3vw, 32px)' }}>
-          {STEPS.map((s, i) => {
-            const last = i === STEPS.length - 1;
-            return (
-              <div key={s.n} style={{ display: 'grid', gridTemplateColumns: '34px 1fr', columnGap: 18 }}>
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                  <span style={{ width: 34, height: 34, borderRadius: '50%', flex: '0 0 auto', background: s.dot, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: T.mono, fontSize: 12, fontWeight: 700, color: '#FFFFFF' }}>{s.n}</span>
-                  {!last ? <div style={{ width: 2, flex: '1 1 auto', minHeight: 22, background: T.line, marginTop: 4, marginBottom: 4 }}/> : null}
-                </div>
-                <div style={{ paddingBottom: last ? 0 : 26, paddingTop: 4 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                    <span style={{ fontFamily: T.hero, fontWeight: 800, fontSize: 19, letterSpacing: '-0.02em', color: T.fg1 }}>{s.label}</span>
-                  </div>
-                  <div style={{ fontFamily: T.sans, fontSize: 14, lineHeight: 1.55, color: T.fg2, marginTop: 6, maxWidth: 680 }}>{s.what}</div>
-                  <div style={{ fontFamily: T.mono, fontSize: 11, letterSpacing: '0.04em', color: T.fg3, marginTop: 10 }}>ENTERS WHEN</div>
-                  <div style={{ fontFamily: T.sans, fontSize: 13.5, lineHeight: 1.5, color: T.fg2, marginTop: 3, maxWidth: 680 }}>{s.trigger}</div>
-                  <div style={{ fontFamily: T.mono, fontSize: 11, letterSpacing: '0.04em', color: T.fg3, marginTop: 12 }}>WHAT WE DO</div>
-                  <ul style={{ margin: '6px 0 0', padding: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 5 }}>
-                    {s.todo.map((t, j) => (
-                      <li key={j} style={{ display: 'grid', gridTemplateColumns: '16px 1fr', gap: 8, fontFamily: T.sans, fontSize: 13.5, lineHeight: 1.5, color: T.fg2 }}>
-                        <span style={{ color: s.dot, fontWeight: 800 }}>·</span><span>{t}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            );
-          })}
-        </div>
       </Page>
     );
   }
@@ -1758,7 +1686,7 @@
     };
     const removeCompany = async () => {
       if (!window.confirm('Delete ' + (co.name || 'this company') + '?\n\nThis removes the company and its Hub access, contacts, and uploaded files. Discoveries and blueprints themselves are not touched. This cannot be undone.')) return;
-      try { await api('/api/admin/company/delete', { method: 'POST', body: JSON.stringify({ id: co.id }) }); navigate('/admin/sales'); }
+      try { await api('/api/admin/company/delete', { method: 'POST', body: JSON.stringify({ id: co.id }) }); navigate('/admin/pipeline'); }
       catch (err) { setError(err.message); }
     };
     // Remove an artifact (estimate | discovery | blueprint) from this company:
@@ -1824,7 +1752,7 @@
             <a href={portalUrl} target="_blank" rel="noreferrer" style={{ ...S.btnGhost, textDecoration: 'none' }}>Open Hub ↗</a>
             <button type="button" style={{ ...S.btnGhost, color: co.declined ? '#2E7D32' : '#B3261E' }} onClick={toggleDeclined}>{co.declined ? 'Restore access' : 'Decline'}</button>
             {me && me.canDelete ? <button type="button" style={{ ...S.btnGhost, color: '#B3261E' }} onClick={removeCompany}>Delete</button> : null}
-            <a href="/admin/sales" onClick={navClick('/admin/sales')} style={{ ...S.btnGhost, textDecoration: 'none' }}>← Pipeline</a>
+            <a href="/admin/pipeline" onClick={navClick('/admin/pipeline')} style={{ ...S.btnGhost, textDecoration: 'none' }}>← Pipeline</a>
           </div>
         }/>
         {(() => {
@@ -3278,7 +3206,7 @@
     // Sales → Template shows the Blueprint Template itself, full-bleed like a
     // preview, rendered with a sample client. New blueprints are created from
     // its current version.
-    const frame = viewer || (route === 'sales-template'
+    const frame = viewer || (route === 'settings-template'
       ? { url: '/blueprint/template/', title: 'Blueprint Template · sample client', page: true } : null);
     if (frame) {
       return (
@@ -3302,7 +3230,6 @@
           : route === 'estimate-editor' ? <EstimateEditor id={routeEstimateCompanyId()} me={me}/>
           : route === 'blueprint-editor' ? <BlueprintEditor id={routeBlueprintId()}/>
           : route === 'sales' ? <SalesPipeline me={me}/>
-          : route === 'sales-process' ? <SalesProcess/>
           : route === 'sales-items' ? <SalesItems me={me}/>
           : route === 'companies' ? <Companies me={me}/>
           : route === 'discoveries' ? <Discoveries me={me}/>
