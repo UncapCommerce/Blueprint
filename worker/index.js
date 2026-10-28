@@ -4495,11 +4495,13 @@ async function handleAdminPipeline(request, env) {
         // (bespoke) pages are always viewable, but still show a value if their
         // content record carries one.
         const draft = await blueprintDraft(env, clean).catch(() => null);
-        const tplLive = !!(templateEntry(draft) && draft.ready);
-        if (!reg && !tplLive && !(draft && draft.content && draft.content.status === 'ready')) return null;
+        // Template blueprints show from creation (admins publish them), with a
+        // draft flag until they're live to the client.
+        const tpl = !!templateEntry(draft);
+        if (!reg && !tpl && !(draft && draft.content && draft.content.status === 'ready')) return null;
         const value = (draft && draft.content && draft.content.investment && draft.content.investment.total) || '';
         const signed = !!(await env.BLUEPRINT_AUTH.get(`bpsigned:${clean}`));
-        return { id: co.blueprintId, num: reg ? reg.num : (tplLive ? padCompanyNo(co.no) : ''), signed, value, url: `/blueprint/${co.blueprintId}/` };
+        return { id: co.blueprintId, num: reg ? reg.num : (tpl ? padCompanyNo(co.no) : ''), signed, value, draft: tpl && !draft.ready, url: `/blueprint/${co.blueprintId}/` };
       })(),
       (async () => {
         if (!co.hasEstimate) return null;
