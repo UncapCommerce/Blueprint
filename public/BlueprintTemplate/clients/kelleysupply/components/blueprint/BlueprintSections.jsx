@@ -763,8 +763,8 @@ function BPGantt() {
     ] },
     { name: 'Production', range: 'WK 07–17', tasks: [
       { n: '05', t: 'Development',                tag: 'Build',    s: 7,  e: 15, range: 'W7–15' },
-      { n: '06', t: 'Data Migration',             tag: 'Migrate',  s: 11, e: 15, range: 'W11–15' },
-      { n: '07', t: 'Integration',                tag: 'Connect',  s: 11, e: 16, range: 'W11–16' },
+      { n: '06', t: 'Data Migration',             tag: 'Migrate',  s: 8,  e: 15, range: 'W8–15' },
+      { n: '07', t: 'Integration',                tag: 'Connect',  s: 8,  e: 16, range: 'W8–16' },
       { n: '08', t: 'QA & Testing',               tag: 'Verify',   s: 15, e: 17, range: 'W15–17' }
     ] },
     { name: 'Audit', range: 'WK 17–20', tasks: [
