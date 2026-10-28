@@ -83,8 +83,8 @@ function bpSite() {
       location: str(about.location, d.about.location).toUpperCase(), manifesto: str(about.manifesto, d.about.manifesto), stats: pairs(about.stats, 3, d.about.stats) },
     blog: { tag: str(blog.tag, d.blog.tag).toUpperCase(), featured: str(blog.featured, d.blog.featured), articles: fill(list(blog.articles, 3, d.blog.articles), 3) },
     searchExample: str(s.searchExample, d.searchExample),
-    erp: str(s.erp, d.erp),
-    platform: str(s.platform, d.platform)
+    erp: 'Infor SyteLine',
+    platform: 'WooCommerce'
   };
   return _site;
 }
@@ -501,7 +501,7 @@ function BPObjectives() {
 function BPApproach() {
   const steps = [
     { n: 'Phase 1', t: 'Blueprint', d: 'Architecture, data model, integration map. A plan that holds up under scrutiny.', wk: '2 weeks' },
-    { n: 'Phase 2', t: 'Build', d: 'Storefront, B2B, ERP sync. Fixed scope, senior team, no surprises.', wk: '16 weeks' },
+    { n: 'Phase 2', t: 'Build', d: 'Storefront, B2B, Infor SyteLine sync. Fixed scope, senior team, no surprises.', wk: '16 weeks' },
     { n: 'Phase 3', t: 'Grow', d: 'Migrate, go live, then optimize conversion, AOV, and automation.', wk: '6–12 months' }
   ];
   return (
@@ -669,7 +669,7 @@ function BPScope() {
     { code: '02', t: 'Experience Design', d: 'A modern, conversion-focused storefront, built to scale.' },
     { code: '03', t: 'Solution Architecture', d: 'Solution architecture, roadmap and integration.' },
     { code: '04', t: 'B2B Enablement',    d: 'Company accounts, price lists, NET terms, and account portals.' },
-    { code: '05', t: 'ERP Integration',   d: 'Bidirectional ERP sync native to Shopify Plus.' },
+    { code: '05', t: 'ERP Integration',   d: 'Bidirectional Infor SyteLine sync native to Shopify Plus.' },
     { code: '06', t: 'Data Migration',    d: 'Products, customers, order history, and SEO redirects.' },
     { code: '07', t: 'Launch & Hypercare Support',  d: 'QA, a go-live runbook, and 30-day post-launch care.', kind: 'base' }
   ];
@@ -1611,7 +1611,7 @@ function BPTechStack() {
     { name: 'Shopify Bundles',             fn: 'Bundled & grouped products',          pri: 'launch', cost: 'Free' },
     { name: 'Shopify Messaging',           fn: 'Email & SMS marketing',               pri: 'launch', cost: 'Free' },
     { name: 'Uncap Quotes',                fn: 'B2B quote management',                pri: 'start',  cost: '$90/mo' },
-    { name: 'Uncap Connect',               fn: 'ERP ↔ Shopify integration',           pri: 'start',  cost: '$390/mo' },
+    { name: 'Uncap Connect',               fn: 'Infor SyteLine ↔ Shopify integration',pri: 'start',  cost: '$390/mo' },
     { name: 'ShipperHQ',                   fn: 'LTL & dimensional shipping rates',    pri: 'optional', cost: '$75/mo' },
     { name: 'Growave',                     fn: 'Loyalty & retention',                 pri: 'launch', cost: '$15/mo' },
     { name: 'JudgeMe',                     fn: 'Product reviews',                     pri: 'launch', cost: '$15/mo' },
@@ -1726,7 +1726,7 @@ function BPTechStack() {
         {/* Footer total */}
         <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1.2fr) minmax(0,1.5fr) minmax(0,0.6fr) minmax(120px,auto)', gap:16, padding:'14px 18px', borderTop:'1px solid #2B2B2B', background:'#0F0F0F', alignItems:'center' }}>
           <span style={{ fontFamily:'var(--font-mono)', fontSize:10, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'var(--uc-signal)' }}>Est. monthly</span>
-          <span style={{ fontFamily:'var(--font-serif)', fontSize:13, color:'var(--uc-stone-500)' }}>Platform + apps, before ERP integration · ShipperHQ +$75/mo if needed</span>
+          <span style={{ fontFamily:'var(--font-serif)', fontSize:13, color:'var(--uc-stone-500)' }}>Platform + apps, before Infor SyteLine integration · ShipperHQ +$75/mo if needed</span>
           <span/>
           <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:'clamp(18px,1.8vw,24px)', letterSpacing:'-0.03em', color:'var(--uc-paper)', textAlign:'right', whiteSpace:'nowrap' }}>~$2,860/mo</span>
         </div>
@@ -2335,7 +2335,7 @@ function BPDelivery() {
     { wk: 'Week 1', t: 'Kickoff + Blueprint start', s: 'Discovery, architecture, data model.' },
     { wk: 'Week 2', t: 'Blueprint sign-off', s: 'Plan, prototype, and budget locked.' },
     { wk: 'Week 6', t: 'Storefront alpha', s: 'Core theme + catalog in staging.' },
-    { wk: 'Week 9', t: 'Integrations live', s: 'ERP sync + B2B flows validated.' },
+    { wk: 'Week 9', t: 'Integrations live', s: 'Infor SyteLine sync + B2B flows validated.' },
     { wk: 'Week 12', t: 'Migration + QA', s: 'Data moved, redirects, full QA pass.' },
     { wk: 'Week 16', t: 'Launch', s: 'Go live + 30-day support begins.' }
   ];
@@ -2395,7 +2395,7 @@ function BPRiskAssessment() {
       d: 'Products, customers, and orders don\u2019t map cleanly off the legacy stack.',
       m: 'Dry-run into staging, reconcile counts, and spot-check edge cases before cutover.' },
     { t: 'ERP integration complexity', sev: 'Medium',
-      d: 'Bidirectional ERP sync is the hardest dependency, and mismatches can block orders.',
+      d: 'Bidirectional Infor SyteLine sync is the hardest dependency, and mismatches can block orders.',
       m: 'Field-level mapping validated early via Uncap Connect, with a live sync log.' },
     { t: 'Scope creep mid-build', sev: 'Low',
       d: 'New requests surface once the build is underway and pull at budget and timeline.',
@@ -2549,7 +2549,7 @@ function BPInvestment() {
     'Front and back-end Shopify development',
     'Essential integrations: payments, shipping, core tools',
     'Data migration: products, customers, orders, content',
-    'Shopify-side ERP integration guidance',
+    'Shopify-side Infor SyteLine integration guidance',
     'Full B2B enablement: companies, catalogs, checkout',
     'Enriched customer account experience',
     'Workflow automation across your systems',
@@ -2625,7 +2625,7 @@ function BPInvestment() {
           <div style={{ fontFamily: 'var(--font-hero)', fontWeight: 700, fontSize: 'clamp(20px, 2vw, 28px)', letterSpacing: '-0.03em', lineHeight: 1.05, color: 'var(--uc-paper)' }}>{bpSite().erp === 'ERP' ? 'Your ERP' : bpSite().erp}, wired into the storefront.</div>
           <p style={{ margin: '10px 0 0', maxWidth: 560, fontFamily: 'var(--font-serif)', fontSize: 'clamp(14px, 1.2vw, 16px)', lineHeight: 1.5, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>
             Bidirectional sync via Uncap Connect: orders, customers, inventory, and fulfillment
-            flowing between Shopify and your ERP in real time, with no manual re-keying.
+            flowing between Shopify and Infor SyteLine in real time, with no manual re-keying.
           </p>
         </div>
         <div style={{ textAlign: 'right' }}>
