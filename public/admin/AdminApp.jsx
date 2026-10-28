@@ -156,8 +156,6 @@
     if (base[0] === 'discoveries') return 'discoveries';
     if (base[0] === 'blueprints') return 'blueprints';
     if (base[0] === 'companies') return 'companies';
-    if (base[0] === 'projects') return 'projects';
-    if (base[0] === 'retainers') return 'retainers';
     if (base[0] === 'settings' || base[0] === 'users') return 'settings-users';
     return 'home';
   }
@@ -341,18 +339,13 @@
     const MONO = 'var(--font-mono, "JetBrains Mono", ui-monospace, monospace)';
     const isMobile = useIsMobile();
 
-    // Sub-navs per section (the second row). Sales/Services land on their first
-    // sub-page.
+    // Sub-navs per section (the second row). Sales lands on its first sub-page.
     const SUB = {
       sales: [
         { id: 'sales',         l: 'Pipeline', path: '/admin/sales' },
         { id: 'sales-process', l: 'Process',  path: '/admin/sales/process' },
         { id: 'sales-items',   l: 'Items',    path: '/admin/sales/items' },
         { id: 'sales-template', l: 'Template', path: '/admin/sales/template' },
-      ],
-      services: [
-        { id: 'projects',  l: 'Projects',  path: '/admin/projects' },
-        { id: 'retainers', l: 'Retainers', path: '/admin/retainers' },
       ],
       settings: [
         { id: 'settings-users', l: 'Users', path: '/admin/settings/users' },
@@ -363,7 +356,6 @@
     const SECTIONS = [
       { id: 'activities', l: 'Activities', path: '/admin', match: ['home'] },
       { id: 'sales', l: 'Sales', path: '/admin/sales', match: ['sales', 'sales-process', 'sales-items', 'sales-template', 'companies', 'discoveries', 'blueprints', 'company-profile', 'estimate-editor', 'blueprint-editor'] },
-      { id: 'services', l: 'Services', path: '/admin/projects', match: ['projects', 'retainers'] },
     ];
     // Settings (owner-only) opens from the gear by the profile, not a section.
     const inSettings = route.startsWith('settings');
@@ -458,22 +450,6 @@
         </div>
         {action || null}
       </div>
-    );
-  }
-
-  // Placeholder for sections that are navigable but not yet designed
-  // (Services). Keeps the nav functional end to end.
-  function SectionStub({ eyebrow, title, note }) {
-    return (
-      <Page>
-        <PageHead eyebrow={eyebrow} title={title}/>
-        <div style={{ ...S.card, padding: 40, textAlign: 'center' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, ...S.eyebrow, marginBottom: 12 }}>
-            <span style={{ width: 6, height: 6, borderRadius: 999, background: T.signal }}/>Coming soon
-          </div>
-          <div style={{ fontFamily: T.sans, fontSize: 14.5, lineHeight: 1.6, color: T.fg2, maxWidth: 520, margin: '0 auto' }}>{note}</div>
-        </div>
-      </Page>
     );
   }
 
@@ -3331,8 +3307,6 @@
           : route === 'companies' ? <Companies me={me}/>
           : route === 'discoveries' ? <Discoveries me={me}/>
           : route === 'blueprints' ? <Blueprints me={me}/>
-          : route === 'projects' ? <SectionStub eyebrow="Services" title="Projects" note="Fixed-scope client projects will live here — tracked from kickoff through delivery. Design coming next."/>
-          : route === 'retainers' ? <SectionStub eyebrow="Services" title="Retainers" note="Ongoing retainer engagements and their scope will live here."/>
           : <Home/>}
         {adding && <AddCompanyModal onClose={() => setAdding(false)} onSaved={(co) => { setAdding(false); if (co) navigate('/admin/company/' + co.id); }}/>}
       </div>
