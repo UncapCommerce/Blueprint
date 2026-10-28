@@ -2330,7 +2330,7 @@ async function handleBlueprintContent(request, env) {
     content: (draft && draft.content) || null,
     branding: company ? {
       hasLogo: !!company.hasLogo,
-      logoUrl: company.hasLogo ? `/api/company/logo?id=${encodeURIComponent(company.id)}` : '',
+      logoUrl: company.hasLogo ? `/api/company/logo?id=${encodeURIComponent(company.id)}&t=${encodeURIComponent(company.updatedAt || '')}` : '',
       palette: company.palette || null,
       address: company.address || '',
       storeUrl: company.storeUrl || '',
@@ -2537,7 +2537,7 @@ async function handleAdminBpToken(request, env) {
     // Profile branding, so a page's wireframes can wear the client's logo
     // and colors straight from the company record.
     palette: sanitizePalette(bpCo.palette),
-    logoUrl: bpCo.hasLogo ? `/api/company/logo?id=${encodeURIComponent(bpCo.id)}` : '',
+    logoUrl: bpCo.hasLogo ? `/api/company/logo?id=${encodeURIComponent(bpCo.id)}&t=${encodeURIComponent(bpCo.updatedAt || '')}` : '',
   } : null;
   const expiresAt = (bpMeta && bpMeta.expiresAt) || '';
   if (sess) {
