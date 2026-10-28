@@ -158,7 +158,6 @@
     if (base[0] === 'companies') return 'companies';
     if (base[0] === 'projects') return 'projects';
     if (base[0] === 'retainers') return 'retainers';
-    if (base[0] === 'dashboard') return 'dashboard';
     if (base[0] === 'users') return 'users';
     return 'home';
   }
@@ -362,7 +361,6 @@
       { id: 'activities', l: 'Activities', path: '/admin', match: ['home'] },
       { id: 'sales', l: 'Sales', path: '/admin/sales', match: ['sales', 'sales-process', 'sales-items', 'sales-template', 'companies', 'discoveries', 'blueprints', 'company-profile', 'estimate-editor', 'blueprint-editor'] },
       { id: 'services', l: 'Services', path: '/admin/projects', match: ['projects', 'retainers'] },
-      { id: 'dashboard', l: 'Dashboard', path: '/admin/dashboard', match: ['dashboard'] },
       ...(me.isSuper ? [{ id: 'users', l: 'Users', path: '/admin/users', match: ['users'] }] : []),
     ];
     const activeSection = SECTIONS.find((s) => s.match.includes(route)) || SECTIONS[0];
@@ -454,7 +452,7 @@
   }
 
   // Placeholder for sections that are navigable but not yet designed
-  // (Services, Dashboard). Keeps the nav functional end to end.
+  // (Services). Keeps the nav functional end to end.
   function SectionStub({ eyebrow, title, note }) {
     return (
       <Page>
@@ -3325,7 +3323,6 @@
           : route === 'blueprints' ? <Blueprints me={me}/>
           : route === 'projects' ? <SectionStub eyebrow="Services" title="Projects" note="Fixed-scope client projects will live here — tracked from kickoff through delivery. Design coming next."/>
           : route === 'retainers' ? <SectionStub eyebrow="Services" title="Retainers" note="Ongoing retainer engagements and their scope will live here."/>
-          : route === 'dashboard' ? <SectionStub eyebrow="Overview" title="Dashboard" note="A cross-section overview of activity, sales, and services. We’ll design this in the next steps."/>
           : <Home/>}
         {adding && <AddCompanyModal onClose={() => setAdding(false)} onSaved={(co) => { setAdding(false); if (co) navigate('/admin/company/' + co.id); }}/>}
       </div>
