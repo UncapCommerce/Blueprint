@@ -77,8 +77,9 @@ JSX with a `babel.transform` (that's exactly what the deploy runs).
   discoveries|blueprints`). Google sign-in (Google Identity Services),
   reserved for `@uncap.com` accounts. Sessions live in KV
   (`admin_session:<token>`) behind an HttpOnly `__Host-bp_admin` cookie.
-  Sections: Companies / Discoveries / Blueprints (+ Users for the super
-  admin)
+  Sections: Companies / Discoveries / Blueprints. Owner-only **Settings**
+  opens from the gear by the profile (`/admin/settings/users`, first tab
+  Users; old `/admin/users` maps there)
 - **Admin hierarchy (4 roles)**: any `@uncap.com` Google account can sign
   in but is **Pending** (no access) until the Admin approves them into a
   role. Roles, most to least privileged: **Admin** (`SUPER_ADMIN_EMAIL` =

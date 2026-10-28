@@ -158,7 +158,7 @@
     if (base[0] === 'companies') return 'companies';
     if (base[0] === 'projects') return 'projects';
     if (base[0] === 'retainers') return 'retainers';
-    if (base[0] === 'users') return 'users';
+    if (base[0] === 'settings' || base[0] === 'users') return 'settings-users';
     return 'home';
   }
   function routeCompanyId() {
@@ -354,6 +354,9 @@
         { id: 'projects',  l: 'Projects',  path: '/admin/projects' },
         { id: 'retainers', l: 'Retainers', path: '/admin/retainers' },
       ],
+      settings: [
+        { id: 'settings-users', l: 'Users', path: '/admin/settings/users' },
+      ],
     };
     // First row. Clicking a section lands on its main page; its match[] maps
     // routes back to the owning section.
@@ -361,9 +364,10 @@
       { id: 'activities', l: 'Activities', path: '/admin', match: ['home'] },
       { id: 'sales', l: 'Sales', path: '/admin/sales', match: ['sales', 'sales-process', 'sales-items', 'sales-template', 'companies', 'discoveries', 'blueprints', 'company-profile', 'estimate-editor', 'blueprint-editor'] },
       { id: 'services', l: 'Services', path: '/admin/projects', match: ['projects', 'retainers'] },
-      ...(me.isSuper ? [{ id: 'users', l: 'Users', path: '/admin/users', match: ['users'] }] : []),
     ];
-    const activeSection = SECTIONS.find((s) => s.match.includes(route)) || SECTIONS[0];
+    // Settings (owner-only) opens from the gear by the profile, not a section.
+    const inSettings = route.startsWith('settings');
+    const activeSection = inSettings ? { id: 'settings' } : (SECTIONS.find((s) => s.match.includes(route)) || SECTIONS[0]);
     const subs = SUB[activeSection.id] || [];
 
     const sectionPill = (s) => (
@@ -386,6 +390,12 @@
     );
     const account = (
       <div style={{ flex: '0 0 auto', display: 'flex', alignItems: 'center', gap: 10 }}>
+        {me.isSuper && (
+          <a href="/admin/settings/users" onClick={navClick('/admin/settings/users')} aria-label="Settings" title="Settings"
+            style={{ width: 32, height: 32, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', borderRadius: 6, color: inSettings ? '#0A0A0A' : '#CFCFCF', background: inSettings ? T.signal : 'transparent', flexShrink: 0 }}>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+          </a>
+        )}
         {me.picture
           ? <img src={me.picture} alt="" referrerPolicy="no-referrer" style={{ width: 22, height: 22, borderRadius: 999, border: '1px solid #4D4D4D' }}/>
           : <span style={{ width: 22, height: 22, borderRadius: 999, background: T.signal, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', fontFamily: MONO, fontSize: 10, fontWeight: 700, color: '#0A0A0A' }}>{(me.email || '?')[0].toUpperCase()}</span>}
@@ -3311,7 +3321,7 @@
     return (
       <div style={{ minHeight: '100vh', background: T.cream }}>
         <TopBar me={me} route={route} onLogout={logout}/>
-        {route === 'users' ? (me.isSuper ? <Users/> : <Home/>)
+        {route === 'settings-users' ? (me.isSuper ? <Users/> : <Home/>)
           : route === 'company-profile' ? <CompanyProfile id={routeCompanyId()} me={me}/>
           : route === 'estimate-editor' ? <EstimateEditor id={routeEstimateCompanyId()} me={me}/>
           : route === 'blueprint-editor' ? <BlueprintEditor id={routeBlueprintId()}/>
@@ -3390,7 +3400,7 @@
 
     return (
       <Page>
-        <PageHead eyebrow="Admin" title="Users"/>
+        <PageHead eyebrow="Settings" title="Users"/>
         <div style={{ fontFamily: T.sans, fontSize: 13.5, color: T.fg2, marginTop: -12, marginBottom: 20 }}>
           Anyone with an @uncap.com Google account can sign in, but stays <b>Pending</b> (no access) until you approve them. <b>Management</b> can delete content and reopen signed blueprints; <b>Staff</b> can create, edit, invite, and view but not delete. Only you (Admin) manage roles here.
         </div>
@@ -3401,11 +3411,11 @@
         ) : (
           <div style={{ ...S.card, overflow: 'hidden' }}>
             {rows.map((u, i) => (
-              <div key={u.email} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', borderBottom: i < rows.length - 1 ? `1px solid ${T.line}` : 'none' }}>
+              <div key={u.email} style={{ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 14, padding: '12px 16px', borderBottom: i < rows.length - 1 ? `1px solid ${T.line}` : 'none' }}>
                 {u.picture
                   ? <img src={u.picture} alt="" referrerPolicy="no-referrer" style={{ width: 34, height: 34, borderRadius: 999, border: `1px solid ${T.line}`, flexShrink: 0 }}/>
                   : <span style={{ width: 34, height: 34, borderRadius: 999, background: T.cream, border: `1px solid ${T.line}`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: T.mono, fontSize: 13, fontWeight: 700, color: T.fg3, flexShrink: 0 }}>{(u.email || '?')[0].toUpperCase()}</span>}
-                <div style={{ flex: '1 1 auto', minWidth: 0 }}>
+                <div style={{ flex: '1 1 180px', minWidth: 0 }}>
                   <div style={{ fontFamily: T.sans, fontWeight: 700, fontSize: 14, color: T.fg1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.name || u.email}</div>
                   <div style={{ fontFamily: T.mono, fontSize: 11, color: T.fg3, marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{u.email}{u.lastLoginAt ? ' · last in ' + fmtWhen(u.lastLoginAt) : ' · never signed in'}</div>
                 </div>
