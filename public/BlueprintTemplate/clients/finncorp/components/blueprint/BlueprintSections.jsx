@@ -432,8 +432,8 @@ function BPWhereCell({ it, i }) {
 function BPWhere() {
   const items = [
     { n: '01', t: 'Aging storefront', tag: 'Storefront', impact: 'High', pct: 82, d: 'Every change to the current storefront means custom code or paying the vendor.' },
-    { n: '02', t: 'Outdated experience', tag: 'Storefront', impact: 'High', pct: 82, d: 'Unfriendly shopping experience and no mobile optimization.' },
-    { n: '03', t: 'No optionality', tag: 'Systems', impact: 'Critical', pct: 94, d: 'No easy way to integrate, or to plug in modern commerce tools and solutions.' },
+    { n: '02', t: 'No ecommerce', tag: 'Commerce', impact: 'Critical', pct: 94, d: 'Buyers cannot order online across the brands; orders come in by phone, email, or reps and are keyed in by hand.' },
+    { n: '03', t: 'Outdated experience', tag: 'Storefront', impact: 'High', pct: 82, d: 'Dated design, hard-to-browse catalogs, and no mobile optimization make products hard to find and buy.' },
     { n: '04', t: 'No agentic optimisation', tag: 'AI', impact: 'High', pct: 78, d: 'No in-site technical components and integrations with AI discovery platforms.' }
   ];
   return (
