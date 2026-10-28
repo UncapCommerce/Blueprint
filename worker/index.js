@@ -264,7 +264,7 @@ export default {
       if (!(await adminIsApproved(env, gate.email))) {
         return json(403, { ok: false, error: 'Your account is pending approval from denis@uncap.com.' });
       }
-      if (!_finPurged) { _finPurged = true; if (ctx && ctx.waitUntil) ctx.waitUntil(purgeFinancialData(env).catch(() => { _finPurged = false; })); }
+      if (!_finPurged) { _finPurged = true; if (ctx && ctx.waitUntil) ctx.waitUntil(Promise.all([purgeFinancialData(env), resetFinncorpBlueprint(env)]).catch(() => { _finPurged = false; })); }
     }
 
     if (url.pathname === '/api/admin/users' && request.method === 'GET') {
@@ -1337,6 +1337,18 @@ async function seedAdminUsers(env) {
 // cached revenue responses. Flag-guarded; kicked off by the first approved
 // admin request in each isolate until the flag is set.
 let _finPurged = false;
+// One-time reset Denis asked for: remove the Finncorp blueprint (and any
+// leftover draft) and unlink it from the company, so it can be created fresh.
+async function resetFinncorpBlueprint(env) {
+  const kv = env.BLUEPRINT_AUTH;
+  if (await kv.get('bpreset:finncorp:v1')) return;
+  const co = await getCompany(env, 'finncorp');
+  const ids = new Set(['finncorp', normalizeBlueprintId((co && co.blueprintId) || '')].filter((id) => id && !BLUEPRINT_REGISTRY.some((b) => b.id === id)));
+  for (const id of ids) await purgeBlueprintDraft(env, id);
+  if (co && co.blueprintId) { co.blueprintId = ''; await putCompany(env, co); }
+  await kv.put('bpreset:finncorp:v1', '1');
+}
+
 async function purgeFinancialData(env) {
   const kv = env.BLUEPRINT_AUTH;
   if (await kv.get('finpurge:v1')) return;
