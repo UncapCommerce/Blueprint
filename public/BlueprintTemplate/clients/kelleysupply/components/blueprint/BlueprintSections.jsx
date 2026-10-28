@@ -813,13 +813,13 @@ function BPGantt() {
 // Mini faux-UI graphics for each KPI group.
 // Wireframe logo: the company logo uploaded in the GO app, else the wordmark.
 // Colors in these frames come from the profile palette (--co-prime / --co-accent).
-// `big` draws the logo ~1.7x larger while negative vertical margins keep its
+// `big` draws the logo ~2.3x larger while negative vertical margins keep its
 // layout box at `h`, so the header bar keeps its height.
 function CoLogo({ h, big }) {
   const co = window.__bpCompany;
-  const g = big ? Math.round(h * 1.7) : h;
+  const g = big ? Math.min(Math.round(h * 2.3), h + 16) : h; // fills the bar, 2px clear of its edges
   const m = big ? -Math.round((g - h) / 2) : 0;
-  if (co && co.logoUrl) return <img src={co.logoUrl} alt={brandName()} style={{ height: g, margin: m + 'px 0', width: 'auto', maxWidth: g * 6, display: 'block', objectFit: 'contain' }}/>;
+  if (co && co.logoUrl) return <img src={co.logoUrl} alt={brandName()} style={{ height: g, margin: m + 'px 0', width: 'auto', maxWidth: g * 8, display: 'block', objectFit: 'contain' }}/>;
   return <BrandMark fontSize={Math.round(h * 0.9)} dotColor="var(--co-accent)"/>;
 }
 function GfxChrome({ children }) {
