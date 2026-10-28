@@ -79,38 +79,6 @@ JSX with a `babel.transform` (that's exactly what the deploy runs).
   (`admin_session:<token>`) behind an HttpOnly `__Host-bp_admin` cookie.
   Sections: Companies / Discoveries / Blueprints (+ Users for the super
   admin)
-- **P&L (owner-only)**: a top-level tab visible only to the super admin
-  (`isSuper`, denis@uncap.com), a full-width whole-year statement.
-  `GET /api/admin/pnl?year=YYYY` returns it: a `columns` array with values keyed
-  by each column, so the client renders it generically. Columns are all twelve
-  months plus every quarter subtotal (Q1–Q4) and a Year total; actuals only fill
-  elapsed months so future columns read blank, while the projected plan fills the
-  whole year. The year selector spans the current year plus the next three, so
-  the 4-year target runway (e.g. 2026–2029) can be planned. Each year's plan
-  carries a `profitPct` profit standard (default 30): the Plan view derives
-  capital to allocate = revenue × (1 − profit%) and shows what's left as expense
-  targets are added. Revenue reuses the
-  same integrated sources as the Revenues section (via the shared
-  `collectRevenueItems` fan-out over Shopify/Stripe/QuickBooks/Partner), minus
-  manual expense lines. **Projections**: a per-year plan (`pnlplan:<year>`, saved
-  via `POST /api/admin/pnl/plan`) holds an annual target per revenue channel plus
-  plan expense lines; the backend splits each annual evenly across the columns
-  (month = annual/12, quarter = annual/4, year = annual) and returns it as
-  `plan` on the P&L payload. The client offers an **Actuals · Plan · Variance**
-  view toggle (Variance = actual − plan, aligned at each revenue channel and the
-  revenue/expense/net totals; future years default to Plan). Expenses are KV
-  records (`pnlexp:<id>`, editable via
-  `POST /api/admin/pnl/expense{,/delete}`) with a `recurring` monthly flag or a
-  one-off `month`. **Payroll** fills automatically from **Gusto** once connected:
-  OAuth 2.0 at `/api/gusto/{install,callback}` (owner-only), tokens in
-  `gusto:tokens` (refresh tokens ROTATE — persist both on every refresh);
-  `gustoPayrollByMonth` reads processed payrolls and sums each one's
-  `gross_pay + employer_taxes + benefits` bucketed by `check_date` month into a
-  read-only `source:'gusto'` expense line. Creds are Cloudflare dashboard
-  vars/secrets: `GUSTO_CLIENT_ID`, `GUSTO_CLIENT_SECRET`, `GUSTO_ENVIRONMENT`
-  (`demo`|`production` — new apps are demo-only until Gusto approves prod). The
-  `/pnl` routes are gated on `isSuperAdmin` in the worker; the P&L endpoint uses
-  the same `revenueCached` SWR wrapper as the revenue endpoints
 - **Admin hierarchy (4 roles)**: any `@uncap.com` Google account can sign
   in but is **Pending** (no access) until the Admin approves them into a
   role. Roles, most to least privileged: **Admin** (`SUPER_ADMIN_EMAIL` =
@@ -232,9 +200,10 @@ JSX with a `babel.transform` (that's exactly what the deploy runs).
   transcript lives at `disctrans:<id>` (read via
   `GET /api/admin/discovery/transcript`, purged with the discovery)
 - `/build` quiz: `public/build/index.html` + `public/components/QuizApp.jsx`
-- Worker handles `/api/checkout/*` (Stripe SetupIntents) and
-  `/api/build/session/*` (KV-backed quiz resume), then falls through to
-  the static assets binding for everything else
+- **Sales operations only**: Revenues, P&L and their Shopify / QuickBooks /
+  Gusto / Shopify Partner / Stripe integrations were removed (Oct 2026), and
+  `purgeFinancialData` (flag `finpurge:v1`) wiped their stored tokens, P&L
+  records and cached responses. Don't reintroduce financial data pulls
 - Production: `go.uncap.com`. Deploys run on every push to
   `main` via Cloudflare's native Workers Builds GitHub connection (the
   Worker is connected directly to this repo in the Cloudflare
@@ -244,9 +213,8 @@ JSX with a `babel.transform` (that's exactly what the deploy runs).
   the pinned wrangler 3.x — local worker smoke tests fail at startup
   with "No such module". Validate with `wrangler deploy --dry-run` plus
   a babel-transform of changed JSX instead
-- Stripe + Resend secrets live in the Cloudflare dashboard, not in env
-  files. `wrangler.toml` only declares vars that are safe in plaintext
-  (e.g. `STRIPE_PUBLISHABLE_KEY`)
+- Secrets (Anthropic, Attio, Deepgram) live in the Cloudflare dashboard, not
+  in env files. `wrangler.toml` only declares vars that are safe in plaintext
 
 ## Standard for every Blueprint proposal page
 
