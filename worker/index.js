@@ -2559,7 +2559,13 @@ async function handleAdminBpToken(request, env) {
   const company = preview ? TEMPLATE_DEMO_COMPANY : bpCo ? {
     name: bpCo.name || '',
     address: bpCo.address || '',
-    lead: bpCo.leadContact ? { name: bpCo.leadContact.name || '', title: bpCo.leadContact.title || '', email: bpCo.leadContact.email || '' } : null,
+    // Client lead from the GO profile; name or title missing on the lead
+    // record falls back to the same person in the contacts list.
+    lead: bpCo.leadContact ? (() => {
+      const l = bpCo.leadContact;
+      const c = (bpCo.contacts || []).find((x) => x && x.email && x.email === l.email) || {};
+      return { name: l.name || c.name || '', title: l.title || c.title || '', email: l.email || '' };
+    })() : null,
     // Profile branding, so a page's wireframes can wear the client's logo
     // and colors straight from the company record.
     palette: sanitizePalette(bpCo.palette),
