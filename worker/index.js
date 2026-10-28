@@ -1513,7 +1513,7 @@ const TEMPLATE_PREVIEW_ID = 'template';
 // Template blueprints customized for one client: a copy of their frozen
 // version under BlueprintTemplate/clients/<id>/. The record, ready gate,
 // number, and website copy stay exactly as for any Template blueprint.
-const TEMPLATE_CUSTOM = new Set(['gabrielny']);
+const TEMPLATE_CUSTOM = new Set(['gabrielny', 'finncorp']);
 function templateEntry(draft) {
   const v = draft ? parseInt(draft.templateVersion, 10) : 0;
   if (!(v > 0)) return null;
