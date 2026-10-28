@@ -245,7 +245,7 @@ function BPIntro() {
           }}>
             <span className={`uc-rise ${r ? 'in' : ''}`} style={{
               display: 'block', fontSize: 'clamp(56px, 9vw, 156px)'
-            }}>{brandName()}&rsquo;s</span>
+            }}>Finn&rsquo;s</span>
             <span className={`uc-rise ${r ? 'in' : ''}`} style={{
               display: 'block', fontSize: 'clamp(40px, 6vw, 104px)',
               fontFamily: 'var(--font-serif)', fontWeight: 400,
