@@ -264,7 +264,7 @@ export default {
       if (!(await adminIsApproved(env, gate.email))) {
         return json(403, { ok: false, error: 'Your account is pending approval from denis@uncap.com.' });
       }
-      if (!_finPurged) { _finPurged = true; if (ctx && ctx.waitUntil) ctx.waitUntil(Promise.all([purgeFinancialData(env), resetFinncorpBlueprint(env)]).catch(() => { _finPurged = false; })); }
+      if (!_finPurged) { _finPurged = true; if (ctx && ctx.waitUntil) ctx.waitUntil(Promise.all([purgeFinancialData(env), resetFinncorpBlueprint(env).then(() => publishFinncorpBlueprint(env))]).catch(() => { _finPurged = false; })); }
     }
 
     if (url.pathname === '/api/admin/users' && request.method === 'GET') {
@@ -1347,6 +1347,21 @@ async function resetFinncorpBlueprint(env) {
   for (const id of ids) await purgeBlueprintDraft(env, id);
   if (co && co.blueprintId) { co.blueprintId = ''; await putCompany(env, co); }
   await kv.put('bpreset:finncorp:v1', '1');
+}
+
+// One-time publish Denis asked for: make the (re-created) Finncorp Template
+// blueprint visible in the Finncorp portal. Logged like a publish from the
+// editor; a no-op if there is no Finncorp Template blueprint.
+async function publishFinncorpBlueprint(env) {
+  const kv = env.BLUEPRINT_AUTH;
+  if (await kv.get('bppublish:finncorp:v1')) return;
+  const draft = await blueprintDraft(env, 'finncorp');
+  if (templateEntry(draft) && !draft.ready) {
+    draft.ready = true;
+    await kv.put('bp:finncorp', JSON.stringify(draft));
+    await logActivity(env, null, { type: 'status', entity: 'blueprint', id: 'finncorp', name: draft.name || 'Finncorp', actor: SUPER_ADMIN_EMAIL, detail: 'Template blueprint published' });
+  }
+  await kv.put('bppublish:finncorp:v1', '1');
 }
 
 async function purgeFinancialData(env) {
