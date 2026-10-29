@@ -4517,6 +4517,25 @@ async function handleAdminCompanyDecline(request, env) {
 // into a stage (estimate → discovery → blueprint → signed) with
 // the data each card shows: lead contact, discovery status, blueprint number +
 // signed state, and quick-links. Stage is the furthest artifact that exists.
+// Project value shown on pipeline cards, read from the blueprint page itself:
+// its installment schedule (the `amount: '$…'` entries) sums to the project
+// price, so the card always matches the proposal the client sees. Pages only
+// change on deploy, so each isolate memoizes the result per page folder.
+const _bpValueMemo = new Map();
+async function blueprintPageValue(env, dir) {
+  if (_bpValueMemo.has(dir)) return _bpValueMemo.get(dir);
+  let value = '';
+  try {
+    const resp = await env.ASSETS.fetch(new Request(`https://${GO_HOST}/${dir}/components/blueprint/BlueprintSections.jsx`));
+    if (resp.ok) {
+      const total = [...(await resp.text()).matchAll(/amount:\s*'\$([\d,]+)'/g)].reduce((t, m) => t + parseInt(m[1].replace(/,/g, ''), 10), 0);
+      if (total > 0) value = '$' + total.toLocaleString('en-US');
+    }
+  } catch { /* no value */ }
+  _bpValueMemo.set(dir, value);
+  return value;
+}
+
 async function handleAdminPipeline(request, env) {
   const sess = await getAdminSession(request, env);
   if (!sess) return json(401, { ok: false, error: 'Not signed in' });
@@ -4546,9 +4565,13 @@ async function handleAdminPipeline(request, env) {
         // draft flag until they're live to the client.
         const tpl = !!templateEntry(draft);
         if (!reg && !tpl && !(draft && draft.content && draft.content.status === 'ready')) return null;
-        const value = (draft && draft.content && draft.content.investment && draft.content.investment.total) || '';
-        const signed = !!(await env.BLUEPRINT_AUTH.get(`bpsigned:${clean}`));
-        return { id: co.blueprintId, num: reg ? reg.num : (tpl ? padCompanyNo(co.no) : ''), signed, value, draft: tpl && !draft.ready, url: `/blueprint/${co.blueprintId}/` };
+        const page = reg || templateEntry(draft);
+        const [pageValue, signedRaw] = await Promise.all([
+          page ? blueprintPageValue(env, page.dir) : '',
+          env.BLUEPRINT_AUTH.get(`bpsigned:${clean}`),
+        ]);
+        const value = pageValue || (draft && draft.content && draft.content.investment && draft.content.investment.total) || '';
+        return { id: co.blueprintId, num: reg ? reg.num : (tpl ? padCompanyNo(co.no) : ''), signed: !!signedRaw, value, draft: tpl && !draft.ready, url: `/blueprint/${co.blueprintId}/` };
       })(),
       (async () => {
         if (!co.hasEstimate) return null;
