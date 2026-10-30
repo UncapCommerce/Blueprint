@@ -4662,6 +4662,12 @@ async function handleAdminGetCompany(request, env) {
   // folder id (no-op when already linked), so opening the profile makes the
   // bespoke blueprint part of the company record.
   rec = await adoptRegistryBlueprint(env, rec);
+  // Relink this company's own Template blueprint if a profile save dropped
+  // the link (deleting a blueprint purges bp:<id>, so this never revives one).
+  if (!rec.blueprintId) {
+    const draft = await blueprintDraft(env, rec.id);
+    if (templateEntry(draft) && draft.companyId === rec.id) { rec.blueprintId = draft.id; await putCompany(env, rec); }
+  }
   return json(200, { ok: true, company: rec });
 }
 

@@ -1629,7 +1629,10 @@
             palette: pal,
             logo: la && la !== 'remove' ? { type: la.type, data: la.data } : null,
             removeLogo: la === 'remove',
-            discoveryHandle: f.discoveryHandle.trim(), blueprintId: f.blueprintId.trim(),
+            // Links go only when their own field is edited: the form copy is
+            // stale after an in-place create and would unlink it.
+            ...(ov.form && 'discoveryHandle' in ov.form ? { discoveryHandle: f.discoveryHandle.trim() } : {}),
+            ...(ov.form && 'blueprintId' in ov.form ? { blueprintId: f.blueprintId.trim() } : {}),
           }),
         });
         if (d.company) setCo(d.company);
