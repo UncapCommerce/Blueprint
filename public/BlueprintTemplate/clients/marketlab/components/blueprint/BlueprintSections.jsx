@@ -2226,7 +2226,12 @@ function BPMigration() {
     { t: 'Stage & verify', s: 'Dry-run into staging. Reconcile counts, spot-check edge cases.' },
     { t: 'Cutover', s: 'Final delta sync, 301 redirect map, DNS switch with zero lost orders.' }
   ];
-  const stats = ['Products', 'Collections', 'Pages', 'Blogs'];
+  const stats = [
+    ['Products', 'Titles, SKUs, variants, specs and images from Akeneo.'],
+    ['Collections', 'Categories rebuilt as collections with their filters.'],
+    ['Pages', 'Content pages carried over with their SEO intact.'],
+    ['Blogs', 'Articles and guides moved with 301 redirects.']
+  ];
   return (
     <BPSection id="migration" n="12" label="Migration" paper tail="MOVE WITHOUT LOSS" vec="bgVector2">
       <BPHeadline>
@@ -2314,12 +2319,16 @@ function BPMigration() {
       })()}
 
       {/* guarantee strip */}
-      <div style={{ marginTop: 'clamp(28px, 3vw, 40px)', paddingTop: 'clamp(24px, 3vw, 36px)', borderTop: '1px solid var(--line-1)', display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-        {stats.map((s, i) => (
-          <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '10px 16px', border: '1px solid var(--line-2)', borderRadius: 999, fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'clamp(14px, 1.3vw, 17px)', letterSpacing: '-0.01em', color: 'var(--fg-1)' }}>
-            <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: 999, background: 'var(--uc-signal)' }}/>
-            {s}
-          </span>
+      <div style={{ marginTop: 'clamp(28px, 3vw, 40px)', paddingTop: 'clamp(24px, 3vw, 36px)', borderTop: '1px solid var(--line-1)', display: 'flex', flexWrap: 'wrap', gap: 'clamp(10px, 1.4vw, 16px)' }}>
+        {stats.map(([t, d], i) => (
+          <div key={t} style={{ flex: '1 1 150px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8, padding: 'clamp(14px, 1.6vw, 20px)', background: 'var(--uc-paper)', border: '1px solid var(--line-2)', borderTop: '3px solid var(--uc-signal)', borderRadius: 8 }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', color: 'var(--fg-3)' }}>{String(i + 1).padStart(2, '0')}</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'clamp(16px, 1.5vw, 20px)', letterSpacing: '-0.015em', color: 'var(--fg-1)' }}>
+              <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: 999, background: 'var(--uc-signal)', flexShrink: 0 }}/>
+              {t}
+            </span>
+            <span style={{ fontFamily: 'var(--font-serif)', fontSize: 14, lineHeight: 1.45, color: 'var(--fg-2)' }}>{d}</span>
+          </div>
         ))}
       </div>
     </BPSection>
