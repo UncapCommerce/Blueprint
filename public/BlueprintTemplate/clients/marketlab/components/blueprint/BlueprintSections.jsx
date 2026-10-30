@@ -433,9 +433,9 @@ function BPWhereCell({ it, i }) {
 
 function BPWhere() {
   const items = [
-    { n: '01', t: 'Aging storefront', tag: 'Storefront', impact: 'High', pct: 82, d: 'Every change to the current storefront means custom code or paying the vendor.' },
+    { n: '01', t: 'Complex platform', tag: 'Platform', impact: 'High', pct: 82, d: 'Optimizely is complex and difficult to run, and expensive to license and maintain.' },
     { n: '02', t: 'Outdated experience', tag: 'Storefront', impact: 'High', pct: 82, d: 'Unfriendly shopping experience and no mobile optimization.' },
-    { n: '03', t: 'No optionality', tag: 'Systems', impact: 'Critical', pct: 94, d: 'No easy way to integrate, or to plug in modern commerce tools and solutions.' },
+    { n: '03', t: 'Limited optionality', tag: 'Systems', impact: 'Critical', pct: 94, d: 'No easy way to integrate, or to plug in modern commerce tools and solutions.' },
     { n: '04', t: 'No agentic optimisation', tag: 'AI', impact: 'High', pct: 78, d: 'No in-site technical components and integrations with AI discovery platforms.' }
   ];
   return (
