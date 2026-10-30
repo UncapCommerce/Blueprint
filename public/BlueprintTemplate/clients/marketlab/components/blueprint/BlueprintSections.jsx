@@ -914,26 +914,28 @@ function GfxCollection() {
         </div>
 
         {/* product list */}
-        <div style={{ padding:'4px 12px', display:'flex', flexDirection:'column', minWidth:0 }}>
+        <div style={{ padding:'0 12px 4px', display:'flex', flexDirection:'column', minWidth:0 }}>
+          <div style={{ display:'flex', justifyContent:'space-between', padding:'7px 0 5px', borderBottom:'1px solid var(--line-2)', fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)' }}><span>PRODUCT</span><span style={{ width:158, paddingLeft:8 }}>PRICE &amp; ORDER</span></div>
           {prods.map((p,i)=>(
             <div key={i} style={{ display:'flex', alignItems:'center', gap:9, padding:'7px 0', borderBottom: i < prods.length-1 ? '1px solid var(--line-1)' : 'none' }}>
-              <div style={{ width:42, height:42, flexShrink:0, background:`linear-gradient(140deg, ${p[3]}, var(--uc-bone))`, borderRadius:3, position:'relative' }}>
+              <div style={{ width:42, height:42, flexShrink:0, background:`linear-gradient(140deg, ${p[3]}, var(--uc-bone))`, border:'1px solid var(--line-1)', borderRadius:3, position:'relative' }}>
                 {p[4] && <span style={{ position:'absolute', top:3, left:3, padding:'1px 4px', background:p[4]==='NEW'?'var(--co-accent)':(p[4]==='PRO'?'var(--uc-black)':'var(--co-prime)'), color:'#fff', borderRadius:2, fontFamily:'var(--font-mono)', fontSize:5, fontWeight:800 }}>{p[4]}</span>}
               </div>
               <div style={{ flex:1, minWidth:0, display:'flex', flexDirection:'column', gap:3 }}>
                 <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:8.5, letterSpacing:'-0.01em', color:'var(--fg-1)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{p[0]}</span>
-                <div style={{ display:'flex', alignItems:'center', gap:3 }}><span style={{ fontFamily:'var(--font-mono)', fontSize:6, color:'var(--co-accent)' }}>★★★★★</span><span style={{ fontFamily:'var(--font-mono)', fontSize:6, color:'var(--fg-3)' }}>{p[5]} ({p[6]})</span></div>
+                <div style={{ display:'flex', alignItems:'center', gap:3, whiteSpace:'nowrap', overflow:'hidden' }}><span style={{ fontFamily:'var(--font-mono)', fontSize:6, color:'var(--co-accent)' }}>★★★★★</span><span style={{ fontFamily:'var(--font-mono)', fontSize:6, color:'var(--fg-3)' }}>{p[5]} ({p[6]})</span></div>
                 <span style={{ fontFamily:'var(--font-mono)', fontSize:6, color:'var(--fg-3)', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>SKU ML-{1040 + i * 7} · {i === 3 ? 'Ships in 3 days' : 'In stock'}</span>
               </div>
-              <div style={{ flexShrink:0, display:'flex', flexDirection:'column', alignItems:'flex-end', gap:3 }}>
-                <span style={{ fontFamily:'var(--font-mono)', fontSize:9, fontWeight:700, color:'var(--fg-1)', whiteSpace:'nowrap' }}>{p[1]}<span style={{ fontSize:6, fontWeight:400, color:'var(--fg-3)' }}> {p[2]}</span></span>
-                <span style={{ fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, color:'var(--co-prime)', whiteSpace:'nowrap' }}>Account price ✓</span>
-              </div>
-              <div style={{ flexShrink:0, display:'flex', alignItems:'center', gap:4 }}>
-                <span style={{ display:'flex', alignItems:'center', border:'1px solid var(--line-2)', borderRadius:3, fontFamily:'var(--font-mono)', fontSize:7, color:'var(--fg-2)' }}><span style={{ padding:'2px 4px' }}>−</span><span style={{ padding:'2px 3px', fontWeight:700, color:'var(--fg-1)' }}>1</span><span style={{ padding:'2px 4px' }}>+</span></span>
+              {/* order box: price, qty and the call to action */}
+              <div style={{ width:158, flexShrink:0, alignSelf:'stretch', display:'flex', alignItems:'center', gap:6, padding:'5px 7px', background:'color-mix(in srgb, var(--hdr-bg) 6%, #fff)', border:'1px solid color-mix(in srgb, var(--hdr-bg) 22%, #fff)', borderRadius:4 }}>
+                <div style={{ flex:1, minWidth:0, display:'flex', flexDirection:'column', gap:2 }}>
+                  <span style={{ fontFamily:'var(--font-mono)', fontSize:9, fontWeight:700, color:'var(--fg-1)', whiteSpace:'nowrap' }}>{p[1]}<span style={{ fontSize:6, fontWeight:400, color:'var(--fg-3)' }}> {p[2]}</span></span>
+                  <span style={{ fontFamily:'var(--font-mono)', fontSize:5.5, fontWeight:700, color:'var(--co-prime)', whiteSpace:'nowrap' }}>Account price ✓</span>
+                </div>
+                <span style={{ flexShrink:0, display:'flex', alignItems:'center', background:'#fff', border:'1px solid var(--line-2)', borderRadius:3, fontFamily:'var(--font-mono)', fontSize:7, color:'var(--fg-2)' }}><span style={{ padding:'2px 4px' }}>−</span><span style={{ padding:'2px 3px', fontWeight:700, color:'var(--fg-1)' }}>1</span><span style={{ padding:'2px 4px' }}>+</span></span>
                 {p[1] === 'Quote'
-                  ? <span style={{ width:34, textAlign:'center', padding:'3px 0', border:'1px solid var(--uc-black)', borderRadius:3, fontFamily:'var(--font-display)', fontSize:7, fontWeight:800, color:'var(--fg-1)' }}>Quote</span>
-                  : <span style={{ width:34, textAlign:'center', padding:'4px 0', background:'var(--co-accent)', borderRadius:3, fontFamily:'var(--font-display)', fontSize:7, fontWeight:800, color:'#fff' }}>Add</span>}
+                  ? <span style={{ flexShrink:0, width:34, textAlign:'center', padding:'3px 0', background:'#fff', border:'1px solid var(--uc-black)', borderRadius:3, fontFamily:'var(--font-display)', fontSize:7, fontWeight:800, color:'var(--fg-1)' }}>Quote</span>
+                  : <span style={{ flexShrink:0, width:34, textAlign:'center', padding:'4px 0', background:'var(--co-accent)', borderRadius:3, fontFamily:'var(--font-display)', fontSize:7, fontWeight:800, color:'#fff' }}>Add</span>}
               </div>
             </div>
           ))}
