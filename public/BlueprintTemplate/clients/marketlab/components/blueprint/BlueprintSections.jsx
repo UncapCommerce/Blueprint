@@ -765,8 +765,8 @@ function BPGantt() {
     ] },
     { name: 'Production', range: 'WK 07–17', tasks: [
       { n: '05', t: 'Development',                tag: 'Build',    s: 7,  e: 15, range: 'W7–15' },
-      { n: '06', t: 'Data Migration',             tag: 'Migrate',  s: 11, e: 15, range: 'W11–15' },
-      { n: '07', t: 'Integration',                tag: 'Connect',  s: 11, e: 16, range: 'W11–16' },
+      { n: '06', t: 'Data Migration',             tag: 'Migrate',  s: 8,  e: 15, range: 'W8–15' },
+      { n: '07', t: 'Integration',                tag: 'Connect',  s: 8,  e: 16, range: 'W8–16' },
       { n: '08', t: 'QA & Testing',               tag: 'Verify',   s: 15, e: 17, range: 'W15–17' }
     ] },
     { name: 'Audit', range: 'WK 17–20', tasks: [
@@ -2377,7 +2377,7 @@ function BPDelivery() {
           {/* right: short summary */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16, fontFamily: 'var(--font-serif)', fontSize: 'clamp(15px, 1.2vw, 18px)', lineHeight: 1.55, color: 'var(--fg-2)' }}>
             <p style={{ margin: 0 }}>
-              A dedicated <strong style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, color: 'var(--fg-1)' }}>Project Lead</strong> runs the build day-to-day — your single point of contact, with weekly 1:1s and full <strong style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, color: 'var(--fg-1)' }}>ClickUp</strong> transparency.
+              Our <strong style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, color: 'var(--fg-1)' }}>Shopify Program Manager</strong> in coordination with a dedicated <strong style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, color: 'var(--fg-1)' }}>Project Lead</strong> runs the build day-to-day — your single point of contact, with weekly 1:1s and full <strong style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, color: 'var(--fg-1)' }}>ClickUp</strong> transparency.
             </p>
             <p style={{ margin: 0 }}>
               They&rsquo;re backed by a <strong style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, color: 'var(--fg-1)' }}>Head of Services</strong> overseeing the work, a <strong style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, color: 'var(--fg-1)' }}>Technical Lead</strong> on architecture &amp; build, a <strong style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, color: 'var(--fg-1)' }}>Creative Lead</strong> on experience &amp; UI, and specialist teams across data and QA.
