@@ -1211,7 +1211,7 @@ function GfxHomepage() {
       <div style={{ display:'flex', gap:16, padding:'7px 14px 8px', background:'var(--hdr-bg)' }}>{nav.map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-display)', fontSize:8.5, fontWeight:700, color:'#fff', textDecoration:i===0?'underline':'none', textUnderlineOffset:2 }}>{x}</span>))}</div>
 
       {/* hero + mega menu overlay */}
-      <div style={{ position:'relative', height:250, background:'linear-gradient(100deg, color-mix(in srgb, var(--co-prime) 18%, #000) 0%, color-mix(in srgb, var(--co-prime) 40%, #000) 55%, color-mix(in srgb, var(--co-prime) 35%, #000) 135%)', overflow:'hidden' }}>
+      <div style={{ position:'relative', height:282, background:'linear-gradient(100deg, color-mix(in srgb, var(--co-prime) 18%, #000) 0%, color-mix(in srgb, var(--co-prime) 40%, #000) 55%, color-mix(in srgb, var(--co-prime) 35%, #000) 135%)', overflow:'hidden' }}>
         <svg viewBox="0 0 200 90" preserveAspectRatio="none" style={{ position:'absolute', right:-10, bottom:-10, width:220, opacity:0.16 }}><path d="M5 85 L5 34 L52 34 L52 12 L104 12 L104 34 L195 34 L195 85 Z" fill="none" stroke="#fff" strokeWidth="1.6"/><path d="M28 85 L28 52 M78 85 L78 34 M150 85 L150 50" stroke="#fff" strokeWidth="1"/></svg>
         {/* hero copy (right 1/3) */}
         <div style={{ position:'absolute', right:18, top:0, bottom:0, width:'34%', display:'flex', flexDirection:'column', justifyContent:'center', gap:7 }}>
@@ -1220,9 +1220,9 @@ function GfxHomepage() {
           <span style={{ alignSelf:'flex-start', marginTop:2, padding:'5px 13px', background:'var(--co-accent)', color:'#fff', borderRadius:999, fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:800 }}>{bpSite().hero.cta} →</span>
         </div>
         {/* mega menu over 2/3: categories, then the open category's items */}
-        <div style={{ position:'absolute', left:0, top:0, bottom:0, width:'64%', background:'#fff', boxShadow:'10px 0 30px -16px rgba(0,0,0,0.5)', padding:'10px 26px 10px 16px', display:'flex', gap:12 }}>
-          <div style={{ flex:1, minWidth:0, display:'flex', flexDirection:'column', gap:3.5 }}>{ML_CATEGORIES.map((c)=>(<span key={c} style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:7.5, lineHeight:1.15, letterSpacing:'-0.01em', color:'var(--fg-1)', textDecoration:c==='Dispensers'?'underline':'none', textUnderlineOffset:2 }}>{c}</span>))}</div>
-          <div style={{ flex:1, minWidth:0, display:'flex', flexDirection:'column', gap:5.5 }}>{ML_DISPENSERS.map((c)=>(<span key={c} style={{ fontFamily:'var(--font-display)', fontWeight:500, fontSize:7.5, lineHeight:1.15, letterSpacing:'-0.01em', color:'var(--fg-2)' }}>{c}</span>))}</div>
+        <div style={{ position:'absolute', left:0, top:0, bottom:0, width:'max(52%, 236px)', background:'#fff', boxShadow:'10px 0 30px -16px rgba(0,0,0,0.5)', padding:'12px 26px 12px 16px', display:'flex', gap:14 }}>
+          <div style={{ flex:1, minWidth:0, display:'flex', flexDirection:'column', gap:5 }}>{ML_CATEGORIES.map((c)=>(<span key={c} style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:7.5, lineHeight:1.15, letterSpacing:'-0.01em', color:'var(--fg-1)', textDecoration:c==='Dispensers'?'underline':'none', textUnderlineOffset:2 }}>{c}</span>))}</div>
+          <div style={{ flex:1, minWidth:0, display:'flex', flexDirection:'column', gap:8 }}>{ML_DISPENSERS.map((c)=>(<span key={c} style={{ fontFamily:'var(--font-display)', fontWeight:500, fontSize:7.5, lineHeight:1.15, letterSpacing:'-0.01em', color:'var(--fg-2)' }}>{c}</span>))}</div>
           <span style={{ position:'absolute', top:10, right:12, fontSize:10, lineHeight:1, color:'var(--fg-1)' }}>✕</span>
         </div>
       </div>
