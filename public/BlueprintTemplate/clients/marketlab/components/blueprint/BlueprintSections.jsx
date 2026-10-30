@@ -2090,12 +2090,16 @@ function BPAgentic() {
 function BPIntegrations() {
   const pFont = '-apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
   const maps = [
-    { l:'Order',       d:'→', r:'Sales Order' },
-    { l:'Customer',    d:'→', r:'Account' },
-    { l:'Line items',  d:'→', r:'SO Lines' },
-    { l:'Inventory',   d:'←', r:'Stock on hand' },
-    { l:'Fulfillment', d:'←', r:'Item Fulfillment' }
+    { l:'Orders',       d:'→', r:'Sales Orders' },
+    { l:'Fulfillments', d:'←', r:'Item Fulfillments' },
+    { l:'Inventory',    d:'←', r:'Inventory Items' },
+    { l:'Customers',    d:'⇄', r:'Contacts' },
+    { l:'Companies',    d:'⇄', r:'Customer Accounts' },
+    { l:'Catalogs',     d:'←', r:'Price Levels' }
   ];
+  // Sync table columns. The --sync-* tokens let page-shell.css restack a row
+  // on phones (name + status, then the ERP record underneath).
+  const syncCol = [{ flex:'1.3 1 0', minWidth:0 }, { flex:'0 0 clamp(20px,5vw,72px)', '--sync-hmap':1 }, { flex:'1.3 1 0', minWidth:0, '--sync-hmap':1 }, { flex:'0 0 64px' }];
   const activity = [
     ['Order #SO-48217 pushed to ' + bpSite().erp, '2 min ago'],
     ['Inventory delta · 1,284 items reconciled', '9 min ago'],
@@ -2115,7 +2119,7 @@ function BPIntegrations() {
         <BPSerif>not five silos.</BPSerif>
       </BPHeadline>
       <p style={{ marginTop:'clamp(18px, 2.2vw, 26px)', maxWidth:640, fontFamily:'var(--font-serif)', fontSize:'clamp(15px, 1.3vw, 18px)', lineHeight:1.5, color:'var(--fg-2)' }}>
-        Uncap Connect runs as a Shopify-embedded app — a real-time, bidirectional {bpSite().erp}
+        Uncap Connect runs as a Shopify-embedded app — a real-time, bidirectional {bpSite().erp}{' '}
         integration with field-level mapping and a live sync log, managed right inside admin.
       </p>
 
@@ -2161,7 +2165,7 @@ function BPIntegrations() {
           <Card>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, flexWrap:'wrap' }}>
               <div style={{ display:'flex', alignItems:'center', gap:11 }}>
-                <span style={{ width:34, height:34, borderRadius:8, background:'#101A2B', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:pFont, fontSize:13, fontWeight:800, color:'#9FB4FF' }}>SL</span>
+                <span style={{ width:34, height:34, borderRadius:8, background:'#101A2B', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:pFont, fontSize:13, fontWeight:800, color:'#9FB4FF' }}>NS</span>
                 <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
                   <span style={{ fontFamily:pFont, fontSize:13.5, fontWeight:700, color:'#1A1A1A' }}>{bpSite().erp}</span>
                   <span style={{ fontFamily:pFont, fontSize:11.5, color:'#616161' }}>Account 4827-PROD · Last sync 2 min ago</span>
@@ -2180,19 +2184,21 @@ function BPIntegrations() {
           {/* field mapping card */}
           <Card pad={false}>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:10, padding:'13px 16px', borderBottom:'1px solid #E3E3E3' }}>
-              <span style={{ fontFamily:pFont, fontSize:13.5, fontWeight:700, color:'#1A1A1A' }}>Field mapping · Order ⇄ Sales Order</span>
+              <span style={{ fontFamily:pFont, fontSize:13.5, fontWeight:700, color:'#1A1A1A' }}>Record sync · Shopify ⇄ {bpSite().erp}</span>
               <span style={{ fontFamily:pFont, fontSize:12, fontWeight:600, color:'#005BD3' }}>Edit</span>
             </div>
             {/* table header */}
-            <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1.3fr) clamp(48px,6vw,72px) minmax(0,1.3fr) minmax(0,90px)', gap:'clamp(8px,1.2vw,16px)', padding:'8px 16px', background:'#FAFAFA', borderBottom:'1px solid #E3E3E3' }}>
-              {['Shopify','',bpSite().erp,'Status'].map((h,i)=>(<span key={i} style={{ fontFamily:pFont, fontSize:10.5, fontWeight:600, color:'#616161', textAlign:i===3?'right':'left' }}>{h}</span>))}
+            <div style={{ display:'flex', gap:'clamp(8px,1.2vw,16px)', padding:'8px 16px', background:'#FAFAFA', borderBottom:'1px solid #E3E3E3' }}>
+              {['Shopify','',bpSite().erp,'Status'].map((h,i)=>(<span key={i} style={{ ...syncCol[i], fontFamily:pFont, fontSize:10.5, fontWeight:600, color:'#616161', textAlign:i===3?'right':'left' }}>{h}</span>))}
             </div>
             {maps.map((m,i)=>(
-              <div key={i} style={{ display:'grid', gridTemplateColumns:'minmax(0,1.3fr) clamp(48px,6vw,72px) minmax(0,1.3fr) minmax(0,90px)', gap:'clamp(8px,1.2vw,16px)', padding:'10px 16px', borderBottom: i<maps.length-1?'1px solid #F1F1F1':'none', alignItems:'center' }}>
-                <span style={{ fontFamily:pFont, fontSize:12.5, fontWeight:600, color:'#1A1A1A', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{m.l}</span>
-                <span style={{ fontFamily:pFont, fontSize:13, fontWeight:700, color: m.d==='←' ? '#B98900' : '#616161', textAlign:'center' }}>{m.d}</span>
-                <span style={{ fontFamily:pFont, fontSize:12.5, color:'#303030', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{m.r}</span>
-                <span style={{ justifySelf:'end' }}><Badge tone="success">Synced</Badge></span>
+              <div key={i} style={{ '--sync-row':1, display:'flex', alignItems:'center', gap:'clamp(8px,1.2vw,16px)', padding:'10px 16px', borderBottom: i<maps.length-1?'1px solid #F1F1F1':'none', alignItems:'center' }}>
+                <span style={{ ...syncCol[0], fontFamily:pFont, fontSize:12.5, fontWeight:600, color:'#1A1A1A', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{m.l}</span>
+                <span style={{ '--sync-map':1, flex:'2.6 1 0', minWidth:0, display:'flex', alignItems:'center', gap:'clamp(8px,1.2vw,16px)' }}>
+                  <span style={{ flex:'0 0 clamp(20px,5vw,72px)', fontFamily:pFont, fontSize:13, fontWeight:700, color: m.d==='←' ? '#B98900' : '#616161', textAlign:'center' }}>{m.d}</span>
+                  <span style={{ flex:1, minWidth:0, fontFamily:pFont, fontSize:12.5, color:'#303030', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{m.r}</span>
+                </span>
+                <span style={{ '--sync-status':1, ...syncCol[3], textAlign:'right' }}><Badge tone="success">Synced</Badge></span>
               </div>
             ))}
           </Card>
@@ -2563,9 +2569,9 @@ function BPInvestment() {
     'Go live, a clean handoff, and a 30-day warranty'
   ];
   const schedule = [
-    { n: '01', amount: '$56,000', due: 'Due at signup' },
-    { n: '02', amount: '$28,000', due: 'Due at design approval' },
-    { n: '03', amount: '$28,000', due: 'Due at project completion' }
+    { n: '01', amount: '$57,000', due: 'Due at signup' },
+    { n: '02', amount: '$28,500', due: 'Due at design approval' },
+    { n: '03', amount: '$28,500', due: 'Due at project completion' }
   ];
   return (
     <BPSection id="investment" n="15" label="Investment" dark tail="FIXED · NO SURPRISES">
@@ -2636,7 +2642,7 @@ function BPInvestment() {
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--uc-stone-500)' }}>Fixed price</div>
-          <div style={{ marginTop: 6, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(34px, 3.6vw, 52px)', letterSpacing: '-0.045em', lineHeight: 0.9, color: 'var(--uc-signal)' }}>$26k</div>
+          <div style={{ marginTop: 6, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(34px, 3.6vw, 52px)', letterSpacing: '-0.045em', lineHeight: 0.9, color: 'var(--uc-signal)' }}>$28k</div>
         </div>
       </div>
 
@@ -2712,7 +2718,7 @@ function BPGrowth() {
     { label: 'Reporting & Insights', v: ['Quarterly', 'Monthly', 'Bi-weekly performance review'] },
     { label: 'Primary Focus', v: ['Stability & direction', 'Lower TCO, efficiency, controlled growth', 'Velocity, experimentation & scale'] },
     { label: 'Best For', v: ['Teams needing guidance, light execution, and a clear roadmap', 'Ops-led teams focused on efficiency, reliability, and measurable improvement', 'Teams requiring white-glove execution and weekly leadership involvement'] },
-    { label: 'Contract', v: ['Month-To-Month', 'Month-To-Month', 'Month-To-Month'] },
+    { label: 'Contract', v: ['12 Months', '6 Months', '6 Months'] },
   ];
   const services = [
     { t: 'Revenue.', d: 'Upsells, cross-sells, bundles, and personalization raise order value, so the store does more with the same traffic.' },
@@ -2720,7 +2726,7 @@ function BPGrowth() {
     { t: 'Retention.', d: 'Email automation, self-service portals, quick reorders, and membership clubs bring buyers back.' },
     { t: 'Operations.', d: 'We integrate your systems and automate the robot work, so your people focus on what grows the business.' }
   ];
-  const [plan, setPlan] = React.useState('core');
+  const [plan, setPlan] = React.useState('optimize');
   const check = (
     <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6 L5 9 L10 3" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
   );
@@ -2736,8 +2742,8 @@ function BPGrowth() {
         lineHeight: 1.5, color: 'var(--fg-2)'
       }}>
         Post-launch, we stay embedded as your growth team — turning a live store into a
-        compounding revenue operation. Retainers start the month after go-live, and run
-        month-to-month after the first quarter — move up or down as the season demands.
+        compounding revenue operation. Retainers start the month after go-live, on a
+        6-month term (12 months for Core). Move up as the season demands.
       </p>
       <div style={{ marginTop: 'clamp(32px, 4vw, 48px)', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16 }}>
         {services.map((sv, i) => (
@@ -2766,7 +2772,7 @@ function BPGrowth() {
                 <span key={pl.id} onClick={() => setPlan(pl.id)} style={{ display: 'flex', flexDirection: 'column', gap: 6, justifyContent: 'flex-end', cursor: 'pointer', position: 'relative', zIndex: on ? 1 : 0, padding: on ? '20px 18px 14px' : '16px 18px 14px', marginTop: on ? -18 : 0, borderBottom: '1px solid var(--line-2)', borderTop: '2px solid ' + (on ? 'var(--uc-black)' : 'transparent'), borderLeft: '2px solid ' + (on ? 'var(--uc-black)' : 'transparent'), borderRight: '2px solid ' + (on ? 'var(--uc-black)' : 'transparent'), borderRadius: on ? '10px 10px 0 0' : 0, background: on ? 'var(--uc-paper)' : 'transparent', boxShadow: on ? '0 -3px 0 var(--uc-signal) inset' : 'none' }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                     <span style={{ fontFamily: 'var(--font-hero)', fontWeight: 700, fontSize: 'clamp(19px, 1.9vw, 26px)', letterSpacing: '-0.035em', color: 'var(--fg-1)' }}>{pl.name}</span>
-                    {pl.id === 'core' ? <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', background: 'var(--uc-signal)', color: 'var(--uc-black)', borderRadius: 999, padding: '3px 7px' }}>Recommended</span> : null}
+                    {pl.id === 'optimize' ? <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', background: 'var(--uc-signal)', color: 'var(--uc-black)', borderRadius: 999, padding: '3px 7px' }}>Recommended</span> : null}
                   </span>
                   <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, color: 'var(--fg-3)' }}>{pl.sub}</span>
                 </span>

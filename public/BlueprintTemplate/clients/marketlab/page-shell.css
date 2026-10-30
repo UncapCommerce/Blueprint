@@ -131,4 +131,10 @@ html { scroll-behavior: smooth; scroll-padding-top: 96px; }
       grid-template-columns: 1fr 1fr !important;
     }
     section { padding-left: 18px !important; padding-right: 18px !important; }
+    /* Uncap Connect sync table: name + status, ERP record on the line below */
+    [style*="--sync-row"] { flex-wrap: wrap; row-gap: 3px !important; }
+    [style*="--sync-status"] { order: 1; }
+    [style*="--sync-map"] { order: 2; flex: 1 1 100% !important; justify-content: flex-start; }
+    [style*="--sync-map"] > span:first-child { flex: 0 0 auto !important; }
+    [style*="--sync-hmap"] { display: none; }
   }
