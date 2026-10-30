@@ -1600,8 +1600,8 @@ function BPTechStack() {
     { name: 'Uncap Quotes',                fn: 'B2B quote management',                pri: 'start',  cost: '$90/mo' },
     { name: 'Uncap Connect',               fn: 'ERP ↔ Shopify integration',           pri: 'start',  cost: '$390/mo' },
     { name: 'ShipperHQ',                   fn: 'LTL & dimensional shipping rates',    pri: 'launch', cost: '$75/mo' },
-    { name: 'Klaviyo Email',               fn: 'Email marketing & automation',        pri: 'launch', cost: '–' },
-    { name: 'JudgeMe',                     fn: 'Product reviews, store reviews, UGC & FAQs', pri: 'launch', cost: '$15/mo' },
+    { name: 'HubSpot',                     fn: 'CRM & email marketing',               pri: 'launch', cost: '–' },
+    { name: 'Yotpo',                       fn: 'Product reviews',                     pri: 'launch', cost: '–' },
     { name: 'Matrixify',                   fn: 'Bulk import / export & migration',    pri: 'start',  cost: '$50/mo' }
   ];
   const priMeta = {
@@ -1629,7 +1629,7 @@ function BPTechStack() {
 
         {(() => {
           const layers = [
-            { tier:'04', name:'Growth & Intelligence', note:'After launch', tools:[['Shopify Flow','launch'],['Shopify Knowledge Base','launch'],['Klaviyo Email','launch'],['JudgeMe','launch']] },
+            { tier:'04', name:'Growth & Intelligence', note:'After launch', tools:[['Shopify Flow','launch'],['Shopify Knowledge Base','launch'],['HubSpot','launch'],['Yotpo','launch']] },
             { tier:'03', name:'Experience & Engagement', note:'Customer-facing', tools:[['Shopify Search & Discovery','launch'],['Shopify Checkout Blocks','launch'],['Shopify Bundles','launch'],['Uncap Quotes','start']] },
             { tier:'02', name:'Data & Integration', note:'System of record', tools:[['Uncap Connect','start'],['ShipperHQ','launch'],['Matrixify','start']] },
             { tier:'01', name:'Commerce Core', note:'Foundation', tools:[['Shopify','start']], core:true }
