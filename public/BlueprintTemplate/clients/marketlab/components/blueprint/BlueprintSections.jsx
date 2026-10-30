@@ -1188,11 +1188,12 @@ function GfxPortal() {
   );
 }
 
+// Marketlab's live menu: a Categories / Our Brands / Departments bar under the
+// logo, opening a two-column panel (categories, then the open one's items).
+const ML_CATEGORIES = ['Carts & Furniture', 'Dispensers', 'Safety', 'Equipment Covers', 'Nursing and Medical Bags', 'Patient Eye Protection', 'Tubes Caps Racks', 'Diagnostics', 'Airway Management', 'Phlebotomy', 'Infection Prevention', 'Ultrasound Gel', 'Specimen Collection', 'Organization', 'Patient Positioning', 'Patient Comfort', 'Specimen Transport', 'Processing Tools', 'Shop All Categories'];
+const ML_DISPENSERS = ['Anesthesia Dispensers', 'Bulk Dispensers', 'Catheter Dispensers', 'Cleaning Stations', 'Eye Protection Dispensers', 'Face Mask Dispensers', 'Glove Dispensers', 'Hand Sanitizer Dispensers', 'Hygiene Stations', 'Label Dispensers', 'Laboratory Dispensers', 'PPE Organizers', 'Specific Use Dispensers', 'Shop All Dispensers'];
 function GfxHomepage() {
-  const nav = bpSite().nav;
-  const mega = [
-    ...bpSite().mega
-  ];
+  const nav = ['Categories', 'Our Brands', 'Departments'];
   const brands = bpSite().brands;
   const feat = [[P(0).name,P(0).price,'#F2A33C','NEW'],[P(1).name,P(1).price,'#E8C87E',null],[P(2).name,P(2).price,'#7BB661','BULK'],[P(3).name,P(3).price,'color-mix(in srgb, var(--co-prime) 60%, #fff)',null]];
   return (
@@ -1200,17 +1201,17 @@ function GfxHomepage() {
       {/* announcement */}
       <div style={{ background:'var(--uc-black)', color:'var(--uc-paper)', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>{bpSite().announcement}</div>
       {/* header */}
-      <div style={{ display:'flex', alignItems:'center', gap:11, padding:'8px 14px', background:'var(--hdr-bg)' }}>
-        <CoLogo h={15}/>
-        <div style={{ display:'flex', gap:11, marginLeft:6 }}>{nav.map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:i===0?'#fff':'rgba(255,255,255,0.78)', position:'relative' }}>{x}{i===0 && <span style={{ position:'absolute', left:0, right:0, bottom:-9, height:2, background:'#fff' }}/>}</span>))}</div>
+      <div style={{ display:'flex', alignItems:'center', gap:11, padding:'9px 14px 0', background:'var(--hdr-bg)' }}>
+        <CoLogo h={17}/>
         <span style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:7 }}>
           <span style={{ width:78, height:18, borderRadius:999, border:'1px solid rgba(255,255,255,0.6)', background:'rgba(255,255,255,0.14)', display:'flex', alignItems:'center', gap:4, padding:'0 8px', fontFamily:'var(--font-mono)', fontSize:7, color:'rgba(255,255,255,0.9)', whiteSpace:'nowrap', overflow:'hidden' }}><span style={{ fontSize:8 }}>⌕</span>Search…</span>
           <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--hdr-bg)', background:'#fff', padding:'3px 8px', borderRadius:3 }}>Cart 6</span>
         </span>
       </div>
+      <div style={{ display:'flex', gap:16, padding:'7px 14px 8px', background:'var(--hdr-bg)' }}>{nav.map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-display)', fontSize:8.5, fontWeight:700, color:'#fff', textDecoration:i===0?'underline':'none', textUnderlineOffset:2 }}>{x}</span>))}</div>
 
       {/* hero + mega menu overlay */}
-      <div style={{ position:'relative', height:188, background:'linear-gradient(100deg, color-mix(in srgb, var(--co-prime) 18%, #000) 0%, color-mix(in srgb, var(--co-prime) 40%, #000) 55%, color-mix(in srgb, var(--co-prime) 35%, #000) 135%)', overflow:'hidden' }}>
+      <div style={{ position:'relative', height:250, background:'linear-gradient(100deg, color-mix(in srgb, var(--co-prime) 18%, #000) 0%, color-mix(in srgb, var(--co-prime) 40%, #000) 55%, color-mix(in srgb, var(--co-prime) 35%, #000) 135%)', overflow:'hidden' }}>
         <svg viewBox="0 0 200 90" preserveAspectRatio="none" style={{ position:'absolute', right:-10, bottom:-10, width:220, opacity:0.16 }}><path d="M5 85 L5 34 L52 34 L52 12 L104 12 L104 34 L195 34 L195 85 Z" fill="none" stroke="#fff" strokeWidth="1.6"/><path d="M28 85 L28 52 M78 85 L78 34 M150 85 L150 50" stroke="#fff" strokeWidth="1"/></svg>
         {/* hero copy (right 1/3) */}
         <div style={{ position:'absolute', right:18, top:0, bottom:0, width:'34%', display:'flex', flexDirection:'column', justifyContent:'center', gap:7 }}>
@@ -1218,14 +1219,11 @@ function GfxHomepage() {
           <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:24, letterSpacing:'-0.04em', lineHeight:0.9, color:'#fff' }}>{bpSite().hero.title}<br/><span style={{ fontFamily:'var(--font-serif)', fontWeight:400 }}>{bpSite().hero.titleSerif}</span></span>
           <span style={{ alignSelf:'flex-start', marginTop:2, padding:'5px 13px', background:'var(--co-accent)', color:'#fff', borderRadius:999, fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:800 }}>{bpSite().hero.cta} →</span>
         </div>
-        {/* mega menu over 2/3 */}
-        <div style={{ position:'absolute', left:0, top:0, bottom:0, width:'64%', background:'rgba(248,246,240,0.97)', borderRight:'1px solid var(--line-2)', boxShadow:'10px 0 30px -16px rgba(0,0,0,0.5)', padding:'14px 16px', display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:14 }}>
-          {mega.map((col,ci)=>(
-            <div key={ci} style={{ display:'flex', flexDirection:'column', gap:6 }}>
-              <div style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', paddingBottom:4, borderBottom:'1px solid var(--line-1)' }}>{col.h.toUpperCase()}</div>
-              {col.items.map((it,ii)=>(<span key={ii} style={{ fontFamily:'var(--font-display)', fontWeight:ii===0&&ci===0?700:500, fontSize:8.5, letterSpacing:'-0.01em', color:ii===0&&ci===0?'var(--fg-1)':'var(--fg-2)' }}>{it}</span>))}
-            </div>
-          ))}
+        {/* mega menu over 2/3: categories, then the open category's items */}
+        <div style={{ position:'absolute', left:0, top:0, bottom:0, width:'64%', background:'#fff', boxShadow:'10px 0 30px -16px rgba(0,0,0,0.5)', padding:'10px 26px 10px 16px', display:'flex', gap:12 }}>
+          <div style={{ flex:1, minWidth:0, display:'flex', flexDirection:'column', gap:3.5 }}>{ML_CATEGORIES.map((c)=>(<span key={c} style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:7.5, lineHeight:1.15, letterSpacing:'-0.01em', color:'var(--fg-1)', textDecoration:c==='Dispensers'?'underline':'none', textUnderlineOffset:2 }}>{c}</span>))}</div>
+          <div style={{ flex:1, minWidth:0, display:'flex', flexDirection:'column', gap:5.5 }}>{ML_DISPENSERS.map((c)=>(<span key={c} style={{ fontFamily:'var(--font-display)', fontWeight:500, fontSize:7.5, lineHeight:1.15, letterSpacing:'-0.01em', color:'var(--fg-2)' }}>{c}</span>))}</div>
+          <span style={{ position:'absolute', top:10, right:12, fontSize:10, lineHeight:1, color:'var(--fg-1)' }}>✕</span>
         </div>
       </div>
 
