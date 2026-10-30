@@ -1,5 +1,5 @@
 // BlueprintSections.jsx: Marketlab's copy of the Blueprint Template v1, ERP
-// pinned to NetSuite and the Migration source to Optimizely. Its logo is
+// pinned to NetSuite and the Migration source to Akeneo (their PIM). Its logo is
 // white, so the Commerce and Content store headers sit on orange (--hdr-bg)
 // with white nav text and a white cart.
 // Every client fact comes from the Gate at runtime: company + contacts +
@@ -86,7 +86,7 @@ function bpSite() {
     blog: { tag: str(blog.tag, d.blog.tag).toUpperCase(), featured: str(blog.featured, d.blog.featured), articles: fill(list(blog.articles, 3, d.blog.articles), 3) },
     searchExample: str(s.searchExample, d.searchExample),
     erp: 'NetSuite',
-    platform: 'Optimizely'
+    platform: 'Akeneo'
   };
   return _site;
 }
@@ -2214,7 +2214,7 @@ function BPMigration() {
     { t: 'Stage & verify', s: 'Dry-run into staging. Reconcile counts, spot-check edge cases.' },
     { t: 'Cutover', s: 'Final delta sync, 301 redirect map, DNS switch with zero lost orders.' }
   ];
-  const stats = ['Products', 'Collections', 'Pages', 'Blogs', 'Customers', 'Companies', 'Orders'];
+  const stats = ['Products', 'Collections', 'Pages', 'Blogs'];
   return (
     <BPSection id="migration" n="12" label="Migration" paper tail="MOVE WITHOUT LOSS" vec="bgVector2">
       <BPHeadline>
@@ -2222,7 +2222,7 @@ function BPMigration() {
         <BPSerif>without losing a thing.</BPSerif>
       </BPHeadline>
       <p style={{ marginTop: 18, maxWidth: 600, fontFamily: 'var(--font-serif)', fontSize: 'clamp(15px, 1.3vw, 18px)', lineHeight: 1.5, color: 'var(--fg-2)' }}>
-        We migrate cart-to-cart — every product, customer, and order — and re-map the
+        We migrate the product data from Akeneo, where it lives today, and re-map the
         messy parts: legacy categories become tags, custom attributes become metafields,
         old URLs become 301s. Nothing copied blind, nothing lost.
       </p>
@@ -2239,10 +2239,10 @@ function BPMigration() {
             {/* platform header */}
             <div style={{ display:'grid', gridTemplateColumns:cols, alignItems:'center', borderBottom:'1px solid var(--line-1)', background:'var(--uc-bone)' }}>
               <div style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 16px' }}>
-                <span style={{ width:26, height:26, borderRadius:6, background:'#121118', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'var(--font-hero)', fontSize:12, fontWeight:800, color:'#8FA0FF' }}>O</span>
+                <span style={{ width:26, height:26, borderRadius:6, background:'#121118', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'var(--font-hero)', fontSize:12, fontWeight:800, color:'#8FA0FF' }}>A</span>
                 <div style={{ display:'flex', flexDirection:'column', gap:1 }}>
                   <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:14, letterSpacing:'-0.01em', color:'var(--fg-1)' }}>{bpSite().platform}</span>
-                  <span style={{ fontFamily:'var(--font-mono)', fontSize:9, color:'var(--fg-3)' }}>B2B Configured Commerce · 12,480 records</span>
+                  <span style={{ fontFamily:'var(--font-mono)', fontSize:9, color:'var(--fg-3)' }}>Product information (PIM) · 12,480 records</span>
                 </div>
               </div>
               <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:2 }}>
@@ -2259,7 +2259,7 @@ function BPMigration() {
             </div>
             {/* record type tabs */}
             <div style={{ display:'flex', alignItems:'center', gap:16, padding:'9px 16px', borderBottom:'1px solid var(--line-1)', flexWrap:'wrap' }}>
-              {['Products','Customers','Orders','Content'].map((t,i)=>(<span key={t} style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:11.5, letterSpacing:'-0.01em', color:i===0?'var(--fg-1)':'var(--fg-3)', borderBottom:i===0?'2px solid var(--uc-black)':'2px solid transparent', paddingBottom:3 }}>{t}</span>))}
+              {['Products','Collections'].map((t,i)=>(<span key={t} style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:11.5, letterSpacing:'-0.01em', color:i===0?'var(--fg-1)':'var(--fg-3)', borderBottom:i===0?'2px solid var(--uc-black)':'2px solid transparent', paddingBottom:3 }}>{t}</span>))}
               <span style={{ marginLeft:'auto', display:'inline-flex', alignItems:'center', gap:6, fontFamily:'var(--font-mono)', fontSize:9.5, fontWeight:700, color:'#2F7D52' }}><span style={{ width:6, height:6, borderRadius:999, background:'#3F8B5D' }}/>Field map verified</span>
             </div>
             {/* crosswalk */}
