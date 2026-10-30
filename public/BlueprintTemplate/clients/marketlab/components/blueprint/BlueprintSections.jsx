@@ -1,6 +1,7 @@
-// BlueprintSections.jsx: Marketlab's copy of the Blueprint Template v1. Its
-// logo is white, so the Commerce and Content store headers sit on orange
-// (--hdr-bg) with white nav text and a white cart.
+// BlueprintSections.jsx: Marketlab's copy of the Blueprint Template v1, ERP
+// pinned to NetSuite and the Migration source to Optimizely. Its logo is
+// white, so the Commerce and Content store headers sit on orange (--hdr-bg)
+// with white nav text and a white cart.
 // Every client fact comes from the Gate at runtime: company + contacts +
 // palette + logo (window.__bpCompany), blueprint number / dates
 // (window.__bpInfo), and the Commerce/Content wireframe copy extracted from
@@ -84,8 +85,8 @@ function bpSite() {
       location: str(about.location, d.about.location).toUpperCase(), manifesto: str(about.manifesto, d.about.manifesto), stats: pairs(about.stats, 3, d.about.stats) },
     blog: { tag: str(blog.tag, d.blog.tag).toUpperCase(), featured: str(blog.featured, d.blog.featured), articles: fill(list(blog.articles, 3, d.blog.articles), 3) },
     searchExample: str(s.searchExample, d.searchExample),
-    erp: str(s.erp, d.erp),
-    platform: str(s.platform, d.platform)
+    erp: 'NetSuite',
+    platform: 'Optimizely'
   };
   return _site;
 }
@@ -1649,21 +1650,21 @@ function BPTechStack() {
               <div style={{ flex:1, display:'flex', flexDirection:'column', gap:10 }}>
                 {layers.map((L) => (
                   <div key={L.tier} style={{
-                    display:'grid', gridTemplateColumns:'minmax(0,280px) minmax(0,1fr)', gap:'clamp(14px,2vw,28px)', alignItems:'center',
+                    display:'flex', flexWrap:'wrap', gap:'12px clamp(14px,2vw,28px)', alignItems:'center',
                     padding:'clamp(14px,1.8vw,20px) clamp(16px,2vw,24px)',
                     background: L.core ? 'var(--uc-paper)' : '#121212',
                     border:'1px solid ' + (L.core ? 'var(--uc-paper)' : '#1F1F1F'),
                     borderRadius:6, position:'relative', overflow:'hidden'
                   }}>
                     {L.core && <span aria-hidden="true" style={{ position:'absolute', left:0, top:0, bottom:0, width:4, background:'var(--uc-signal)' }}/>}
-                    <div style={{ display:'flex', alignItems:'center', gap:13, minWidth:0 }}>
+                    <div style={{ flex:'1 1 240px', display:'flex', alignItems:'center', gap:13, minWidth:0 }}>
                       <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:'clamp(26px,3vw,40px)', letterSpacing:'-0.04em', lineHeight:0.9, flexShrink:0, color: L.core ? 'var(--fg-3)' : 'var(--uc-stone-500)' }}>{L.tier}</span>
                       <div style={{ display:'flex', flexDirection:'column', gap:3, minWidth:0 }}>
                         <span style={{ fontFamily:'var(--font-hero)', fontWeight:700, fontSize:'clamp(15px,1.5vw,20px)', letterSpacing:'-0.025em', whiteSpace:'nowrap', color: L.core ? 'var(--uc-black)' : 'var(--uc-paper)' }}>{L.name}</span>
                         <span style={{ fontFamily:'var(--font-mono)', fontSize:8.5, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color: L.core ? 'var(--fg-3)' : 'var(--uc-stone-500)' }}>{L.note}</span>
                       </div>
                     </div>
-                    <div style={{ display:'flex', gap:8, flexWrap:'wrap', justifyContent:'flex-end' }}>
+                    <div style={{ flex:'1 1 300px', display:'flex', gap:8, flexWrap:'wrap', justifyContent:'flex-end' }}>
                       {L.tools.map(([t,p]) => {
                         const c = chip[p];
                         return (
@@ -1709,11 +1710,11 @@ function BPTechStack() {
           );
         })}
         {/* Footer total */}
-        <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1.2fr) minmax(0,1.5fr) minmax(0,1fr) 120px', gap:16, padding:'14px 18px', borderTop:'1px solid #2B2B2B', background:'#0F0F0F', alignItems:'center' }}>
+        <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1.2fr) minmax(0,1.5fr) minmax(0,0.6fr) minmax(120px,auto)', gap:16, padding:'14px 18px', borderTop:'1px solid #2B2B2B', background:'#0F0F0F', alignItems:'center' }}>
           <span style={{ fontFamily:'var(--font-mono)', fontSize:10, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'var(--uc-signal)' }}>Est. monthly</span>
           <span style={{ fontFamily:'var(--font-serif)', fontSize:13, color:'var(--uc-stone-500)' }}>Platform + apps, before ERP integration</span>
           <span/>
-          <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:'clamp(18px,1.8vw,24px)', letterSpacing:'-0.03em', color:'var(--uc-paper)', textAlign:'right' }}>~$2,920/mo</span>
+          <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:'clamp(18px,1.8vw,24px)', letterSpacing:'-0.03em', color:'var(--uc-paper)', textAlign:'right', whiteSpace:'nowrap' }}>~$2,830/mo</span>
         </div>
       </div>
       <div style={{ marginTop:16, display:'flex', gap:18, flexWrap:'wrap', fontFamily:'var(--font-mono)', fontSize:10, color:'var(--uc-stone-500)', letterSpacing:'0.06em' }}>
@@ -2238,10 +2239,10 @@ function BPMigration() {
             {/* platform header */}
             <div style={{ display:'grid', gridTemplateColumns:cols, alignItems:'center', borderBottom:'1px solid var(--line-1)', background:'var(--uc-bone)' }}>
               <div style={{ display:'flex', alignItems:'center', gap:10, padding:'12px 16px' }}>
-                <span style={{ width:26, height:26, borderRadius:6, background:'#121118', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'var(--font-hero)', fontSize:12, fontWeight:800, color:'#8FA0FF' }}>W</span>
+                <span style={{ width:26, height:26, borderRadius:6, background:'#121118', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'var(--font-hero)', fontSize:12, fontWeight:800, color:'#8FA0FF' }}>O</span>
                 <div style={{ display:'flex', flexDirection:'column', gap:1 }}>
                   <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:14, letterSpacing:'-0.01em', color:'var(--fg-1)' }}>{bpSite().platform}</span>
-                  <span style={{ fontFamily:'var(--font-mono)', fontSize:9, color:'var(--fg-3)' }}>Legacy store · 12,480 records</span>
+                  <span style={{ fontFamily:'var(--font-mono)', fontSize:9, color:'var(--fg-3)' }}>B2B Configured Commerce · 12,480 records</span>
                 </div>
               </div>
               <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:2 }}>
