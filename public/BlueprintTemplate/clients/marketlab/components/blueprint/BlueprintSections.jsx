@@ -1609,6 +1609,7 @@ function BPTechStack() {
     { name: 'Shopify Knowledge Base',      fn: 'Help center & self-service',          pri: 'launch', cost: 'Free' },
     { name: 'Shopify Flow',                fn: 'Workflow automation',                 pri: 'launch', cost: 'Free' },
     { name: 'Shopify Bundles',             fn: 'Bundled & grouped products',          pri: 'launch', cost: 'Free' },
+    { name: 'Shopify Forms',               fn: 'Sign-up & lead capture forms',        pri: 'launch', cost: 'Free' },
     { name: 'Uncap Quotes',                fn: 'B2B quote management',                pri: 'start',  cost: '$90/mo' },
     { name: 'Uncap Connect',               fn: 'ERP ↔ Shopify integration',           pri: 'start',  cost: '$390/mo' },
     { name: 'Akeneo',                      fn: 'Product information management (PIM)', pri: 'start', cost: '–' },
@@ -1641,7 +1642,7 @@ function BPTechStack() {
 
         {(() => {
           const layers = [
-            { tier:'04', name:'Growth & Intelligence', note:'After launch', tools:[['Shopify Flow','launch'],['Shopify Knowledge Base','launch'],['HubSpot','launch'],['Yotpo','launch']] },
+            { tier:'04', name:'Growth & Intelligence', note:'After launch', tools:[['Shopify Flow','launch'],['Shopify Knowledge Base','launch'],['Shopify Forms','launch'],['HubSpot','launch'],['Yotpo','launch']] },
             { tier:'03', name:'Experience & Engagement', note:'Customer-facing', tools:[['Shopify Search & Discovery','launch'],['Shopify Checkout Blocks','launch'],['Shopify Bundles','launch'],['Uncap Quotes','start']] },
             { tier:'02', name:'Data & Integration', note:'System of record', tools:[['Uncap Connect','start'],['Akeneo','start'],['Matrixify','start']] },
             { tier:'01', name:'Commerce Core', note:'Foundation', tools:[['Shopify','start']], core:true }
