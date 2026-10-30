@@ -2563,9 +2563,9 @@ function BPInvestment() {
     'Go live, a clean handoff, and a 30-day warranty'
   ];
   const schedule = [
-    { n: '01', amount: '$49,000', due: 'Due at signup' },
-    { n: '02', amount: '$24,500', due: 'Due at design approval' },
-    { n: '03', amount: '$24,500', due: 'Due at project completion' }
+    { n: '01', amount: '$56,000', due: 'Due at signup' },
+    { n: '02', amount: '$28,000', due: 'Due at design approval' },
+    { n: '03', amount: '$28,000', due: 'Due at project completion' }
   ];
   return (
     <BPSection id="investment" n="15" label="Investment" dark tail="FIXED · NO SURPRISES">
@@ -2581,7 +2581,7 @@ function BPInvestment() {
         {/* LEFT — identity + price */}
         <div style={{ padding: 'clamp(28px, 3.4vw, 52px)', display: 'flex', flexDirection: 'column', gap: 'clamp(18px, 2vw, 26px)' }}>
           <div>
-            <h3 style={{ margin: 0, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(40px, 5vw, 76px)', letterSpacing: '-0.045em', lineHeight: 0.9, color: 'var(--uc-paper)' }}>Shopify <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, fontSize: '0.62em', letterSpacing: '-0.02em' }}>Build</span></h3>
+            <h3 style={{ margin: 0, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(40px, 5vw, 76px)', letterSpacing: '-0.045em', lineHeight: 0.9, color: 'var(--uc-paper)' }}>Shopify <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, fontSize: '0.62em', letterSpacing: '-0.02em' }}>Replatforming</span></h3>
             <div style={{ marginTop: 'clamp(14px, 1.6vw, 20px)', fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 'clamp(17px, 1.6vw, 24px)', lineHeight: 1.25, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>Your store and your integrated systems, working as one.</div>
           </div>
           <p style={{ margin: 0, maxWidth: 460, fontFamily: 'var(--font-serif)', fontSize: 'clamp(14.5px, 1.2vw, 17px)', lineHeight: 1.55, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>
@@ -2592,7 +2592,7 @@ function BPInvestment() {
           {/* price — standout box */}
           <div style={{ padding: 'clamp(18px, 2vw, 26px) clamp(20px, 2.2vw, 28px)', background: 'var(--uc-signal)', borderRadius: 12, boxShadow: '0 22px 60px -26px rgba(232,255,82,0.45)' }}>
             <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--uc-black)' }}>Fixed price</div>
-            <div style={{ marginTop: 4, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(52px, 6vw, 88px)', letterSpacing: '-0.05em', lineHeight: 0.85, color: 'var(--uc-black)' }}>$72k</div>
+            <div style={{ marginTop: 4, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(52px, 6vw, 88px)', letterSpacing: '-0.05em', lineHeight: 0.85, color: 'var(--uc-black)' }}>$86k</div>
           </div>
 
           {/* walk away */}
