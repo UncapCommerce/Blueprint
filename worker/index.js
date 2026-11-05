@@ -264,7 +264,7 @@ export default {
       if (!(await adminIsApproved(env, gate.email))) {
         return json(403, { ok: false, error: 'Your account is pending approval from denis@uncap.com.' });
       }
-      if (!_finPurged) { _finPurged = true; if (ctx && ctx.waitUntil) ctx.waitUntil(Promise.all([purgeFinancialData(env), resetFinncorpBlueprint(env).then(() => publishFinncorpBlueprint(env)), renameMarketlabContact(env)]).catch(() => { _finPurged = false; })); }
+      if (!_finPurged) { _finPurged = true; if (ctx && ctx.waitUntil) ctx.waitUntil(Promise.all([purgeFinancialData(env), resetFinncorpBlueprint(env).then(() => publishFinncorpBlueprint(env)), applyContactFixes(env)]).catch(() => { _finPurged = false; })); }
     }
 
     if (url.pathname === '/api/admin/users' && request.method === 'GET') {
@@ -1364,18 +1364,27 @@ async function publishFinncorpBlueprint(env) {
   await kv.put('bppublish:finncorp:v1', '1');
 }
 
-// One-time contact fix Denis asked for: Marketlab's Joel Shoemaker was saved
-// without his proper name. Renames him on the company and on the blueprint's
-// contact snapshot; a no-op once done or if he isn't there.
-async function renameMarketlabContact(env) {
+// One-time contact name fixes Denis asked for (names aren't editable in the
+// admin). Each renames one contact, by email or the company's Client Lead, on
+// the company and its blueprint's contact snapshot; flag-guarded, so each runs
+// once and is a no-op if the contact isn't there.
+const CONTACT_FIXES = [
+  { flag: 'coname:marketlab:v1', id: 'marketlab', email: 'joel.shoemaker@marketlab.com', name: 'Joel Shoemaker' },
+  { flag: 'coname:moynihanlumber:v1', id: 'moynihanlumber', lead: true, name: 'Warren Herrera' },
+];
+async function applyContactFixes(env) {
   const kv = env.BLUEPRINT_AUTH;
-  if (await kv.get('coname:marketlab:v1')) return;
-  const email = 'joel.shoemaker@marketlab.com', name = 'Joel Shoemaker';
-  const fix = (c) => (c && (c.email || '').toLowerCase() === email ? { ...c, name } : c);
-  const [co, draft] = await Promise.all([getCompany(env, 'marketlab'), blueprintDraft(env, 'marketlab')]);
-  if (co) await putCompany(env, { ...co, leadContact: fix(co.leadContact), contacts: (co.contacts || []).map(fix) });
-  if (draft) await kv.put('bp:marketlab', JSON.stringify({ ...draft, leadContact: fix(draft.leadContact), associatedContacts: (draft.associatedContacts || []).map(fix) }));
-  await kv.put('coname:marketlab:v1', '1');
+  for (const f of CONTACT_FIXES) {
+    if (await kv.get(f.flag)) continue;
+    const [co, draft] = await Promise.all([getCompany(env, f.id), blueprintDraft(env, f.id)]);
+    const email = (f.lead ? (co && co.leadContact && co.leadContact.email) : f.email || '').toLowerCase();
+    if (email) {
+      const fix = (c) => (c && (c.email || '').toLowerCase() === email ? { ...c, name: f.name } : c);
+      if (co) await putCompany(env, { ...co, leadContact: fix(co.leadContact), contacts: (co.contacts || []).map(fix) });
+      if (draft) await kv.put(`bp:${f.id}`, JSON.stringify({ ...draft, leadContact: fix(draft.leadContact), associatedContacts: (draft.associatedContacts || []).map(fix) }));
+    }
+    await kv.put(f.flag, '1');
+  }
 }
 
 async function purgeFinancialData(env) {
