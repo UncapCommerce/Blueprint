@@ -1,4 +1,5 @@
-// BlueprintSections.jsx: Moynihan Lumber's copy of the Blueprint Template v1.
+// BlueprintSections.jsx: Moynihan Lumber's copy of the Blueprint Template v1,
+// with their own site wording pinned in MOYNIHAN_SITE / MOY_MENU.
 // Every client fact comes from the Gate at runtime: company + contacts +
 // palette + logo (window.__bpCompany), blueprint number / dates
 // (window.__bpInfo), and the Commerce/Content wireframe copy extracted from
@@ -51,11 +52,56 @@ const SITE_DEFAULTS = {
   erp: 'ERP',
   platform: 'Legacy store'
 };
+// Moynihan Lumber's own wording, from moynihanlumber.com (menu, about page,
+// footer). Pinned over the website read so the wireframes always speak their
+// language; ERP and platform still come from the blueprint record.
+const MOY_LOCATIONS = ['North Reading, MA', 'Beverly, MA', 'Plaistow, NH'];
+const MOYNIHAN_SITE = {
+  announcement: '0% Interest for 12 Months',
+  nav: ['Locations', 'Products', 'Kitchen & Bath', 'Services', 'Events', 'Blog', 'Portfolio', 'About', 'Contact'],
+  mega: [
+    { h: 'Lumber & Building Materials', items: ['Framing Lumber', 'Engineered Lumber', 'Plywood & Panel', 'Exterior Trim Boards'] },
+    { h: 'Deck & Rail', items: ['Composite & PVC Decking', 'Wood Decking & Framing', 'Railing', 'Deck Fasteners & Connectors'] },
+    { h: 'Windows & Doors', items: ['Windows', 'Exterior Doors', 'Interior Doors', 'Shutters'] }
+  ],
+  featured: ['Kitchen & Bath Showroom', 'Custom Millwork', 'Request a Quote'],
+  hero: { eyebrow: 'Over 100 years · MA & NH', title: 'Quality backed', titleSerif: 'by a desire to please.', cta: 'Shop products' },
+  finder: ['Category', 'Species', 'Size'],
+  brands: MOY_LOCATIONS.map((l) => l.split(',')[0]),
+  products: [
+    { name: '2x4x8 KD Framing Stud', price: '$5.98' }, { name: '3/4" CDX Plywood 4x8', price: '$58.50' },
+    { name: 'LVL Beam 1-3/4" x 11-7/8"', price: 'Quote' }, { name: "Composite Deck Board 16'", price: '$62.00' },
+    { name: 'PVC Trim Board 1x6x16', price: '$48.90' }, { name: 'Andersen 400 Series Window', price: 'Quote' },
+    { name: 'Structural Screws, 50 pk', price: '$32.00' }, { name: 'Exterior Primer, 1 gal', price: '$42.00' }
+  ],
+  pdp: { sub: 'Kiln-dried SPF · Stud grade', specs: [['Species', 'SPF'], ['Grade', 'Stud'], ['Size', '1-1/2" x 3-1/2" x 8\''], ['Treatment', 'Kiln-dried']],
+    why: ['Graded and stacked at our own yards.', 'Contractor pricing and account terms at login.', 'Pick up in North Reading, Beverly, or Plaistow.'] },
+  trust: ['Family-owned since 1959', '3 locations in MA & NH', 'Request a quote 24/7'],
+  review: 'Straight, dry studs every time. Our crews order here every week.',
+  story: 'Part of Greater Boston lumber for over 100 years. Quality backed by a desire to please.',
+  est: 'Est. 1959',
+  about: { eyebrow: 'Est. 1959 · North Reading, MA', title: 'Part of Greater', titleSerif: 'Boston lumber.', location: 'North Reading, MA',
+    manifesto: 'Quality backed by a desire to please.', stats: [['100+', 'Years'], ['3', 'Locations'], ['13', 'Acres']] },
+  blog: { tag: 'Blog · 5 min', featured: 'Composite or PVC: choosing your decking.', articles: ['Planning your kitchen remodel', 'Framing lumber grades explained', 'Exterior trim that lasts'] },
+  searchExample: 'pressure treated 2x6 for a deck'
+};
+// Their Products mega menu, column by column.
+const MOY_MENU = [
+  [['Lumber & Building Materials', ['Engineered Lumber', 'Framing Lumber', 'Pine Boards', 'Structural Connectors & Fasteners', 'Drywall & Steel Studs', 'Plywood & Panel', 'Exterior Trim Boards', 'Interior Trim Boards', 'Insulation & Ventilation']],
+   ['Siding, Roofing & Flooring', ['Siding', 'Roofing Materials', 'Flooring']],
+   ['Deck & Rail', ['Wood Decking & Framing', 'Composite & PVC Decking', 'Railing', 'Deck & Rail Accessories', 'Deck Fasteners & Connectors']]],
+  [['Windows & Shutters', ['Windows', 'Shutters']], ['Doors', ['Exterior Doors', 'Interior Doors']],
+   ['Millwork', ['Columns & Post Wraps', 'Custom Millwork', 'Stair Parts', 'Wood, Vinyl, Urethane & PVC Millwork']],
+   ['Moldings', ['Wood Moldings', 'Flexible, Poly, PVC, Urethane, Custom Moldings']]],
+  [['Kitchen & Bath', ['Cabinetry', 'Countertops', 'Kitchen Cabinet Hardware & Accessories', 'Meet the Designers']],
+   ['Hardware', ['Cabinet & Door Hardware', 'Closet Organizers & Shelving', 'Electrical', 'Heating, Plumbing & Ventilation', 'Fasteners', 'Tools & Accessories']],
+   ['Paints, Stains & Sundries', ['Paints', 'Stains', 'Sundries']], ['Masonry, Landscaping & Dock Flotation', []]]
+];
 let _siteRaw, _site;
 function bpSite() {
-  const raw = (typeof window !== 'undefined' && window.__bpSite) || null;
-  if (_site && raw === _siteRaw) return _site;
-  const s = raw || {}, d = SITE_DEFAULTS;
+  const live = (typeof window !== 'undefined' && window.__bpSite) || null;
+  if (_site && live === _siteRaw) return _site;
+  const raw = live, s = { ...(live || {}), ...MOYNIHAN_SITE }, d = SITE_DEFAULTS;
   const str = (v, fb) => (typeof v === 'string' && v.trim() ? v.trim() : fb);
   const list = (v, n, fb) => { const a = Array.isArray(v) ? v.filter((x) => typeof x === 'string' && x.trim()).map((x) => x.trim()) : []; return a.length >= n ? a : fb; };
   const fill = (a, n) => Array.from({ length: n }, (_, i) => a[i % a.length]);
@@ -859,7 +905,7 @@ function GfxCollection() {
   const tc = (w) => w.charAt(0) + w.slice(1).toLowerCase();
   const facets = [
     { h: 'Category', items: [...m0.items, bpSite().mega[1].items[0]].map((l, i) => [l, i === 0]) },
-    { h: 'Brand', items: br.slice(0, 3).map((b, i) => [tc(b), i === 0]) },
+    { h: 'Location', items: MOY_LOCATIONS.map((l, i) => [l.split(',')[0], i === 0]) },
     { h: 'Availability', items: [['In stock', true],['Ships today', false],['Made to order', false]] }
   ];
   return (
@@ -889,7 +935,7 @@ function GfxCollection() {
 
       {/* applied filter chips */}
       <div style={{ padding:'0 14px 10px', display:'flex', gap:5, flexWrap:'wrap', alignItems:'center' }}>
-        {[bpSite().mega[0].items[0] + ' ✕', tc(bpSite().brands[0]) + ' ✕', 'In stock ✕'].map((c,i)=>(<span key={i} style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, color:'var(--fg-1)', background:'var(--uc-bone)', border:'1px solid var(--line-2)', borderRadius:999, padding:'2px 8px' }}>{c}</span>))}
+        {[bpSite().mega[0].items[0] + ' ✕', MOY_LOCATIONS[0].split(',')[0] + ' ✕', 'In stock ✕'].map((c,i)=>(<span key={i} style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, color:'var(--fg-1)', background:'var(--uc-bone)', border:'1px solid var(--line-2)', borderRadius:999, padding:'2px 8px' }}>{c}</span>))}
         <span style={{ fontFamily:'var(--font-mono)', fontSize:7, color:'var(--co-accent)', fontWeight:700 }}>Clear all</span>
       </div>
 
@@ -1186,10 +1232,7 @@ function GfxPortal() {
 }
 
 function GfxHomepage() {
-  const nav = bpSite().nav;
-  const mega = [
-    ...bpSite().mega
-  ];
+  const nav = bpSite().nav.slice(0, 6);
   const brands = bpSite().brands;
   const feat = [[P(0).name,P(0).price,'#F2A33C','NEW'],[P(1).name,P(1).price,'#E8C87E',null],[P(2).name,P(2).price,'#7BB661','BULK'],[P(3).name,P(3).price,'color-mix(in srgb, var(--co-prime) 60%, #fff)',null]];
   return (
@@ -1199,15 +1242,29 @@ function GfxHomepage() {
       {/* header */}
       <div style={{ display:'flex', alignItems:'center', gap:11, padding:'8px 14px', borderBottom:'1px solid var(--line-1)' }}>
         <CoLogo h={15}/>
-        <div style={{ display:'flex', gap:11, marginLeft:6 }}>{nav.map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:i===0?'var(--fg-1)':'var(--fg-3)', position:'relative' }}>{x}{i===0 && <span style={{ position:'absolute', left:0, right:0, bottom:-9, height:2, background:'var(--uc-black)' }}/>}</span>))}</div>
+        <div style={{ display:'flex', gap:11, marginLeft:6 }}>{nav.map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:i===1?'var(--fg-1)':'var(--fg-3)', position:'relative' }}>{x}{i===1 && <span style={{ position:'absolute', left:0, right:0, bottom:-9, height:2, background:'var(--uc-black)' }}/>}</span>))}</div>
         <span style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:7 }}>
           <span style={{ width:78, height:18, borderRadius:999, border:'1px solid var(--line-2)', display:'flex', alignItems:'center', gap:4, padding:'0 8px', fontFamily:'var(--font-mono)', fontSize:7, color:'var(--fg-3)', whiteSpace:'nowrap', overflow:'hidden' }}><span style={{ fontSize:8 }}>⌕</span>Search…</span>
           <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--uc-paper)', background:'var(--co-prime)', padding:'3px 8px', borderRadius:3 }}>Cart 6</span>
         </span>
       </div>
 
-      {/* hero + mega menu overlay */}
-      <div style={{ position:'relative', height:188, background:'linear-gradient(100deg, color-mix(in srgb, var(--co-prime) 18%, #000) 0%, color-mix(in srgb, var(--co-prime) 40%, #000) 55%, color-mix(in srgb, var(--co-prime) 35%, #000) 135%)', overflow:'hidden' }}>
+      {/* their Products menu, open */}
+      <div style={{ display:'flex', flexWrap:'wrap', gap:'10px 14px', padding:'12px 14px', background:'var(--uc-paper)', borderBottom:'1px solid var(--line-1)', boxShadow:'0 10px 22px -18px rgba(0,0,0,0.5)' }}>
+        {MOY_MENU.map((col,ci)=>(
+          <div key={ci} style={{ flex:'1 1 110px', minWidth:0, display:'flex', flexDirection:'column', gap:8, paddingLeft:ci?10:0, borderLeft:ci?'1px solid var(--line-1)':'none' }}>
+            {col.map(([h,items],gi)=>(
+              <div key={gi} style={{ display:'flex', flexDirection:'column', gap:2.5 }}>
+                <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:7.5, lineHeight:1.15, letterSpacing:'-0.01em', color:ci===0&&gi===0?'var(--co-prime)':'var(--fg-1)' }}>{h}</span>
+                {items.map((it)=>(<span key={it} style={{ fontFamily:'var(--font-display)', fontWeight:500, fontSize:6.5, lineHeight:1.2, color:'var(--fg-2)', paddingLeft:4 }}>{it}</span>))}
+              </div>
+            ))}
+          </div>
+        ))}
+      </div>
+
+      {/* hero */}
+      <div style={{ position:'relative', height:150, background:'linear-gradient(100deg, color-mix(in srgb, var(--co-prime) 18%, #000) 0%, color-mix(in srgb, var(--co-prime) 40%, #000) 55%, color-mix(in srgb, var(--co-prime) 35%, #000) 135%)', overflow:'hidden' }}>
         <svg viewBox="0 0 200 90" preserveAspectRatio="none" style={{ position:'absolute', right:-10, bottom:-10, width:220, opacity:0.16 }}><path d="M5 85 L5 34 L52 34 L52 12 L104 12 L104 34 L195 34 L195 85 Z" fill="none" stroke="#fff" strokeWidth="1.6"/><path d="M28 85 L28 52 M78 85 L78 34 M150 85 L150 50" stroke="#fff" strokeWidth="1"/></svg>
         {/* hero copy (right 1/3) */}
         <div style={{ position:'absolute', right:18, top:0, bottom:0, width:'34%', display:'flex', flexDirection:'column', justifyContent:'center', gap:7 }}>
@@ -1215,20 +1272,11 @@ function GfxHomepage() {
           <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:24, letterSpacing:'-0.04em', lineHeight:0.9, color:'#fff' }}>{bpSite().hero.title}<br/><span style={{ fontFamily:'var(--font-serif)', fontWeight:400 }}>{bpSite().hero.titleSerif}</span></span>
           <span style={{ alignSelf:'flex-start', marginTop:2, padding:'5px 13px', background:'var(--co-accent)', color:'#fff', borderRadius:999, fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:800 }}>{bpSite().hero.cta} →</span>
         </div>
-        {/* mega menu over 2/3 */}
-        <div style={{ position:'absolute', left:0, top:0, bottom:0, width:'64%', background:'rgba(248,246,240,0.97)', borderRight:'1px solid var(--line-2)', boxShadow:'10px 0 30px -16px rgba(0,0,0,0.5)', padding:'14px 16px', display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:14 }}>
-          {mega.map((col,ci)=>(
-            <div key={ci} style={{ display:'flex', flexDirection:'column', gap:6 }}>
-              <div style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', paddingBottom:4, borderBottom:'1px solid var(--line-1)' }}>{col.h.toUpperCase()}</div>
-              {col.items.map((it,ii)=>(<span key={ii} style={{ fontFamily:'var(--font-display)', fontWeight:ii===0&&ci===0?700:500, fontSize:8.5, letterSpacing:'-0.01em', color:ii===0&&ci===0?'var(--fg-1)':'var(--fg-2)' }}>{it}</span>))}
-            </div>
-          ))}
-        </div>
       </div>
 
       {/* Year / Make / Model fitment */}
       <div style={{ background:'var(--uc-black)', padding:'10px 14px', display:'flex', alignItems:'center', gap:8 }}>
-        <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, letterSpacing:'0.08em', color:'var(--co-prime)', whiteSpace:'nowrap' }}>MATCH YOUR SYSTEM</span>
+        <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, letterSpacing:'0.08em', color:'var(--co-prime)', whiteSpace:'nowrap' }}>FIND YOUR MATERIAL</span>
         {bpSite().finder.map((f,i)=>(<span key={f} style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'space-between', height:22, background:'var(--uc-paper)', borderRadius:4, padding:'0 9px', fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--fg-2)' }}>{f}<span style={{ color:'var(--fg-3)' }}>▾</span></span>))}
         <span style={{ display:'inline-flex', alignItems:'center', height:22, padding:'0 12px', background:'var(--co-accent)', color:'#fff', borderRadius:4, fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:800, whiteSpace:'nowrap' }}>Find products →</span>
       </div>
@@ -1406,7 +1454,7 @@ function GfxPhone({ kind }) {
             <div style={{ margin:'10px 12px 0', borderRadius:8, background:'linear-gradient(100deg, color-mix(in srgb, var(--co-prime) 18%, #000) 0%, color-mix(in srgb, var(--co-prime) 40%, #000) 55%, color-mix(in srgb, var(--co-prime) 35%, #000) 135%)', position:'relative', overflow:'hidden', padding:'12px 13px', display:'flex', flexDirection:'column', gap:5, minHeight:96 }}>
               <svg viewBox="0 0 120 60" style={{ position:'absolute', right:-6, bottom:-6, width:120, opacity:0.18 }}><path d="M5 55 L5 22 L32 22 L32 8 L62 8 L62 22 L115 22 L115 55 Z" fill="none" stroke="#fff" strokeWidth="1.6"/><path d="M16 55 L16 33 M46 55 L46 22 M88 55 L88 32" stroke="#fff" strokeWidth="1"/></svg>
               <span style={{ fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, letterSpacing:'0.16em', color:'var(--co-prime)' }}>{bpSite().hero.eyebrow}</span>
-              <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:18, letterSpacing:'-0.04em', lineHeight:0.9, color:'#fff' }}>{bpSite().hero.title}<br/><span style={{ fontFamily:'var(--font-serif)', fontWeight:400 }}>Today.</span></span>
+              <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:18, letterSpacing:'-0.04em', lineHeight:0.9, color:'#fff' }}>{bpSite().hero.title}<br/><span style={{ fontFamily:'var(--font-serif)', fontWeight:400 }}>{bpSite().hero.titleSerif}</span></span>
               <span style={{ alignSelf:'flex-start', marginTop:2, padding:'5px 12px', background:'var(--co-accent)', color:'#fff', borderRadius:999, fontFamily:'var(--font-mono)', fontSize:7, fontWeight:800 }}>{bpSite().hero.cta} →</span>
             </div>
             {/* brand strip */}
