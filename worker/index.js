@@ -264,7 +264,7 @@ export default {
       if (!(await adminIsApproved(env, gate.email))) {
         return json(403, { ok: false, error: 'Your account is pending approval from denis@uncap.com.' });
       }
-      if (!_finPurged) { _finPurged = true; if (ctx && ctx.waitUntil) ctx.waitUntil(Promise.all([purgeFinancialData(env), resetFinncorpBlueprint(env).then(() => publishFinncorpBlueprint(env)).then(() => declineFinncorp(env)), applyContactFixes(env)]).catch(() => { _finPurged = false; })); }
+      if (!_finPurged) { _finPurged = true; if (ctx && ctx.waitUntil) ctx.waitUntil(Promise.all([purgeFinancialData(env), resetFinncorpBlueprint(env).then(() => publishFinncorpBlueprint(env)).then(() => applyCompanyDeclines(env)), applyContactFixes(env)]).catch(() => { _finPurged = false; })); }
     }
 
     if (url.pathname === '/api/admin/users' && request.method === 'GET') {
@@ -1387,17 +1387,24 @@ async function applyContactFixes(env) {
   }
 }
 
-// One-time decline Denis asked for: move Finncorp to Declined (Hub access off),
-// exactly as the company page's Decline button does. Skipped if already done.
-async function declineFinncorp(env) {
+// One-time declines Denis asked for: move each company to Declined (Hub access
+// off), exactly as the company page's Decline button does. Flag-guarded, so
+// each runs once; a later Restore from the company page sticks.
+const COMPANY_DECLINES = [
+  { flag: 'codecline:finncorp:v1', id: 'finncorp' },
+  { flag: 'codecline:seesinc:v1', id: 'seesinc' },
+];
+async function applyCompanyDeclines(env) {
   const kv = env.BLUEPRINT_AUTH;
-  if (await kv.get('codecline:finncorp:v1')) return;
-  const co = await getCompany(env, 'finncorp');
-  if (co && !co.declined) {
-    await putCompany(env, { ...co, declined: true });
-    await logActivity(env, null, { type: 'deleted', entity: 'company', id: co.id, name: co.name, actor: SUPER_ADMIN_EMAIL, detail: 'Declined — Hub access disabled' });
+  for (const d of COMPANY_DECLINES) {
+    if (await kv.get(d.flag)) continue;
+    const co = await getCompany(env, d.id);
+    if (co && !co.declined) {
+      await putCompany(env, { ...co, declined: true });
+      await logActivity(env, null, { type: 'deleted', entity: 'company', id: co.id, name: co.name, actor: SUPER_ADMIN_EMAIL, detail: 'Declined — Hub access disabled' });
+    }
+    await kv.put(d.flag, '1');
   }
-  await kv.put('codecline:finncorp:v1', '1');
 }
 
 async function purgeFinancialData(env) {
