@@ -58,7 +58,7 @@ const SITE_DEFAULTS = {
 const MOY_LOCATIONS = ['North Reading, MA', 'Beverly, MA', 'Plaistow, NH'];
 const MOYNIHAN_SITE = {
   announcement: '0% Interest for 12 Months',
-  nav: ['Locations', 'Products', 'Kitchen & Bath', 'Services', 'Events', 'Blog', 'Portfolio', 'About', 'Contact'],
+  nav: ['Products', 'Kitchen & Bath', 'Services', 'Events', 'Blog', 'Portfolio', 'About', 'Contact'],
   mega: [
     { h: 'Lumber & Building Materials', items: ['Framing Lumber', 'Engineered Lumber', 'Plywood & Panel', 'Exterior Trim Boards'] },
     { h: 'Deck & Rail', items: ['Composite & PVC Decking', 'Wood Decking & Framing', 'Railing', 'Deck Fasteners & Connectors'] },
@@ -86,7 +86,7 @@ const MOYNIHAN_SITE = {
   searchExample: 'pressure treated 2x6 for a deck',
   erp: 'Epicor BisTrack'
 };
-// Their Products mega menu, column by column.
+// Their Products menu: first-level categories and what each opens.
 const MOY_MENU = [
   [['Lumber & Building Materials', ['Engineered Lumber', 'Framing Lumber', 'Pine Boards', 'Structural Connectors & Fasteners', 'Drywall & Steel Studs', 'Plywood & Panel', 'Exterior Trim Boards', 'Interior Trim Boards', 'Insulation & Ventilation']],
    ['Siding, Roofing & Flooring', ['Siding', 'Roofing Materials', 'Flooring']],
@@ -915,7 +915,7 @@ function GfxCollection() {
       <div style={{ background:'var(--uc-black)', color:'var(--uc-paper)', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>{bpSite().announcement}</div>
       <div style={{ display:'flex', alignItems:'center', gap:11, padding:'8px 14px', borderBottom:'1px solid var(--line-1)' }}>
         <CoLogo h={13}/>
-        <div style={{ display:'flex', gap:9, marginLeft:4 }}>{bpSite().nav.slice(0, 4).map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:i===1?'var(--fg-1)':'var(--fg-3)' }}>{x}</span>))}</div>
+        <div style={{ display:'flex', gap:9, marginLeft:4 }}>{bpSite().nav.slice(0, 4).map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:i===0?'var(--fg-1)':'var(--fg-3)' }}>{x}</span>))}</div>
         <span style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:7 }}>
           <span style={{ width:110, height:18, borderRadius:999, border:'1px solid var(--line-2)', display:'flex', alignItems:'center', gap:4, padding:'0 9px', fontFamily:'var(--font-mono)', fontSize:7, color:'var(--fg-3)', whiteSpace:'nowrap', overflow:'hidden' }}><span style={{ fontSize:8 }}>⌕</span>Search products…</span>
           <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--uc-paper)', background:'var(--co-prime)', padding:'3px 8px', borderRadius:3 }}>Cart 0</span>
@@ -1234,6 +1234,7 @@ function GfxPortal() {
 
 function GfxHomepage() {
   const nav = bpSite().nav.slice(0, 6);
+  const groups = MOY_MENU.flat(), open = groups[0];
   const brands = bpSite().brands;
   const feat = [[P(0).name,P(0).price,'#F2A33C','NEW'],[P(1).name,P(1).price,'#E8C87E',null],[P(2).name,P(2).price,'#7BB661','BULK'],[P(3).name,P(3).price,'color-mix(in srgb, var(--co-prime) 60%, #fff)',null]];
   return (
@@ -1243,35 +1244,26 @@ function GfxHomepage() {
       {/* header */}
       <div style={{ display:'flex', alignItems:'center', gap:11, padding:'8px 14px', borderBottom:'1px solid var(--line-1)' }}>
         <CoLogo h={15}/>
-        <div style={{ display:'flex', gap:11, marginLeft:6 }}>{nav.map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:i===1?'var(--fg-1)':'var(--fg-3)', position:'relative' }}>{x}{i===1 && <span style={{ position:'absolute', left:0, right:0, bottom:-9, height:2, background:'var(--uc-black)' }}/>}</span>))}</div>
+        <div style={{ display:'flex', gap:11, marginLeft:6 }}>{nav.map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:i===0?'var(--fg-1)':'var(--fg-3)', position:'relative' }}>{x}{i===0 && <span style={{ position:'absolute', left:0, right:0, bottom:-9, height:2, background:'var(--uc-black)' }}/>}</span>))}</div>
         <span style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:7 }}>
           <span style={{ width:78, height:18, borderRadius:999, border:'1px solid var(--line-2)', display:'flex', alignItems:'center', gap:4, padding:'0 8px', fontFamily:'var(--font-mono)', fontSize:7, color:'var(--fg-3)', whiteSpace:'nowrap', overflow:'hidden' }}><span style={{ fontSize:8 }}>⌕</span>Search…</span>
           <span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--uc-paper)', background:'var(--co-prime)', padding:'3px 8px', borderRadius:3 }}>Cart 6</span>
         </span>
       </div>
 
-      {/* their Products menu, open */}
-      <div style={{ display:'flex', flexWrap:'wrap', gap:'10px 14px', padding:'12px 14px', background:'var(--uc-paper)', borderBottom:'1px solid var(--line-1)', boxShadow:'0 10px 22px -18px rgba(0,0,0,0.5)' }}>
-        {MOY_MENU.map((col,ci)=>(
-          <div key={ci} style={{ flex:'1 1 110px', minWidth:0, display:'flex', flexDirection:'column', gap:8, paddingLeft:ci?10:0, borderLeft:ci?'1px solid var(--line-1)':'none' }}>
-            {col.map(([h,items],gi)=>(
-              <div key={gi} style={{ display:'flex', flexDirection:'column', gap:2.5 }}>
-                <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:7.5, lineHeight:1.15, letterSpacing:'-0.01em', color:ci===0&&gi===0?'var(--co-prime)':'var(--fg-1)' }}>{h}</span>
-                {items.map((it)=>(<span key={it} style={{ fontFamily:'var(--font-display)', fontWeight:500, fontSize:6.5, lineHeight:1.2, color:'var(--fg-2)', paddingLeft:4 }}>{it}</span>))}
-              </div>
-            ))}
-          </div>
-        ))}
-      </div>
-
-      {/* hero */}
-      <div style={{ position:'relative', height:150, background:'linear-gradient(100deg, color-mix(in srgb, var(--co-prime) 18%, #000) 0%, color-mix(in srgb, var(--co-prime) 40%, #000) 55%, color-mix(in srgb, var(--co-prime) 35%, #000) 135%)', overflow:'hidden' }}>
+      {/* hero + their Products menu, open over the left half */}
+      <div style={{ position:'relative', height:214, background:'linear-gradient(100deg, color-mix(in srgb, var(--co-prime) 18%, #000) 0%, color-mix(in srgb, var(--co-prime) 40%, #000) 55%, color-mix(in srgb, var(--co-prime) 35%, #000) 135%)', overflow:'hidden' }}>
         <svg viewBox="0 0 200 90" preserveAspectRatio="none" style={{ position:'absolute', right:-10, bottom:-10, width:220, opacity:0.16 }}><path d="M5 85 L5 34 L52 34 L52 12 L104 12 L104 34 L195 34 L195 85 Z" fill="none" stroke="#fff" strokeWidth="1.6"/><path d="M28 85 L28 52 M78 85 L78 34 M150 85 L150 50" stroke="#fff" strokeWidth="1"/></svg>
         {/* hero copy (right 1/3) */}
         <div style={{ position:'absolute', right:18, top:0, bottom:0, width:'34%', display:'flex', flexDirection:'column', justifyContent:'center', gap:7 }}>
           <span style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.16em', color:'var(--co-prime)' }}>{bpSite().hero.eyebrow}</span>
           <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:24, letterSpacing:'-0.04em', lineHeight:0.9, color:'#fff' }}>{bpSite().hero.title}<br/><span style={{ fontFamily:'var(--font-serif)', fontWeight:400 }}>{bpSite().hero.titleSerif}</span></span>
           <span style={{ alignSelf:'flex-start', marginTop:2, padding:'5px 13px', background:'var(--co-accent)', color:'#fff', borderRadius:999, fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:800 }}>{bpSite().hero.cta} →</span>
+        </div>
+        {/* menu: first level, then the hovered category's items */}
+        <div style={{ position:'absolute', left:0, top:0, bottom:0, width:'max(50%, 236px)', background:'#fff', boxShadow:'10px 0 30px -16px rgba(0,0,0,0.5)', padding:'11px 14px', display:'flex', gap:12 }}>
+          <div style={{ flex:1, minWidth:0, display:'flex', flexDirection:'column', gap:5, paddingRight:10, borderRight:'1px solid var(--line-1)' }}>{groups.map(([h])=>(<span key={h} style={{ display:'flex', justifyContent:'space-between', gap:4, fontFamily:'var(--font-display)', fontWeight:700, fontSize:7.5, lineHeight:1.15, letterSpacing:'-0.01em', color:h===open[0]?'var(--co-prime)':'var(--fg-1)' }}>{h}{h===open[0] && <span>›</span>}</span>))}</div>
+          <div style={{ flex:1, minWidth:0, display:'flex', flexDirection:'column', gap:6 }}>{open[1].map((it)=>(<span key={it} style={{ fontFamily:'var(--font-display)', fontWeight:500, fontSize:7.5, lineHeight:1.15, color:'var(--fg-2)' }}>{it}</span>))}</div>
         </div>
       </div>
 
