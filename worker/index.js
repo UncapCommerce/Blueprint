@@ -264,7 +264,7 @@ export default {
       if (!(await adminIsApproved(env, gate.email))) {
         return json(403, { ok: false, error: 'Your account is pending approval from denis@uncap.com.' });
       }
-      if (!_finPurged) { _finPurged = true; if (ctx && ctx.waitUntil) ctx.waitUntil(Promise.all([purgeFinancialData(env), resetFinncorpBlueprint(env).then(() => publishFinncorpBlueprint(env)), applyContactFixes(env)]).catch(() => { _finPurged = false; })); }
+      if (!_finPurged) { _finPurged = true; if (ctx && ctx.waitUntil) ctx.waitUntil(Promise.all([purgeFinancialData(env), resetFinncorpBlueprint(env).then(() => publishFinncorpBlueprint(env)).then(() => declineFinncorp(env)), applyContactFixes(env)]).catch(() => { _finPurged = false; })); }
     }
 
     if (url.pathname === '/api/admin/users' && request.method === 'GET') {
@@ -1385,6 +1385,19 @@ async function applyContactFixes(env) {
     }
     await kv.put(f.flag, '1');
   }
+}
+
+// One-time decline Denis asked for: move Finncorp to Declined (Hub access off),
+// exactly as the company page's Decline button does. Skipped if already done.
+async function declineFinncorp(env) {
+  const kv = env.BLUEPRINT_AUTH;
+  if (await kv.get('codecline:finncorp:v1')) return;
+  const co = await getCompany(env, 'finncorp');
+  if (co && !co.declined) {
+    await putCompany(env, { ...co, declined: true });
+    await logActivity(env, null, { type: 'deleted', entity: 'company', id: co.id, name: co.name, actor: SUPER_ADMIN_EMAIL, detail: 'Declined — Hub access disabled' });
+  }
+  await kv.put('codecline:finncorp:v1', '1');
 }
 
 async function purgeFinancialData(env) {
