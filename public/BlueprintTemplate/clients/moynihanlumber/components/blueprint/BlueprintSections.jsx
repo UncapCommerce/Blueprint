@@ -54,7 +54,7 @@ const SITE_DEFAULTS = {
 };
 // Moynihan Lumber's own wording, from moynihanlumber.com (menu, about page,
 // footer). Pinned over the website read so the wireframes always speak their
-// language; ERP and platform still come from the blueprint record.
+// language, with their ERP; the platform still comes from the blueprint record.
 const MOY_LOCATIONS = ['North Reading, MA', 'Beverly, MA', 'Plaistow, NH'];
 const MOYNIHAN_SITE = {
   announcement: '0% Interest for 12 Months',
@@ -83,7 +83,8 @@ const MOYNIHAN_SITE = {
   about: { eyebrow: 'Est. 1959 · North Reading, MA', title: 'Part of Greater', titleSerif: 'Boston lumber.', location: 'North Reading, MA',
     manifesto: 'Quality backed by a desire to please.', stats: [['100+', 'Years'], ['3', 'Locations'], ['13', 'Acres']] },
   blog: { tag: 'Blog · 5 min', featured: 'Composite or PVC: choosing your decking.', articles: ['Planning your kitchen remodel', 'Framing lumber grades explained', 'Exterior trim that lasts'] },
-  searchExample: 'pressure treated 2x6 for a deck'
+  searchExample: 'pressure treated 2x6 for a deck',
+  erp: 'Epicor BisTrack'
 };
 // Their Products mega menu, column by column.
 const MOY_MENU = [
@@ -2127,6 +2128,9 @@ function BPIntegrations() {
     { l:'Inventory',   d:'←', r:'Stock on hand' },
     { l:'Fulfillment', d:'←', r:'Item Fulfillment' }
   ];
+  // Sync table columns. The --sync-* tokens let page-shell.css restack a row
+  // on phones (name + status, then the ERP record underneath).
+  const syncCol = [{ flex:'1.3 1 0', minWidth:0 }, { flex:'0 0 clamp(20px,5vw,72px)', '--sync-hmap':1 }, { flex:'1.3 1 0', minWidth:0, '--sync-hmap':1 }, { flex:'0 0 64px' }];
   const activity = [
     ['Order #SO-48217 pushed to ' + bpSite().erp, '2 min ago'],
     ['Inventory delta · 1,284 items reconciled', '9 min ago'],
@@ -2146,7 +2150,7 @@ function BPIntegrations() {
         <BPSerif>not five silos.</BPSerif>
       </BPHeadline>
       <p style={{ marginTop:'clamp(18px, 2.2vw, 26px)', maxWidth:640, fontFamily:'var(--font-serif)', fontSize:'clamp(15px, 1.3vw, 18px)', lineHeight:1.5, color:'var(--fg-2)' }}>
-        Uncap Connect runs as a Shopify-embedded app — a real-time, bidirectional {bpSite().erp}
+        Uncap Connect runs as a Shopify-embedded app — a real-time, bidirectional {bpSite().erp}{' '}
         integration with field-level mapping and a live sync log, managed right inside admin.
       </p>
 
@@ -2192,7 +2196,7 @@ function BPIntegrations() {
           <Card>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, flexWrap:'wrap' }}>
               <div style={{ display:'flex', alignItems:'center', gap:11 }}>
-                <span style={{ width:34, height:34, borderRadius:8, background:'#101A2B', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:pFont, fontSize:13, fontWeight:800, color:'#9FB4FF' }}>SL</span>
+                <span style={{ width:34, height:34, borderRadius:8, background:'#101A2B', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:pFont, fontSize:13, fontWeight:800, color:'#9FB4FF' }}>EB</span>
                 <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
                   <span style={{ fontFamily:pFont, fontSize:13.5, fontWeight:700, color:'#1A1A1A' }}>{bpSite().erp}</span>
                   <span style={{ fontFamily:pFont, fontSize:11.5, color:'#616161' }}>Account 4827-PROD · Last sync 2 min ago</span>
@@ -2215,15 +2219,17 @@ function BPIntegrations() {
               <span style={{ fontFamily:pFont, fontSize:12, fontWeight:600, color:'#005BD3' }}>Edit</span>
             </div>
             {/* table header */}
-            <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1.3fr) clamp(48px,6vw,72px) minmax(0,1.3fr) minmax(0,90px)', gap:'clamp(8px,1.2vw,16px)', padding:'8px 16px', background:'#FAFAFA', borderBottom:'1px solid #E3E3E3' }}>
-              {['Shopify','',bpSite().erp,'Status'].map((h,i)=>(<span key={i} style={{ fontFamily:pFont, fontSize:10.5, fontWeight:600, color:'#616161', textAlign:i===3?'right':'left' }}>{h}</span>))}
+            <div style={{ display:'flex', gap:'clamp(8px,1.2vw,16px)', padding:'8px 16px', background:'#FAFAFA', borderBottom:'1px solid #E3E3E3' }}>
+              {['Shopify','',bpSite().erp,'Status'].map((h,i)=>(<span key={i} style={{ ...syncCol[i], fontFamily:pFont, fontSize:10.5, fontWeight:600, color:'#616161', textAlign:i===3?'right':'left' }}>{h}</span>))}
             </div>
             {maps.map((m,i)=>(
-              <div key={i} style={{ display:'grid', gridTemplateColumns:'minmax(0,1.3fr) clamp(48px,6vw,72px) minmax(0,1.3fr) minmax(0,90px)', gap:'clamp(8px,1.2vw,16px)', padding:'10px 16px', borderBottom: i<maps.length-1?'1px solid #F1F1F1':'none', alignItems:'center' }}>
-                <span style={{ fontFamily:pFont, fontSize:12.5, fontWeight:600, color:'#1A1A1A', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{m.l}</span>
-                <span style={{ fontFamily:pFont, fontSize:13, fontWeight:700, color: m.d==='←' ? '#B98900' : '#616161', textAlign:'center' }}>{m.d}</span>
-                <span style={{ fontFamily:pFont, fontSize:12.5, color:'#303030', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{m.r}</span>
-                <span style={{ justifySelf:'end' }}><Badge tone="success">Synced</Badge></span>
+              <div key={i} style={{ '--sync-row':1, display:'flex', alignItems:'center', gap:'clamp(8px,1.2vw,16px)', padding:'10px 16px', borderBottom: i<maps.length-1?'1px solid #F1F1F1':'none', alignItems:'center' }}>
+                <span style={{ ...syncCol[0], fontFamily:pFont, fontSize:12.5, fontWeight:600, color:'#1A1A1A', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{m.l}</span>
+                <span style={{ '--sync-map':1, flex:'2.6 1 0', minWidth:0, display:'flex', alignItems:'center', gap:'clamp(8px,1.2vw,16px)' }}>
+                  <span style={{ flex:'0 0 clamp(20px,5vw,72px)', fontFamily:pFont, fontSize:13, fontWeight:700, color: m.d==='←' ? '#B98900' : '#616161', textAlign:'center' }}>{m.d}</span>
+                  <span style={{ flex:1, minWidth:0, fontFamily:pFont, fontSize:12.5, color:'#303030', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{m.r}</span>
+                </span>
+                <span style={{ '--sync-status':1, ...syncCol[3], textAlign:'right' }}><Badge tone="success">Synced</Badge></span>
               </div>
             ))}
           </Card>
@@ -2257,7 +2263,12 @@ function BPMigration() {
     { t: 'Stage & verify', s: 'Dry-run into staging. Reconcile counts, spot-check edge cases.' },
     { t: 'Cutover', s: 'Final delta sync, 301 redirect map, DNS switch with zero lost orders.' }
   ];
-  const stats = ['Products', 'Collections', 'Pages', 'Blogs', 'Customers', 'Companies', 'Orders'];
+  const stats = [
+    ['Products', 'Titles, SKUs, specs and images, structured for Shopify.'],
+    ['Collections', 'Categories rebuilt as collections with their filters.'],
+    ['Pages', 'Content pages carried over with their SEO intact.'],
+    ['Blogs', 'Articles and guides moved with 301 redirects.']
+  ];
   return (
     <BPSection id="migration" n="12" label="Migration" paper tail="MOVE WITHOUT LOSS" vec="bgVector2">
       <BPHeadline>
@@ -2265,7 +2276,7 @@ function BPMigration() {
         <BPSerif>without losing a thing.</BPSerif>
       </BPHeadline>
       <p style={{ marginTop: 18, maxWidth: 600, fontFamily: 'var(--font-serif)', fontSize: 'clamp(15px, 1.3vw, 18px)', lineHeight: 1.5, color: 'var(--fg-2)' }}>
-        We migrate cart-to-cart — every product, customer, and order — and re-map the
+        We migrate your catalog and content and re-map the
         messy parts: legacy categories become tags, custom attributes become metafields,
         old URLs become 301s. Nothing copied blind, nothing lost.
       </p>
@@ -2302,7 +2313,7 @@ function BPMigration() {
             </div>
             {/* record type tabs */}
             <div style={{ display:'flex', alignItems:'center', gap:16, padding:'9px 16px', borderBottom:'1px solid var(--line-1)', flexWrap:'wrap' }}>
-              {['Products','Customers','Orders','Content'].map((t,i)=>(<span key={t} style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:11.5, letterSpacing:'-0.01em', color:i===0?'var(--fg-1)':'var(--fg-3)', borderBottom:i===0?'2px solid var(--uc-black)':'2px solid transparent', paddingBottom:3 }}>{t}</span>))}
+              {['Products','Content'].map((t,i)=>(<span key={t} style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:11.5, letterSpacing:'-0.01em', color:i===0?'var(--fg-1)':'var(--fg-3)', borderBottom:i===0?'2px solid var(--uc-black)':'2px solid transparent', paddingBottom:3 }}>{t}</span>))}
               <span style={{ marginLeft:'auto', display:'inline-flex', alignItems:'center', gap:6, fontFamily:'var(--font-mono)', fontSize:9.5, fontWeight:700, color:'#2F7D52' }}><span style={{ width:6, height:6, borderRadius:999, background:'#3F8B5D' }}/>Field map verified</span>
             </div>
             {/* crosswalk */}
@@ -2345,12 +2356,16 @@ function BPMigration() {
       })()}
 
       {/* guarantee strip */}
-      <div style={{ marginTop: 'clamp(28px, 3vw, 40px)', paddingTop: 'clamp(24px, 3vw, 36px)', borderTop: '1px solid var(--line-1)', display: 'flex', flexWrap: 'wrap', gap: 10 }}>
-        {stats.map((s, i) => (
-          <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: 9, padding: '10px 16px', border: '1px solid var(--line-2)', borderRadius: 999, fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'clamp(14px, 1.3vw, 17px)', letterSpacing: '-0.01em', color: 'var(--fg-1)' }}>
-            <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: 999, background: 'var(--uc-signal)' }}/>
-            {s}
-          </span>
+      <div style={{ marginTop: 'clamp(28px, 3vw, 40px)', paddingTop: 'clamp(24px, 3vw, 36px)', borderTop: '1px solid var(--line-1)', display: 'flex', flexWrap: 'wrap', gap: 'clamp(10px, 1.4vw, 16px)' }}>
+        {stats.map(([t, d], i) => (
+          <div key={t} style={{ flex: '1 1 150px', minWidth: 0, display: 'flex', flexDirection: 'column', gap: 8, padding: 'clamp(14px, 1.6vw, 20px)', background: 'var(--uc-paper)', border: '1px solid var(--line-2)', borderTop: '3px solid var(--uc-signal)', borderRadius: 8 }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', color: 'var(--fg-3)' }}>{String(i + 1).padStart(2, '0')}</span>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 8, fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 'clamp(16px, 1.5vw, 20px)', letterSpacing: '-0.015em', color: 'var(--fg-1)' }}>
+              <span aria-hidden="true" style={{ width: 7, height: 7, borderRadius: 999, background: 'var(--uc-signal)', flexShrink: 0 }}/>
+              {t}
+            </span>
+            <span style={{ fontFamily: 'var(--font-serif)', fontSize: 14, lineHeight: 1.45, color: 'var(--fg-2)' }}>{d}</span>
+          </div>
         ))}
       </div>
     </BPSection>
@@ -2399,7 +2414,7 @@ function BPDelivery() {
           {/* right: short summary */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16, fontFamily: 'var(--font-serif)', fontSize: 'clamp(15px, 1.2vw, 18px)', lineHeight: 1.55, color: 'var(--fg-2)' }}>
             <p style={{ margin: 0 }}>
-              A dedicated <strong style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, color: 'var(--fg-1)' }}>Project Lead</strong> runs the build day-to-day — your single point of contact, with weekly 1:1s and full <strong style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, color: 'var(--fg-1)' }}>ClickUp</strong> transparency.
+              Our <strong style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, color: 'var(--fg-1)' }}>Shopify Program Manager</strong> in coordination with a dedicated <strong style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, color: 'var(--fg-1)' }}>Project Lead</strong> runs the build day-to-day — your single point of contact, with weekly 1:1s and full <strong style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, color: 'var(--fg-1)' }}>ClickUp</strong> transparency.
             </p>
             <p style={{ margin: 0 }}>
               They&rsquo;re backed by a <strong style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, color: 'var(--fg-1)' }}>Head of Services</strong> overseeing the work, a <strong style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, color: 'var(--fg-1)' }}>Technical Lead</strong> on architecture &amp; build, a <strong style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, color: 'var(--fg-1)' }}>Creative Lead</strong> on experience &amp; UI, and specialist teams across data and QA.
