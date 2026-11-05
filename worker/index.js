@@ -1393,6 +1393,7 @@ async function applyContactFixes(env) {
 const COMPANY_DECLINES = [
   { flag: 'codecline:finncorp:v1', id: 'finncorp' },
   { flag: 'codecline:seesinc:v1', id: 'seesinc' },
+  { flag: 'codecline:kvalinc:v1', id: 'kvalinc' },
 ];
 async function applyCompanyDeclines(env) {
   const kv = env.BLUEPRINT_AUTH;
