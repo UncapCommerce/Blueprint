@@ -264,7 +264,7 @@ export default {
       if (!(await adminIsApproved(env, gate.email))) {
         return json(403, { ok: false, error: 'Your account is pending approval from denis@uncap.com.' });
       }
-      if (!_finPurged) { _finPurged = true; if (ctx && ctx.waitUntil) ctx.waitUntil(Promise.all([purgeFinancialData(env), resetFinncorpBlueprint(env).then(() => publishFinncorpBlueprint(env)).then(() => applyCompanyDeclines(env)), applyContactFixes(env)]).catch(() => { _finPurged = false; })); }
+      if (!_finPurged) { _finPurged = true; if (ctx && ctx.waitUntil) ctx.waitUntil(Promise.all([purgeFinancialData(env), resetFinncorpBlueprint(env).then(() => publishFinncorpBlueprint(env)).then(() => applyCompanyFixes(env)), applyContactFixes(env)]).catch(() => { _finPurged = false; })); }
     }
 
     if (url.pathname === '/api/admin/users' && request.method === 'GET') {
@@ -1387,24 +1387,29 @@ async function applyContactFixes(env) {
   }
 }
 
-// One-time declines Denis asked for: move each company to Declined (Hub access
-// off), exactly as the company page's Decline button does. Flag-guarded, so
-// each runs once; a later Restore from the company page sticks.
-const COMPANY_DECLINES = [
-  { flag: 'codecline:finncorp:v1', id: 'finncorp' },
-  { flag: 'codecline:seesinc:v1', id: 'seesinc' },
-  { flag: 'codecline:kvalinc:v1', id: 'kvalinc' },
+// One-time company fixes Denis asked for. A row can move the company to
+// Declined (Hub access off, exactly as the company page's Decline button does)
+// and/or rename it on the company and its blueprint record. Flag-guarded, so
+// each runs once; a later edit or Restore from the company page sticks.
+const COMPANY_FIXES = [
+  { flag: 'codecline:finncorp:v1', id: 'finncorp', declined: true },
+  { flag: 'codecline:seesinc:v1', id: 'seesinc', declined: true },
+  { flag: 'codecline:kvalinc:v1', id: 'kvalinc', declined: true },
+  { flag: 'corename:winstonrods:v1', id: 'winstonrods', name: 'Winston Rod' },
 ];
-async function applyCompanyDeclines(env) {
+async function applyCompanyFixes(env) {
   const kv = env.BLUEPRINT_AUTH;
-  for (const d of COMPANY_DECLINES) {
-    if (await kv.get(d.flag)) continue;
-    const co = await getCompany(env, d.id);
-    if (co && !co.declined) {
-      await putCompany(env, { ...co, declined: true });
-      await logActivity(env, null, { type: 'deleted', entity: 'company', id: co.id, name: co.name, actor: SUPER_ADMIN_EMAIL, detail: 'Declined — Hub access disabled' });
+  for (const f of COMPANY_FIXES) {
+    if (await kv.get(f.flag)) continue;
+    const co = await getCompany(env, f.id);
+    if (co) {
+      const next = { ...co, ...(f.declined ? { declined: true } : {}), ...(f.name ? { name: f.name } : {}) };
+      await putCompany(env, next);
+      if (f.declined && !co.declined) await logActivity(env, null, { type: 'deleted', entity: 'company', id: co.id, name: co.name, actor: SUPER_ADMIN_EMAIL, detail: 'Declined — Hub access disabled' });
+      const draft = f.name && co.blueprintId ? await blueprintDraft(env, co.blueprintId) : null;
+      if (draft) await kv.put(`bp:${draft.id}`, JSON.stringify({ ...draft, name: f.name }));
     }
-    await kv.put(d.flag, '1');
+    await kv.put(f.flag, '1');
   }
 }
 
