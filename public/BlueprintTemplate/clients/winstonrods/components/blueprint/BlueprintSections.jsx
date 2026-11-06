@@ -1708,7 +1708,7 @@ function BPTechStack() {
         {/* Footer total */}
         <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1.2fr) minmax(0,1.5fr) minmax(0,0.6fr) minmax(120px,auto)', gap:16, padding:'14px 18px', borderTop:'1px solid #2B2B2B', background:'#0F0F0F', alignItems:'center' }}>
           <span style={{ fontFamily:'var(--font-mono)', fontSize:10, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'var(--uc-signal)' }}>Est. monthly</span>
-          <span style={{ fontFamily:'var(--font-serif)', fontSize:13, color:'var(--uc-stone-500)' }}>Platform + apps, before Fishbowl support</span>
+          <span style={{ fontFamily:'var(--font-serif)', fontSize:13, color:'var(--uc-stone-500)' }}>Platform + apps, monthly</span>
           <span/>
           <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:'clamp(18px,1.8vw,24px)', letterSpacing:'-0.03em', color:'var(--uc-paper)', textAlign:'right', whiteSpace:'nowrap' }}>~$2,405/mo</span>
         </div>
@@ -1775,8 +1775,8 @@ function ShopAdminNav({ activeApp }) {
         <Child label="Accounts"/>
         <Child label="Settings"/>
       </>}
-      {/* Uncap Connect — expandable */}
-      <AppParent label="Uncap Connect" glyph="⌖" open={activeApp==='connect'}/>
+      {/* Fishbowl connector, expandable */}
+      <AppParent label="Fishbowl" glyph="⌖" open={activeApp==='connect'}/>
       {activeApp==='connect' && <>
         <Child label="Overview" active/>
         <Child label="Field mapping"/>
@@ -2099,8 +2099,8 @@ function BPIntegrations() {
         <BPSerif>not five silos.</BPSerif>
       </BPHeadline>
       <p style={{ marginTop:'clamp(18px, 2.2vw, 26px)', maxWidth:640, fontFamily:'var(--font-serif)', fontSize:'clamp(15px, 1.3vw, 18px)', lineHeight:1.5, color:'var(--fg-2)' }}>
-        Uncap Connect runs as a Shopify-embedded app — a real-time, bidirectional {bpSite().erp}{' '}
-        connection with field-level mapping and a live sync log, managed right inside admin.
+        {bpSite().erp} connects to Shopify right inside admin: orders, inventory, and
+        fulfillment syncing in real time, configured and tested by our team.
       </p>
 
       {/* Shopify-embedded app (Polaris) */}
@@ -2130,10 +2130,10 @@ function BPIntegrations() {
             <div style={{ display:'flex', flexDirection:'column', gap:3 }}>
               <span style={{ fontFamily:pFont, fontSize:11.5, color:'#005BD3', fontWeight:600 }}>‹ Apps</span>
               <span style={{ display:'inline-flex', alignItems:'center', gap:10 }}>
-                <span style={{ fontFamily:pFont, fontSize:'clamp(18px,1.8vw,22px)', fontWeight:700, color:'#1A1A1A', letterSpacing:'-0.01em' }}>Uncap Connect</span>
+                <span style={{ fontFamily:pFont, fontSize:'clamp(18px,1.8vw,22px)', fontWeight:700, color:'#1A1A1A', letterSpacing:'-0.01em' }}>{bpSite().erp}</span>
                 <Badge tone="success"><span style={{ width:6, height:6, borderRadius:999, background:'#29845A' }}/>Connected</Badge>
               </span>
-              <span style={{ fontFamily:pFont, fontSize:12.5, color:'#616161' }}>{bpSite().erp} connection</span>
+              <span style={{ fontFamily:pFont, fontSize:12.5, color:'#616161' }}>Shopify connection</span>
             </div>
             <div style={{ display:'flex', gap:8 }}>
               <span style={{ fontFamily:pFont, fontSize:12, fontWeight:600, color:'#303030', background:'#FFFFFF', border:'1px solid #E3E3E3', borderRadius:8, padding:'7px 13px', boxShadow:'0 1px 0 rgba(0,0,0,0.05)' }}>View logs</span>
@@ -2197,7 +2197,7 @@ function BPIntegrations() {
       </div>
 
       <div style={{ marginTop:20, fontFamily:'var(--font-mono)', fontSize:11, color:'var(--fg-3)', letterSpacing:'0.06em' }}>
-        ↳ Native Shopify-embedded app · field maps owned and versioned · no manual re-keying
+        ↳ Connected inside Shopify admin · configured and tested by Uncap · no manual re-keying
       </div>
     </BPSection>
   );
@@ -2547,9 +2547,9 @@ function BPInvestment() {
     'Go live, a clean handoff, and a 30-day warranty'
   ];
   const schedule = [
-    { n: '01', amount: '$49,000', due: 'Due at signup' },
-    { n: '02', amount: '$24,500', due: 'Due at design approval' },
-    { n: '03', amount: '$24,500', due: 'Due at project completion' }
+    { n: '01', amount: '$36,000', due: 'Due at signup' },
+    { n: '02', amount: '$18,000', due: 'Due at design approval' },
+    { n: '03', amount: '$18,000', due: 'Due at project completion' }
   ];
   return (
     <BPSection id="investment" n="15" label="Investment" dark tail="FIXED · NO SURPRISES">
@@ -2597,30 +2597,6 @@ function BPInvestment() {
               </li>
             ))}
           </ul>
-        </div>
-      </div>
-
-      {/* Fishbowl support: separate fixed-price workstream */}
-      <div style={{
-        marginTop: 16, padding: 'clamp(22px, 2.6vw, 32px)',
-        border: '1px solid #1F1F1F', borderRadius: 12, background: '#0F0F0F',
-        display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, auto)',
-        gap: 'clamp(20px, 4vw, 48px)', alignItems: 'center'
-      }}>
-        <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-            <span aria-hidden="true" style={{ width: 16, height: 2, background: 'var(--uc-signal)' }}/>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--uc-stone-500)' }}>Fishbowl Support</span>
-          </div>
-          <div style={{ fontFamily: 'var(--font-hero)', fontWeight: 700, fontSize: 'clamp(20px, 2vw, 28px)', letterSpacing: '-0.03em', lineHeight: 1.05, color: 'var(--uc-paper)' }}>{bpSite().erp}, connected to the storefront.</div>
-          <p style={{ margin: '10px 0 0', maxWidth: 560, fontFamily: 'var(--font-serif)', fontSize: 'clamp(14px, 1.2vw, 16px)', lineHeight: 1.5, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>
-            We connect Fishbowl to Shopify and configure orders, customers, inventory, and
-            fulfillment to sync, then test it end to end. Support, not a custom integration.
-          </p>
-        </div>
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--uc-stone-500)' }}>Fixed price</div>
-          <div style={{ marginTop: 6, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(34px, 3.6vw, 52px)', letterSpacing: '-0.045em', lineHeight: 0.9, color: 'var(--uc-signal)' }}>$26k</div>
         </div>
       </div>
 
