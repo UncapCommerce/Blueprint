@@ -1,6 +1,6 @@
 // BlueprintSections.jsx: Winston Rod's copy of the Blueprint Template v1,
-// migrating from WooCommerce on a 12-week build, with Fishbowl connected to
-// Shopify as support (not a custom integration).
+// migrating from WooCommerce on a 12-week build, with QuickBooks Online
+// connected to Shopify as support (not a custom integration).
 // Every client fact comes from the Gate at runtime: company + contacts +
 // palette + logo (window.__bpCompany), blueprint number / dates
 // (window.__bpInfo), and the Commerce/Content wireframe copy extracted from
@@ -84,7 +84,7 @@ function bpSite() {
       location: str(about.location, d.about.location).toUpperCase(), manifesto: str(about.manifesto, d.about.manifesto), stats: pairs(about.stats, 3, d.about.stats) },
     blog: { tag: str(blog.tag, d.blog.tag).toUpperCase(), featured: str(blog.featured, d.blog.featured), articles: fill(list(blog.articles, 3, d.blog.articles), 3) },
     searchExample: str(s.searchExample, d.searchExample),
-    erp: 'Fishbowl',
+    erp: 'QuickBooks Online',
     platform: 'WooCommerce'
   };
   return _site;
@@ -502,7 +502,7 @@ function BPObjectives() {
 function BPApproach() {
   const steps = [
     { n: 'Phase 1', t: 'Blueprint', d: 'Architecture, data model, integration map. A plan that holds up under scrutiny.', wk: '2 weeks' },
-    { n: 'Phase 2', t: 'Build', d: 'Storefront, B2B, Fishbowl connection. Fixed scope, senior team, no surprises.', wk: '12 weeks' },
+    { n: 'Phase 2', t: 'Build', d: 'Storefront, B2B, QuickBooks Online connection. Fixed scope, senior team, no surprises.', wk: '12 weeks' },
     { n: 'Phase 3', t: 'Grow', d: 'Migrate, go live, then optimize conversion, AOV, and automation.', wk: '6–12 months' }
   ];
   return (
@@ -670,7 +670,7 @@ function BPScope() {
     { code: '02', t: 'Experience Design', d: 'A modern, conversion-focused storefront, built to scale.' },
     { code: '03', t: 'Solution Architecture', d: 'Solution architecture, roadmap and integration.' },
     { code: '04', t: 'B2B Enablement',    d: 'Company accounts, price lists, NET terms, and account portals.' },
-    { code: '05', t: 'Fishbowl Support',  d: 'Fishbowl connected to Shopify, configured and tested.' },
+    { code: '05', t: 'QuickBooks Online Support',  d: 'QuickBooks Online connected to Shopify, configured and tested.' },
     { code: '06', t: 'Data Migration',    d: 'Products, customers, order history, and SEO redirects.' },
     { code: '07', t: 'Launch & Hypercare Support',  d: 'QA, a go-live runbook, and 30-day post-launch care.', kind: 'base' }
   ];
@@ -1628,7 +1628,7 @@ function BPTechStack() {
           const layers = [
             { tier:'04', name:'Growth & Intelligence', note:'After launch', tools:[['Shopify Flow','launch'],['Shopify Knowledge Base','launch'],['Shopify Messaging','launch'],['JudgeMe','launch']] },
             { tier:'03', name:'Experience & Engagement', note:'Customer-facing', tools:[['Shopify Search & Discovery','launch'],['Shopify Checkout Blocks','launch'],['Shopify Bundles','launch'],['Uncap Quotes','start']] },
-            { tier:'02', name:'Data & Integration', note:'System of record', tools:[['Fishbowl','start']] },
+            { tier:'02', name:'Data & Integration', note:'System of record', tools:[['QuickBooks Online','start']] },
             { tier:'01', name:'Commerce Core', note:'Foundation', tools:[['Shopify','start']], core:true }
           ];
           const chip = { start:{ bg:'var(--uc-signal)', fg:'var(--uc-black)' }, launch:{ bg:'#FF8B37', fg:'var(--uc-black)' }, future:{ bg:'transparent', fg:'var(--uc-stone-300)', outline:true } };
@@ -1775,8 +1775,8 @@ function ShopAdminNav({ activeApp }) {
         <Child label="Accounts"/>
         <Child label="Settings"/>
       </>}
-      {/* Fishbowl connector, expandable */}
-      <AppParent label="Fishbowl" glyph="⌖" open={activeApp==='connect'}/>
+      {/* QuickBooks Online connector, expandable */}
+      <AppParent label="QuickBooks Online" glyph="⌖" open={activeApp==='connect'}/>
       {activeApp==='connect' && <>
         <Child label="Overview" active/>
         <Child label="Field mapping"/>
@@ -2074,11 +2074,11 @@ function BPAgentic() {
 function BPIntegrations() {
   const pFont = '-apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
   const maps = [
-    { l:'Order',       d:'→', r:'Sales Order' },
-    { l:'Customer',    d:'→', r:'Account' },
-    { l:'Line items',  d:'→', r:'SO Lines' },
-    { l:'Inventory',   d:'←', r:'Stock on hand' },
-    { l:'Fulfillment', d:'←', r:'Item Fulfillment' }
+    { l:'Order',       d:'→', r:'Sales Receipt' },
+    { l:'Customer',    d:'→', r:'Customer' },
+    { l:'Line items',  d:'→', r:'Products & Services' },
+    { l:'Inventory',   d:'←', r:'Quantity on hand' },
+    { l:'Payouts',     d:'→', r:'Bank Deposit' }
   ];
   const activity = [
     ['Order #SO-48217 pushed to ' + bpSite().erp, '2 min ago'],
@@ -2099,8 +2099,8 @@ function BPIntegrations() {
         <BPSerif>not five silos.</BPSerif>
       </BPHeadline>
       <p style={{ marginTop:'clamp(18px, 2.2vw, 26px)', maxWidth:640, fontFamily:'var(--font-serif)', fontSize:'clamp(15px, 1.3vw, 18px)', lineHeight:1.5, color:'var(--fg-2)' }}>
-        {bpSite().erp} connects to Shopify right inside admin: orders, inventory, and
-        fulfillment syncing in real time, configured and tested by our team.
+        {bpSite().erp} connects to Shopify right inside admin: orders, customers, inventory, and
+        payouts syncing in real time, configured and tested by our team.
       </p>
 
       {/* Shopify-embedded app (Polaris) */}
@@ -2145,7 +2145,7 @@ function BPIntegrations() {
           <Card>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, flexWrap:'wrap' }}>
               <div style={{ display:'flex', alignItems:'center', gap:11 }}>
-                <span style={{ width:34, height:34, borderRadius:8, background:'#101A2B', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:pFont, fontSize:13, fontWeight:800, color:'#9FB4FF' }}>FB</span>
+                <span style={{ width:34, height:34, borderRadius:8, background:'#101A2B', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:pFont, fontSize:13, fontWeight:800, color:'#9FB4FF' }}>QB</span>
                 <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
                   <span style={{ fontFamily:pFont, fontSize:13.5, fontWeight:700, color:'#1A1A1A' }}>{bpSite().erp}</span>
                   <span style={{ fontFamily:pFont, fontSize:11.5, color:'#616161' }}>Account 4827-PROD · Last sync 2 min ago</span>
@@ -2164,7 +2164,7 @@ function BPIntegrations() {
           {/* field mapping card */}
           <Card pad={false}>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:10, padding:'13px 16px', borderBottom:'1px solid #E3E3E3' }}>
-              <span style={{ fontFamily:pFont, fontSize:13.5, fontWeight:700, color:'#1A1A1A' }}>Field mapping · Order ⇄ Sales Order</span>
+              <span style={{ fontFamily:pFont, fontSize:13.5, fontWeight:700, color:'#1A1A1A' }}>Field mapping · Order ⇄ Sales Receipt</span>
               <span style={{ fontFamily:pFont, fontSize:12, fontWeight:600, color:'#005BD3' }}>Edit</span>
             </div>
             {/* table header */}
@@ -2325,7 +2325,7 @@ function BPDelivery() {
     { wk: 'WK 01', t: 'Kickoff + Blueprint start', s: 'Discovery, architecture, data model.' },
     { wk: 'WK 02', t: 'Blueprint sign-off', s: 'Plan, prototype, and budget locked.' },
     { wk: 'WK 05', t: 'Storefront alpha', s: 'Core theme + catalog in staging.' },
-    { wk: 'WK 09', t: 'Fishbowl connected', s: 'Fishbowl sync + B2B flows validated.' },
+    { wk: 'WK 09', t: 'QuickBooks Online connected', s: 'QuickBooks Online sync + B2B flows validated.' },
     { wk: 'WK 10', t: 'Migration + QA', s: 'Data moved, redirects, full QA pass.' },
     { wk: 'WK 12', t: 'Launch', s: 'Go live + 30-day support begins.' }
   ];
@@ -2384,8 +2384,8 @@ function BPRiskAssessment() {
     { t: 'Data migration integrity', sev: 'Low',
       d: 'Products, collections, and content don’t map cleanly off WooCommerce.',
       m: 'Dry-run into staging, reconcile counts, and spot-check edge cases before cutover.' },
-    { t: 'Fishbowl sync alignment', sev: 'Low',
-      d: 'Orders and inventory syncing between Fishbowl and Shopify is the key dependency, and mismatches can block orders.',
+    { t: 'QuickBooks Online sync alignment', sev: 'Low',
+      d: 'Orders and inventory syncing between QuickBooks Online and Shopify is the key dependency, and mismatches can block orders.',
       m: 'Sync settings validated early in staging, with test orders run end to end before launch.' },
     { t: 'Scope creep mid-build', sev: 'Low',
       d: 'New requests surface once the build is underway and pull at budget and timeline.',
@@ -2539,7 +2539,7 @@ function BPInvestment() {
     'Front and back-end Shopify development',
     'Essential integrations: payments, shipping, core tools',
     'Data migration: products, customers, orders, content',
-    'Fishbowl support: connecting it to Shopify',
+    'QuickBooks Online support: connecting it to Shopify',
     'Full B2B enablement: companies, catalogs, checkout',
     'Enriched customer account experience',
     'Workflow automation across your systems',
