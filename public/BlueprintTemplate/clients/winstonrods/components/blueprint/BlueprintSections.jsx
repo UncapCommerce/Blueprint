@@ -1,5 +1,6 @@
 // BlueprintSections.jsx: Winston Rod's copy of the Blueprint Template v1,
-// migrating from WooCommerce on a 12-week build.
+// migrating from WooCommerce on a 12-week build, with Fishbowl connected to
+// Shopify as support (not a custom integration).
 // Every client fact comes from the Gate at runtime: company + contacts +
 // palette + logo (window.__bpCompany), blueprint number / dates
 // (window.__bpInfo), and the Commerce/Content wireframe copy extracted from
@@ -83,7 +84,7 @@ function bpSite() {
       location: str(about.location, d.about.location).toUpperCase(), manifesto: str(about.manifesto, d.about.manifesto), stats: pairs(about.stats, 3, d.about.stats) },
     blog: { tag: str(blog.tag, d.blog.tag).toUpperCase(), featured: str(blog.featured, d.blog.featured), articles: fill(list(blog.articles, 3, d.blog.articles), 3) },
     searchExample: str(s.searchExample, d.searchExample),
-    erp: str(s.erp, d.erp),
+    erp: 'Fishbowl',
     platform: 'WooCommerce'
   };
   return _site;
@@ -360,7 +361,7 @@ function BPSummary() {
       }}>
         {[
           { v: '12 wk', l: 'Estimated timeline to launch on Shopify' },
-          { v: 'Unified', l: 'B2B storefront on Shopify integrated with ' + bpSite().erp },
+          { v: 'Unified', l: 'B2B storefront on Shopify connected to ' + bpSite().erp },
           { v: 'Speed', l: 'Sidekick-friendly system to self-manage your store' },
           { v: 'Growth', l: 'Experience optimized for conversion and retention' }
         ].map((s, i) => (
@@ -501,7 +502,7 @@ function BPObjectives() {
 function BPApproach() {
   const steps = [
     { n: 'Phase 1', t: 'Blueprint', d: 'Architecture, data model, integration map. A plan that holds up under scrutiny.', wk: '2 weeks' },
-    { n: 'Phase 2', t: 'Build', d: 'Storefront, B2B, ERP sync. Fixed scope, senior team, no surprises.', wk: '12 weeks' },
+    { n: 'Phase 2', t: 'Build', d: 'Storefront, B2B, Fishbowl connection. Fixed scope, senior team, no surprises.', wk: '12 weeks' },
     { n: 'Phase 3', t: 'Grow', d: 'Migrate, go live, then optimize conversion, AOV, and automation.', wk: '6–12 months' }
   ];
   return (
@@ -669,7 +670,7 @@ function BPScope() {
     { code: '02', t: 'Experience Design', d: 'A modern, conversion-focused storefront, built to scale.' },
     { code: '03', t: 'Solution Architecture', d: 'Solution architecture, roadmap and integration.' },
     { code: '04', t: 'B2B Enablement',    d: 'Company accounts, price lists, NET terms, and account portals.' },
-    { code: '05', t: 'ERP Integration',   d: 'Bidirectional ERP sync native to Shopify Plus.' },
+    { code: '05', t: 'Fishbowl Support',  d: 'Fishbowl connected to Shopify, configured and tested.' },
     { code: '06', t: 'Data Migration',    d: 'Products, customers, order history, and SEO redirects.' },
     { code: '07', t: 'Launch & Hypercare Support',  d: 'QA, a go-live runbook, and 30-day post-launch care.', kind: 'base' }
   ];
@@ -1597,7 +1598,7 @@ function BPTechStack() {
     { name: 'Shopify Flow',                fn: 'Workflow automation',                 pri: 'launch', cost: 'Free' },
     { name: 'Shopify Bundles',             fn: 'Bundled & grouped products',          pri: 'launch', cost: 'Free' },
     { name: 'Uncap Quotes',                fn: 'B2B quote management',                pri: 'start',  cost: '$90/mo' },
-    { name: 'Uncap Connect',               fn: 'ERP ↔ Shopify integration',           pri: 'start',  cost: '$390/mo' },
+    { name: 'Uncap Connect',               fn: 'Fishbowl ↔ Shopify sync',             pri: 'start',  cost: '$390/mo' },
     { name: 'ShipperHQ',                   fn: 'LTL & dimensional shipping rates',    pri: 'launch', cost: '$75/mo' },
     { name: 'Klaviyo Email',               fn: 'Email marketing & automation',        pri: 'launch', cost: '–' },
     { name: 'JudgeMe',                     fn: 'Product reviews, store reviews, UGC & FAQs', pri: 'launch', cost: '$15/mo' },
@@ -1710,7 +1711,7 @@ function BPTechStack() {
         {/* Footer total */}
         <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1.2fr) minmax(0,1.5fr) minmax(0,1fr) 120px', gap:16, padding:'14px 18px', borderTop:'1px solid #2B2B2B', background:'#0F0F0F', alignItems:'center' }}>
           <span style={{ fontFamily:'var(--font-mono)', fontSize:10, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'var(--uc-signal)' }}>Est. monthly</span>
-          <span style={{ fontFamily:'var(--font-serif)', fontSize:13, color:'var(--uc-stone-500)' }}>Platform + apps, before ERP integration</span>
+          <span style={{ fontFamily:'var(--font-serif)', fontSize:13, color:'var(--uc-stone-500)' }}>Platform + apps, before Fishbowl support</span>
           <span/>
           <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:'clamp(18px,1.8vw,24px)', letterSpacing:'-0.03em', color:'var(--uc-paper)', textAlign:'right' }}>~$2,920/mo</span>
         </div>
@@ -2101,8 +2102,8 @@ function BPIntegrations() {
         <BPSerif>not five silos.</BPSerif>
       </BPHeadline>
       <p style={{ marginTop:'clamp(18px, 2.2vw, 26px)', maxWidth:640, fontFamily:'var(--font-serif)', fontSize:'clamp(15px, 1.3vw, 18px)', lineHeight:1.5, color:'var(--fg-2)' }}>
-        Uncap Connect runs as a Shopify-embedded app — a real-time, bidirectional {bpSite().erp}
-        integration with field-level mapping and a live sync log, managed right inside admin.
+        Uncap Connect runs as a Shopify-embedded app — a real-time, bidirectional {bpSite().erp}{' '}
+        connection with field-level mapping and a live sync log, managed right inside admin.
       </p>
 
       {/* Shopify-embedded app (Polaris) */}
@@ -2135,7 +2136,7 @@ function BPIntegrations() {
                 <span style={{ fontFamily:pFont, fontSize:'clamp(18px,1.8vw,22px)', fontWeight:700, color:'#1A1A1A', letterSpacing:'-0.01em' }}>Uncap Connect</span>
                 <Badge tone="success"><span style={{ width:6, height:6, borderRadius:999, background:'#29845A' }}/>Connected</Badge>
               </span>
-              <span style={{ fontFamily:pFont, fontSize:12.5, color:'#616161' }}>{bpSite().erp} integration</span>
+              <span style={{ fontFamily:pFont, fontSize:12.5, color:'#616161' }}>{bpSite().erp} connection</span>
             </div>
             <div style={{ display:'flex', gap:8 }}>
               <span style={{ fontFamily:pFont, fontSize:12, fontWeight:600, color:'#303030', background:'#FFFFFF', border:'1px solid #E3E3E3', borderRadius:8, padding:'7px 13px', boxShadow:'0 1px 0 rgba(0,0,0,0.05)' }}>View logs</span>
@@ -2147,7 +2148,7 @@ function BPIntegrations() {
           <Card>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, flexWrap:'wrap' }}>
               <div style={{ display:'flex', alignItems:'center', gap:11 }}>
-                <span style={{ width:34, height:34, borderRadius:8, background:'#101A2B', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:pFont, fontSize:13, fontWeight:800, color:'#9FB4FF' }}>SL</span>
+                <span style={{ width:34, height:34, borderRadius:8, background:'#101A2B', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:pFont, fontSize:13, fontWeight:800, color:'#9FB4FF' }}>FB</span>
                 <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
                   <span style={{ fontFamily:pFont, fontSize:13.5, fontWeight:700, color:'#1A1A1A' }}>{bpSite().erp}</span>
                   <span style={{ fontFamily:pFont, fontSize:11.5, color:'#616161' }}>Account 4827-PROD · Last sync 2 min ago</span>
@@ -2327,7 +2328,7 @@ function BPDelivery() {
     { wk: 'WK 01', t: 'Kickoff + Blueprint start', s: 'Discovery, architecture, data model.' },
     { wk: 'WK 02', t: 'Blueprint sign-off', s: 'Plan, prototype, and budget locked.' },
     { wk: 'WK 05', t: 'Storefront alpha', s: 'Core theme + catalog in staging.' },
-    { wk: 'WK 09', t: 'Integrations live', s: 'ERP sync + B2B flows validated.' },
+    { wk: 'WK 09', t: 'Fishbowl connected', s: 'Fishbowl sync + B2B flows validated.' },
     { wk: 'WK 10', t: 'Migration + QA', s: 'Data moved, redirects, full QA pass.' },
     { wk: 'WK 12', t: 'Launch', s: 'Go live + 30-day support begins.' }
   ];
@@ -2386,8 +2387,8 @@ function BPRiskAssessment() {
     { t: 'Data migration integrity', sev: 'Medium',
       d: 'Products, customers, and orders don\u2019t map cleanly off the legacy stack.',
       m: 'Dry-run into staging, reconcile counts, and spot-check edge cases before cutover.' },
-    { t: 'ERP integration complexity', sev: 'Medium',
-      d: 'Bidirectional ERP sync is the hardest dependency, and mismatches can block orders.',
+    { t: 'Fishbowl sync alignment', sev: 'Medium',
+      d: 'Orders and inventory syncing between Fishbowl and Shopify is the key dependency, and mismatches can block orders.',
       m: 'Field-level mapping validated early via Uncap Connect, with a live sync log.' },
     { t: 'Scope creep mid-build', sev: 'Low',
       d: 'New requests surface once the build is underway and pull at budget and timeline.',
@@ -2541,7 +2542,7 @@ function BPInvestment() {
     'Front and back-end Shopify development',
     'Essential integrations: payments, shipping, core tools',
     'Data migration: products, customers, orders, content',
-    'Shopify-side ERP integration guidance',
+    'Fishbowl support: connecting it to Shopify',
     'Full B2B enablement: companies, catalogs, checkout',
     'Enriched customer account experience',
     'Workflow automation across your systems',
@@ -2602,7 +2603,7 @@ function BPInvestment() {
         </div>
       </div>
 
-      {/* ERP integration — separate fixed-price workstream */}
+      {/* Fishbowl support: separate fixed-price workstream */}
       <div style={{
         marginTop: 16, padding: 'clamp(22px, 2.6vw, 32px)',
         border: '1px solid #1F1F1F', borderRadius: 12, background: '#0F0F0F',
@@ -2612,12 +2613,12 @@ function BPInvestment() {
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
             <span aria-hidden="true" style={{ width: 16, height: 2, background: 'var(--uc-signal)' }}/>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--uc-stone-500)' }}>ERP Integration</span>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--uc-stone-500)' }}>Fishbowl Support</span>
           </div>
-          <div style={{ fontFamily: 'var(--font-hero)', fontWeight: 700, fontSize: 'clamp(20px, 2vw, 28px)', letterSpacing: '-0.03em', lineHeight: 1.05, color: 'var(--uc-paper)' }}>{bpSite().erp === 'ERP' ? 'Your ERP' : bpSite().erp}, wired into the storefront.</div>
+          <div style={{ fontFamily: 'var(--font-hero)', fontWeight: 700, fontSize: 'clamp(20px, 2vw, 28px)', letterSpacing: '-0.03em', lineHeight: 1.05, color: 'var(--uc-paper)' }}>{bpSite().erp}, connected to the storefront.</div>
           <p style={{ margin: '10px 0 0', maxWidth: 560, fontFamily: 'var(--font-serif)', fontSize: 'clamp(14px, 1.2vw, 16px)', lineHeight: 1.5, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>
-            Bidirectional sync via Uncap Connect: orders, customers, inventory, and fulfillment
-            flowing between Shopify and your ERP in real time, with no manual re-keying.
+            We connect Fishbowl to Shopify and configure orders, customers, inventory, and
+            fulfillment to sync, then test it end to end. Support, not a custom integration.
           </p>
         </div>
         <div style={{ textAlign: 'right' }}>
