@@ -2381,10 +2381,10 @@ function BPRiskAssessment() {
     High:   { c: 'var(--uc-error)',  label: 'High' }
   };
   const risks = [
-    { t: 'Data migration integrity', sev: 'Medium',
-      d: 'Products, customers, and orders don\u2019t map cleanly off the legacy stack.',
+    { t: 'Data migration integrity', sev: 'Low',
+      d: 'Products, collections, and content don’t map cleanly off WooCommerce.',
       m: 'Dry-run into staging, reconcile counts, and spot-check edge cases before cutover.' },
-    { t: 'Fishbowl sync alignment', sev: 'Medium',
+    { t: 'Fishbowl sync alignment', sev: 'Low',
       d: 'Orders and inventory syncing between Fishbowl and Shopify is the key dependency, and mismatches can block orders.',
       m: 'Sync settings validated early in staging, with test orders run end to end before launch.' },
     { t: 'Scope creep mid-build', sev: 'Low',
