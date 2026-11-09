@@ -4687,6 +4687,14 @@ async function handleAdminCreateCompany(request, env) {
   const fields = companyFieldsFrom(body);
   if (!fields.name) return json(400, { ok: false, error: 'Company name is required' });
 
+  // One company per Attio record / website: re-adding one already in the
+  // portal used to mint a silent "<id>-2" duplicate.
+  const host = (u) => (u || '').toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').split(/[/?#:]/)[0];
+  const dup = (await listCompanies(env)).find((c) =>
+    (fields.attioCompanyId && c.attioCompanyId === fields.attioCompanyId) ||
+    (host(fields.storeUrl) && host(c.storeUrl) === host(fields.storeUrl)));
+  if (dup) return json(409, { ok: false, existingId: dup.id, error: `${dup.name || dup.id} is already in the portal (go.uncap.com/admin/company/${dup.id}).` });
+
   // The company folder follows the store domain: companyname.com →
   // go.uncap.com/companyname/. Name is only the fallback when no domain.
   const base = fields.storeUrl
