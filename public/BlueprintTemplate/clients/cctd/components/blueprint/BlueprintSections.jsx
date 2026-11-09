@@ -1596,10 +1596,10 @@ function BPTechStack() {
     { name: 'Shopify Knowledge Base',      fn: 'Help center & self-service',          pri: 'launch', cost: 'Free' },
     { name: 'Shopify Flow',                fn: 'Workflow automation',                 pri: 'launch', cost: 'Free' },
     { name: 'Shopify Bundles',             fn: 'Bundled & grouped products',          pri: 'launch', cost: 'Free' },
+    { name: 'Shopify Messaging',           fn: 'Email & SMS marketing',               pri: 'launch', cost: 'Free' },
     { name: 'Uncap Quotes',                fn: 'B2B quote management',                pri: 'start',  cost: '$90/mo' },
     { name: 'Uncap Connect',               fn: 'ERP ↔ Shopify integration',           pri: 'start',  cost: '$390/mo' },
     { name: 'ShipperHQ',                   fn: 'LTL & dimensional shipping rates',    pri: 'launch', cost: '$75/mo' },
-    { name: 'Klaviyo Email',               fn: 'Email marketing & automation',        pri: 'launch', cost: '–' },
     { name: 'JudgeMe',                     fn: 'Product reviews, store reviews, UGC & FAQs', pri: 'launch', cost: '$15/mo' },
     { name: 'Matrixify',                   fn: 'Bulk import / export & migration',    pri: 'start',  cost: '$50/mo' }
   ];
@@ -1628,7 +1628,7 @@ function BPTechStack() {
 
         {(() => {
           const layers = [
-            { tier:'04', name:'Growth & Intelligence', note:'After launch', tools:[['Shopify Flow','launch'],['Shopify Knowledge Base','launch'],['Klaviyo Email','launch'],['JudgeMe','launch']] },
+            { tier:'04', name:'Growth & Intelligence', note:'After launch', tools:[['Shopify Flow','launch'],['Shopify Knowledge Base','launch'],['Shopify Messaging','launch'],['JudgeMe','launch']] },
             { tier:'03', name:'Experience & Engagement', note:'Customer-facing', tools:[['Shopify Search & Discovery','launch'],['Shopify Checkout Blocks','launch'],['Shopify Bundles','launch'],['Uncap Quotes','start']] },
             { tier:'02', name:'Data & Integration', note:'System of record', tools:[['Uncap Connect','start'],['ShipperHQ','launch'],['Matrixify','start']] },
             { tier:'01', name:'Commerce Core', note:'Foundation', tools:[['Shopify','start']], core:true }
@@ -1648,21 +1648,21 @@ function BPTechStack() {
               <div style={{ flex:1, display:'flex', flexDirection:'column', gap:10 }}>
                 {layers.map((L) => (
                   <div key={L.tier} style={{
-                    display:'grid', gridTemplateColumns:'minmax(0,280px) minmax(0,1fr)', gap:'clamp(14px,2vw,28px)', alignItems:'center',
+                    display:'flex', flexWrap:'wrap', gap:'12px clamp(14px,2vw,28px)', alignItems:'center',
                     padding:'clamp(14px,1.8vw,20px) clamp(16px,2vw,24px)',
                     background: L.core ? 'var(--uc-paper)' : '#121212',
                     border:'1px solid ' + (L.core ? 'var(--uc-paper)' : '#1F1F1F'),
                     borderRadius:6, position:'relative', overflow:'hidden'
                   }}>
                     {L.core && <span aria-hidden="true" style={{ position:'absolute', left:0, top:0, bottom:0, width:4, background:'var(--uc-signal)' }}/>}
-                    <div style={{ display:'flex', alignItems:'center', gap:13, minWidth:0 }}>
+                    <div style={{ flex:'1 1 240px', display:'flex', alignItems:'center', gap:13, minWidth:0 }}>
                       <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:'clamp(26px,3vw,40px)', letterSpacing:'-0.04em', lineHeight:0.9, flexShrink:0, color: L.core ? 'var(--fg-3)' : 'var(--uc-stone-500)' }}>{L.tier}</span>
                       <div style={{ display:'flex', flexDirection:'column', gap:3, minWidth:0 }}>
                         <span style={{ fontFamily:'var(--font-hero)', fontWeight:700, fontSize:'clamp(15px,1.5vw,20px)', letterSpacing:'-0.025em', whiteSpace:'nowrap', color: L.core ? 'var(--uc-black)' : 'var(--uc-paper)' }}>{L.name}</span>
                         <span style={{ fontFamily:'var(--font-mono)', fontSize:8.5, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color: L.core ? 'var(--fg-3)' : 'var(--uc-stone-500)' }}>{L.note}</span>
                       </div>
                     </div>
-                    <div style={{ display:'flex', gap:8, flexWrap:'wrap', justifyContent:'flex-end' }}>
+                    <div style={{ flex:'1 1 300px', display:'flex', gap:8, flexWrap:'wrap', justifyContent:'flex-end' }}>
                       {L.tools.map(([t,p]) => {
                         const c = chip[p];
                         return (
@@ -1708,11 +1708,11 @@ function BPTechStack() {
           );
         })}
         {/* Footer total */}
-        <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1.2fr) minmax(0,1.5fr) minmax(0,1fr) 120px', gap:16, padding:'14px 18px', borderTop:'1px solid #2B2B2B', background:'#0F0F0F', alignItems:'center' }}>
+        <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1.2fr) minmax(0,1.5fr) minmax(0,0.6fr) minmax(120px,auto)', gap:16, padding:'14px 18px', borderTop:'1px solid #2B2B2B', background:'#0F0F0F', alignItems:'center' }}>
           <span style={{ fontFamily:'var(--font-mono)', fontSize:10, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'var(--uc-signal)' }}>Est. monthly</span>
           <span style={{ fontFamily:'var(--font-serif)', fontSize:13, color:'var(--uc-stone-500)' }}>Platform + apps, before ERP integration</span>
           <span/>
-          <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:'clamp(18px,1.8vw,24px)', letterSpacing:'-0.03em', color:'var(--uc-paper)', textAlign:'right' }}>~$2,920/mo</span>
+          <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:'clamp(18px,1.8vw,24px)', letterSpacing:'-0.03em', color:'var(--uc-paper)', textAlign:'right', whiteSpace:'nowrap' }}>~$2,920/mo</span>
         </div>
       </div>
       <div style={{ marginTop:16, display:'flex', gap:18, flexWrap:'wrap', fontFamily:'var(--font-mono)', fontSize:10, color:'var(--uc-stone-500)', letterSpacing:'0.06em' }}>
