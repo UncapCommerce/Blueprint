@@ -669,7 +669,7 @@ function BPScope() {
     { code: '02', t: 'Experience Design', d: 'A modern, conversion-focused storefront, built to scale.' },
     { code: '03', t: 'Solution Architecture', d: 'Solution architecture, roadmap and integration.' },
     { code: '04', t: 'B2B Enablement',    d: 'Company accounts, price lists, NET terms, and account portals.' },
-    { code: '05', t: 'ERP Integration',   d: 'Bidirectional ERP sync native to Shopify Plus.' },
+    { code: '05', t: 'ERP Integration Advisory', d: 'Supporting the Modern Retail team.' },
     { code: '06', t: 'Data Migration',    d: 'Products, customers, order history, and SEO redirects.' },
     { code: '07', t: 'Launch & Hypercare Support',  d: 'QA, a go-live runbook, and 30-day post-launch care.', kind: 'base' }
   ];
