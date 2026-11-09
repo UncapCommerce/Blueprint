@@ -195,7 +195,10 @@ function BPIntro() {
   const leadName = (bpCo && bpCo.lead && bpCo.lead.name) || 'TBD';
   const leadSub = (bpCo && bpCo.lead && bpCo.lead.title) || 'Client Lead';
   const coName = (bpCo && bpCo.name) || brandName();
-  const coAddr = (bpCo && bpCo.address) || '';
+  // Two lines: street, then city, state, ZIP, country ("IL 61832" splits too).
+  const addrParts = ((bpCo && bpCo.address) || '').split(/\s*[,·\n]\s*/).filter(Boolean)
+    .flatMap((p) => { const m = /^([A-Z]{2})\s+(\d{5}(?:-\d{4})?)$/.exec(p); return m ? [m[1], m[2]] : [p]; });
+  const coAddr = addrParts.length > 1 ? addrParts[0] + ',\n' + addrParts.slice(1).join(', ') : (addrParts[0] || '');
   return (
     <section id="intro" data-bp-section="intro" style={{
       background: 'var(--uc-black)',
@@ -315,7 +318,7 @@ function BPIntro() {
                   }}>{c.v}</span>
                   <span style={{
                     display: 'block', fontFamily: 'var(--font-mono)', fontSize: 11,
-                    color: 'var(--uc-stone-500)', marginTop: 2
+                    color: 'var(--uc-stone-500)', marginTop: 2, whiteSpace: 'pre-line'
                   }}>{c.s}</span>
                 </span>
               </div>
