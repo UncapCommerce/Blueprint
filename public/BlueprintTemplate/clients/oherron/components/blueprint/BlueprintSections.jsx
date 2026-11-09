@@ -764,7 +764,7 @@ function BPGantt() {
     { name: 'Production', range: 'WK 08–20', tasks: [
       { n: '05', t: 'Development',                tag: 'Build',    s: 8,  e: 18, range: 'W8–18' },
       { n: '06', t: 'Data Migration',             tag: 'Migrate',  s: 13, e: 18, range: 'W13–18' },
-      { n: '07', t: 'Integration',                tag: 'Connect',  s: 13, e: 19, range: 'W13–19' },
+      { n: '07', t: 'Integration',                tag: 'Connect',  s: 8,  e: 19, range: 'W8–19' },
       { n: '08', t: 'QA & Testing',               tag: 'Verify',   s: 18, e: 20, range: 'W18–20' }
     ] },
     { name: 'Audit', range: 'WK 20–24', tasks: [
