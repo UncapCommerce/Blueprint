@@ -1572,7 +1572,7 @@ const BLUEPRINT_REGISTRY = [
 // a sent or signed proposal never changes under the client. Client facts
 // (company, contacts, palette, logo, number, dates) and the wireframe copy
 // pulled from the company website (bp.site) reach the page via bp-token.
-const TEMPLATE_VERSION = 1;
+const TEMPLATE_VERSION = 2;
 const TEMPLATE_PREVIEW_ID = 'template';
 // Template blueprints customized for one client: a copy of their frozen
 // version under BlueprintTemplate/clients/<id>/. The record, ready gate,
