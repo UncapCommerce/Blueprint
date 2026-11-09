@@ -2730,9 +2730,22 @@ async function handleAdminAttioSearchCompanies(request, env) {
   const q = (new URL(request.url).searchParams.get('q') || '').trim().slice(0, 200);
   if (!q) return json(200, { ok: true, companies: [] });
 
+  // Match the name or a domain, so typing "acme.com" finds the company too.
+  // Two queries in parallel; the domain one is best-effort and never blocks
+  // the name search.
   let records;
   try {
-    records = await attioQuery(env, 'companies', { name: { '$contains': q } });
+    const [byName, byDomain] = await Promise.all([
+      attioQuery(env, 'companies', { name: { '$contains': q } }),
+      attioQuery(env, 'companies', { domains: { domain: { '$contains': q.toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').replace(/\/.*$/, '') } } }).catch(() => []),
+    ]);
+    const seen = new Set();
+    records = [...byName, ...byDomain].filter((r) => {
+      const id = r.id && r.id.record_id;
+      if (!id || seen.has(id)) return false;
+      seen.add(id);
+      return true;
+    });
   } catch (err) {
     return json(err.status || 502, { ok: false, error: err.message });
   }
