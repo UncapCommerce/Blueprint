@@ -2225,7 +2225,7 @@ function BPMigration() {
         <BPSerif>without losing a thing.</BPSerif>
       </BPHeadline>
       <p style={{ marginTop: 18, maxWidth: 600, fontFamily: 'var(--font-serif)', fontSize: 'clamp(15px, 1.3vw, 18px)', lineHeight: 1.5, color: 'var(--fg-2)' }}>
-        We migrate cart-to-cart — every product, customer, and order — and re-map the
+        We migrate your catalog and content and re-map the
         messy parts: legacy categories become tags, custom attributes become metafields,
         old URLs become 301s. Nothing copied blind, nothing lost.
       </p>
@@ -2262,7 +2262,7 @@ function BPMigration() {
             </div>
             {/* record type tabs */}
             <div style={{ display:'flex', alignItems:'center', gap:16, padding:'9px 16px', borderBottom:'1px solid var(--line-1)', flexWrap:'wrap' }}>
-              {['Products','Customers','Orders','Content'].map((t,i)=>(<span key={t} style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:11.5, letterSpacing:'-0.01em', color:i===0?'var(--fg-1)':'var(--fg-3)', borderBottom:i===0?'2px solid var(--uc-black)':'2px solid transparent', paddingBottom:3 }}>{t}</span>))}
+              {['Products','Content'].map((t,i)=>(<span key={t} style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:11.5, letterSpacing:'-0.01em', color:i===0?'var(--fg-1)':'var(--fg-3)', borderBottom:i===0?'2px solid var(--uc-black)':'2px solid transparent', paddingBottom:3 }}>{t}</span>))}
               <span style={{ marginLeft:'auto', display:'inline-flex', alignItems:'center', gap:6, fontFamily:'var(--font-mono)', fontSize:9.5, fontWeight:700, color:'#2F7D52' }}><span style={{ width:6, height:6, borderRadius:999, background:'#3F8B5D' }}/>Field map verified</span>
             </div>
             {/* crosswalk */}
