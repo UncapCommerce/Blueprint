@@ -1,4 +1,5 @@
-// BlueprintSections.jsx: CCTD's copy of the Blueprint Template v2.
+// BlueprintSections.jsx: CCTD's copy of the Blueprint Template v2, ERP pinned
+// to Epicor P21.
 // Every client fact comes from the Gate at runtime: company + contacts +
 // palette + logo (window.__bpCompany), blueprint number / dates
 // (window.__bpInfo), and the Commerce/Content wireframe copy extracted from
@@ -82,7 +83,7 @@ function bpSite() {
       location: str(about.location, d.about.location).toUpperCase(), manifesto: str(about.manifesto, d.about.manifesto), stats: pairs(about.stats, 3, d.about.stats) },
     blog: { tag: str(blog.tag, d.blog.tag).toUpperCase(), featured: str(blog.featured, d.blog.featured), articles: fill(list(blog.articles, 3, d.blog.articles), 3) },
     searchExample: str(s.searchExample, d.searchExample),
-    erp: str(s.erp, d.erp),
+    erp: 'Epicor P21',
     platform: str(s.platform, d.platform)
   };
   return _site;
@@ -2100,7 +2101,7 @@ function BPIntegrations() {
         <BPSerif>not five silos.</BPSerif>
       </BPHeadline>
       <p style={{ marginTop:'clamp(18px, 2.2vw, 26px)', maxWidth:640, fontFamily:'var(--font-serif)', fontSize:'clamp(15px, 1.3vw, 18px)', lineHeight:1.5, color:'var(--fg-2)' }}>
-        Uncap Connect runs as a Shopify-embedded app — a real-time, bidirectional {bpSite().erp}
+        Uncap Connect runs as a Shopify-embedded app — a real-time, bidirectional {bpSite().erp}{' '}
         integration with field-level mapping and a live sync log, managed right inside admin.
       </p>
 
@@ -2146,7 +2147,7 @@ function BPIntegrations() {
           <Card>
             <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:12, flexWrap:'wrap' }}>
               <div style={{ display:'flex', alignItems:'center', gap:11 }}>
-                <span style={{ width:34, height:34, borderRadius:8, background:'#101A2B', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:pFont, fontSize:13, fontWeight:800, color:'#9FB4FF' }}>SL</span>
+                <span style={{ width:34, height:34, borderRadius:8, background:'#101A2B', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:pFont, fontSize:13, fontWeight:800, color:'#9FB4FF' }}>P21</span>
                 <div style={{ display:'flex', flexDirection:'column', gap:2 }}>
                   <span style={{ fontFamily:pFont, fontSize:13.5, fontWeight:700, color:'#1A1A1A' }}>{bpSite().erp}</span>
                   <span style={{ fontFamily:pFont, fontSize:11.5, color:'#616161' }}>Account 4827-PROD · Last sync 2 min ago</span>
