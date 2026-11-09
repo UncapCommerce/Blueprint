@@ -670,7 +670,7 @@ function BPScope() {
     { code: '03', t: 'Solution Architecture', d: 'Solution architecture, roadmap and integration.' },
     { code: '04', t: 'B2B Enablement',    d: 'Company accounts, price lists, NET terms, and account portals.' },
     { code: '05', t: 'ERP Integration Advisory', d: 'Supporting the Modern Retail team.' },
-    { code: '06', t: 'Data Migration',    d: 'Products, customers, order history, and SEO redirects.' },
+    { code: '06', t: 'Data Migration',    d: 'Products, catalogs, collections, pages, blogs, and SEO redirects.' },
     { code: '07', t: 'Launch & Hypercare Support',  d: 'QA, a go-live runbook, and 30-day post-launch care.', kind: 'base' }
   ];
   return (
@@ -2207,13 +2207,14 @@ function BPIntegrations() {
 
 function BPMigration() {
   const steps = [
-    { t: 'Audit & map', s: 'Catalogue every record — products, customers, orders, content, redirects.' },
+    { t: 'Audit & map', s: 'Catalogue every record — products, catalogs, collections, pages, blogs, redirects.' },
     { t: 'Transform', s: 'Clean, dedupe, and re-map data to the new model. Nothing copied blind.' },
     { t: 'Stage & verify', s: 'Dry-run into staging. Reconcile counts, spot-check edge cases.' },
     { t: 'Cutover', s: 'Final delta sync, 301 redirect map, DNS switch with zero lost orders.' }
   ];
   const stats = [
     ['Products', 'Titles, SKUs, specs and images, structured for Shopify.'],
+    ['Catalogs', 'B2B catalogs and price lists set up for each account.'],
     ['Collections', 'Categories rebuilt as collections with their filters.'],
     ['Pages', 'Content pages carried over with their SEO intact.'],
     ['Blogs', 'Articles and guides moved with 301 redirects.']
@@ -2537,7 +2538,7 @@ function BPInvestment() {
     'Shopify theme-based design, configured and branded for ' + brandName(),
     'Front and back-end Shopify development',
     'Essential integrations: payments, shipping, core tools',
-    'Data migration: products, customers, orders, content',
+    'Data migration: products, catalogs, collections, pages, blogs',
     'Shopify-side ERP integration guidance',
     'Full B2B enablement: companies, catalogs, checkout',
     'Enriched customer account experience',
