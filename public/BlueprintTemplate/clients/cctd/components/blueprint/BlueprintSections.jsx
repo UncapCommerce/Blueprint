@@ -3380,7 +3380,7 @@ window.BPInvestment = BPInvestment;
 // the full terms of how the pool is charged.
 function BPBuffer() {
   return (
-    <section id="buffer" data-bp-section="buffer" style={{ background: 'var(--uc-cream)', color: 'var(--fg-1)', borderTop: '1px solid var(--line-1)', padding: 'clamp(40px, 5vw, 72px) clamp(32px, 5vw, 80px)', scrollMarginTop: 24 }}>
+    <section id="buffer" data-bp-section="buffer" style={{ background: 'var(--uc-paper)', color: 'var(--fg-1)', borderTop: '1px solid var(--line-1)', padding: 'clamp(40px, 5vw, 72px) clamp(32px, 5vw, 80px)', scrollMarginTop: 24 }}>
       <div style={{ maxWidth: 1080, margin: '0 auto', padding: 'clamp(22px, 2.6vw, 32px)', border: '1px dashed var(--line-2)', borderRadius: 12, background: 'var(--uc-paper)', display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: 'clamp(20px, 4vw, 48px)' }}>
         <div style={{ flex: '1 1 300px', minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
