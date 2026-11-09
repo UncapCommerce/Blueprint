@@ -815,7 +815,10 @@ function BPGantt() {
 // Colors in these frames come from the profile palette (--co-prime / --co-accent).
 function CoLogo({ h }) {
   const co = window.__bpCompany;
-  if (co && co.logoUrl) return <img src={co.logoUrl} alt={brandName()} style={{ height: h, width: 'auto', maxWidth: h * 7, display: 'block', objectFit: 'contain' }}/>;
+  // Drawn ~40% larger than its slot; the negative margin keeps the slot (and so
+  // every header's height) exactly as it was.
+  const g = Math.round(h * 1.4), m = -Math.round((g - h) / 2);
+  if (co && co.logoUrl) return <img src={co.logoUrl} alt={brandName()} style={{ height: g, margin: m + 'px 0', width: 'auto', maxWidth: g * 7, display: 'block', objectFit: 'contain', flexShrink: 0 }}/>;
   return <BrandMark fontSize={Math.round(h * 0.9)} dotColor="var(--co-accent)"/>;
 }
 function GfxChrome({ children }) {
@@ -1596,7 +1599,7 @@ function BPTechStack() {
     { name: 'Shopify Knowledge Base',      fn: 'Help center & self-service',          pri: 'launch', cost: 'Free' },
     { name: 'Shopify Flow',                fn: 'Workflow automation',                 pri: 'launch', cost: 'Free' },
     { name: 'Shopify Bundles',             fn: 'Bundled & grouped products',          pri: 'launch', cost: 'Free' },
-    { name: 'Uncap Quotes',                fn: 'B2B quote management',                pri: 'start',  cost: '$90/mo' },
+    { name: 'ID.com',                      fn: 'ID recognition & verification',       pri: 'launch', cost: '–' },
     { name: 'Appse',               fn: 'ERP ↔ Shopify integration',           pri: 'start',  cost: '$390/mo' },
     { name: 'ShipperHQ',                   fn: 'LTL & dimensional shipping rates',    pri: 'launch', cost: '$75/mo' },
     { name: 'Mailchimp',                   fn: 'Email marketing & automation',        pri: 'launch', cost: '–' },
@@ -1629,7 +1632,7 @@ function BPTechStack() {
         {(() => {
           const layers = [
             { tier:'04', name:'Growth & Intelligence', note:'After launch', tools:[['Shopify Flow','launch'],['Shopify Knowledge Base','launch'],['Mailchimp','launch'],['JudgeMe','launch']] },
-            { tier:'03', name:'Experience & Engagement', note:'Customer-facing', tools:[['Shopify Search & Discovery','launch'],['Shopify Checkout Blocks','launch'],['Shopify Bundles','launch'],['Uncap Quotes','start']] },
+            { tier:'03', name:'Experience & Engagement', note:'Customer-facing', tools:[['Shopify Search & Discovery','launch'],['Shopify Checkout Blocks','launch'],['Shopify Bundles','launch'],['ID.com','launch']] },
             { tier:'02', name:'Data & Integration', note:'System of record', tools:[['Appse','start'],['ShipperHQ','launch'],['Matrixify','start']] },
             { tier:'01', name:'Commerce Core', note:'Foundation', tools:[['Shopify','start']], core:true }
           ];
@@ -1648,21 +1651,21 @@ function BPTechStack() {
               <div style={{ flex:1, display:'flex', flexDirection:'column', gap:10 }}>
                 {layers.map((L) => (
                   <div key={L.tier} style={{
-                    display:'grid', gridTemplateColumns:'minmax(0,280px) minmax(0,1fr)', gap:'clamp(14px,2vw,28px)', alignItems:'center',
+                    display:'flex', flexWrap:'wrap', gap:'12px clamp(14px,2vw,28px)', alignItems:'center',
                     padding:'clamp(14px,1.8vw,20px) clamp(16px,2vw,24px)',
                     background: L.core ? 'var(--uc-paper)' : '#121212',
                     border:'1px solid ' + (L.core ? 'var(--uc-paper)' : '#1F1F1F'),
                     borderRadius:6, position:'relative', overflow:'hidden'
                   }}>
                     {L.core && <span aria-hidden="true" style={{ position:'absolute', left:0, top:0, bottom:0, width:4, background:'var(--uc-signal)' }}/>}
-                    <div style={{ display:'flex', alignItems:'center', gap:13, minWidth:0 }}>
+                    <div style={{ flex:'1 1 240px', display:'flex', alignItems:'center', gap:13, minWidth:0 }}>
                       <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:'clamp(26px,3vw,40px)', letterSpacing:'-0.04em', lineHeight:0.9, flexShrink:0, color: L.core ? 'var(--fg-3)' : 'var(--uc-stone-500)' }}>{L.tier}</span>
                       <div style={{ display:'flex', flexDirection:'column', gap:3, minWidth:0 }}>
                         <span style={{ fontFamily:'var(--font-hero)', fontWeight:700, fontSize:'clamp(15px,1.5vw,20px)', letterSpacing:'-0.025em', whiteSpace:'nowrap', color: L.core ? 'var(--uc-black)' : 'var(--uc-paper)' }}>{L.name}</span>
                         <span style={{ fontFamily:'var(--font-mono)', fontSize:8.5, fontWeight:700, letterSpacing:'0.1em', textTransform:'uppercase', color: L.core ? 'var(--fg-3)' : 'var(--uc-stone-500)' }}>{L.note}</span>
                       </div>
                     </div>
-                    <div style={{ display:'flex', gap:8, flexWrap:'wrap', justifyContent:'flex-end' }}>
+                    <div style={{ flex:'1 1 300px', display:'flex', gap:8, flexWrap:'wrap', justifyContent:'flex-end' }}>
                       {L.tools.map(([t,p]) => {
                         const c = chip[p];
                         return (
@@ -1708,11 +1711,11 @@ function BPTechStack() {
           );
         })}
         {/* Footer total */}
-        <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1.2fr) minmax(0,1.5fr) minmax(0,1fr) 120px', gap:16, padding:'14px 18px', borderTop:'1px solid #2B2B2B', background:'#0F0F0F', alignItems:'center' }}>
+        <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1.2fr) minmax(0,1.5fr) minmax(0,0.6fr) minmax(120px,auto)', gap:16, padding:'14px 18px', borderTop:'1px solid #2B2B2B', background:'#0F0F0F', alignItems:'center' }}>
           <span style={{ fontFamily:'var(--font-mono)', fontSize:10, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'var(--uc-signal)' }}>Est. monthly</span>
           <span style={{ fontFamily:'var(--font-serif)', fontSize:13, color:'var(--uc-stone-500)' }}>Platform + apps, before ERP integration</span>
           <span/>
-          <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:'clamp(18px,1.8vw,24px)', letterSpacing:'-0.03em', color:'var(--uc-paper)', textAlign:'right' }}>~$2,920/mo</span>
+          <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:'clamp(18px,1.8vw,24px)', letterSpacing:'-0.03em', color:'var(--uc-paper)', textAlign:'right', whiteSpace:'nowrap' }}>~$2,830/mo</span>
         </div>
       </div>
       <div style={{ marginTop:16, display:'flex', gap:18, flexWrap:'wrap', fontFamily:'var(--font-mono)', fontSize:10, color:'var(--uc-stone-500)', letterSpacing:'0.06em' }}>
@@ -1769,14 +1772,6 @@ function ShopAdminNav({ activeApp }) {
       <Group>Sales channels</Group>
       {channels.map(([l,ic]) => <NavItem key={l} label={l} icon={ic}/>)}
       <Group>Apps</Group>
-      {/* Uncap Quotes — expandable */}
-      <AppParent label="Uncap Quotes" glyph="▤" open={activeApp==='quotes'}/>
-      {activeApp==='quotes' && <>
-        <Child label="Requests"/>
-        <Child label="Quotes" active/>
-        <Child label="Accounts"/>
-        <Child label="Settings"/>
-      </>}
       {/* Appse — expandable */}
       <AppParent label="Appse" glyph="⌖" open={activeApp==='connect'}/>
       {activeApp==='connect' && <>
@@ -1789,108 +1784,6 @@ function ShopAdminNav({ activeApp }) {
   );
 }
 
-// ── Uncap Quotes — Quotes tab (Shopify-embedded app, Polaris) ──────────────
-function GfxQuotes() {
-  const pFont = '-apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
-  const tabs = [['All','22'],['Drafts','1'],['Sent','1'],['Viewed','3'],['Commented','4'],['Approved','5'],['Paid','7']];
-  const rows = [
-    { id:'Q-2087', dt:'2026-05-28', co:'Midwest Fabrication LLC', cu:'Dale Wojcik',     it:'509',  tot:'$2,406.06', exp:'2026-06-12', st:'Viewed',   cm:true },
-    { id:'Q-2086', dt:'2026-05-28', co:'Rust Belt Welding Supply', cu:'Stan Petryk',     it:'20',   tot:'$2,182.80', exp:'2026-06-15', st:'Draft' },
-    { id:'Q-2085', dt:'2026-05-27', co:'Great Lakes Industrial',  cu:'Sandra Liu',      it:'1230', tot:'$5,074.55', exp:'2026-06-22', st:'Approved' },
-    { id:'Q-2084', dt:'2026-05-27', co:'Allegheny Iron & Forge',  cu:'Carl Bregović',   it:'12',   tot:'$1,536.52', exp:'2026-06-20', st:'Viewed',   cm:true },
-    { id:'Q-2083', dt:'2026-05-27', co:'Harbor Steel Works',      cu:'Erik Lindqvist',  it:'4',    tot:'$1,060.25', exp:'2026-06-09', st:'Paid',     arch:true },
-    { id:'Q-2082', dt:'2026-05-08', co:'Cascade Machine Tooling', cu:'Jen Park',        it:'4',    tot:'$2,708.16', exp:'2026-05-20', st:'Expired',  arch:true },
-    { id:'Q-2081', dt:'2026-05-27', co:'Birch Run Manufacturing', cu:'Travis McCready', it:'259',  tot:'$1,244.44', exp:'2026-06-14', st:'Paid',     arch:true }
-  ];
-  const initials = (n) => n.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase();
-  const StatusBadge = ({ st }) => {
-    const map = {
-      Viewed:   { bg:'#ECE6FF', fg:'#4A26A8', dot:'#7B57D6' },
-      Draft:    { bg:'#EBEBEB', fg:'#616161', dot:null },
-      Approved: { bg:'#CDFEE1', fg:'#014B40', dot:'#29845A' },
-      Paid:     { bg:'#F1F1F1', fg:'#616161', dot:'#8A8A8A' },
-      Expired:  { bg:'#FFF1E3', fg:'#5E3B00', dot:'#B98900' },
-      Declined: { bg:'#FDD9D6', fg:'#8E1F0B', dot:'#D72C0D' }
-    };
-    const t = map[st] || map.Draft;
-    return <span style={{ display:'inline-flex', alignItems:'center', gap:5, fontFamily:pFont, fontSize:11, fontWeight:600, color:t.fg, background:t.bg, borderRadius:8, padding:'2px 8px', whiteSpace:'nowrap' }}>{t.dot && <span style={{ width:6, height:6, borderRadius:999, background:t.dot }}/>}{st}</span>;
-  };
-  const gridCols = 'minmax(0,72px) minmax(0,84px) minmax(0,1.3fr) minmax(0,1.1fr) minmax(0,46px) minmax(0,84px) minmax(0,84px) minmax(0,86px)';
-  return (
-    <div style={{ border:'1px solid var(--line-2)', borderRadius:12, overflow:'hidden', boxShadow:'0 24px 60px -32px rgba(10,10,10,0.45)' }}>
-      {/* Shopify admin top bar */}
-      <div style={{ display:'flex', alignItems:'center', gap:12, padding:'9px 14px', background:'#1A1A1A' }}>
-        <span style={{ display:'inline-flex', alignItems:'center', gap:7 }}>
-          <span style={{ width:20, height:20, borderRadius:5, background:'#95BF47', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:pFont, fontSize:12, fontWeight:800, color:'#1A1A1A' }}>S</span>
-          <span style={{ fontFamily:pFont, fontSize:11.5, fontWeight:600, color:'#E3E3E3' }}>{brandHandle()}-supply</span>
-        </span>
-        <span style={{ flex:1, maxWidth:360, margin:'0 auto', display:'flex', alignItems:'center', gap:7, background:'#303030', borderRadius:8, padding:'6px 11px' }}>
-          <span style={{ color:'#8A8A8A', fontSize:11 }}>⌕</span>
-          <span style={{ fontFamily:pFont, fontSize:11, color:'#8A8A8A' }}>Search</span>
-        </span>
-        <span style={{ width:22, height:22, borderRadius:999, background:'linear-gradient(135deg,#5C6AC4,#202E78)', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:pFont, fontSize:10, fontWeight:700, color:'#fff' }}>D</span>
-      </div>
-
-      <div style={{ display:'flex', background:'#F1F1F1' }}>
-        {/* Shopify left navigation */}
-        <ShopAdminNav activeApp="quotes"/>
-
-        {/* Polaris page */}
-        <div style={{ flex:1, minWidth:0, padding:'clamp(16px,2vw,24px)', display:'flex', flexDirection:'column', gap:14 }}>
-          {/* page header */}
-          <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap:14, flexWrap:'wrap' }}>
-            <span style={{ fontFamily:pFont, fontSize:'clamp(18px,1.8vw,22px)', fontWeight:700, color:'#1A1A1A', letterSpacing:'-0.01em' }}>Quotes</span>
-            <div style={{ display:'flex', gap:8 }}>
-              <span style={{ fontFamily:pFont, fontSize:12, fontWeight:600, color:'#303030', background:'#FFFFFF', border:'1px solid #E3E3E3', borderRadius:8, padding:'7px 13px', boxShadow:'0 1px 0 rgba(0,0,0,0.05)' }}>Export</span>
-              <span style={{ fontFamily:pFont, fontSize:12, fontWeight:600, color:'#FFFFFF', background:'#303030', borderRadius:8, padding:'7px 13px' }}>＋ Create quote</span>
-            </div>
-          </div>
-
-          {/* card: tabs + filters + table */}
-          <div style={{ background:'#FFFFFF', border:'1px solid #E3E3E3', borderRadius:12, boxShadow:'0 1px 0 rgba(0,0,0,0.05)', overflow:'hidden' }}>
-            {/* tabs */}
-            <div style={{ display:'flex', alignItems:'center', gap:2, padding:'8px 10px', borderBottom:'1px solid #F1F1F1', flexWrap:'wrap' }}>
-              {tabs.map(([l,c],i)=>(
-                <span key={l} style={{ display:'inline-flex', alignItems:'center', gap:5, fontFamily:pFont, fontSize:12, fontWeight: i===0?700:500, color: i===0?'#1A1A1A':'#616161', background: i===0?'#F1F1F1':'transparent', borderRadius:8, padding:'5px 10px' }}>{l}<span style={{ color:'#8A8A8A', fontWeight:400 }}>{c}</span></span>
-              ))}
-            </div>
-            {/* filter row */}
-            <div style={{ display:'flex', alignItems:'center', gap:8, padding:'10px 12px', borderBottom:'1px solid #F1F1F1' }}>
-              <span style={{ flex:1, maxWidth:300, display:'flex', alignItems:'center', gap:7, background:'#FFFFFF', border:'1px solid #E3E3E3', borderRadius:8, padding:'6px 11px' }}>
-                <span style={{ color:'#8A8A8A', fontSize:11 }}>⌕</span>
-                <span style={{ fontFamily:pFont, fontSize:12, color:'#8A8A8A' }}>Search quotes</span>
-              </span>
-              <span style={{ fontFamily:pFont, fontSize:11.5, fontWeight:600, color:'#303030', background:'#FFFFFF', border:'1px solid #E3E3E3', borderRadius:8, padding:'6px 11px' }}>⚲ Filter</span>
-              <span style={{ fontFamily:pFont, fontSize:11.5, fontWeight:600, color:'#303030', background:'#FFFFFF', border:'1px solid #E3E3E3', borderRadius:8, padding:'6px 11px' }}>⇅ Sort</span>
-            </div>
-            {/* table header */}
-            <div style={{ display:'grid', gridTemplateColumns:gridCols, gap:'clamp(6px,1vw,12px)', padding:'9px 16px', background:'#FAFAFA', borderBottom:'1px solid #E3E3E3' }}>
-              {[['Quote','left'],['Created','left'],['Company','left'],['Customer','left'],['Items','right'],['Total','right'],['Expires','left'],['Status','right']].map(([h,a],i)=>(<span key={i} style={{ fontFamily:pFont, fontSize:10.5, fontWeight:600, color:'#616161', textAlign:a }}>{h}</span>))}
-            </div>
-            {/* rows */}
-            {rows.map((r,i)=>(
-              <div key={r.id} style={{ display:'grid', gridTemplateColumns:gridCols, gap:'clamp(6px,1vw,12px)', padding:'10px 16px', borderBottom: i<rows.length-1?'1px solid #F1F1F1':'none', alignItems:'center', opacity: r.arch?0.62:1 }}>
-                <span style={{ fontFamily:pFont, fontSize:12, fontWeight:500, color:'#1A1A1A', display:'inline-flex', alignItems:'center', gap:5 }}>{r.id}{r.cm && <span style={{ color:'#8A8A8A', fontSize:11 }}>💬</span>}</span>
-                <span style={{ fontFamily:pFont, fontSize:11.5, color:'#8A8A8A', whiteSpace:'nowrap' }}>{r.dt}</span>
-                <span style={{ fontFamily:pFont, fontSize:12, fontWeight:500, color:'#1A1A1A', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{r.co}</span>
-                <span style={{ display:'inline-flex', alignItems:'center', gap:7, minWidth:0 }}>
-                  <span style={{ width:20, height:20, borderRadius:999, background:'#E0E7F5', color:'#3F5CA8', flexShrink:0, display:'flex', alignItems:'center', justifyContent:'center', fontFamily:pFont, fontSize:8.5, fontWeight:700 }}>{initials(r.cu)}</span>
-                  <span style={{ fontFamily:pFont, fontSize:12, fontWeight:500, color:'#1A1A1A', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>{r.cu}</span>
-                </span>
-                <span style={{ fontFamily:pFont, fontSize:12, color:'#303030', textAlign:'right' }}>{r.it}</span>
-                <span style={{ fontFamily:pFont, fontSize:12, fontWeight:600, color:'#1A1A1A', textAlign:'right' }}>{r.tot}</span>
-                <span style={{ fontFamily:pFont, fontSize:11.5, color:'#8A8A8A', whiteSpace:'nowrap' }}>{r.exp}</span>
-                <span style={{ justifySelf:'end' }}><StatusBadge st={r.st}/></span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-// ── 08 B2B ENABLEMENT ───────────────────────────────────────────────────────
 function BPB2B() {
   const caps = [
     { t: 'Company accounts & roles', d: 'Multi-buyer companies, permissions, and spend limits per seat.' },
@@ -1948,24 +1841,6 @@ function BPB2B() {
           ))}
         </div>
       </div>
-      {/* Uncap Quotes app — Quotes tab */}
-      <div style={{ marginTop:'clamp(44px, 5.5vw, 80px)' }}>
-        <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:'clamp(16px, 1.8vw, 22px)' }}>
-          <span aria-hidden="true" style={{ width:16, height:2, background:'var(--uc-signal)' }}/>
-          <span style={{ fontFamily:'var(--font-mono)', fontSize:11, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'var(--fg-3)' }}>Uncap Quotes · Shopify admin</span>
-        </div>
-        <BPHeadline>
-          Quote management,{' '}
-          <BPSerif>start to signed.</BPSerif>
-        </BPHeadline>
-        <p style={{ marginTop:'clamp(16px, 2vw, 24px)', maxWidth:680, fontFamily:'var(--font-serif)', fontSize:'clamp(15px, 1.3vw, 18px)', lineHeight:1.5, color:'var(--fg-2)', textWrap:'pretty' }}>
-          Capture requests, build and send quotes, run approvals, negotiate line by line with threaded comments, collect payment against invoices, and collaborate with your team and buyers — every quote, end to end, inside Shopify.
-        </p>
-        <div style={{ marginTop:'clamp(24px, 3vw, 40px)' }}>
-          <GfxQuotes/>
-        </div>
-      </div>
-
       <div style={{ marginTop:20, fontFamily:'var(--font-mono)', fontSize:11, color:'var(--fg-3)', letterSpacing:'0.06em' }}>
         ↳ Built on Shopify B2B (Plus) · extended by Uncap products where needed
       </div>
