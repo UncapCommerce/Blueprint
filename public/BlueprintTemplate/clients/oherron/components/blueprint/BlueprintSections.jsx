@@ -1867,7 +1867,7 @@ function BPAgentic() {
     { who: 'buyer', text: 'Add both, ship to our main location, NET-30.' }
   ];
   return (
-    <BPSection id="agentic" n="10" label="Agentic" dark tail="THE AI-ENABLED STORE">
+    <BPSection id="agentic" n="11" label="Agentic" dark tail="THE AI-ENABLED STORE">
       <BPHeadline dark>
         Built for the{' '}
         <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, color: 'var(--uc-stone-300)' }}>agentic web.</span>
@@ -1971,7 +1971,7 @@ function BPIntegrations() {
     return <span style={{ display:'inline-flex', alignItems:'center', gap:5, fontFamily:pFont, fontSize:11, fontWeight:600, color:t.fg, background:t.bg, borderRadius:8, padding:'2px 8px', whiteSpace:'nowrap' }}>{children}</span>;
   };
   return (
-    <BPSection id="integrations" n="11" label="Integrated" tail="HOW IT CONNECTS">
+    <BPSection id="integrations" n="12" label="Integrated" tail="HOW IT CONNECTS">
       <BPHeadline>
         One operation,{' '}
         <BPSerif>not five silos.</BPSerif>
@@ -2095,7 +2095,7 @@ function BPMigration() {
     ['Blogs', 'Articles and guides moved with 301 redirects.']
   ];
   return (
-    <BPSection id="migration" n="12" label="Migration" paper tail="MOVE WITHOUT LOSS" vec="bgVector2">
+    <BPSection id="migration" n="13" label="Migration" paper tail="MOVE WITHOUT LOSS" vec="bgVector2">
       <BPHeadline>
         Replatform{' '}
         <BPSerif>without losing a thing.</BPSerif>
@@ -2208,7 +2208,7 @@ function BPDelivery() {
     { wk: 'WK 24', t: 'Launch', s: 'Go live + 30-day support begins.' }
   ];
   return (
-    <BPSection id="delivery" n="13" label="Delivery" paper tail="TIMELINE">
+    <BPSection id="delivery" n="14" label="Delivery" paper tail="TIMELINE">
       <BPHeadline>
         Six months,{' '}
         <BPSerif>phase by phase.</BPSerif>
@@ -2270,7 +2270,7 @@ function BPRiskAssessment() {
       m: 'Fixed scope up front, with a pre-approved buffer allowance for out-of-scope asks.' }
   ];
   return (
-    <BPSection id="risks" n="14" label="Risks" tail="EYES OPEN">
+    <BPSection id="risks" n="15" label="Risks" tail="EYES OPEN">
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr)', gap: 'clamp(28px, 5vw, 80px)', alignItems: 'end' }}>
         <BPHeadline>
           Named upfront,{' '}
@@ -2318,7 +2318,7 @@ function BPTeam() {
     { n: 'Jack Patel', r: 'Head of Solutions', img: '/BlueprintTemplate/assets/team-jack.webp' }
   ];
   return (
-    <BPSection id="team" n="17" label="Team" tail="WHO DOES THE WORK">
+    <BPSection id="team" n="18" label="Team" tail="WHO DOES THE WORK">
       <BPHeadline>
         Senior from{' '}
         <BPSerif>day one.</BPSerif>
@@ -2430,7 +2430,7 @@ function BPInvestment() {
     { n: '03', amount: '$24,000', due: 'Due at project completion' }
   ];
   return (
-    <BPSection id="investment" n="15" label="Investment" dark tail="FIXED · NO SURPRISES">
+    <BPSection id="investment" n="16" label="Investment" dark tail="FIXED · NO SURPRISES">
       {/* One package — split panel */}
       <div style={{
         position: 'relative', overflow: 'hidden',
@@ -2587,7 +2587,7 @@ function BPGrowth() {
     <svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6 L5 9 L10 3" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg>
   );
   return (
-    <BPSection id="growth" n="16" label="Growth" paper tail="AFTER LAUNCH">
+    <BPSection id="growth" n="17" label="Growth" paper tail="AFTER LAUNCH">
       <BPHeadline>
         Launch is the start.{' '}
         <BPSerif>Growth is the work.</BPSerif>
@@ -2676,7 +2676,7 @@ function BPWhy() {
   ];
   const clients = ['blueroot','canon','e3sparkplugs','eea','farmers','garrison','genuinescooter','industryrailway','kbs','microfiberwholesale','pawstruck','phoenixmecano','sanitaire','signwarehouse','thermosoft','ulegroup','vermontwoods','vosges','weldingstore','warehouselighting'];
   return (
-    <BPSection id="why" n="18" label="Uncap" dark tail="THE CASE">
+    <BPSection id="why" n="19" label="Uncap" dark tail="THE CASE">
       <BPHeadline dark>
         Uncap Commerce.{' '}
         <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, color: 'var(--uc-stone-300)' }}>Unified.</span>
@@ -2781,7 +2781,7 @@ function BPProof() {
   );
   const initials = (n) => n.split(' ').map(w => w[0]).slice(0, 2).join('').toUpperCase();
   return (
-    <BPSection id="proof" n="19" label="Proof" paper tail="ON THE RECORD">
+    <BPSection id="proof" n="20" label="Proof" paper tail="ON THE RECORD">
       <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr)', gap: 'clamp(28px, 5vw, 80px)', alignItems: 'end' }}>
         <BPHeadline>
           Don&rsquo;t take{' '}
@@ -3102,7 +3102,7 @@ function BPNext() {
     { n: '03', t: 'Ship in 24 weeks', d: 'Launch live, then move into Growth.' }
   ];
   return (
-    <BPSection id="next" n="20" label="Next" paper tail="LET'S GO">
+    <BPSection id="next" n="21" label="Next" paper tail="LET'S GO">
       <BPHeadline>
         Three steps{' '}
         <BPSerif>to start.</BPSerif>
@@ -3153,17 +3153,18 @@ function BPNav() {
     { id: 'content',     n: '07', l: 'Content' },
     { id: 'techstack',   n: '08', l: 'Architecture' },
     { id: 'b2b',         n: '09', l: 'Unified' },
-    { id: 'agentic',     n: '10', l: 'Agentic' },
-    { id: 'integrations',n: '11', l: 'Integrated' },
-    { id: 'migration',   n: '12', l: 'Migration' },
-    { id: 'delivery',    n: '13', l: 'Delivery' },
-    { id: 'risks',       n: '14', l: 'Risks' },
-    { id: 'investment',  n: '15', l: 'Investment' },
-    { id: 'growth',      n: '16', l: 'Growth' },
-    { id: 'team',        n: '17', l: 'Team' },
-    { id: 'why',         n: '18', l: 'Uncap' },
-    { id: 'proof',       n: '19', l: 'Proof' },
-    { id: 'next',        n: '20', l: 'Next' }
+    { id: 'application', n: '10', l: 'Application' },
+    { id: 'agentic',     n: '11', l: 'Agentic' },
+    { id: 'integrations',n: '12', l: 'Integrated' },
+    { id: 'migration',   n: '13', l: 'Migration' },
+    { id: 'delivery',    n: '14', l: 'Delivery' },
+    { id: 'risks',       n: '15', l: 'Risks' },
+    { id: 'investment',  n: '16', l: 'Investment' },
+    { id: 'growth',      n: '17', l: 'Growth' },
+    { id: 'team',        n: '18', l: 'Team' },
+    { id: 'why',         n: '19', l: 'Uncap' },
+    { id: 'proof',       n: '20', l: 'Proof' },
+    { id: 'next',        n: '21', l: 'Next' }
   ];
   const [active, setActive] = React.useState('intro');
   // Collapsible: the floating nav opens by default on every load; the
@@ -3269,6 +3270,101 @@ window.BPPerformance = BPPerformance;
 window.BPContent = BPContent;
 window.BPTechStack = BPTechStack;
 window.BPB2B = BPB2B;
+
+// ── APPLICATION: custom quartermaster portal ────────────────────────────────
+// A custom app on Shopify B2B: the quartermaster (the customer's admin) sets the
+// rules, and officers (the buyers) shop within them.
+function BPApplication() {
+  const caps = [
+    { t: 'Cart approvals', d: 'Officers build a cart and submit it; once the quartermaster approves, they can check out.' },
+    { t: 'Allowances', d: 'Each officer gets an allowance to spend on the products they are eligible for.' },
+    { t: 'Eligible products', d: 'The quartermaster picks which products the allowance can be used on.' },
+    { t: 'Officer management', d: 'Add and remove officers (buyers) as the roster changes.' }
+  ];
+  const nav = [['Approvals', '3', true], ['Officers', '48'], ['Allowances'], ['Eligible products'], ['Orders']];
+  const queue = [
+    { n: 'Ofc. R. Delgado', b: 'Badge 4417', items: 3, tot: '$312.40', left: '$487.60', st: 'Pending' },
+    { n: 'Sgt. M. Okafor', b: 'Badge 2290', items: 5, tot: '$654.10', left: '$145.90', st: 'Pending' },
+    { n: 'Ofc. J. Brennan', b: 'Badge 5108', items: 2, tot: '$189.00', left: '$611.00', st: 'Approved' }
+  ];
+  const pFont = '-apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif';
+  return (
+    <BPSection id="application" n="10" label="Application" tail="BUILT FOR YOUR DEPARTMENTS">
+      <BPHeadline>
+        A quartermaster portal,{' '}
+        <BPSerif>built for the way you outfit.</BPSerif>
+      </BPHeadline>
+      <p style={{ marginTop:'clamp(20px, 2.4vw, 28px)', maxWidth:680, fontFamily:'var(--font-serif)', fontSize:'clamp(15px, 1.3vw, 18px)', lineHeight:1.5, color:'var(--fg-2)' }}>
+        A custom application on Shopify where the quartermaster sets the rules (approvals, allowances, and eligible products) and officers shop within them. Every order stays inside policy, without the paperwork.
+      </p>
+
+      {/* capabilities */}
+      <div style={{ marginTop:'clamp(28px, 3.5vw, 44px)', display:'flex', flexWrap:'wrap', gap:'clamp(10px, 1.4vw, 16px)' }}>
+        {caps.map((c, i) => (
+          <div key={c.t} style={{ flex:'1 1 220px', minWidth:0, display:'flex', flexDirection:'column', gap:8, padding:'clamp(16px, 1.8vw, 22px)', background:'var(--uc-paper)', border:'1px solid var(--line-2)', borderTop:'3px solid var(--uc-signal)', borderRadius:8 }}>
+            <span style={{ fontFamily:'var(--font-mono)', fontSize:10, fontWeight:700, letterSpacing:'0.12em', color:'var(--fg-3)' }}>{String(i + 1).padStart(2, '0')}</span>
+            <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:'clamp(16px, 1.5vw, 20px)', letterSpacing:'-0.015em', color:'var(--fg-1)' }}>{c.t}</span>
+            <span style={{ fontFamily:'var(--font-serif)', fontSize:14, lineHeight:1.45, color:'var(--fg-2)' }}>{c.d}</span>
+          </div>
+        ))}
+      </div>
+
+      {/* portal wireframe */}
+      <div style={{ marginTop:'clamp(28px, 3.5vw, 44px)', border:'1px solid var(--line-2)', borderRadius:12, overflow:'hidden', background:'#F1F1F1', boxShadow:'0 24px 60px -32px rgba(10,10,10,0.45)' }}>
+        <div style={{ display:'flex', alignItems:'center', gap:10, padding:'10px 16px', background:'var(--co-prime)' }}>
+          <CoLogo h={16}/>
+          <span style={{ fontFamily:pFont, fontSize:12, fontWeight:600, color:'rgba(255,255,255,0.85)' }}>Quartermaster portal</span>
+          <span style={{ marginLeft:'auto', fontFamily:pFont, fontSize:11.5, color:'rgba(255,255,255,0.85)', whiteSpace:'nowrap' }}>City Police Dept. · QM</span>
+        </div>
+        <div style={{ display:'flex', flexWrap:'wrap' }}>
+          <div style={{ flex:'1 1 170px', padding:'14px 10px', display:'flex', flexDirection:'column', gap:3, borderRight:'1px solid #E3E3E3', background:'#EBEBEB' }}>
+            {nav.map(([l, c, on]) => (
+              <span key={l} style={{ display:'flex', justifyContent:'space-between', alignItems:'center', padding:'6px 9px', borderRadius:7, background:on ? '#FFFFFF' : 'transparent', fontFamily:pFont, fontSize:12.5, fontWeight:on ? 650 : 500, color:'#303030' }}>{l}{c ? <span style={{ fontSize:11, fontWeight:600, color:on ? '#FFFFFF' : '#616161', background:on ? 'var(--co-accent)' : 'transparent', borderRadius:999, padding:'1px 7px' }}>{c}</span> : null}</span>
+            ))}
+          </div>
+          <div style={{ flex:'999 1 320px', minWidth:0, padding:'clamp(14px, 2vw, 22px)', display:'flex', flexDirection:'column', gap:12 }}>
+            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', gap:10, flexWrap:'wrap' }}>
+              <span style={{ fontFamily:pFont, fontSize:'clamp(16px, 1.6vw, 20px)', fontWeight:700, color:'#1A1A1A' }}>Cart approvals</span>
+              <span style={{ fontFamily:pFont, fontSize:12, fontWeight:600, color:'#FFFFFF', background:'#303030', borderRadius:8, padding:'7px 12px', whiteSpace:'nowrap' }}>+ Add officer</span>
+            </div>
+            <div style={{ background:'#FFFFFF', border:'1px solid #E3E3E3', borderRadius:12, overflow:'hidden' }}>
+              {queue.map((q, i) => (
+                <div key={q.n} style={{ display:'flex', flexWrap:'wrap', alignItems:'center', gap:'8px 14px', padding:'12px 14px', borderTop:i ? '1px solid #F1F1F1' : 'none' }}>
+                  <span style={{ flex:'1 1 150px', minWidth:0, display:'flex', flexDirection:'column', gap:2 }}>
+                    <span style={{ fontFamily:pFont, fontSize:13, fontWeight:650, color:'#1A1A1A' }}>{q.n}</span>
+                    <span style={{ fontFamily:pFont, fontSize:11.5, color:'#616161' }}>{q.b} · {q.items} items · {q.tot}</span>
+                  </span>
+                  <span style={{ flex:'0 0 auto', fontFamily:pFont, fontSize:11.5, color:'#616161', whiteSpace:'nowrap' }}>Allowance left <b style={{ color:'#1A1A1A' }}>{q.left}</b></span>
+                  {q.st === 'Pending'
+                    ? <span style={{ flex:'0 0 auto', display:'flex', gap:6 }}><span style={{ fontFamily:pFont, fontSize:12, fontWeight:600, color:'#303030', border:'1px solid #E3E3E3', borderRadius:8, padding:'5px 10px' }}>Review</span><span style={{ fontFamily:pFont, fontSize:12, fontWeight:600, color:'#FFFFFF', background:'var(--co-prime)', borderRadius:8, padding:'5px 10px' }}>Approve</span></span>
+                    : <span style={{ flex:'0 0 auto', fontFamily:pFont, fontSize:11.5, fontWeight:600, color:'#014B40', background:'#CDFEE1', borderRadius:8, padding:'4px 9px' }}>Approved · can check out</span>}
+                </div>
+              ))}
+            </div>
+            <div style={{ display:'flex', flexWrap:'wrap', gap:12 }}>
+              <div style={{ flex:'1 1 200px', minWidth:0, background:'#FFFFFF', border:'1px solid #E3E3E3', borderRadius:12, padding:'12px 14px', display:'flex', flexDirection:'column', gap:7 }}>
+                <span style={{ fontFamily:pFont, fontSize:12, fontWeight:650, color:'#1A1A1A' }}>Annual uniform allowance</span>
+                <span style={{ fontFamily:pFont, fontSize:11.5, color:'#616161' }}>$800 per officer · resets Jan 1</span>
+                <span style={{ height:6, borderRadius:999, background:'#EBEBEB', overflow:'hidden' }}><span style={{ display:'block', width:'61%', height:'100%', background:'var(--co-prime)' }}/></span>
+                <span style={{ fontFamily:pFont, fontSize:11.5, color:'#616161' }}>61% used across 48 officers</span>
+              </div>
+              <div style={{ flex:'1 1 200px', minWidth:0, background:'#FFFFFF', border:'1px solid #E3E3E3', borderRadius:12, padding:'12px 14px', display:'flex', flexDirection:'column', gap:6 }}>
+                <span style={{ fontFamily:pFont, fontSize:12, fontWeight:650, color:'#1A1A1A' }}>Eligible products</span>
+                {['Duty uniforms', 'Footwear', 'Outerwear', 'Duty gear'].map((p, i) => (
+                  <span key={p} style={{ display:'flex', alignItems:'center', gap:7, fontFamily:pFont, fontSize:12, color:'#303030' }}><span style={{ width:14, height:14, borderRadius:4, background:i < 3 ? 'var(--co-prime)' : '#FFFFFF', border:'1px solid ' + (i < 3 ? 'var(--co-prime)' : '#8A8A8A'), color:'#fff', fontSize:9, display:'flex', alignItems:'center', justifyContent:'center' }}>{i < 3 ? '✓' : ''}</span>{p}</span>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style={{ marginTop:20, fontFamily:'var(--font-mono)', fontSize:11, color:'var(--fg-3)', letterSpacing:'0.06em' }}>
+        ↳ Custom application on Shopify B2B · quartermaster sets the rules, officers shop within them
+      </div>
+    </BPSection>
+  );
+}
+window.BPApplication = BPApplication;
 window.BPIntegrations = BPIntegrations;
 window.BPGantt = BPGantt;
 window.BPDelivery = BPDelivery;
