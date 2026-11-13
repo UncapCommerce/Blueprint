@@ -2426,9 +2426,9 @@ function BPInvestment() {
     'Go live, a clean handoff, and a 30-day warranty'
   ];
   const schedule = [
-    { n: '01', amount: '$48,000', due: 'Due at signup' },
-    { n: '02', amount: '$24,000', due: 'Due at design approval' },
-    { n: '03', amount: '$24,000', due: 'Due at project completion' }
+    { n: '01', amount: '$56,000', due: 'Due at signup' },
+    { n: '02', amount: '$28,000', due: 'Due at design approval' },
+    { n: '03', amount: '$28,000', due: 'Due at project completion' }
   ];
   return (
     <BPSection id="investment" n="16" label="Investment" dark tail="FIXED · NO SURPRISES">
@@ -2478,6 +2478,31 @@ function BPInvestment() {
           </ul>
         </div>
       </div>
+
+      {/* Custom Shopify application — separate fixed-price workstream */}
+      <div style={{
+        marginTop: 16, padding: 'clamp(22px, 2.6vw, 32px)',
+        border: '1px solid #1F1F1F', borderRadius: 12, background: '#0F0F0F',
+        display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, auto)',
+        gap: 'clamp(20px, 4vw, 48px)', alignItems: 'center'
+      }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+            <span aria-hidden="true" style={{ width: 16, height: 2, background: 'var(--uc-signal)' }}/>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--uc-stone-500)' }}>Custom Shopify Application</span>
+          </div>
+          <div style={{ fontFamily: 'var(--font-hero)', fontWeight: 700, fontSize: 'clamp(20px, 2vw, 28px)', letterSpacing: '-0.03em', lineHeight: 1.05, color: 'var(--uc-paper)' }}>Your quartermaster portal, built to fit.</div>
+          <p style={{ margin: '10px 0 0', maxWidth: 560, fontFamily: 'var(--font-serif)', fontSize: 'clamp(14px, 1.2vw, 16px)', lineHeight: 1.5, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>
+            A custom application on Shopify for the quartermaster: cart approvals before checkout,
+            per-officer allowances, eligible products, and adding or removing officers.
+          </p>
+        </div>
+        <div style={{ textAlign: 'right' }}>
+          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--uc-stone-500)' }}>Fixed price</div>
+          <div style={{ marginTop: 6, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(34px, 3.6vw, 52px)', letterSpacing: '-0.045em', lineHeight: 0.9, color: 'var(--uc-signal)' }}>$16k</div>
+        </div>
+      </div>
+
 
       {/* ERP integration — separate fixed-price workstream */}
       <div style={{
