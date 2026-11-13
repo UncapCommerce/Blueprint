@@ -1602,6 +1602,7 @@ function BPTechStack() {
     { name: 'Shopify Flow',                fn: 'Workflow automation',                 pri: 'launch', cost: 'Free' },
     { name: 'Shopify Bundles',             fn: 'Bundled & grouped products',          pri: 'launch', cost: 'Free' },
     { name: 'ID.com',                      fn: 'ID recognition & verification',       pri: 'launch', cost: '–' },
+    { name: 'Globo Options',               fn: 'Custom product options',              pri: 'launch', cost: '$10/mo' },
     { name: 'Appse',               fn: 'ERP ↔ Shopify integration',           pri: 'start',  cost: '$390/mo' },
     { name: 'Mailchimp',                   fn: 'Email marketing & automation',        pri: 'launch', cost: '–' },
     { name: 'JudgeMe',                     fn: 'Product reviews, store reviews, UGC & FAQs', pri: 'launch', cost: '$15/mo' },
@@ -1633,7 +1634,7 @@ function BPTechStack() {
         {(() => {
           const layers = [
             { tier:'04', name:'Growth & Intelligence', note:'After launch', tools:[['Shopify Flow','launch'],['Shopify Knowledge Base','launch'],['Mailchimp','launch'],['JudgeMe','launch']] },
-            { tier:'03', name:'Experience & Engagement', note:'Customer-facing', tools:[['Shopify Search & Discovery','launch'],['Shopify Checkout Blocks','launch'],['Shopify Bundles','launch'],['ID.com','launch']] },
+            { tier:'03', name:'Experience & Engagement', note:'Customer-facing', tools:[['Shopify Search & Discovery','launch'],['Shopify Checkout Blocks','launch'],['Shopify Bundles','launch'],['Globo Options','launch'],['ID.com','launch']] },
             { tier:'02', name:'Data & Integration', note:'System of record', tools:[['Appse','start'],['Matrixify','start']] },
             { tier:'01', name:'Commerce Core', note:'Foundation', tools:[['Shopify','start']], core:true }
           ];
@@ -1716,7 +1717,7 @@ function BPTechStack() {
           <span style={{ fontFamily:'var(--font-mono)', fontSize:10, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'var(--uc-signal)' }}>Est. monthly</span>
           <span style={{ fontFamily:'var(--font-serif)', fontSize:13, color:'var(--uc-stone-500)' }}>Platform + apps, before ERP integration</span>
           <span/>
-          <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:'clamp(18px,1.8vw,24px)', letterSpacing:'-0.03em', color:'var(--uc-paper)', textAlign:'right', whiteSpace:'nowrap' }}>~$2,755/mo</span>
+          <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:'clamp(18px,1.8vw,24px)', letterSpacing:'-0.03em', color:'var(--uc-paper)', textAlign:'right', whiteSpace:'nowrap' }}>~$2,765/mo</span>
         </div>
       </div>
       <div style={{ marginTop:16, display:'flex', gap:18, flexWrap:'wrap', fontFamily:'var(--font-mono)', fontSize:10, color:'var(--uc-stone-500)', letterSpacing:'0.06em' }}>
