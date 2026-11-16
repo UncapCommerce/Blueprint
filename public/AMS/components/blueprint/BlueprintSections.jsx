@@ -2348,7 +2348,7 @@ function BPTeam() {
   const team = [
     { n: 'Denis Dyli', r: 'CEO, Principal', img: '/BlueprintTemplate/assets/team-denis.webp' },
     { n: 'Michael Johnson', r: 'Head of Services', img: '/BlueprintTemplate/assets/team-michael.webp' },
-    { n: 'Zach Francque', r: 'Director of Partnership', img: '/BlueprintTemplate/assets/team-zach.webp' },
+    { n: 'Zach Francque', r: 'Director of Shopify Alliance', img: '/BlueprintTemplate/assets/team-zach.webp' },
     { n: 'Jo Tan', r: 'Head of Design', img: '/BlueprintTemplate/assets/team-jo.webp' },
     { n: 'Vishal Ranpariya', r: 'CTO', img: '/BlueprintTemplate/assets/team-vishal.webp' }
   ];
