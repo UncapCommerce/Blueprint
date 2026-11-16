@@ -2444,9 +2444,9 @@ function BPTeam() {
   const team = [
     { n: 'Denis Dyli', r: 'CEO, Principal', img: '/BlueprintTemplate/assets/team-denis.webp' },
     { n: 'Michael Johnson', r: 'Head of Services', img: '/BlueprintTemplate/assets/team-michael.webp' },
+    { n: 'Zach Francque', r: 'Director of Partnership', img: '/BlueprintTemplate/assets/team-zach.webp' },
     { n: 'Jo Tan', r: 'Head of Design', img: '/BlueprintTemplate/assets/team-jo.webp' },
-    { n: 'Vishal Ranpariya', r: 'Head of Products', img: '/BlueprintTemplate/assets/team-vishal.webp' },
-    { n: 'Jack Patel', r: 'Head of Solutions', img: '/BlueprintTemplate/assets/team-jack.webp' }
+    { n: 'Vishal Ranpariya', r: 'CTO', img: '/BlueprintTemplate/assets/team-vishal.webp' }
   ];
   return (
     <BPSection id="team" n="17" label="Team" tail="WHO DOES THE WORK">
