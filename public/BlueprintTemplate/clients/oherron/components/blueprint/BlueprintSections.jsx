@@ -2315,8 +2315,8 @@ function BPTeam() {
     { n: 'Denis Dyli', r: 'CEO, Principal', img: '/BlueprintTemplate/assets/team-denis.webp' },
     { n: 'Michael Johnson', r: 'Head of Services', img: '/BlueprintTemplate/assets/team-michael.webp' },
     { n: 'Zach Francque', r: 'Director of Shopify Alliance', img: '/BlueprintTemplate/assets/team-zach.webp' },
-    { n: 'Jo Tan', r: 'Head of Design', img: '/BlueprintTemplate/assets/team-jo.webp' },
-    { n: 'Vishal Ranpariya', r: 'CTO', img: '/BlueprintTemplate/assets/team-vishal.webp' }
+    { n: 'Jo Tan', r: 'Head of Experience Design', img: '/BlueprintTemplate/assets/team-jo.webp' },
+    { n: 'Vishal Ranpariya', r: 'CTO, Partner', img: '/BlueprintTemplate/assets/team-vishal.webp' }
   ];
   return (
     <BPSection id="team" n="18" label="Team" tail="WHO DOES THE WORK">
