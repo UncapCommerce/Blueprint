@@ -1054,24 +1054,17 @@ function GfxPDP() {
         <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
           <div style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em', color:'var(--co-prime)' }}>{brandName().toUpperCase()}</div>
           <div style={{ fontFamily:'var(--font-hero)', fontWeight:700, fontSize:21, letterSpacing:'-0.04em', lineHeight:0.9, color:'var(--fg-1)' }}>{P(0).name}<br/><span style={{ fontFamily:'var(--font-serif)', fontWeight:400, fontSize:16 }}>{bpSite().pdp.sub}</span></div>
-          {/* swatches */}
-          <div style={{ display:'flex', gap:5, marginTop:1 }}>{['var(--co-prime)','#1F1F1F','#E9B44C','#7C6FB0'].map((c,i)=>(<span key={i} style={{ width:16, height:16, borderRadius:999, background:c, border:i===0?'1.5px solid var(--uc-black)':'1px solid var(--line-1)', boxShadow:i===0?'0 0 0 2px var(--uc-paper) inset':'none' }}/>))}</div>
-          {/* configuration — configurable product */}
-          <div style={{ marginTop:1 }}>
-            <div style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:4 }}>CONFIGURATION</div>
-            <div style={{ display:'flex', gap:4 }}>{[['Each',false],['Pack of 10',true],['Pack of 50',false]].map(([l,on],i)=>(<span key={i} style={{ flex:1, padding:'5px 2px', textAlign:'center', border:'1px solid', borderColor:on?'var(--uc-black)':'var(--line-1)', borderRadius:3, fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, color:on?'var(--uc-paper)':'var(--fg-2)', background:on?'var(--uc-black)':'transparent', whiteSpace:'nowrap' }}>{l}</span>))}</div>
-          </div>
-          {/* CTAs */}
-          <div style={{ display:'flex', flexDirection:'column', gap:6, marginTop:2 }}>
-            <div style={{ display:'flex', gap:6 }}>
-              <div style={{ display:'flex', alignItems:'center', border:'1px solid var(--uc-black)', borderRadius:3, overflow:'hidden' }}>
-                <span style={{ padding:'0 8px', fontFamily:'var(--font-mono)', fontSize:11, fontWeight:700, color:'var(--fg-2)' }}>–</span>
-                <span style={{ padding:'8px 4px', minWidth:18, textAlign:'center', fontFamily:'var(--font-mono)', fontSize:9, fontWeight:700, color:'var(--fg-1)', borderLeft:'1px solid var(--line-1)', borderRight:'1px solid var(--line-1)' }}>1</span>
-                <span style={{ padding:'0 8px', fontFamily:'var(--font-mono)', fontSize:11, fontWeight:700, color:'var(--fg-2)' }}>+</span>
-              </div>
-              <span style={{ flex:1, padding:'8px', textAlign:'center', background:'var(--co-accent)', color:'#fff', borderRadius:3, fontFamily:'var(--font-display)', fontSize:9.5, fontWeight:800 }}>Add to cart</span>
+          {/* closed portal: members log in to see variants and order */}
+          <div style={{ marginTop:2, padding:'11px 12px', border:'1px solid var(--line-2)', borderRadius:4, background:'var(--uc-bone)', display:'flex', flexDirection:'column', gap:8 }}>
+            <div style={{ display:'flex', alignItems:'center', gap:7 }}>
+              <span style={{ width:16, height:16, borderRadius:999, background:'var(--co-prime)', color:'#fff', fontSize:8, display:'flex', alignItems:'center', justifyContent:'center', flexShrink:0 }}>🔒</span>
+              <span style={{ fontFamily:'var(--font-display)', fontSize:9.5, fontWeight:700, color:'var(--fg-1)' }}>Members-only ordering</span>
             </div>
-            <span style={{ padding:'7px', textAlign:'center', border:'1px solid var(--uc-black)', borderRadius:3, fontFamily:'var(--font-display)', fontSize:9, fontWeight:700, color:'var(--fg-1)' }}>Request a Quote</span>
+            <span style={{ fontFamily:'var(--font-serif)', fontSize:9.5, lineHeight:1.4, color:'var(--fg-2)' }}>If you are a member, log in to place an order, or <span style={{ color:'var(--co-prime)', fontWeight:700, textDecoration:'underline' }}>register here</span>.</span>
+            <div style={{ display:'flex', gap:6 }}>
+              <span style={{ flex:1, padding:'7px', textAlign:'center', background:'var(--co-prime)', color:'#fff', borderRadius:3, fontFamily:'var(--font-display)', fontSize:9, fontWeight:800 }}>Log in</span>
+              <span style={{ flex:1, padding:'7px', textAlign:'center', border:'1px solid var(--uc-black)', borderRadius:3, fontFamily:'var(--font-display)', fontSize:9, fontWeight:700, color:'var(--fg-1)' }}>Register</span>
+            </div>
           </div>
           {/* trust row */}
           <div style={{ display:'flex', gap:8, marginTop:3, flexWrap:'wrap' }}>{bpSite().trust.map(t=>(<span key={t} style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, color:'var(--fg-3)' }}>{t}</span>))}</div>
@@ -1092,7 +1085,7 @@ function GfxPDP() {
             </div>
             <div style={{ display:'flex', alignItems:'center', gap:8 }}>
               <span style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, color:'var(--fg-3)', whiteSpace:'nowrap' }}>Bundle <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:12, color:'var(--fg-1)' }}>{bundlePrice()}</span></span>
-              <span style={{ flex:1, padding:'6px', textAlign:'center', background:'var(--co-accent)', color:'#fff', borderRadius:3, fontFamily:'var(--font-display)', fontSize:8.5, fontWeight:700 }}>Add all 3</span>
+              <span style={{ flex:1, padding:'6px', textAlign:'center', background:'var(--co-accent)', color:'#fff', borderRadius:3, fontFamily:'var(--font-display)', fontSize:8.5, fontWeight:700 }}>Log in to order</span>
             </div>
           </div>
         </div>
