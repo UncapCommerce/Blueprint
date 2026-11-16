@@ -1389,7 +1389,8 @@ async function applyContactFixes(env) {
 
 // One-time company fixes Denis asked for. A row can move the company to
 // Declined (Hub access off, exactly as the company page's Decline button does)
-// and/or rename it on the company and its blueprint record. Flag-guarded, so
+// and/or rename it on the company and its blueprint record, and/or set its
+// address. Flag-guarded, so
 // each runs once; a later edit or Restore from the company page sticks.
 const COMPANY_FIXES = [
   { flag: 'codecline:finncorp:v1', id: 'finncorp', declined: true },
@@ -1398,6 +1399,7 @@ const COMPANY_FIXES = [
   { flag: 'corename:winstonrods:v1', id: 'winstonrods', name: 'Winston Rod' },
   { flag: 'codecline:gabrielny:v1', id: 'gabrielny', declined: true },
   { flag: 'corename:dfelectrical:v1', id: 'dfelectrical', name: 'DF Electrical' },
+  { flag: 'coaddr:dfelectrical:v1', id: 'dfelectrical', address: '1810 W. Winton Ave, Hayward, CA 94545-1232' },
 ];
 async function applyCompanyFixes(env) {
   const kv = env.BLUEPRINT_AUTH;
@@ -1405,7 +1407,7 @@ async function applyCompanyFixes(env) {
     if (await kv.get(f.flag)) continue;
     const co = await getCompany(env, f.id);
     if (co) {
-      const next = { ...co, ...(f.declined ? { declined: true } : {}), ...(f.name ? { name: f.name } : {}) };
+      const next = { ...co, ...(f.declined ? { declined: true } : {}), ...(f.name ? { name: f.name } : {}), ...(f.address ? { address: f.address } : {}) };
       await putCompany(env, next);
       if (f.declined && !co.declined) await logActivity(env, null, { type: 'deleted', entity: 'company', id: co.id, name: co.name, actor: SUPER_ADMIN_EMAIL, detail: 'Declined — Hub access disabled' });
       const draft = f.name && co.blueprintId ? await blueprintDraft(env, co.blueprintId) : null;
