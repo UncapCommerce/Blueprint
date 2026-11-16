@@ -1066,6 +1066,7 @@ function GfxPDP() {
               <span style={{ flex:1, padding:'7px', textAlign:'center', border:'1px solid var(--uc-black)', borderRadius:3, fontFamily:'var(--font-display)', fontSize:9, fontWeight:700, color:'var(--fg-1)' }}>Register</span>
             </div>
           </div>
+          <span style={{ padding:'7px', textAlign:'center', border:'1px solid var(--uc-black)', borderRadius:3, fontFamily:'var(--font-display)', fontSize:9, fontWeight:700, color:'var(--fg-1)' }}>Add to Quote</span>
           {/* trust row */}
           <div style={{ display:'flex', gap:8, marginTop:3, flexWrap:'wrap' }}>{bpSite().trust.map(t=>(<span key={t} style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, color:'var(--fg-3)' }}>{t}</span>))}</div>
           {/* frequently bought together (compact, in buy box) */}
