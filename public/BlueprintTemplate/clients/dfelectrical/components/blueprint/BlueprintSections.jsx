@@ -1052,23 +1052,14 @@ function GfxPDP() {
 
         {/* buy box */}
         <div style={{ display:'flex', flexDirection:'column', gap:7 }}>
-          <div style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em', color:'var(--co-prime)' }}>{brandName().toUpperCase()} · IN STOCK · SHIPS TODAY</div>
+          <div style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em', color:'var(--co-prime)' }}>{brandName().toUpperCase()}</div>
           <div style={{ fontFamily:'var(--font-hero)', fontWeight:700, fontSize:21, letterSpacing:'-0.04em', lineHeight:0.9, color:'var(--fg-1)' }}>{P(0).name}<br/><span style={{ fontFamily:'var(--font-serif)', fontWeight:400, fontSize:16 }}>{bpSite().pdp.sub}</span></div>
-          <div style={{ display:'flex', alignItems:'center', gap:6, fontFamily:'var(--font-mono)', fontSize:8 }}><span style={{ color:'var(--co-accent)' }}>★★★★★</span><span style={{ color:'var(--fg-3)' }}>4.9 · 128 reviews</span></div>
           {/* swatches */}
           <div style={{ display:'flex', gap:5, marginTop:1 }}>{['var(--co-prime)','#1F1F1F','#E9B44C','#7C6FB0'].map((c,i)=>(<span key={i} style={{ width:16, height:16, borderRadius:999, background:c, border:i===0?'1.5px solid var(--uc-black)':'1px solid var(--line-1)', boxShadow:i===0?'0 0 0 2px var(--uc-paper) inset':'none' }}/>))}</div>
           {/* configuration — configurable product */}
           <div style={{ marginTop:1 }}>
             <div style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:4 }}>CONFIGURATION</div>
             <div style={{ display:'flex', gap:4 }}>{[['Each',false],['Pack of 10',true],['Pack of 50',false]].map(([l,on],i)=>(<span key={i} style={{ flex:1, padding:'5px 2px', textAlign:'center', border:'1px solid', borderColor:on?'var(--uc-black)':'var(--line-1)', borderRadius:3, fontFamily:'var(--font-mono)', fontSize:6, fontWeight:700, color:on?'var(--uc-paper)':'var(--fg-2)', background:on?'var(--uc-black)':'transparent', whiteSpace:'nowrap' }}>{l}</span>))}</div>
-          </div>
-          {/* live stock (ERP) + account price */}
-          <div style={{ marginTop:2, border:'1px solid var(--line-1)', borderRadius:3, overflow:'hidden' }}>
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(4,1fr)' }}>{[['IN STOCK','142'],['WAREHOUSE','Main'],['SHIPS','Today'],['YOUR PRICE',P(0).price]].map((t,i)=>(
-              <div key={i} style={{ padding:'4px 2px', textAlign:'center', borderLeft:i?'1px solid var(--line-1)':'none' }}>
-                <div style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, color:'var(--fg-3)', letterSpacing:'0.04em' }}>{t[0]}</div>
-                <div style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--fg-1)', marginTop:2 }}>{t[1]}</div>
-              </div>))}</div>
           </div>
           {/* CTAs */}
           <div style={{ display:'flex', flexDirection:'column', gap:6, marginTop:2 }}>
@@ -1117,16 +1108,6 @@ function GfxPDP() {
           <div style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:7 }}>WHY BUYERS CHOOSE IT</div>
           <div style={{ display:'flex', flexDirection:'column', gap:6 }}>{bpSite().pdp.why.map((t,i)=>(<div key={i} style={{ display:'grid', gridTemplateColumns:'12px 1fr', gap:7, alignItems:'start' }}><span style={{ width:10, height:10, borderRadius:999, background:'var(--co-prime)', marginTop:1, display:'flex', alignItems:'center', justifyContent:'center' }}><svg width="6" height="6" viewBox="0 0 12 12" fill="none"><path d="M2 6 L5 9 L10 3" stroke="#fff" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"/></svg></span><span style={{ fontFamily:'var(--font-serif)', fontSize:9, lineHeight:1.35, color:'var(--fg-2)' }}>{t}</span></div>))}</div>
         </div>
-      </div>
-
-      {/* review highlight */}
-      <div style={{ padding:'11px 14px', borderTop:'1px solid var(--line-1)', display:'flex', gap:10, alignItems:'center', background:'var(--uc-paper)' }}>
-        <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:24, letterSpacing:'-0.04em', color:'var(--fg-1)' }}>4.9</span>
-        <div style={{ flex:1 }}>
-          <div style={{ fontFamily:'var(--font-mono)', fontSize:8, color:'var(--co-accent)' }}>★★★★★</div>
-          <div style={{ fontFamily:'var(--font-serif)', fontStyle:'italic', fontSize:9, lineHeight:1.35, color:'var(--fg-2)', marginTop:2 }}>“{bpSite().review}”</div>
-        </div>
-        <span style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, color:'var(--fg-3)', whiteSpace:'nowrap' }}>VERIFIED ✓</span>
       </div>
 
       {/* you may also like */}
