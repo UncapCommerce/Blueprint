@@ -1389,9 +1389,10 @@ async function applyContactFixes(env) {
 
 // One-time company fixes Denis asked for. A row can move the company to
 // Declined (Hub access off, exactly as the company page's Decline button does)
-// and/or rename it on the company and its blueprint record, and/or set its
-// address. Flag-guarded, so
-// each runs once; a later edit or Restore from the company page sticks.
+// and/or rename it on the company and its blueprint record, set its address,
+// or make a contact (by email) the Client Lead, the person shown on the
+// blueprint cover as the signer. Flag-guarded, so each runs once; a later edit
+// or Restore from the company page sticks.
 const COMPANY_FIXES = [
   { flag: 'codecline:finncorp:v1', id: 'finncorp', declined: true },
   { flag: 'codecline:seesinc:v1', id: 'seesinc', declined: true },
@@ -1400,14 +1401,23 @@ const COMPANY_FIXES = [
   { flag: 'codecline:gabrielny:v1', id: 'gabrielny', declined: true },
   { flag: 'corename:dfelectrical:v1', id: 'dfelectrical', name: 'DF Electrical' },
   { flag: 'coaddr:dfelectrical:v1', id: 'dfelectrical', address: '1810 W. Winton Ave, Hayward, CA 94545-1232' },
+  { flag: 'colead:northwest:v1', id: 'northwest', lead: 'jscott@northwest.ca' },
 ];
+// The company record with `email` as its Client Lead: that contact is promoted
+// (or added) and the previous lead stays on as a regular contact.
+function withLead(co, email) {
+  const all = [co.leadContact, ...(co.contacts || [])].filter(Boolean);
+  const lead = all.find((c) => (c.email || '').toLowerCase() === email) || { email, name: '', title: '' };
+  return { ...co, leadContact: lead, contacts: all.filter((c) => c !== lead) };
+}
 async function applyCompanyFixes(env) {
   const kv = env.BLUEPRINT_AUTH;
   for (const f of COMPANY_FIXES) {
     if (await kv.get(f.flag)) continue;
     const co = await getCompany(env, f.id);
     if (co) {
-      const next = { ...co, ...(f.declined ? { declined: true } : {}), ...(f.name ? { name: f.name } : {}), ...(f.address ? { address: f.address } : {}) };
+      const base = f.lead ? withLead(co, f.lead) : co;
+      const next = { ...base, ...(f.declined ? { declined: true } : {}), ...(f.name ? { name: f.name } : {}), ...(f.address ? { address: f.address } : {}) };
       await putCompany(env, next);
       if (f.declined && !co.declined) await logActivity(env, null, { type: 'deleted', entity: 'company', id: co.id, name: co.name, actor: SUPER_ADMIN_EMAIL, detail: 'Declined — Hub access disabled' });
       const draft = f.name && co.blueprintId ? await blueprintDraft(env, co.blueprintId) : null;
