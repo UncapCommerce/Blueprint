@@ -2433,9 +2433,9 @@ function BPTeam() {
   const team = [
     { n: 'Denis Dyli', r: 'CEO, Principal', img: '/BlueprintTemplate/assets/team-denis.webp' },
     { n: 'Michael Johnson', r: 'Head of Services', img: '/BlueprintTemplate/assets/team-michael.webp' },
+    { n: 'Zach Francque', r: 'Director of Partnership', img: '/BlueprintTemplate/assets/team-zach.webp' },
     { n: 'Jo Tan', r: 'Head of Design', img: '/BlueprintTemplate/assets/team-jo.webp' },
-    { n: 'Vishal Ranpariya', r: 'Head of Products', img: '/BlueprintTemplate/assets/team-vishal.webp' },
-    { n: 'Jack Patel', r: 'Head of Solutions', img: '/BlueprintTemplate/assets/team-jack.webp' }
+    { n: 'Vishal Ranpariya', r: 'CTO', img: '/BlueprintTemplate/assets/team-vishal.webp' }
   ];
   return (
     <BPSection id="team" n="17" label="Team" tail="WHO DOES THE WORK">
@@ -2444,8 +2444,8 @@ function BPTeam() {
         <BPSerif>day one.</BPSerif>
       </BPHeadline>
       <p style={{ marginTop: 18, maxWidth: 600, fontFamily: 'var(--font-serif)', fontSize: 'clamp(15px, 1.3vw, 18px)', lineHeight: 1.5, color: 'var(--fg-2)' }}>
-        The team in this proposal is the team in the work. No bait-and-switch, no
-        outsourced QA. You&rsquo;ll meet everyone on the first call.
+        A leadership team with deep roots in commerce and B2B distribution, and years of
+        experience building on Shopify for manufacturers and distributors.
       </p>
       <div style={{
         marginTop: 'clamp(32px, 4vw, 48px)',
