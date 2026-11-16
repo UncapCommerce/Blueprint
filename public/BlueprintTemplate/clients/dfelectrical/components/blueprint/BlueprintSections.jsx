@@ -817,9 +817,12 @@ function BPGantt() {
 // Mini faux-UI graphics for each KPI group.
 // Wireframe logo: the company logo uploaded in the GO app, else the wordmark.
 // Colors in these frames come from the profile palette (--co-prime / --co-accent).
-function CoLogo({ h }) {
+function CoLogo({ h, big }) {
   const co = window.__bpCompany;
-  if (co && co.logoUrl) return <img src={co.logoUrl} alt={brandName()} style={{ height: h, width: 'auto', maxWidth: h * 7, display: 'block', objectFit: 'contain' }}/>;
+  // big (Commerce headers): drawn ~40% larger, with a negative margin so the
+  // slot, and so every header's height, stays exactly as it was.
+  const g = big ? Math.round(h * 1.4) : h, m = -Math.round((g - h) / 2);
+  if (co && co.logoUrl) return <img src={co.logoUrl} alt={brandName()} style={{ height: g, margin: m + 'px 0', width: 'auto', maxWidth: g * 7, display: 'block', objectFit: 'contain', flexShrink: 0 }}/>;
   return <BrandMark fontSize={Math.round(h * 0.9)} dotColor="var(--co-accent)"/>;
 }
 function GfxChrome({ children }) {
@@ -827,7 +830,7 @@ function GfxChrome({ children }) {
     <div style={{ background: 'var(--uc-paper)', border: '1px solid var(--line-1)', borderRadius: 5, overflow: 'hidden' }}>
       <div style={{ background:'var(--uc-black)', color:'var(--uc-paper)', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>{bpSite().announcement}</div>
       <div style={{ display:'flex', alignItems:'center', gap:12, padding:'9px 14px', borderBottom:'1px solid var(--line-1)' }}>
-        <CoLogo h={15}/>
+        <CoLogo h={15} big/>
         <div style={{ display:'flex', gap:11, marginLeft:6 }}>{bpSite().nav.slice(0, 4).map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:8.5, fontWeight:700, letterSpacing:'0.04em', color:i===0?'var(--fg-1)':'var(--fg-3)' }}>{x}</span>))}</div>
         <div style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:8 }}>
           <span style={{ fontFamily:'var(--font-mono)', fontSize:8, color:'var(--fg-3)' }}>Search…</span>
@@ -872,7 +875,7 @@ function GfxCollection() {
       {/* chrome */}
       <div style={{ background:'var(--uc-black)', color:'var(--uc-paper)', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>{bpSite().announcement}</div>
       <div style={{ display:'flex', alignItems:'center', gap:11, padding:'8px 14px', borderBottom:'1px solid var(--line-1)' }}>
-        <CoLogo h={13}/>
+        <CoLogo h={13} big/>
         <div style={{ display:'flex', gap:9, marginLeft:4 }}>{bpSite().nav.slice(0, 4).map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:i===1?'var(--fg-1)':'var(--fg-3)' }}>{x}</span>))}</div>
         <span style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:7 }}>
           <span style={{ width:110, height:18, borderRadius:999, border:'1px solid var(--line-2)', display:'flex', alignItems:'center', gap:4, padding:'0 9px', fontFamily:'var(--font-mono)', fontSize:7, color:'var(--fg-3)', whiteSpace:'nowrap', overflow:'hidden' }}><span style={{ fontSize:8 }}>⌕</span>Search products…</span>
@@ -947,7 +950,7 @@ function GfxCart() {
       <div>
         <div style={{ background:'var(--uc-black)', color:'var(--uc-paper)', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>{bpSite().announcement}</div>
         <div style={{ display:'flex', alignItems:'center', gap:11, padding:'8px 14px', borderBottom:'1px solid var(--line-1)' }}>
-          <CoLogo h={13}/>
+          <CoLogo h={13} big/>
           <div style={{ display:'flex', gap:9, marginLeft:4 }}>{bpSite().nav.slice(0, 4).map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:i===0?'var(--fg-1)':'var(--fg-3)' }}>{x}</span>))}</div>
           <span style={{ marginLeft:'auto', fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--uc-paper)', background:'var(--co-prime)', padding:'3px 8px', borderRadius:3 }}>Cart 3</span>
         </div>
@@ -1028,7 +1031,7 @@ function GfxPDP() {
       {/* chrome */}
       <div style={{ background:'var(--uc-black)', color:'var(--uc-paper)', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>{bpSite().announcement}</div>
       <div style={{ display:'flex', alignItems:'center', gap:11, padding:'8px 14px', borderBottom:'1px solid var(--line-1)' }}>
-        <CoLogo h={13}/>
+        <CoLogo h={13} big/>
         <div style={{ display:'flex', gap:9, marginLeft:4 }}>{bpSite().nav.slice(0, 4).map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:i===0?'var(--fg-1)':'var(--fg-3)' }}>{x}</span>))}</div>
         <span style={{ marginLeft:'auto', fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--uc-paper)', background:'var(--co-prime)', padding:'3px 8px', borderRadius:3 }}>Cart 2</span>
       </div>
@@ -1143,7 +1146,7 @@ function GfxPortal() {
       {/* chrome */}
       <div style={{ background:'var(--uc-black)', color:'var(--uc-paper)', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>ACCOUNT #40218 · NET-30 TERMS ACTIVE</div>
       <div style={{ display:'flex', alignItems:'center', gap:11, padding:'8px 14px', borderBottom:'1px solid var(--line-1)' }}>
-        <CoLogo h={13}/>
+        <CoLogo h={13} big/>
         <span style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:7 }}>
           <span style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, color:'var(--fg-3)' }}>ACME BUYER CO.</span>
           <span style={{ width:18, height:18, borderRadius:999, background:'linear-gradient(135deg,var(--co-prime),color-mix(in srgb, var(--co-prime) 70%, #000))', display:'flex', alignItems:'center', justifyContent:'center', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:800, color:'#fff' }}>L</span>
@@ -1203,7 +1206,7 @@ function GfxHomepage() {
       <div style={{ background:'var(--uc-black)', color:'var(--uc-paper)', textAlign:'center', padding:'4px 0', fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.12em' }}>{bpSite().announcement}</div>
       {/* header */}
       <div style={{ display:'flex', alignItems:'center', gap:11, padding:'8px 14px', borderBottom:'1px solid var(--line-1)' }}>
-        <CoLogo h={15}/>
+        <CoLogo h={15} big/>
         <div style={{ display:'flex', gap:11, marginLeft:6 }}>{nav.map((x,i)=>(<span key={x} style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:i===0?'var(--fg-1)':'var(--fg-3)', position:'relative' }}>{x}{i===0 && <span style={{ position:'absolute', left:0, right:0, bottom:-9, height:2, background:'var(--uc-black)' }}/>}</span>))}</div>
         <span style={{ marginLeft:'auto', display:'flex', alignItems:'center', gap:7 }}>
           <span style={{ width:78, height:18, borderRadius:999, border:'1px solid var(--line-2)', display:'flex', alignItems:'center', gap:4, padding:'0 8px', fontFamily:'var(--font-mono)', fontSize:7, color:'var(--fg-3)', whiteSpace:'nowrap', overflow:'hidden' }}><span style={{ fontSize:8 }}>⌕</span>Search…</span>
