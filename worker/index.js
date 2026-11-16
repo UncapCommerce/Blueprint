@@ -1397,6 +1397,7 @@ const COMPANY_FIXES = [
   { flag: 'codecline:kvalinc:v1', id: 'kvalinc', declined: true },
   { flag: 'corename:winstonrods:v1', id: 'winstonrods', name: 'Winston Rod' },
   { flag: 'codecline:gabrielny:v1', id: 'gabrielny', declined: true },
+  { flag: 'corename:dfelectrical:v1', id: 'dfelectrical', name: 'DF Electrical' },
 ];
 async function applyCompanyFixes(env) {
   const kv = env.BLUEPRINT_AUTH;
