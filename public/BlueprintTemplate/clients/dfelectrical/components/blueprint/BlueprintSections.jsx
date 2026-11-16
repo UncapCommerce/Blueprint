@@ -2455,8 +2455,9 @@ function BPTeam() {
         <BPSerif>day one.</BPSerif>
       </BPHeadline>
       <p style={{ marginTop: 18, maxWidth: 600, fontFamily: 'var(--font-serif)', fontSize: 'clamp(15px, 1.3vw, 18px)', lineHeight: 1.5, color: 'var(--fg-2)' }}>
-        The team in this proposal is the team in the work. No bait-and-switch, no
-        outsourced QA. You&rsquo;ll meet everyone on the first call.
+        A leadership team with deep roots in commerce and B2B distribution, and years of
+        experience building on Shopify for manufacturers and distributors. The people in
+        this proposal lead the work, and you&rsquo;ll meet every one of them on the first call.
       </p>
       <div style={{
         marginTop: 'clamp(32px, 4vw, 48px)',
