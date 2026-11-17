@@ -433,7 +433,7 @@ function BPWhereCell({ it, i }) {
 
 function BPWhere() {
   const items = [
-    { n: '01', t: 'No ecommerce cart', tag: 'Commerce', impact: 'Critical', pct: 94, d: 'Customers can browse but cannot buy online; parts and equipment orders still come in by phone, email, or at the counter.' },
+    { n: '01', t: 'No shopping cart', tag: 'Commerce', impact: 'Critical', pct: 94, d: 'Customers can browse but cannot order online.' },
     { n: '02', t: 'Outdated experience', tag: 'Storefront', impact: 'High', pct: 82, d: 'Unfriendly shopping experience and no mobile optimization.' },
     { n: '03', t: 'Low optionality', tag: 'Systems', impact: 'Critical', pct: 94, d: 'No easy way to integrate, or to plug in modern commerce tools and solutions.' },
     { n: '04', t: 'No agentic optimisation', tag: 'AI', impact: 'High', pct: 78, d: 'No in-site technical components and integrations with AI discovery platforms.' }
