@@ -765,8 +765,8 @@ function BPGantt() {
     ] },
     { name: 'Production', range: 'WK 07–17', tasks: [
       { n: '05', t: 'Development',                tag: 'Build',    s: 7,  e: 15, range: 'W7–15' },
-      { n: '06', t: 'Data Migration',             tag: 'Migrate',  s: 11, e: 15, range: 'W11–15' },
-      { n: '07', t: 'Integration',                tag: 'Connect',  s: 11, e: 16, range: 'W11–16' },
+      { n: '06', t: 'Data Migration',             tag: 'Migrate',  s: 7, e: 15, range: 'W7–15' },
+      { n: '07', t: 'Integration',                tag: 'Connect',  s: 3, e: 16, range: 'W3–16' },
       { n: '08', t: 'QA & Testing',               tag: 'Verify',   s: 15, e: 17, range: 'W15–17' }
     ] },
     { name: 'Audit', range: 'WK 17–20', tasks: [
@@ -1602,16 +1602,15 @@ function BPTechStack() {
     { name: 'Shopify Flow',                fn: 'Workflow automation',                 pri: 'launch', cost: 'Free' },
     { name: 'Shopify Bundles',             fn: 'Bundled & grouped products',          pri: 'launch', cost: 'Free' },
     { name: 'Uncap Quotes',                fn: 'B2B quote management',                pri: 'start',  cost: '$90/mo' },
-    { name: 'Uncap Connect',               fn: 'ERP ↔ Shopify integration',           pri: 'start',  cost: '$390/mo' },
-    { name: 'ShipperHQ',                   fn: 'LTL & dimensional shipping rates',    pri: 'launch', cost: '$75/mo' },
-    { name: 'Klaviyo Email',               fn: 'Email marketing & automation',        pri: 'launch', cost: '–' },
-    { name: 'JudgeMe',                     fn: 'Product reviews, store reviews, UGC & FAQs', pri: 'launch', cost: '$15/mo' },
-    { name: 'Matrixify',                   fn: 'Bulk import / export & migration',    pri: 'start',  cost: '$50/mo' }
+    { name: 'Uncap Connect',               fn: 'RIMSS ↔ Shopify integration',           pri: 'start',  cost: '$290/mo' },
+    { name: 'Uncap Diagrams',              fn: 'Interactive parts diagrams',          pri: 'start',  cost: '$90/mo' },
+    { name: 'Matrixify',                   fn: 'Bulk import / export',                pri: 'dev', cost: '$50/mo' }
   ];
   const priMeta = {
     start:  { l: 'Needed to start',  c: 'var(--uc-signal)', fg: 'var(--uc-black)' },
     launch: { l: 'Needed on launch', c: '#FF8B37',          fg: 'var(--uc-black)' },
-    future: { l: 'Future phase',     c: 'transparent',      fg: 'var(--fg-3)', outline: true }
+    future: { l: 'Future phase',     c: 'transparent',      fg: 'var(--fg-3)', outline: true },
+    dev:    { l: 'During development', c: 'transparent',     fg: 'var(--fg-3)', outline: true }
   };
   return (
     <BPSection id="techstack" n="08" label="Architecture" dark grid tail="WHAT IT RUNS ON">
@@ -1633,12 +1632,12 @@ function BPTechStack() {
 
         {(() => {
           const layers = [
-            { tier:'04', name:'Growth & Intelligence', note:'After launch', tools:[['Shopify Flow','launch'],['Shopify Knowledge Base','launch'],['Klaviyo Email','launch'],['JudgeMe','launch']] },
+            { tier:'04', name:'Growth & Intelligence', note:'After launch', tools:[['Shopify Flow','launch'],['Shopify Knowledge Base','launch']] },
             { tier:'03', name:'Experience & Engagement', note:'Customer-facing', tools:[['Shopify Search & Discovery','launch'],['Shopify Checkout Blocks','launch'],['Shopify Bundles','launch'],['Uncap Quotes','start']] },
-            { tier:'02', name:'Data & Integration', note:'System of record', tools:[['Uncap Connect','start'],['ShipperHQ','launch'],['Matrixify','start']] },
+            { tier:'02', name:'Data & Integration', note:'System of record', tools:[['Uncap Connect','start'],['Uncap Diagrams','start'],['Matrixify','dev']] },
             { tier:'01', name:'Commerce Core', note:'Foundation', tools:[['Shopify','start']], core:true }
           ];
-          const chip = { start:{ bg:'var(--uc-signal)', fg:'var(--uc-black)' }, launch:{ bg:'#FF8B37', fg:'var(--uc-black)' }, future:{ bg:'transparent', fg:'var(--uc-stone-300)', outline:true } };
+          const chip = { start:{ bg:'var(--uc-signal)', fg:'var(--uc-black)' }, launch:{ bg:'#FF8B37', fg:'var(--uc-black)' }, future:{ bg:'transparent', fg:'var(--uc-stone-300)', outline:true }, dev:{ bg:'transparent', fg:'var(--uc-stone-300)', outline:true } };
           return (
             <div style={{ display:'flex', gap:'clamp(12px, 1.6vw, 20px)' }}>
               {/* flow rail */}
@@ -1703,7 +1702,7 @@ function BPTechStack() {
               <span style={{ fontFamily:'var(--font-display)', fontWeight:700, fontSize:'clamp(14px,1.3vw,17px)', letterSpacing:'-0.012em', color:'var(--uc-paper)' }}>{r.name}</span>
               <span style={{ fontFamily:'var(--font-serif)', fontSize:14, color:'var(--uc-stone-300)' }}>{r.fn}</span>
               <span style={{ justifySelf:'center' }}>
-                <span style={{ display:'inline-flex', alignItems:'center', gap:7, padding:'4px 10px', borderRadius:999, background: m.outline ? 'transparent' : m.c, border: m.outline ? '1px solid #2B2B2B' : 'none', fontFamily:'var(--font-mono)', fontSize:9.5, fontWeight:700, letterSpacing:'0.06em', textTransform:'uppercase', color: m.outline ? 'var(--uc-stone-300)' : m.fg, textAlign:'center' }}>
+                <span style={{ display:'inline-flex', alignItems:'center', gap:7, padding:'4px 10px', borderRadius:999, background: m.outline ? 'transparent' : m.c, border: m.outline ? '1px solid #2B2B2B' : 'none', fontFamily:'var(--font-mono)', fontSize:9.5, fontWeight:700, letterSpacing:'0.06em', textTransform:'uppercase', color: m.outline ? 'var(--uc-stone-300)' : m.fg, whiteSpace:'nowrap' }}>
                   {!m.outline && <span style={{ width:5, height:5, borderRadius:999, background:'var(--uc-black)' }}/>}
                   {m.l}
                 </span>
@@ -1713,17 +1712,15 @@ function BPTechStack() {
           );
         })}
         {/* Footer total */}
-        <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1.2fr) minmax(0,1.5fr) minmax(0,1fr) 120px', gap:16, padding:'14px 18px', borderTop:'1px solid #2B2B2B', background:'#0F0F0F', alignItems:'center' }}>
-          <span style={{ fontFamily:'var(--font-mono)', fontSize:10, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'var(--uc-signal)' }}>Est. monthly</span>
-          <span style={{ fontFamily:'var(--font-serif)', fontSize:13, color:'var(--uc-stone-500)' }}>Platform + apps, before ERP integration</span>
-          <span/>
-          <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:'clamp(18px,1.8vw,24px)', letterSpacing:'-0.03em', color:'var(--uc-paper)', textAlign:'right' }}>~$2,920/mo</span>
+        <div style={{ display:'flex', alignItems:'center', gap:16, flexWrap:'wrap', padding:'14px 18px', borderTop:'1px solid #2B2B2B', background:'#0F0F0F' }}>
+          <span style={{ fontFamily:'var(--font-mono)', fontSize:10, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'var(--uc-signal)', whiteSpace:'nowrap' }}>Est. monthly</span>
+          <span style={{ fontFamily:'var(--font-serif)', fontSize:13, color:'var(--uc-stone-500)' }}>Platform + apps + RIMSS integration</span>
+          <span style={{ marginLeft:'auto', fontFamily:'var(--font-hero)', fontWeight:800, fontSize:'clamp(18px,1.8vw,24px)', letterSpacing:'-0.03em', color:'var(--uc-paper)', textAlign:'right', whiteSpace:'nowrap' }}>~$2,820/mo</span>
         </div>
       </div>
       <div style={{ marginTop:16, display:'flex', gap:18, flexWrap:'wrap', fontFamily:'var(--font-mono)', fontSize:10, color:'var(--uc-stone-500)', letterSpacing:'0.06em' }}>
         <span style={{ display:'inline-flex', alignItems:'center', gap:6 }}><span style={{ width:8,height:8,borderRadius:999,background:'var(--uc-signal)' }}/>NEEDED TO START</span>
         <span style={{ display:'inline-flex', alignItems:'center', gap:6 }}><span style={{ width:8,height:8,borderRadius:999,background:'#FF8B37' }}/>NEEDED ON LAUNCH</span>
-        <span style={{ display:'inline-flex', alignItems:'center', gap:6 }}><span style={{ width:8,height:8,borderRadius:999,border:'1px solid #2B2B2B' }}/>FUTURE PHASE</span>
         <span style={{ marginLeft:'auto' }}>↳ Swappable to your existing vendors</span>
       </div>
       </div>
