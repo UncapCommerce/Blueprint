@@ -1371,6 +1371,7 @@ async function publishFinncorpBlueprint(env) {
 const CONTACT_FIXES = [
   { flag: 'coname:marketlab:v1', id: 'marketlab', email: 'joel.shoemaker@marketlab.com', name: 'Joel Shoemaker' },
   { flag: 'coname:moynihanlumber:v1', id: 'moynihanlumber', lead: true, name: 'Warren Herrera' },
+  { flag: 'coname:farmersequip:v1', id: 'farmersequip', email: 'rstrachan@farmersequip.com', name: 'Ryan Strachan' },
 ];
 async function applyContactFixes(env) {
   const kv = env.BLUEPRINT_AUTH;
