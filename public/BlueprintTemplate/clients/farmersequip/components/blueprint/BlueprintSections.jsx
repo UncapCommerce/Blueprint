@@ -82,7 +82,7 @@ function bpSite() {
       location: str(about.location, d.about.location).toUpperCase(), manifesto: str(about.manifesto, d.about.manifesto), stats: pairs(about.stats, 3, d.about.stats) },
     blog: { tag: str(blog.tag, d.blog.tag).toUpperCase(), featured: str(blog.featured, d.blog.featured), articles: fill(list(blog.articles, 3, d.blog.articles), 3) },
     searchExample: str(s.searchExample, d.searchExample),
-    erp: str(s.erp, d.erp),
+    erp: 'RIMSS',
     platform: str(s.platform, d.platform)
   };
   return _site;
