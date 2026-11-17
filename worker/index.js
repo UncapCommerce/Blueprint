@@ -1366,24 +1366,30 @@ async function publishFinncorpBlueprint(env) {
 
 // One-time contact name fixes Denis asked for (names aren't editable in the
 // admin). Each renames one contact, by email or the company's Client Lead, on
-// the company and its blueprint's contact snapshot; flag-guarded, so each runs
-// once and is a no-op if the contact isn't there.
+// the company and the contact snapshots its blueprint and discovery took at
+// creation (including their lead-name label); flag-guarded, so each runs once.
+// A fix waits (flag unset) until its company exists.
 const CONTACT_FIXES = [
   { flag: 'coname:marketlab:v1', id: 'marketlab', email: 'joel.shoemaker@marketlab.com', name: 'Joel Shoemaker' },
   { flag: 'coname:moynihanlumber:v1', id: 'moynihanlumber', lead: true, name: 'Warren Herrera' },
-  { flag: 'coname:farmersequip:v1', id: 'farmersequip', email: 'rstrachan@farmersequip.com', name: 'Ryan Strachan' },
+  { flag: 'coname:farmersequip:v2', id: 'farmersequip', email: 'rstrachan@farmersequip.com', name: 'Ryan Strachan' },
 ];
 async function applyContactFixes(env) {
   const kv = env.BLUEPRINT_AUTH;
   for (const f of CONTACT_FIXES) {
     if (await kv.get(f.flag)) continue;
     const [co, draft] = await Promise.all([getCompany(env, f.id), blueprintDraft(env, f.id)]);
-    const email = (f.lead ? (co && co.leadContact && co.leadContact.email) : f.email || '').toLowerCase();
-    if (email) {
-      const fix = (c) => (c && (c.email || '').toLowerCase() === email ? { ...c, name: f.name } : c);
-      if (co) await putCompany(env, { ...co, leadContact: fix(co.leadContact), contacts: (co.contacts || []).map(fix) });
-      if (draft) await kv.put(`bp:${f.id}`, JSON.stringify({ ...draft, leadContact: fix(draft.leadContact), associatedContacts: (draft.associatedContacts || []).map(fix) }));
-    }
+    if (!co) continue;
+    const email = (f.lead ? (co.leadContact && co.leadContact.email) : f.email || '').toLowerCase();
+    const isIt = (c) => !!c && (c.email || '').toLowerCase() === email;
+    const fix = (c) => (isIt(c) ? { ...c, name: f.name } : c);
+    const discId = co.discoveryHandle ? await kv.get(`dischandle:${co.discoveryHandle}`) : null;
+    const disc = discId ? JSON.parse((await kv.get(`discovery:${discId}`)) || 'null') : null;
+    await Promise.all([
+      putCompany(env, { ...co, leadContact: fix(co.leadContact), contacts: (co.contacts || []).map(fix) }),
+      draft && kv.put(`bp:${f.id}`, JSON.stringify({ ...draft, ...(isIt(draft.leadContact) ? { leadClient: f.name } : {}), leadContact: fix(draft.leadContact), associatedContacts: (draft.associatedContacts || []).map(fix) })),
+      disc && kv.put(`discovery:${discId}`, JSON.stringify({ ...disc, ...(isIt(disc.leadContact) ? { client: f.name } : {}), leadContact: fix(disc.leadContact), associatedContacts: (disc.associatedContacts || []).map(fix) })),
+    ]);
     await kv.put(f.flag, '1');
   }
 }
