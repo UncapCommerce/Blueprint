@@ -284,8 +284,8 @@ function BPIntro() {
               fontSize: 'clamp(20px, 2.2vw, 32px)', lineHeight: 1.25,
               letterSpacing: '-0.015em', color: 'var(--uc-paper)', textWrap: 'pretty'
             }}>
-              A plan to replatform {brandName()}&rsquo;s commerce operations to Shopify, consolidate
-              the tech stack, and build an exceptional experience for growth.
+              A plan to build {brandName()}&rsquo;s parts store on Shopify, consolidate
+              the tech stack, and deliver an exceptional experience for growth.
             </div>
           </div>
 
@@ -343,13 +343,13 @@ function BPSummary() {
         </BPHeadline>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 18 }}>
           <p style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: 'clamp(16px, 1.4vw, 20px)', lineHeight: 1.55, color: 'var(--fg-2)' }}>
-            {brandName()} is running a capable operation on a stack that no longer keeps up.
-            This blueprint lays out how we unify storefront, B2B, and back-office on
-            Shopify — in a fixed scope, on a fixed timeline.
+            {brandName()} is running a capable operation and is ready for a parts store
+            that makes buying easy. This blueprint lays out how we build it on Shopify, with
+            the store, B2B, and back-office in one place, in a fixed scope, on a fixed timeline.
           </p>
           <p style={{ margin: 0, fontFamily: 'var(--font-serif)', fontSize: 'clamp(16px, 1.4vw, 20px)', lineHeight: 1.55, color: 'var(--fg-2)' }}>
-            The result: one system, lower total cost of ownership, and a revenue engine
-            your team can actually run.
+            The result: one parts store, lower total cost of ownership, and a revenue
+            engine your team can actually run.
           </p>
         </div>
       </div>
@@ -362,7 +362,7 @@ function BPSummary() {
       }}>
         {[
           { v: '20 wk', l: 'Estimated timeline to launch on Shopify' },
-          { v: 'Unified', l: 'B2B storefront on Shopify integrated with ' + bpSite().erp },
+          { v: 'Unified', l: 'B2B parts store on Shopify integrated with ' + bpSite().erp },
           { v: 'Speed', l: 'Sidekick-friendly system to self-manage your store' },
           { v: 'Growth', l: 'Experience optimized for conversion and retention' }
         ].map((s, i) => (
@@ -460,8 +460,8 @@ function BPWhere() {
 // ── 03 OBJECTIVES ───────────────────────────────────────────────────────────
 function BPObjectives() {
   const items = [
-    { n: '01', t: 'Seamless replatforming', d: 'Migrate to Shopify without losing what works — while optimizing for growth.', metric: 'Zero',   unit: 'disruption',       tag: 'Migration' },
-    { n: '02', t: 'Unify commerce',   d: 'One platform for storefront, B2B, and back-office. No reconciling.',           metric: 'One',    unit: 'system of record', tag: 'Revenue' },
+    { n: '01', t: 'Seamless build', d: 'Build your parts store on Shopify without disrupting how you sell today, optimized for growth.', metric: 'Zero',   unit: 'disruption',       tag: 'Build' },
+    { n: '02', t: 'Unify commerce',   d: 'One platform for the parts store, B2B, and back-office. No reconciling.',           metric: 'One',    unit: 'system of record', tag: 'Revenue' },
     { n: '03', t: 'Low cost of ownership', d: 'Fewer tools, one partner. Retire the legacy stack and its renewals.',          metric: 'Lower',  unit: 'total cost',       tag: 'Finance' },
     { n: '04', t: 'Growth-ready foundation', d: 'Conversion, AOV, retention — engineered in, not bolted on.',                  metric: 'Higher', unit: 'AOV + LTV',        tag: 'Growth' },
     { n: '05', t: 'Free the team',         d: 'Automate the robot work. Let people do the work that grows the business.',     metric: 'Faster', unit: 'daily ops',        tag: 'Operations' }
@@ -503,7 +503,7 @@ function BPObjectives() {
 function BPApproach() {
   const steps = [
     { n: 'Phase 1', t: 'Blueprint', d: 'Architecture, data model, integration map. A plan that holds up under scrutiny.', wk: '2 weeks' },
-    { n: 'Phase 2', t: 'Build', d: 'Storefront, B2B, ERP sync. Fixed scope, senior team, no surprises.', wk: '20 weeks' },
+    { n: 'Phase 2', t: 'Build', d: 'Parts store, B2B, RIMSS sync. Fixed scope, senior team, no surprises.', wk: '20 weeks' },
     { n: 'Phase 3', t: 'Grow', d: 'Migrate, go live, then optimize conversion, AOV, and automation.', wk: '6–12 months' }
   ];
   return (
@@ -668,7 +668,7 @@ function BPBuildLayer({ L }) {
 function BPScope() {
   const layers = [
     { code: '01', t: 'Commerce Strategy', d: 'Strategy, R&D, optimisation, and a plan the board can trust.' },
-    { code: '02', t: 'Experience Design', d: 'A modern, conversion-focused storefront, built to scale.' },
+    { code: '02', t: 'Experience Design', d: 'A modern, conversion-focused parts store, built to scale.' },
     { code: '03', t: 'Solution Architecture', d: 'Solution architecture, roadmap and integration.' },
     { code: '04', t: 'B2B Enablement',    d: 'Company accounts, price lists, NET terms, and account portals.' },
     { code: '05', t: 'ERP Integration',   d: 'Bidirectional ERP sync native to Shopify Plus.' },
@@ -687,7 +687,7 @@ function BPScope() {
           fontFamily: 'var(--font-serif)', fontSize: 'clamp(15px, 1.3vw, 18px)',
           lineHeight: 1.55, color: 'var(--fg-2)', textWrap: 'pretty'
         }}>
-          Seven workstreams, stacked into one Shopify Plus system — from the storefront
+          Seven workstreams, stacked into one Shopify Plus system — from the parts store
           down to the platform it ships on.
         </p>
       </div>
@@ -1620,7 +1620,7 @@ function BPTechStack() {
       </BPHeadline>
 
       <p style={{ marginTop:'clamp(16px, 2vw, 22px)', maxWidth:760, fontFamily:'var(--font-serif)', fontSize:'clamp(15px, 1.3vw, 18px)', lineHeight:1.55, color:'var(--uc-stone-300)' }}>
-        Streamlining operations and omni-channel marketing matter as much as the storefront itself. We wire up the critical integrations — through Shopify apps or connection bridges — so everything syncs in real time. The platforms we manage include, but aren&rsquo;t limited to:
+        Streamlining operations and omni-channel marketing matter as much as the store itself. We wire up the critical integrations — through Shopify apps or connection bridges — so everything syncs in real time. The platforms we manage include, but aren&rsquo;t limited to:
       </p>
 
       {/* ── Architecture diagram: the stack as layered tiers ── */}
@@ -1902,7 +1902,7 @@ function BPB2B() {
     { t: 'Quick order & reorder', d: 'One-click reorders, saved lists, and fast repeat ordering.' },
     { t: 'Sales rep tools', d: 'Order on behalf of, account dashboards, and assisted selling.' }
   ];
-  const channels = ['Storefront', 'B2B Portal', 'Point of Sale', 'Sales Reps'];
+  const channels = ['Parts Store', 'B2B Portal', 'Point of Sale', 'Sales Reps'];
   return (
     <BPSection id="b2b" n="09" label="Unified" paper tail="ONE OPERATION">
       <BPHeadline>
@@ -2223,7 +2223,7 @@ function BPMigration() {
   return (
     <BPSection id="migration" n="12" label="Migration" paper tail="MOVE WITHOUT LOSS" vec="bgVector2">
       <BPHeadline>
-        Replatform{' '}
+        Build{' '}
         <BPSerif>without losing a thing.</BPSerif>
       </BPHeadline>
       <p style={{ marginTop: 18, maxWidth: 600, fontFamily: 'var(--font-serif)', fontSize: 'clamp(15px, 1.3vw, 18px)', lineHeight: 1.5, color: 'var(--fg-2)' }}>
@@ -2328,7 +2328,7 @@ function BPDelivery() {
   const milestones = [
     { wk: 'WK 01', t: 'Kickoff + Blueprint start', s: 'Discovery, architecture, data model.' },
     { wk: 'WK 04', t: 'Blueprint sign-off', s: 'Plan, prototype, and budget locked.' },
-    { wk: 'WK 08', t: 'Storefront alpha', s: 'Core theme + catalog in staging.' },
+    { wk: 'WK 08', t: 'Parts store alpha', s: 'Core theme + catalog in staging.' },
     { wk: 'WK 12', t: 'Integrations live', s: 'ERP sync + B2B flows validated.' },
     { wk: 'WK 15', t: 'Migration + QA', s: 'Data moved, redirects, full QA pass.' },
     { wk: 'WK 20', t: 'Launch', s: 'Go live + 30-day support begins.' }
@@ -2403,7 +2403,7 @@ function BPRiskAssessment() {
           <BPSerif>managed by design.</BPSerif>
         </BPHeadline>
         <p style={{ margin: 0, maxWidth: 380, fontFamily: 'var(--font-serif)', fontSize: 'clamp(15px, 1.3vw, 18px)', lineHeight: 1.5, color: 'var(--fg-2)', textWrap: 'pretty' }}>
-          Every replatform carries risk. Here are the ones we watch — each paired with how we manage it.
+          Every build carries risk. Here are the ones we watch — each paired with how we manage it.
         </p>
       </div>
 
@@ -2573,7 +2573,7 @@ function BPInvestment() {
             <div style={{ marginTop: 'clamp(14px, 1.6vw, 20px)', fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 'clamp(17px, 1.6vw, 24px)', lineHeight: 1.25, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>Your store and your integrated systems, working as one.</div>
           </div>
           <p style={{ margin: 0, maxWidth: 460, fontFamily: 'var(--font-serif)', fontSize: 'clamp(14.5px, 1.2vw, 17px)', lineHeight: 1.55, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>
-            A modern unified B2C/B2B storefront on Shopify Plus with a tech stack and customer
+            A modern unified B2C/B2B parts store on Shopify Plus with a tech stack and customer
             experience — everything {brandName()} needs to launch and scale.
           </p>
 
@@ -2616,7 +2616,7 @@ function BPInvestment() {
             <span aria-hidden="true" style={{ width: 16, height: 2, background: 'var(--uc-signal)' }}/>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--uc-stone-500)' }}>ERP Integration</span>
           </div>
-          <div style={{ fontFamily: 'var(--font-hero)', fontWeight: 700, fontSize: 'clamp(20px, 2vw, 28px)', letterSpacing: '-0.03em', lineHeight: 1.05, color: 'var(--uc-paper)' }}>{bpSite().erp === 'ERP' ? 'Your ERP' : bpSite().erp}, wired into the storefront.</div>
+          <div style={{ fontFamily: 'var(--font-hero)', fontWeight: 700, fontSize: 'clamp(20px, 2vw, 28px)', letterSpacing: '-0.03em', lineHeight: 1.05, color: 'var(--uc-paper)' }}>{bpSite().erp === 'ERP' ? 'Your ERP' : bpSite().erp}, wired into the parts store.</div>
           <p style={{ margin: '10px 0 0', maxWidth: 560, fontFamily: 'var(--font-serif)', fontSize: 'clamp(14px, 1.2vw, 16px)', lineHeight: 1.5, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>
             Bidirectional sync via Uncap Connect: orders, customers, inventory, and fulfillment
             flowing between Shopify and your ERP in real time, with no manual re-keying.
@@ -2914,7 +2914,7 @@ function BPProof() {
           <BPSerif>our word for it.</BPSerif>
         </BPHeadline>
         <p style={{ margin: 0, maxWidth: 380, fontFamily: 'var(--font-serif)', fontSize: 'clamp(15px, 1.3vw, 18px)', lineHeight: 1.5, color: 'var(--fg-2)', textWrap: 'pretty' }}>
-          Operators who ran the same play — replatformed, integrated, and grew on Shopify with Uncap.
+          Operators who ran the same play — built, integrated, and grew on Shopify with Uncap.
         </p>
       </div>
 
