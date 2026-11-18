@@ -2600,10 +2600,10 @@ function BPInvestment() {
             <span aria-hidden="true" style={{ width: 16, height: 2, background: 'var(--uc-signal)' }}/>
             <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--uc-stone-500)' }}>ERP Integration</span>
           </div>
-          <div style={{ fontFamily: 'var(--font-hero)', fontWeight: 700, fontSize: 'clamp(20px, 2vw, 28px)', letterSpacing: '-0.03em', lineHeight: 1.05, color: 'var(--uc-paper)' }}>{bpSite().erp === 'ERP' ? 'Your ERP' : bpSite().erp}, wired into the parts store.</div>
+          <div style={{ fontFamily: 'var(--font-hero)', fontWeight: 700, fontSize: 'clamp(20px, 2vw, 28px)', letterSpacing: '-0.03em', lineHeight: 1.05, color: 'var(--uc-paper)' }}>{bpSite().erp} and the parts store, always in sync.</div>
           <p style={{ margin: '10px 0 0', maxWidth: 560, fontFamily: 'var(--font-serif)', fontSize: 'clamp(14px, 1.2vw, 16px)', lineHeight: 1.5, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>
-            Bidirectional sync via Uncap Connect: orders, customers, inventory, and fulfillment
-            flowing between Shopify and your ERP in real time, with no manual re-keying.
+            Orders, customers, and inventory update automatically between the store and
+            {bpSite().erp}. No one re-keys data, and the numbers always match.
           </p>
         </div>
         <div style={{ textAlign: 'right' }}>
