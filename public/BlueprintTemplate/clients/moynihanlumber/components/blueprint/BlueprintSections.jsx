@@ -2577,72 +2577,133 @@ function BPInvestmentCard({ p }) {
   );
 }
 
+// Three build packages. They share the work list, ERP integration and buffer;
+// they differ on team, design, B2B and the rows below. The payment schedule
+// follows the selected package. Its amount literals are the recommended
+// package's split (the admin pipeline sums them for the project value), and
+// the others scale from it.
+const BP_PACKAGES = [
+  { id: 'core', name: 'Core', tagline: 'A clean, proven launch.', price: 48000 },
+  { id: 'advanced', name: 'Advanced', tagline: 'Senior-led, built to convert.', price: 72000, rec: true },
+  { id: 'premier', name: 'Premier', tagline: 'Fully tailored, white-glove.', price: 94000 }
+];
+const BP_PACKAGE_ROWS = [
+  { l: 'Delivery team', v: ['Shared delivery team', 'Senior-led delivery', 'Dedicated Account Manager'] },
+  { l: 'Design', v: ['Standard Design', 'Advanced Design', 'Custom Tailored Design'] },
+  { l: 'B2B', v: ['No B2B Setup', 'Standard B2B Capabilities', 'Full B2B Enablement'], none: 0 },
+  { l: 'Project cadence', v: ['Bi-weekly check-ins', 'Weekly 1:1s', 'Weekly 1:1s + exec steering'] },
+  { l: 'SEO & GEO', v: ['Essential SEO', 'SEO + GEO launch setup', 'Advanced SEO, GEO & schema'] },
+  { l: 'Training', v: ['Recorded walkthroughs', 'Live team training', 'Role-based training & playbooks'] },
+  { l: 'Launch warranty', v: ['30 days', '60 days', '90 days of hypercare'] }
+];
+const BP_ERP_PRICE = 26000;
+const bpUsd = (n) => '$' + Math.round(n).toLocaleString('en-US');
+const bpK = (n) => '$' + (n / 1000).toLocaleString('en-US') + 'k';
+
+function BPPackageCard({ p, i, on, pick }) {
+  const fg = on ? 'var(--uc-black)' : 'var(--uc-paper)';
+  const sub = on ? 'var(--fg-2)' : 'var(--uc-stone-300)';
+  const faint = on ? 'var(--fg-3)' : 'var(--uc-stone-500)';
+  const line = on ? 'var(--line-1)' : '#1F1F1F';
+  return (
+    <button type="button" onClick={pick} aria-pressed={on} style={{
+      all: 'unset', boxSizing: 'border-box', cursor: 'pointer', position: 'relative', overflow: 'hidden',
+      background: on ? 'var(--uc-paper)' : '#0F0F0F', border: '1px solid ' + (on ? 'var(--uc-paper)' : '#1F1F1F'), borderRadius: 12,
+      padding: 'clamp(22px, 2.4vw, 30px)', display: 'flex', flexDirection: 'column', gap: 'clamp(16px, 1.8vw, 20px)',
+      boxShadow: on ? '0 26px 70px -34px rgba(232,255,82,0.55)' : 'none', transition: 'background .15s, border-color .15s'
+    }}>
+      {on && <span aria-hidden="true" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 4, background: 'var(--uc-signal)' }}/>}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', color: faint }}>PACKAGE {String(i + 1).padStart(2, '0')}</span>
+        {p.rec && <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9, fontWeight: 800, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--uc-black)', background: 'var(--uc-signal)', borderRadius: 999, padding: '3px 8px' }}>Recommended</span>}
+      </div>
+      <div>
+        <div style={{ fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(30px, 3vw, 42px)', letterSpacing: '-0.04em', lineHeight: 0.92, color: fg }}>{p.name}</div>
+        <div style={{ marginTop: 8, fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 'clamp(15px, 1.3vw, 18px)', color: sub }}>{p.tagline}</div>
+      </div>
+      <div style={{ paddingTop: 'clamp(14px, 1.6vw, 18px)', borderTop: '1px solid ' + line }}>
+        <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: faint }}>Fixed price</div>
+        <div style={{ marginTop: 6, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(40px, 4.4vw, 64px)', letterSpacing: '-0.05em', lineHeight: 0.88, color: fg }}>{bpK(p.price)}</div>
+      </div>
+      <ul style={{ listStyle: 'none', padding: 'clamp(14px, 1.6vw, 18px) 0 0', margin: 0, borderTop: '1px solid ' + line, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        {BP_PACKAGE_ROWS.map((r) => {
+          const no = r.none === i;
+          return (
+            <li key={r.l} style={{ display: 'grid', gridTemplateColumns: '16px 1fr', gap: 10, alignItems: 'start' }}>
+              <span style={{ marginTop: 13, width: 14, height: 14, borderRadius: 999, background: no ? 'transparent' : 'var(--uc-signal)', border: no ? '1px solid ' + faint : 'none', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', boxSizing: 'border-box' }}>
+                {no ? <span style={{ width: 6, height: 1.5, background: faint }}/> : <svg width="8" height="8" viewBox="0 0 12 12" fill="none"><path d="M2 6 L5 9 L10 3" stroke="var(--uc-black)" strokeWidth="2.8" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+              </span>
+              <span style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                <span style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: faint }}>{r.l}</span>
+                <span style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(14px, 1.1vw, 15.5px)', fontWeight: 600, lineHeight: 1.35, color: no ? faint : fg }}>{r.v[i]}</span>
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+      <div style={{ marginTop: 'auto', display: 'flex', alignItems: 'center', gap: 10, minHeight: 40, paddingTop: 4 }}>
+        <span style={{ width: 20, height: 20, borderRadius: 999, display: 'inline-flex', alignItems: 'center', justifyContent: 'center', border: '1.5px solid ' + (on ? 'var(--uc-black)' : 'var(--uc-stone-500)'), background: on ? 'var(--uc-signal)' : 'transparent' }}>
+          {on && <svg width="10" height="10" viewBox="0 0 12 12" fill="none"><path d="M2 6 L5 9 L10 3" stroke="var(--uc-black)" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+        </span>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: on ? 'var(--uc-black)' : 'var(--uc-stone-300)' }}>{on ? 'Selected' : 'Choose ' + p.name}</span>
+      </div>
+    </button>
+  );
+}
+
 function BPInvestment() {
   const work = [
     'Tech stack architecture, scoped up front',
-    'Shopify theme-based design, configured and branded for ' + brandName(),
     'Front and back-end Shopify development',
     'Essential integrations: payments, shipping, core tools',
-    'Data migration: products, customers, orders, content',
+    'Data migration: products, collections, pages, and blogs',
     'Shopify-side ERP integration guidance',
-    'Full B2B enablement: companies, catalogs, checkout',
     'Enriched customer account experience',
     'Workflow automation across your systems',
-    'SEO and GEO, so you launch findable',
-    'Go live, a clean handoff, and a 30-day warranty'
+    'Go live with a clean handoff'
   ];
   const schedule = [
     { n: '01', amount: '$49,000', due: 'Due at signup' },
     { n: '02', amount: '$24,500', due: 'Due at design approval' },
     { n: '03', amount: '$24,500', due: 'Due at project completion' }
   ];
+  const rec = BP_PACKAGES.find((p) => p.rec);
+  const [sel, setSel] = React.useState(rec.id);
+  const pkg = BP_PACKAGES.find((p) => p.id === sel);
+  const scale = (pkg.price + BP_ERP_PRICE) / (rec.price + BP_ERP_PRICE);
   return (
     <BPSection id="investment" n="15" label="Investment" dark tail="FIXED · NO SURPRISES">
-      {/* One package — split panel */}
-      <div style={{
-        position: 'relative', overflow: 'hidden',
-        background: '#0F0F0F', color: 'var(--uc-paper)',
-        border: '1px solid #1F1F1F', borderRadius: 12,
-        display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)'
-      }}>
-        <span aria-hidden="true" style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: 3, background: 'var(--uc-signal)', zIndex: 2 }}/>
-
-        {/* LEFT — identity + price */}
-        <div style={{ padding: 'clamp(28px, 3.4vw, 52px)', display: 'flex', flexDirection: 'column', gap: 'clamp(18px, 2vw, 26px)' }}>
-          <div>
-            <h3 style={{ margin: 0, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(40px, 5vw, 76px)', letterSpacing: '-0.045em', lineHeight: 0.9, color: 'var(--uc-paper)' }}>Shopify <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, fontSize: '0.62em', letterSpacing: '-0.02em' }}>Build</span></h3>
-            <div style={{ marginTop: 'clamp(14px, 1.6vw, 20px)', fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 'clamp(17px, 1.6vw, 24px)', lineHeight: 1.25, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>Your store and your integrated systems, working as one.</div>
-          </div>
-          <p style={{ margin: 0, maxWidth: 460, fontFamily: 'var(--font-serif)', fontSize: 'clamp(14.5px, 1.2vw, 17px)', lineHeight: 1.55, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>
-            A modern unified B2C/B2B storefront on Shopify Plus with a tech stack and customer
-            experience — everything {brandName()} needs to launch and scale.
-          </p>
-
-          {/* price — standout box */}
-          <div style={{ padding: 'clamp(18px, 2vw, 26px) clamp(20px, 2.2vw, 28px)', background: 'var(--uc-signal)', borderRadius: 12, boxShadow: '0 22px 60px -26px rgba(232,255,82,0.45)' }}>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--uc-black)' }}>Fixed price</div>
-            <div style={{ marginTop: 4, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(52px, 6vw, 88px)', letterSpacing: '-0.05em', lineHeight: 0.85, color: 'var(--uc-black)' }}>$72k</div>
-          </div>
-
-          {/* walk away */}
-          <div style={{ marginTop: 'auto', padding: 'clamp(16px, 1.8vw, 22px)', background: '#141414', border: '1px solid #1F1F1F', borderRadius: 10 }}>
-            <div style={{ fontFamily: 'var(--font-mono)', fontSize: 9.5, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--uc-stone-500)', marginBottom: 8 }}>You walk away with</div>
-            <div style={{ fontFamily: 'var(--font-serif)', fontSize: 'clamp(15px, 1.3vw, 18px)', lineHeight: 1.4, color: 'var(--uc-paper)', textWrap: 'pretty' }}>Your successful commerce implementation on Shopify, built for growth.</div>
-          </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 'clamp(16px, 4vw, 56px)', alignItems: 'end' }}>
+        <div>
+          <h3 style={{ margin: 0, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(40px, 5vw, 76px)', letterSpacing: '-0.045em', lineHeight: 0.9, color: 'var(--uc-paper)' }}>Shopify <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, fontSize: '0.62em', letterSpacing: '-0.02em' }}>Build</span></h3>
+          <div style={{ marginTop: 'clamp(14px, 1.6vw, 20px)', fontFamily: 'var(--font-serif)', fontStyle: 'italic', fontSize: 'clamp(17px, 1.6vw, 24px)', lineHeight: 1.25, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>Your store and your integrated systems, working as one.</div>
         </div>
+        <p style={{ margin: 0, maxWidth: 520, fontFamily: 'var(--font-serif)', fontSize: 'clamp(14.5px, 1.2vw, 17px)', lineHeight: 1.55, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>
+          Three ways to build the same modern storefront on Shopify Plus. Every package ships the
+          full platform; they differ in how much senior attention, design depth, and B2B
+          capability {brandName()} gets. Pick one; the payment schedule below follows it.
+        </p>
+      </div>
 
-        {/* RIGHT — the work */}
-        <div style={{ padding: 'clamp(28px, 3.4vw, 52px)', borderLeft: '1px solid #1F1F1F' }}>
-          <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--uc-stone-500)', marginBottom: 'clamp(18px, 2vw, 26px)' }}>The work</div>
-          <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 'clamp(13px, 1.5vw, 18px)' }}>
-            {work.map((w, i) => (
-              <li key={i} style={{ display: 'grid', gridTemplateColumns: '20px 1fr', gap: 14, alignItems: 'start' }}>
-                <span style={{ marginTop: 1, width: 18, height: 18, borderRadius: 999, background: 'var(--uc-signal)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M2 6 L5 9 L10 3" stroke="var(--uc-black)" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"/></svg></span>
-                <span style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(14px, 1.15vw, 16.5px)', fontWeight: 500, lineHeight: 1.35, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>{w}</span>
-              </li>
-            ))}
-          </ul>
+      {/* Packages */}
+      <div style={{ marginTop: 'clamp(28px, 3.4vw, 44px)', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, alignItems: 'stretch' }}>
+        {BP_PACKAGES.map((p, i) => <BPPackageCard key={p.id} p={p} i={i} on={sel === p.id} pick={() => setSel(p.id)}/>)}
+      </div>
+
+      {/* Included in every package */}
+      <div style={{ marginTop: 16, padding: 'clamp(22px, 2.6vw, 32px)', border: '1px solid #1F1F1F', borderRadius: 12, background: '#0F0F0F' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 'clamp(16px, 1.8vw, 22px)' }}>
+          <span aria-hidden="true" style={{ width: 16, height: 2, background: 'var(--uc-signal)' }}/>
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.14em', textTransform: 'uppercase', color: 'var(--uc-stone-500)' }}>Included in every package</span>
         </div>
+        <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 'clamp(12px, 1.4vw, 16px) clamp(20px, 3vw, 40px)' }}>
+          {work.map((w, i) => (
+            <li key={i} style={{ display: 'grid', gridTemplateColumns: '20px 1fr', gap: 12, alignItems: 'start' }}>
+              <span style={{ marginTop: 1, width: 18, height: 18, borderRadius: 999, background: 'var(--uc-signal)', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}><svg width="9" height="9" viewBox="0 0 12 12" fill="none"><path d="M2 6 L5 9 L10 3" stroke="var(--uc-black)" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round"/></svg></span>
+              <span style={{ fontFamily: 'var(--font-sans)', fontSize: 'clamp(14px, 1.15vw, 16px)', fontWeight: 500, lineHeight: 1.35, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>{w}</span>
+            </li>
+          ))}
+        </ul>
       </div>
 
       {/* ERP integration — separate fixed-price workstream */}
@@ -2665,15 +2726,16 @@ function BPInvestment() {
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--uc-stone-500)' }}>Fixed price</div>
-          <div style={{ marginTop: 6, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(34px, 3.6vw, 52px)', letterSpacing: '-0.045em', lineHeight: 0.9, color: 'var(--uc-signal)' }}>$26k</div>
+          <div style={{ marginTop: 6, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(34px, 3.6vw, 52px)', letterSpacing: '-0.045em', lineHeight: 0.9, color: 'var(--uc-signal)' }}>{bpK(BP_ERP_PRICE)}</div>
         </div>
       </div>
 
       {/* Payment schedule */}
       <div style={{ marginTop: 'clamp(28px, 3.2vw, 44px)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 'clamp(16px, 1.8vw, 22px)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: 10, marginBottom: 'clamp(16px, 1.8vw, 22px)' }}>
           <span aria-hidden="true" style={{ width: 16, height: 2, background: 'var(--uc-signal)' }}/>
           <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.16em', textTransform: 'uppercase', color: 'var(--uc-stone-500)' }}>Payment schedule</span>
+          <span style={{ marginLeft: 'auto', fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.06em', color: 'var(--uc-stone-300)', textAlign: 'right' }}>{pkg.name} {bpK(pkg.price)} + ERP {bpK(BP_ERP_PRICE)} = {bpUsd(pkg.price + BP_ERP_PRICE)}</span>
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
           {schedule.map((s, i) => (
@@ -2687,7 +2749,7 @@ function BPInvestment() {
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-2)' }}>Installment {i + 1}</span>
                 <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.1em', color: 'var(--fg-3)' }}>{s.n} / 03</span>
               </div>
-              <div style={{ fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(30px, 3.4vw, 46px)', letterSpacing: '-0.04em', lineHeight: 0.9, color: 'var(--fg-1)' }}>{s.amount}</div>
+              <div style={{ fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(30px, 3.4vw, 46px)', letterSpacing: '-0.04em', lineHeight: 0.9, color: 'var(--fg-1)' }}>{bpUsd(Number(s.amount.replace(/\D/g, '')) * scale)}</div>
               <div style={{ paddingTop: 'clamp(12px, 1.4vw, 16px)', borderTop: '1px solid var(--line-1)', fontFamily: 'var(--font-mono)', fontSize: 12, letterSpacing: '0.04em', color: 'var(--fg-2)' }}>{s.due}</div>
             </div>
           ))}
