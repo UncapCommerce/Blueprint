@@ -89,8 +89,11 @@ function bpSite() {
   return _site;
 }
 const P = (i) => bpSite().products[i];
+// Product-page prices always show a number: the product's own, else the
+// Template's sample price for that slot.
+const priced = (i) => (/\d/.test(P(i).price) ? P(i).price : SITE_DEFAULTS.products[i % SITE_DEFAULTS.products.length].price);
 function bundlePrice() {
-  const n = [0, 1, 2].map((i) => parseFloat(String(P(i).price).replace(/[^0-9.]/g, '')));
+  const n = [0, 1, 2].map((i) => parseFloat(String(priced(i)).replace(/[^0-9.]/g, '')));
   return n.every((x) => x > 0) ? '$' + Math.round(n.reduce((a, b) => a + b, 0) * 0.92).toLocaleString('en-US') : 'Quote';
 }
 
@@ -1067,7 +1070,7 @@ function GfxPDP() {
           {/* price */}
           <div style={{ marginTop:2, display:'flex', alignItems:'baseline', gap:5 }}>
             <span style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)' }}>PRICE</span>
-            <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:18, letterSpacing:'-0.04em', color:'var(--fg-1)' }}>{P(0).price}</span>
+            <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:18, letterSpacing:'-0.04em', color:'var(--fg-1)' }}>{priced(0)}</span>
             <span style={{ fontFamily:'var(--font-mono)', fontSize:7, fontWeight:700, color:'var(--fg-3)' }}>/Box</span>
           </div>
           {/* CTAs */}
@@ -1080,7 +1083,7 @@ function GfxPDP() {
               </div>
               <span style={{ flex:1, padding:'8px', textAlign:'center', background:'var(--co-accent)', color:'#fff', borderRadius:3, fontFamily:'var(--font-display)', fontSize:9.5, fontWeight:800 }}>Add to cart</span>
             </div>
-            <span style={{ padding:'7px', textAlign:'center', border:'1px solid var(--uc-black)', borderRadius:3, fontFamily:'var(--font-display)', fontSize:9, fontWeight:700, color:'var(--fg-1)' }}>Request a Quote</span>
+            <span style={{ padding:'7px', textAlign:'center', background:'var(--uc-black)', border:'1px solid var(--uc-black)', borderRadius:3, fontFamily:'var(--font-display)', fontSize:9, fontWeight:700, color:'#fff' }}>Add to Quote</span>
           </div>
           {/* trust row */}
           <div style={{ display:'flex', gap:8, marginTop:3, flexWrap:'wrap' }}>{bpSite().trust.map(t=>(<span key={t} style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, color:'var(--fg-3)' }}>{t}</span>))}</div>
@@ -1088,7 +1091,7 @@ function GfxPDP() {
           <div style={{ marginTop:7, paddingTop:9, borderTop:'1px solid var(--line-1)' }}>
             <div style={{ fontFamily:'var(--font-mono)', fontSize:6.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:6 }}>FREQUENTLY BOUGHT TOGETHER</div>
             <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1fr) auto minmax(0,1fr) auto minmax(0,1fr)', alignItems:'center', gap:5, marginBottom:8 }}>
-              {[[P(0).name,P(0).price,'var(--co-prime)'],[P(1).name,P(1).price,'#F2A33C'],[P(2).name,P(2).price,'#7BB661']].map((p,i)=>(
+              {[[P(0).name,priced(0),'var(--co-prime)'],[P(1).name,priced(1),'#F2A33C'],[P(2).name,priced(2),'#7BB661']].map((p,i)=>(
                 <React.Fragment key={i}>
                   {i>0 && <span style={{ fontFamily:'var(--font-hero)', fontWeight:800, fontSize:11, color:'var(--fg-3)', flexShrink:0 }}>+</span>}
                   <div style={{ minWidth:0, display:'flex', flexDirection:'column', gap:3 }}>
@@ -1132,7 +1135,7 @@ function GfxPDP() {
       {/* you may also like */}
       <div style={{ padding:'11px 14px', borderTop:'1px solid var(--line-1)', background:'var(--uc-bone)' }}>
         <div style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, letterSpacing:'0.1em', color:'var(--fg-3)', marginBottom:8 }}>COMPLETE THE SET</div>
-        <div style={{ display:'grid', gridTemplateColumns:'repeat(4, minmax(0,1fr))', gap:7 }}>{[[P(4).name,P(4).price,'#F2A33C'],[P(5).name,P(5).price,'#7BB661'],[P(6).name,P(6).price,'#7C6FB0'],[P(7).name,P(7).price,'#E9B44C']].map((p,i)=>(<div key={i} style={{ display:'flex', flexDirection:'column', gap:4 }}><div style={{ aspectRatio:'1/1', borderRadius:3, background:`linear-gradient(140deg, ${p[2]}, var(--uc-bone))` }}/><span style={{ fontFamily:'var(--font-display)', fontWeight:600, fontSize:7.5, color:'var(--fg-1)' }}>{p[0]}</span><span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--fg-1)' }}>{p[1]}</span></div>))}</div>
+        <div style={{ display:'grid', gridTemplateColumns:'repeat(4, minmax(0,1fr))', gap:7 }}>{[[P(4).name,priced(4),'#F2A33C'],[P(5).name,priced(5),'#7BB661'],[P(6).name,priced(6),'#7C6FB0'],[P(7).name,priced(7),'#E9B44C']].map((p,i)=>(<div key={i} style={{ display:'flex', flexDirection:'column', gap:4 }}><div style={{ aspectRatio:'1/1', borderRadius:3, background:`linear-gradient(140deg, ${p[2]}, var(--uc-bone))` }}/><span style={{ fontFamily:'var(--font-display)', fontWeight:600, fontSize:7.5, color:'var(--fg-1)' }}>{p[0]}</span><span style={{ fontFamily:'var(--font-mono)', fontSize:7.5, fontWeight:700, color:'var(--fg-1)' }}>{p[1]}</span></div>))}</div>
       </div>
     </div>
   );
