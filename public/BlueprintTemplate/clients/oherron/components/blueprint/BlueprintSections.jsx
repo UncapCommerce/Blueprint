@@ -195,10 +195,13 @@ function BPIntro() {
   const leadName = (bpCo && bpCo.lead && bpCo.lead.name) || 'TBD';
   const leadSub = (bpCo && bpCo.lead && bpCo.lead.title) || 'Client Lead';
   const coName = (bpCo && bpCo.name) || brandName();
-  // Two lines: street, then city, state, ZIP, country ("IL 61832" splits too).
-  const addrParts = ((bpCo && bpCo.address) || '').split(/\s*[,·\n]\s*/).filter(Boolean)
-    .flatMap((p) => { const m = /^([A-Z]{2})\s+(\d{5}(?:-\d{4})?)$/.exec(p); return m ? [m[1], m[2]] : [p]; });
-  const coAddr = addrParts.length > 1 ? addrParts[0] + ',\n' + addrParts.slice(1).join(', ') : (addrParts[0] || '');
+  // Street (plus any suite) on the first line, then "City, ST ZIP" below; a US
+  // country suffix is dropped. Handles comma, middot and newline separators.
+  const addrParts = ((bpCo && bpCo.address) || '').split(/\s*[,·\n]\s*/).filter((p) => p && !/^(US|USA|United States)$/i.test(p));
+  const addrStreet = addrParts.length > 3 && /^(suite|ste\.?|unit|apt\.?|fl(oor)?\.?|bldg\.?|#)\s*\S/i.test(addrParts[1]) ? 2 : 1;
+  const coAddr = addrParts.length > addrStreet + 1
+    ? addrParts.slice(0, addrStreet).join(', ') + '\n' + addrParts.slice(addrStreet).join(', ').replace(/, ([A-Z]{2}), (?=[A-Z0-9])/, ', $1 ')
+    : addrParts.join(', ');
   return (
     <section id="intro" data-bp-section="intro" style={{
       background: 'var(--uc-black)',

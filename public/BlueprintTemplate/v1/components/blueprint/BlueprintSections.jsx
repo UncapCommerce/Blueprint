@@ -194,7 +194,13 @@ function BPIntro() {
   const leadName = (bpCo && bpCo.lead && bpCo.lead.name) || 'TBD';
   const leadSub = (bpCo && bpCo.lead && bpCo.lead.title) || 'Client Lead';
   const coName = (bpCo && bpCo.name) || brandName();
-  const coAddr = (bpCo && bpCo.address) || '';
+  // Street (plus any suite) on the first line, then "City, ST ZIP" below; a US
+  // country suffix is dropped. Handles comma, middot and newline separators.
+  const addrParts = ((bpCo && bpCo.address) || '').split(/\s*[,·\n]\s*/).filter((p) => p && !/^(US|USA|United States)$/i.test(p));
+  const addrStreet = addrParts.length > 3 && /^(suite|ste\.?|unit|apt\.?|fl(oor)?\.?|bldg\.?|#)\s*\S/i.test(addrParts[1]) ? 2 : 1;
+  const coAddr = addrParts.length > addrStreet + 1
+    ? addrParts.slice(0, addrStreet).join(', ') + '\n' + addrParts.slice(addrStreet).join(', ').replace(/, ([A-Z]{2}), (?=[A-Z0-9])/, ', $1 ')
+    : addrParts.join(', ');
   return (
     <section id="intro" data-bp-section="intro" style={{
       background: 'var(--uc-black)',
@@ -314,7 +320,7 @@ function BPIntro() {
                   }}>{c.v}</span>
                   <span style={{
                     display: 'block', fontFamily: 'var(--font-mono)', fontSize: 11,
-                    color: 'var(--uc-stone-500)', marginTop: 2
+                    color: 'var(--uc-stone-500)', marginTop: 2, whiteSpace: 'pre-line'
                   }}>{c.s}</span>
                 </span>
               </div>
