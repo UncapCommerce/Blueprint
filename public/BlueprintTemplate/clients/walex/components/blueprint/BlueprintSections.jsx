@@ -1612,7 +1612,7 @@ function BPTechStack() {
     { name: 'ShipperHQ',                   fn: 'LTL & dimensional shipping rates',    pri: 'launch', cost: '$350/mo' },
     { name: 'Avalara',                     fn: 'Sales tax calculation & compliance',  pri: 'launch', cost: '–' },
     { name: 'Intercom',                    fn: 'Customer support & AI chat',          pri: 'launch', cost: '–' },
-    { name: 'Klaviyo Email',               fn: 'Email marketing & automation',        pri: 'launch', cost: '–' },
+    { name: 'Shopify Messaging',           fn: 'Email & SMS marketing',               pri: 'launch', cost: 'Free' },
     { name: 'JudgeMe',                     fn: 'Product reviews, store reviews, UGC & FAQs', pri: 'launch', cost: '$15/mo' },
     { name: 'Matrixify',                   fn: 'Bulk import / export & migration',    pri: 'start',  cost: '$50/mo' }
   ];
@@ -1641,7 +1641,7 @@ function BPTechStack() {
 
         {(() => {
           const layers = [
-            { tier:'04', name:'Growth & Intelligence', note:'After launch', tools:[['Shopify Flow','launch'],['Shopify Knowledge Base','launch'],['Shopify Forms','launch'],['Intercom','launch'],['Klaviyo Email','launch'],['JudgeMe','launch']] },
+            { tier:'04', name:'Growth & Intelligence', note:'After launch', tools:[['Shopify Flow','launch'],['Shopify Knowledge Base','launch'],['Shopify Forms','launch'],['Intercom','launch'],['Shopify Messaging','launch'],['JudgeMe','launch']] },
             { tier:'03', name:'Experience & Engagement', note:'Customer-facing', tools:[['Shopify Search & Discovery','launch'],['Shopify Checkout Blocks','launch'],['Shopify Bundles','launch'],['Uncap Quotes','start']] },
             { tier:'02', name:'Data & Integration', note:'System of record', tools:[['Uncap Connect','start'],['ShipperHQ','launch'],['Avalara','launch'],['Matrixify','start']] },
             { tier:'01', name:'Commerce Core', note:'Foundation', tools:[['Shopify Plus','start']], core:true }
