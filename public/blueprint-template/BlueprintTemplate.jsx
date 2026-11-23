@@ -192,6 +192,14 @@ function ApproveButton({ brand, accent, onAccent, token }) {
   const [title, setTitle] = useState('');
   const [error, setError] = useState('');
 
+  // The sticky approve banner (AdminToolbar.jsx) opens this same modal and
+  // steps aside once the page is approved.
+  useEffect(() => {
+    window.__bpOpenApprove = () => setState('signing');
+    window.__bpApproved = state === 'approved';
+    window.dispatchEvent(new Event(state === 'approved' ? 'bp:approved' : 'bp:approve-ready'));
+  }, [state]);
+
   const submit = async () => {
     if (!name.trim() || !title.trim()) { setError('Both fields are required'); return; }
     setState('submitting'); setError('');
@@ -212,14 +220,14 @@ function ApproveButton({ brand, accent, onAccent, token }) {
   }
   const btn = { background: accent, color: onAccent, border: 'none', borderRadius: 6, padding: '15px 30px', fontSize: 16, fontWeight: 700, cursor: 'pointer' };
   if (state === 'idle' || state === 'approved') {
-    return <button style={btn} onClick={() => setState('signing')}>Approve &amp; kick off →</button>;
+    return <button style={btn} onClick={() => setState('signing')}>Approve →</button>;
   }
   // signing | submitting → modal
   return (
     <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,10,10,0.6)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', overflowY: 'auto', zIndex: 500, padding: '40px 16px' }}
       onClick={() => setState('idle')}>
       <div onClick={(e) => e.stopPropagation()} style={{ background: '#FFFFFF', color: '#0A0A0A', borderRadius: 10, width: 560, maxWidth: '100%', padding: 28, textAlign: 'left' }}>
-        <div style={{ fontFamily: 'var(--font-display, Inter, sans-serif)', fontWeight: 800, fontSize: 22, letterSpacing: '-0.02em' }}>Approve &amp; kick off</div>
+        <div style={{ fontFamily: 'var(--font-display, Inter, sans-serif)', fontWeight: 800, fontSize: 22, letterSpacing: '-0.02em' }}>Approve</div>
         <div style={{ fontSize: 13.5, color: '#4D4D4D', marginTop: 6 }}>Sign below to approve. This binds {brand} to the Master Services Agreement as the effective date.</div>
         <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
           <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Full name" style={inp}/>

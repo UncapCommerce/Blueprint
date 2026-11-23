@@ -61,6 +61,7 @@
         /* The client's own "Download signed copy" button and the team's
            floating toolbar are page chrome, never part of the document. */
         #bp-client-download-btn { display: none !important; }
+        #bp-approve-bar { display: none !important; }
         #bp-admin-toolbar { display: none !important; }
 
         /* Letter is the predictable default for proposals on this side
@@ -398,10 +399,9 @@
   // have a signature under their own token (handleSign skips the KV
   // write for them), so this naturally stays hidden for admins.
   const DOWNLOAD_BTN_ID = 'bp-client-download-btn';
-  async function maybeShowClientDownloadButton() {
-    if (document.getElementById(DOWNLOAD_BTN_ID)) return;
+  async function fetchOwnSigned() {
     const token = window.__bpToken;
-    if (!token) return;
+    if (!token) return false;
     try {
       const resp = await fetch('/api/auth/my-signature', {
         method: 'POST',
@@ -409,9 +409,11 @@
         body: JSON.stringify({ token }),
       });
       const data = await resp.json().catch(() => ({}));
-      if (!resp.ok || !data.ok || !data.signature) return;
-    } catch (_) { return; }
-
+      return !!(resp.ok && data.ok && data.signature);
+    } catch (_) { return false; }
+  }
+  function showClientDownloadButton() {
+    if (document.getElementById(DOWNLOAD_BTN_ID)) return;
     const btn = document.createElement('button');
     btn.id = DOWNLOAD_BTN_ID;
     btn.type = 'button';
@@ -436,6 +438,62 @@
     });
     document.body.appendChild(btn);
   }
+
+  // ── Sticky approve banner ─────────────────────────────────────────────
+  // Pinned to the bottom of the browser on every open blueprint: a short
+  // message and an Approve button that opens the page's own signature
+  // modal. A page opts in by exposing window.__bpOpenApprove from its
+  // BPApproveButton (declined pages don't), and the banner stays away once
+  // this session has signed or the page reports bp:approved.
+  const APPROVE_BAR_ID = 'bp-approve-bar';
+  let ownSigned = null; // unknown until tryInit asks the server
+  function fitBodyToBar() {
+    const bar = document.getElementById(APPROVE_BAR_ID);
+    document.body.style.paddingBottom = bar ? bar.offsetHeight + 'px' : '';
+  }
+  function maybeShowApproveBar() {
+    if (ownSigned !== false || window.__bpApproved || typeof window.__bpOpenApprove !== 'function') return;
+    if (document.getElementById(APPROVE_BAR_ID)) return;
+    const bar = document.createElement('div');
+    bar.id = APPROVE_BAR_ID;
+    bar.setAttribute('role', 'region');
+    bar.setAttribute('aria-label', 'Approve this Blueprint');
+    bar.style.cssText = [
+      'position:fixed', 'left:0', 'right:0', 'bottom:0', 'z-index:900',
+      'display:flex', 'align-items:center', 'justify-content:space-between', 'flex-wrap:wrap', 'gap:10px 20px',
+      'padding:12px max(16px, calc((100vw - 1080px) / 2)) calc(12px + env(safe-area-inset-bottom))',
+      'background:#0A0A0A', 'color:#F2EFE7', 'border-top:3px solid #E8FF52',
+      'box-shadow:0 -14px 36px -20px rgba(10,10,10,0.55)',
+      "font-family:var(--font-sans, Inter, system-ui, sans-serif)",
+    ].join(';');
+    const msg = document.createElement('div');
+    msg.style.cssText = 'flex:1 1 200px;min-width:0';
+    msg.innerHTML =
+      '<div style="font-family:var(--font-mono, ui-monospace, monospace);font-size:10px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;color:#E8FF52">Ready to move forward?</div>' +
+      '<div style="margin-top:3px;font-size:14px;line-height:1.35;color:#D9D7D0">Approve this Blueprint to lock in the scope, timeline and investment.</div>';
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.textContent = 'Approve →';
+    btn.style.cssText = [
+      'flex:0 0 auto', 'min-height:44px', 'padding:12px 24px', 'border:none', 'border-radius:6px', 'cursor:pointer',
+      'background:#E8FF52', 'color:#0A0A0A', 'font:inherit', 'font-size:15px', 'font-weight:700', 'letter-spacing:-0.005em',
+    ].join(';');
+    btn.addEventListener('click', () => { if (typeof window.__bpOpenApprove === 'function') window.__bpOpenApprove(); });
+    bar.appendChild(msg);
+    bar.appendChild(btn);
+    document.body.appendChild(bar);
+    fitBodyToBar();
+    window.addEventListener('resize', fitBodyToBar);
+  }
+  function removeApproveBar() {
+    const bar = document.getElementById(APPROVE_BAR_ID);
+    if (!bar) return;
+    bar.remove();
+    window.removeEventListener('resize', fitBodyToBar);
+    fitBodyToBar();
+  }
+  window.addEventListener('bp:approve-ready', maybeShowApproveBar);
+  window.addEventListener('bp:approved', removeApproveBar);
 
   // ── Floating team toolbar ─────────────────────────────────────────────
   // Rendered only for admin/preview sessions (clients never see it): a
@@ -532,7 +590,9 @@
       const session = await fetchSession(window.__bpToken);
       mountAdminBar(session);
       maybeAutoPrint(session);
-      maybeShowClientDownloadButton();
+      ownSigned = await fetchOwnSigned();
+      if (ownSigned) showClientDownloadButton();
+      else maybeShowApproveBar();
       return;
     }
     attempts++;

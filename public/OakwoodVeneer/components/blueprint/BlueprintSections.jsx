@@ -2864,7 +2864,7 @@ function BPProof() {
   );
 }
 
-// ── Approve & kickoff CTA. Clicking opens an inline signature modal that
+// ── Approve CTA. Clicking opens an inline signature modal that
 // captures the signer's full name and title; submitting POSTs them to
 // /api/auth/sign which persists a record in KV (1-year TTL) and emails
 // denis@uncap.com with the signer + timestamp + IP + user-agent. The
@@ -2895,6 +2895,14 @@ function BPApproveButton() {
 
   const openModal = () => { setError(''); setState('signing'); };
   const closeModal = () => { setState('idle'); setError(''); };
+
+  // The sticky approve banner (AdminToolbar.jsx) opens this same modal and
+  // steps aside once the page is approved.
+  React.useEffect(() => {
+    window.__bpOpenApprove = openModal;
+    window.__bpApproved = state === 'approved';
+    window.dispatchEvent(new Event(state === 'approved' ? 'bp:approved' : 'bp:approve-ready'));
+  }, [state]);
 
   const onSubmit = async (e) => {
     e.preventDefault();
@@ -2964,7 +2972,7 @@ function BPApproveButton() {
         className="uc-btn b-signal"
         style={{ padding: '16px 26px', fontSize: 15, border: 'none', cursor: 'pointer' }}
       >
-        Approve &amp; kickoff <span>→</span>
+        Approve <span>→</span>
       </button>
 
       {(state === 'signing' || state === 'submitting') && (
@@ -3004,7 +3012,7 @@ function BPApproveButton() {
               fontFamily: 'var(--font-hero)', fontWeight: 800,
               fontSize: 'clamp(24px, 3.4vw, 30px)', lineHeight: 1.04,
               letterSpacing: '-0.025em'
-            }}>Approve &amp; kickoff.</h2>
+            }}>Approve.</h2>
             <p style={{
               margin: '0 0 22px',
               fontFamily: 'var(--font-serif)', fontStyle: 'italic',
