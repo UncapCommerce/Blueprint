@@ -674,13 +674,13 @@ function BPBuildLayer({ L }) {
 
 function BPScope() {
   const layers = [
-    { code: '01', t: 'Commerce Strategy', d: 'Strategy, R&D, optimisation, and a plan the board can trust.' },
-    { code: '02', t: 'Experience Design', d: 'A modern, conversion-focused storefront, built to scale.' },
-    { code: '03', t: 'Solution Architecture', d: 'Solution architecture, roadmap and integration.' },
-    { code: '04', t: 'B2B Enablement',    d: 'Company accounts, price lists, NET terms, and account portals.' },
-    { code: '05', t: 'NetSuite Integration', d: 'Bidirectional NetSuite sync native to Shopify Plus.' },
-    { code: '06', t: 'Data Migration',    d: 'Products, customers, order history, and SEO redirects.' },
-    { code: '07', t: 'Launch & Hypercare Support',  d: 'QA, a go-live runbook, and 30-day post-launch care.', kind: 'base' }
+    { code: '01', t: 'Commerce Strategy', d: 'Ecommerce optimization, best practices, and a strategic plan of execution.' },
+    { code: '02', t: 'Experience Design', d: 'Tailored UX/UI design for the whole customer journey, on web and mobile.' },
+    { code: '03', t: 'Solution Architecture', d: 'The tech stack, systems, and integrations, built for scale and security.' },
+    { code: '04', t: 'B2B Enablement',    d: 'Company profiles, catalogs, price lists, payment terms, and a self-serve portal.' },
+    { code: '05', t: 'NetSuite Integration', d: 'Two-way NetSuite sync of orders, customers, and inventory, native to Shopify.' },
+    { code: '06', t: 'Data Migration',    d: 'Products, customers, order history, and SEO redirects, moved over without loss.' },
+    { code: '07', t: 'Launch & Hypercare Support',  d: 'Full QA, a go-live runbook, and 30 days of hands-on post-launch care support.', kind: 'base' }
   ];
   return (
     <BPSection id="scope" n="05" label="Scope of Work" tail="THE SYSTEM">
