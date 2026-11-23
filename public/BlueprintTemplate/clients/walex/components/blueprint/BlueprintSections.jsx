@@ -3402,8 +3402,8 @@ function BPBuffer() {
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--fg-3)' }}>If needed</div>
-          <div style={{ marginTop: 6, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(34px, 3.6vw, 52px)', letterSpacing: '-0.045em', lineHeight: 0.9, color: 'var(--fg-1)' }}>$19.5k</div>
-          <div style={{ marginTop: 10, display: 'inline-flex', alignItems: 'center', gap: 7, padding: '4px 10px', border: '1px solid var(--line-2)', borderRadius: 999, fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-2)', whiteSpace: 'nowrap' }}><span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: 999, background: 'var(--uc-signal)' }}/>145 service hours</div>
+          <div style={{ marginTop: 6, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(34px, 3.6vw, 52px)', letterSpacing: '-0.045em', lineHeight: 0.9, color: 'var(--fg-1)' }}>$13.5k</div>
+          <div style={{ marginTop: 10, display: 'inline-flex', alignItems: 'center', gap: 7, padding: '4px 10px', border: '1px solid var(--line-2)', borderRadius: 999, fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--fg-2)', whiteSpace: 'nowrap' }}><span aria-hidden="true" style={{ width: 6, height: 6, borderRadius: 999, background: 'var(--uc-signal)' }}/>100 service hours</div>
         </div>
       </div>
     </section>
