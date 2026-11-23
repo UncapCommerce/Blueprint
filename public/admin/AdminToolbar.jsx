@@ -492,7 +492,14 @@
     window.removeEventListener('resize', fitBodyToBar);
     fitBodyToBar();
   }
-  window.addEventListener('bp:approve-ready', maybeShowApproveBar);
+  // The signing modal lives inside the page's own stacking layer, so it
+  // can't rise above this bar; the bar steps aside while the modal is open.
+  function syncApproveBar() {
+    const bar = document.getElementById(APPROVE_BAR_ID);
+    if (!bar) { maybeShowApproveBar(); return; }
+    bar.style.display = document.querySelector('[role="dialog"][aria-modal="true"]') ? 'none' : 'flex';
+  }
+  window.addEventListener('bp:approve-ready', syncApproveBar);
   window.addEventListener('bp:approved', removeApproveBar);
 
   // ── Floating team toolbar ─────────────────────────────────────────────

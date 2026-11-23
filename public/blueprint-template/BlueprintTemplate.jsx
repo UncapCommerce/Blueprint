@@ -224,7 +224,7 @@ function ApproveButton({ brand, accent, onAccent, token }) {
   }
   // signing | submitting → modal
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(10,10,10,0.6)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', overflowY: 'auto', zIndex: 500, padding: '40px 16px' }}
+    <div role="dialog" aria-modal="true" aria-label="Sign to approve" style={{ position: 'fixed', inset: 0, background: 'rgba(10,10,10,0.6)', display: 'flex', alignItems: 'flex-start', justifyContent: 'center', overflowY: 'auto', zIndex: 500, padding: '40px 16px' }}
       onClick={() => setState('idle')}>
       <div onClick={(e) => e.stopPropagation()} style={{ background: '#FFFFFF', color: '#0A0A0A', borderRadius: 10, width: 560, maxWidth: '100%', padding: 28, textAlign: 'left' }}>
         <div style={{ fontFamily: 'var(--font-display, Inter, sans-serif)', fontWeight: 800, fontSize: 22, letterSpacing: '-0.02em' }}>Approve</div>
