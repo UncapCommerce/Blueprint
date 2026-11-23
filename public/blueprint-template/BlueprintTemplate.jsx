@@ -239,7 +239,7 @@ function ApproveButton({ brand, accent, onAccent, token }) {
         {error ? <div style={{ color: '#B5322B', fontSize: 13, marginTop: 12 }}>{error}</div> : null}
         <div style={{ display: 'flex', gap: 10, justifyContent: 'flex-end', marginTop: 16 }}>
           <button style={{ border: '1px solid #C9C7C0', background: 'transparent', color: '#4D4D4D', borderRadius: 6, padding: '12px 18px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }} onClick={() => setState('idle')} disabled={state === 'submitting'}>Cancel</button>
-          <button style={{ ...btn, padding: '12px 22px', fontSize: 14, opacity: state === 'submitting' ? 0.7 : 1 }} onClick={submit} disabled={state === 'submitting'}>{state === 'submitting' ? 'Recording…' : 'Sign & approve'}</button>
+          <button className="bp-sign-btn" style={{ ...btn, padding: '12px 22px', fontSize: 14, opacity: state === 'submitting' ? 0.7 : 1 }} onClick={submit} disabled={state === 'submitting'}>{state === 'submitting' ? 'Recording…' : 'Sign Digitally'}</button>
         </div>
       </div>
     </div>

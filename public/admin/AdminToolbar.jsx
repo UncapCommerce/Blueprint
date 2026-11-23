@@ -73,6 +73,16 @@
   }
   ensurePrintStyles();
 
+  // Hover for the signing popup's "Sign Digitally" button on every blueprint
+  // (inline styles can't express :hover, and the page CSS differs by version).
+  (function () {
+    if (document.getElementById('bp-sign-btn-styles')) return;
+    const s = document.createElement('style');
+    s.id = 'bp-sign-btn-styles';
+    s.textContent = '.bp-sign-btn:not(:disabled):hover { background: #0A0A0A !important; color: #FFFFFF !important; }';
+    document.head.appendChild(s);
+  })();
+
   // ── Print-mode stylesheet (armed only when a mode class is set) ──────
   const MODE_STYLE_ID = 'bp-print-mode-styles';
   function ensureModeStyles() {

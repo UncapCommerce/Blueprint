@@ -2931,7 +2931,7 @@ function BPApproveButton() {
                     <button
                       type="submit"
                       disabled={state === 'submitting' || !name.trim() || !title.trim()}
-                      className="uc-btn b-signal"
+                      className="uc-btn b-signal bp-sign-btn"
                       style={{
                         flex: 1, justifyContent: 'center',
                         padding: '12px 18px', fontSize: 14, border: 'none',
@@ -2939,7 +2939,7 @@ function BPApproveButton() {
                         opacity: state === 'submitting' ? 0.7 : 1
                       }}
                     >
-                      {state === 'submitting' ? 'Recording…' : 'Sign & approve'} <span>→</span>
+                      {state === 'submitting' ? 'Recording…' : 'Sign Digitally'} <span>→</span>
                     </button>
                   </div>
                 }
