@@ -2429,9 +2429,9 @@ function BPInvestment() {
     'Go live, a clean handoff, and a 30-day warranty'
   ];
   const schedule = [
-    { n: '01', amount: '$56,000', due: 'Due at signup' },
-    { n: '02', amount: '$28,000', due: 'Due at design approval' },
-    { n: '03', amount: '$28,000', due: 'Due at project completion' }
+    { n: '01', amount: '$53,000', due: 'Due at signup' },
+    { n: '02', amount: '$26,500', due: 'Due at design approval' },
+    { n: '03', amount: '$26,500', due: 'Due at project completion' }
   ];
   return (
     <BPSection id="investment" n="16" label="Investment" dark tail="FIXED · NO SURPRISES">
@@ -2527,7 +2527,11 @@ function BPInvestment() {
         </div>
         <div style={{ textAlign: 'right' }}>
           <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--uc-stone-500)' }}>Fixed price</div>
-          <div style={{ marginTop: 6, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(34px, 3.6vw, 52px)', letterSpacing: '-0.045em', lineHeight: 0.9, color: 'var(--uc-signal)' }}>$18k</div>
+          <div style={{ marginTop: 6, display: 'flex', alignItems: 'baseline', justifyContent: 'flex-end', gap: 10, flexWrap: 'wrap' }}>
+            <span style={{ fontFamily: 'var(--font-hero)', fontWeight: 700, fontSize: 'clamp(18px, 1.8vw, 24px)', letterSpacing: '-0.03em', color: 'var(--uc-stone-500)', textDecoration: 'line-through' }}>$18k</span>
+            <span style={{ fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(34px, 3.6vw, 52px)', letterSpacing: '-0.045em', lineHeight: 0.9, color: 'var(--uc-signal)' }}>$12k</span>
+          </div>
+          <div style={{ marginTop: 10, display: 'inline-flex', padding: '4px 10px', borderRadius: 999, background: 'var(--uc-signal)', color: 'var(--uc-black)', fontFamily: 'var(--font-mono)', fontSize: 10, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>$6,000 discount</div>
         </div>
       </div>
 
