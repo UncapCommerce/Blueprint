@@ -177,8 +177,9 @@ function BPIntro() {
   const [r, setR] = React.useState(false);
   React.useEffect(() => { const t = setTimeout(() => setR(true), 80); return () => clearTimeout(t); }, []);
   // "Valid through" comes from the expiration set on this blueprint in the app
-  // (surfaced on window.__bpExpiresAt by the Gate); fall back if none is set.
-  const bpExp = (typeof window !== 'undefined' && window.__bpExpiresAt) || '';
+  // (surfaced on window.__bpExpiresAt by the Gate); O'Herron runs at least to
+  // Dec 5, 2026, so the later of the two dates shows.
+  const bpExp = [(typeof window !== 'undefined' && window.__bpExpiresAt) || '', '2026-12-05'].sort().at(-1);
   const expMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(bpExp);
   // Number + prepared month come from the blueprint record; with no
   // expiration set in the app the proposal runs to the end of that month.
