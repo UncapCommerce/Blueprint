@@ -584,13 +584,13 @@ function BPBuildLayer({ L }) {
 
 function BPScope() {
   const layers = [
-    { code: '01', t: 'Commerce Strategy', d: 'Strategy, R&D, optimisation, and a plan the board can trust.' },
-    { code: '02', t: 'Experience Design', d: 'A modern, conversion-focused storefront, built to scale.' },
-    { code: '03', t: 'Solution Architecture', d: 'Solution architecture, roadmap and integration.' },
-    { code: '04', t: 'B2B Enablement',    d: 'Catalogs, pricing tiers, NET terms, and account portals.' },
-    { code: '05', t: 'System Integration', d: 'Bidirectional, real-time sync native to Shopify Plus.' },
-    { code: '06', t: 'Data Migration',    d: 'Products, customers, order history, and SEO redirects.' },
-    { code: '07', t: 'Launch & Hypercare Support',  d: 'QA, a go-live runbook, and 30-day post-launch care.', kind: 'base' }
+    { code: '01', t: 'Commerce Strategy', d: 'Ecommerce optimization, proven best practices, and a clear, strategic plan of execution.' },
+    { code: '02', t: 'Experience Design', d: 'Tailored, conversion-led UX/UI design for the whole customer journey, on web and mobile.' },
+    { code: '03', t: 'Solution Architecture', d: 'A future-proof tech stack, systems, and integrations, engineered for scale and security.' },
+    { code: '04', t: 'B2B Enablement',    d: 'Company profiles, catalogs, price lists, payment terms, and a seamless self-serve portal.' },
+    { code: '05', t: 'System Integration', d: 'Real-time, two-way system sync of orders, customers, and inventory, native to Shopify Plus.' },
+    { code: '06', t: 'Data Migration',    d: 'Products, customers, order history, and SEO redirects, migrated securely with zero loss.' },
+    { code: '07', t: 'Launch & Hypercare Support',  d: 'Rigorous QA, a proven go-live runbook, and 30 days of dedicated post-launch hypercare.', kind: 'base' }
   ];
   return (
     <BPSection id="scope" n="05" label="Scope of Work" tail="THE SYSTEM">
