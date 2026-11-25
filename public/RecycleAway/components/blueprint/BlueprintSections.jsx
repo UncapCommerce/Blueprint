@@ -97,7 +97,8 @@ function BPIntro() {
   // Valid-through, client lead, and company address come from the app
   // (surfaced on window.__bpExpiresAt / window.__bpCompany by the Gate),
   // with static fallbacks until they're set there.
-  const bpExp = (typeof window !== 'undefined' && window.__bpExpiresAt) || '';
+  // Recycle Away runs at least to Nov 30, 2026, so the later of the two dates shows.
+  const bpExp = [(typeof window !== 'undefined' && window.__bpExpiresAt) || '', '2026-11-30'].sort().at(-1);
   const expMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(bpExp);
   const [expY, expM, expD] = expMatch ? [+expMatch[1], +expMatch[2], +expMatch[3]] : [2026, 9, 30];
   const validThrough = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][expM - 1] + ' ' + expD + ', ' + expY;
@@ -681,8 +682,8 @@ function BPGantt() {
     ] },
     { name: 'Production', range: 'WK 06–14', tasks: [
       { n: '05', t: 'Development',                tag: 'Build',    s: 6,  e: 12, range: 'W6–12' },
-      { n: '06', t: 'Data Migration',             tag: 'Migrate',  s: 9,  e: 12, range: 'W9–12' },
-      { n: '07', t: 'Integration',                tag: 'Connect',  s: 9,  e: 13, range: 'W9–13' },
+      { n: '06', t: 'Data Migration',             tag: 'Migrate',  s: 6,  e: 12, range: 'W6–12' },
+      { n: '07', t: 'Integration',                tag: 'Connect',  s: 6,  e: 13, range: 'W6–13' },
       { n: '08', t: 'QA & Testing',               tag: 'Verify',   s: 12, e: 14, range: 'W12–14' }
     ] },
     { name: 'Audit', range: 'WK 14–16', tasks: [
@@ -1517,6 +1518,7 @@ function BPTechStack() {
     { name: 'Shopify Bundles',             fn: 'Bundled & grouped products',          pri: 'launch', cost: 'Free' },
     { name: 'Shopify Marketplace Connect', fn: 'Sync to marketplaces',                pri: 'future', cost: 'Free' },
     { name: 'Shopify Messaging',           fn: 'Customer chat & conversations',       pri: 'launch', cost: 'Free' },
+    { name: 'ShipperHQ',                   fn: 'LTL & dimensional shipping rates',    pri: 'launch', cost: '$75/mo' },
     { name: 'Avalara',                     fn: 'Sales tax calculation & filing',      pri: 'start',  cost: 'Included' },
     { name: 'Uncap Quotes',                fn: 'B2B quote management',                pri: 'start',  cost: '$90/mo' },
     { name: 'Matrixify',                   fn: 'Bulk import / export & migration',    pri: 'start',  cost: '$50/mo' }
@@ -1548,7 +1550,7 @@ function BPTechStack() {
           const layers = [
             { tier:'04', name:'Growth & Intelligence', note:'After launch', tools:[['Shopify Flow','launch'],['Shopify Marketplace Connect','future'],['Shopify Knowledge Base','launch']] },
             { tier:'03', name:'Experience & Engagement', note:'Customer-facing', tools:[['Shopify Search & Discovery','launch'],['Shopify Checkout Blocks','launch'],['Shopify Bundles','launch'],['Shopify Messaging','launch'],['Uncap Quotes','start']] },
-            { tier:'02', name:'Data & Integration', note:'System of record', tools:[['Avalara','start'],['Matrixify','start']] },
+            { tier:'02', name:'Data & Integration', note:'System of record', tools:[['Avalara','start'],['ShipperHQ','launch'],['Matrixify','start']] },
             { tier:'01', name:'Commerce Core', note:'Foundation', tools:[['Shopify','start']], core:true }
           ];
           const chip = { start:{ bg:'var(--uc-signal)', fg:'var(--uc-black)' }, launch:{ bg:'#FF8B37', fg:'var(--uc-black)' }, future:{ bg:'transparent', fg:'var(--uc-stone-300)', outline:true } };
@@ -1629,7 +1631,7 @@ function BPTechStack() {
         <div style={{ display:'grid', gridTemplateColumns:'minmax(0,1.2fr) minmax(0,1.5fr) minmax(0,1fr) minmax(120px,auto)', gap:16, padding:'14px 18px', borderTop:'1px solid #2B2B2B', background:'#0F0F0F', alignItems:'center' }}>
           <span style={{ fontFamily:'var(--font-mono)', fontSize:10, fontWeight:700, letterSpacing:'0.12em', textTransform:'uppercase', color:'var(--uc-signal)' }}>Est. monthly</span>
           <span style={{ fontFamily:'var(--font-serif)', fontSize:13, color:'var(--uc-stone-500)' }}>Platform + apps, before system integration</span>
-          <span style={{ gridColumn:'3 / 5', fontFamily:'var(--font-hero)', fontWeight:800, fontSize:'clamp(18px,1.8vw,24px)', letterSpacing:'-0.03em', color:'var(--uc-paper)', textAlign:'right', whiteSpace:'nowrap' }}>~$2,440/mo</span>
+          <span style={{ gridColumn:'3 / 5', fontFamily:'var(--font-hero)', fontWeight:800, fontSize:'clamp(18px,1.8vw,24px)', letterSpacing:'-0.03em', color:'var(--uc-paper)', textAlign:'right', whiteSpace:'nowrap' }}>~$2,515/mo</span>
         </div>
       </div>
       <div style={{ marginTop:16, display:'flex', gap:18, flexWrap:'wrap', fontFamily:'var(--font-mono)', fontSize:10, color:'var(--uc-stone-500)', letterSpacing:'0.06em' }}>
@@ -2139,7 +2141,7 @@ function BPDelivery() {
           {/* right: short summary */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 16, fontFamily: 'var(--font-serif)', fontSize: 'clamp(15px, 1.2vw, 18px)', lineHeight: 1.55, color: 'var(--fg-2)' }}>
             <p style={{ margin: 0 }}>
-              A dedicated <strong style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, color: 'var(--fg-1)' }}>Project Lead</strong> runs the build day-to-day — your single point of contact, with weekly 1:1s and full <strong style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, color: 'var(--fg-1)' }}>ClickUp</strong> transparency.
+              Our <strong style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, color: 'var(--fg-1)' }}>Shopify Program Manager</strong> in coordination with a dedicated <strong style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, color: 'var(--fg-1)' }}>Project Lead</strong> runs the build day-to-day — your single point of contact, with weekly 1:1s and full <strong style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, color: 'var(--fg-1)' }}>ClickUp</strong> transparency.
             </p>
             <p style={{ margin: 0 }}>
               They&rsquo;re backed by a <strong style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, color: 'var(--fg-1)' }}>Head of Services</strong> overseeing the work, a <strong style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, color: 'var(--fg-1)' }}>Technical Lead</strong> on architecture &amp; build, a <strong style={{ fontFamily: 'var(--font-sans)', fontWeight: 700, color: 'var(--fg-1)' }}>Creative Lead</strong> on experience &amp; UI, and specialist teams across data and QA.

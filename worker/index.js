@@ -1411,6 +1411,7 @@ const COMPANY_FIXES = [
   { flag: 'coaddr:dfelectrical:v1', id: 'dfelectrical', address: '1810 W. Winton Ave, Hayward, CA 94545-1232' },
   { flag: 'colead:northwest:v1', id: 'northwest', lead: 'jscott@northwest.ca' },
   { flag: 'bpexp:oherron:v1', id: 'oherron', expires: '2026-12-05' },
+  { flag: 'bpexp:recycleaway:v1', id: 'recycleaway', expires: '2026-11-30' },
 ];
 // The company record with `email` as its Client Lead: that contact is promoted
 // (or added) and the previous lead stays on as a regular contact.
@@ -1431,10 +1432,10 @@ async function applyCompanyFixes(env) {
       if (f.declined && !co.declined) await logActivity(env, null, { type: 'deleted', entity: 'company', id: co.id, name: co.name, actor: SUPER_ADMIN_EMAIL, detail: 'Declined — Hub access disabled' });
       const draft = f.name && co.blueprintId ? await blueprintDraft(env, co.blueprintId) : null;
       if (draft) await kv.put(`bp:${draft.id}`, JSON.stringify({ ...draft, name: f.name }));
-      if (f.expires) {
-        const bid = normalizeBlueprintId(co.blueprintId || f.id);
-        await kv.put(`bpmeta:${bid}`, JSON.stringify({ ...(await getBpMeta(env, bid)), expiresAt: f.expires }));
-      }
+    }
+    if (f.expires) {
+      const bid = normalizeBlueprintId((co && co.blueprintId) || f.id);
+      await kv.put(`bpmeta:${bid}`, JSON.stringify({ ...(await getBpMeta(env, bid)), expiresAt: f.expires }));
     }
     await kv.put(f.flag, '1');
   }
