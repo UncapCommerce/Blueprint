@@ -368,9 +368,9 @@ function BPSummary() {
       }}>
         {[
           { v: '20 weeks', l: 'Estimated timeline to launch on Shopify' },
-          { v: 'Unified', l: 'B2B storefront on Shopify integrated with ' + bpSite().erp },
+          { v: 'Unified', l: 'B2B, B2C, POS and content in one system' },
           { v: 'Simplified', l: 'Sidekick-friendly system to self-manage your store' },
-          { v: 'Integrated', l: 'Systems and apps that talk to each other' }
+          { v: 'Integrated', l: bpSite().erp + ', systems and apps that talk to each other' }
         ].map((s, i) => (
           <div key={i} style={{
             padding: 'clamp(24px, 3vw, 36px)',
