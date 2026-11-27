@@ -357,7 +357,7 @@ function BPObjectives() {
   { n: '01', t: 'Unify commerce', d: 'One platform for B2B wholesale, brand storefronts, and back-office. No reconciling.', metric: 'One', unit: 'system of record', tag: 'Revenue' },
   { n: '02', t: 'Self-managed systems', d: 'Fewer tools, one partner. Retire the legacy stack and its renewals.', metric: 'Lower', unit: 'total cost', tag: 'Finance' },
   { n: '03', t: 'Built-in growth engine', d: 'AOV and conversion engineered in from day one, not bolted on post-launch.', metric: 'Higher', unit: 'AOV + LTV', tag: 'Growth' },
-  { n: '04', t: 'Automation', d: 'Replace phone, fax, and email orders with self-serve, and free the team to focus on relationships, not data entry.', metric: 'Faster', unit: 'daily ops', tag: 'Operations' }];
+  { n: '04', t: 'Always-on automation', d: 'Replace phone, fax, and email orders with self-serve, and free the team to focus on relationships, not data entry.', metric: 'Faster', unit: 'daily ops', tag: 'Operations' }];
 
   return (
     <BPSection id="objectives" n="03" label="Objectives" paper tail="WHAT SUCCESS LOOKS LIKE">

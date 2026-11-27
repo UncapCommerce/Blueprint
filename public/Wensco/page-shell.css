@@ -119,6 +119,9 @@ html { scroll-behavior: smooth; scroll-padding-top: 96px; }
      (1.4fr/1.2fr/…) while skipping px-first icon grids like
      "minmax(0px, 44px) minmax(0px, 1fr)". ── */
   @media (max-width: 720px) {
+    /* Objectives rows: number + title on one line, description and tag under the title */
+    [style*="minmax(0px, 52px) minmax(0px, 2fr)"] { grid-template-columns: minmax(0, 28px) minmax(0, 1fr) !important; row-gap: 10px !important; }
+    [style*="minmax(0px, 52px) minmax(0px, 2fr)"] > :nth-child(n+4) { grid-column: 2; justify-content: flex-start !important; }
     nav { display: none !important; }
     [style*="fr) minmax(0px, 1fr)"],
     [style*="minmax(0px, auto) minmax(0px, 1fr)"],
