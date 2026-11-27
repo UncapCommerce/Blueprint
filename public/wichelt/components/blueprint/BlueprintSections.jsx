@@ -254,7 +254,7 @@ function BPSummary() {
         borderTop: '1px solid var(--line-1)', borderBottom: '1px solid var(--line-1)'
       }}>
         {[
-        { v: '16 wk', l: 'Estimated timeline to launch on Shopify' },
+        { v: '16 weeks', l: 'Estimated timeline to launch on Shopify' },
         { v: 'Unified', l: 'B2B + DTC on Shopify integrated with ERP' },
         { v: '16k+ SKUs', l: 'Sell your quality fabrics, threads, graphs, kits, and more online' },
         { v: 'Modern B2B', l: 'A modern shopping experience for your dealers — self-serve ordering, pricing, and reorders' }].

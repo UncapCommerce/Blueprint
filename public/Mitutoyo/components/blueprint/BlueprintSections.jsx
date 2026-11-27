@@ -245,7 +245,7 @@ function BPSummary() {
         borderTop: '1px solid var(--line-1)', borderBottom: '1px solid var(--line-1)'
       }}>
         {[
-          { v: '16 wk', l: 'Estimated timeline to launch on Shopify' },
+          { v: '16 weeks', l: 'Estimated timeline to launch on Shopify' },
           { v: 'Unified', l: 'B2C, B2B, POS on Shopify integrated with ERP' },
           { v: 'Agentic', l: 'AI product discoverability built in' },
           { v: 'Low Cost', l: 'Build with native tech stack' }

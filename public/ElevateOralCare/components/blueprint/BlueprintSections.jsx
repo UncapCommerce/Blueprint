@@ -265,7 +265,7 @@ function BPSummary() {
         borderTop: '1px solid var(--line-1)', borderBottom: '1px solid var(--line-1)'
       }}>
         {[
-        { v: '20 wk', l: 'Estimated timeline to launch on Shopify' },
+        { v: '20 weeks', l: 'Estimated timeline to launch on Shopify' },
         { v: 'Unified', l: 'Shopify B2B storefront integrated with NetSuite ERP' },
         { v: 'Simplified', l: 'Sidekick enabled for management' },
         { v: '+22%', l: 'Targeted increase across KPIs' }].

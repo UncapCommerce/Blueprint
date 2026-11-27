@@ -256,7 +256,7 @@ function BPSummary() {
         borderTop: '1px solid var(--line-1)', borderBottom: '1px solid var(--line-1)'
       }}>
         {[
-          { v: '16 wk', l: 'Estimated timeline to launch on Shopify' },
+          { v: '16 weeks', l: 'Estimated timeline to launch on Shopify' },
           { v: 'Unified', l: 'Web, B2C and B2B on Shopify fully integrated' },
           { v: 'Simplified', l: 'Sidekick friendly system to self-manage' },
           { v: 'Integrated', l: 'Systems and apps that talk to each other' }

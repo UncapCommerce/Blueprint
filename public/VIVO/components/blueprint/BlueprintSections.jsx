@@ -266,7 +266,7 @@ function BPSummary() {
         borderTop: '1px solid var(--line-1)', borderBottom: '1px solid var(--line-1)'
       }}>
         {[
-          { v: '12 wk', l: 'Estimated timeline to upgrade & go live' },
+          { v: '12 weeks', l: 'Estimated timeline to upgrade & go live' },
           { v: 'Unified', l: 'B2C, B2B & Unified Commerce on Shopify' },
           { v: '2.0 OS', l: 'Upgraded theme and app cleanup' },
           { v: 'Simplified', l: 'Sidekick ready solution for self management' }

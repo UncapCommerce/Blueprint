@@ -254,7 +254,7 @@ function BPSummary() {
         borderTop: '1px solid var(--line-1)', borderBottom: '1px solid var(--line-1)'
       }}>
         {[
-          { v: '12 wk', l: 'Estimated timeline to launch on Shopify' },
+          { v: '12 weeks', l: 'Estimated timeline to launch on Shopify' },
           { v: 'OS 2.0', l: 'Upgraded theme framework' },
           { v: 'Clean', l: 'Less apps and more flexibility' }
         ].map((s, i) => (
@@ -265,7 +265,7 @@ function BPSummary() {
             position: 'relative'
           }}>
             <span aria-hidden="true" style={{ position: 'absolute', top: 0, left: i > 0 ? 'clamp(20px, 3vw, 36px)' : 0, width: 16, height: 2, background: 'var(--uc-signal)' }}/>
-            <div style={{ fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(34px, 3.8vw, 60px)', letterSpacing: '-0.05em', lineHeight: 0.88, color: 'var(--fg-1)' }}>{s.v}</div>
+            <div style={{ fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(26px, 2.9vw, 46px)', letterSpacing: '-0.05em', whiteSpace: 'nowrap', lineHeight: 0.88, color: 'var(--fg-1)' }}>{s.v}</div>
             <div style={{ marginTop: 12, fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--fg-3)' }}>{s.l}</div>
           </div>
         ))}
