@@ -364,9 +364,9 @@ function BPWhere() {
 function BPObjectives() {
   const items = [
   { n: '01', t: 'Unify commerce', d: 'One platform for storefront, B2B, and back-office. No reconciling.', metric: 'One', unit: 'system of record', tag: 'Revenue' },
-  { n: '02', t: 'Cut cost of ownership', d: 'Fewer tools, one partner. Retire the legacy stack and its renewals.', metric: 'Lower', unit: 'total cost', tag: 'Finance' },
-  { n: '03', t: 'Build a revenue engine', d: 'Conversion, AOV, retention — engineered in, not bolted on.', metric: 'Higher', unit: 'AOV + LTV', tag: 'Growth' },
-  { n: '04', t: 'Free the team', d: 'Automate the robot work. Let people do the work that grows the business.', metric: 'Faster', unit: 'daily ops', tag: 'Operations' }];
+  { n: '02', t: 'Self-managed systems', d: 'Fewer tools, one partner. Retire the legacy stack and its renewals.', metric: 'Lower', unit: 'total cost', tag: 'Finance' },
+  { n: '03', t: 'Built-in growth engine', d: 'Conversion, AOV, retention — engineered in, not bolted on.', metric: 'Higher', unit: 'AOV + LTV', tag: 'Growth' },
+  { n: '04', t: 'Automation', d: 'Automate the robot work and free the team to focus on what grows the business.', metric: 'Faster', unit: 'daily ops', tag: 'Operations' }];
 
   return (
     <BPSection id="objectives" n="03" label="Objectives" paper tail="WHAT SUCCESS LOOKS LIKE">

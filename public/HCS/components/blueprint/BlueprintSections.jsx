@@ -378,11 +378,11 @@ function BPWhere() {
 // ── 03 OBJECTIVES ───────────────────────────────────────────────────────────
 function BPObjectives() {
   const items = [
-    { n: '01', t: 'Seamless implementation', d: 'Build on Shopify without losing what works today — while optimizing for growth.', metric: 'Zero',   unit: 'disruption',       tag: 'New build' },
+    { n: '01', t: 'Seamless implementation', d: 'Uncap takes full ownership of the project. Build on Shopify without losing what works today, while optimizing for growth.', metric: 'Zero',   unit: 'disruption',       tag: 'New build' },
     { n: '02', t: 'Unify commerce',   d: 'One platform for storefront, B2B, and back-office. No reconciling.',           metric: 'One',    unit: 'system of record', tag: 'Revenue' },
-    { n: '03', t: 'Low cost of ownership', d: 'Fewer tools, one partner. Retire the current stack and its renewals.',          metric: 'Lower',  unit: 'total cost',       tag: 'Finance' },
-    { n: '04', t: 'Growth-ready foundation', d: 'Conversion, AOV, retention — engineered in, not bolted on.',                  metric: 'Higher', unit: 'AOV + LTV',        tag: 'Growth' },
-    { n: '05', t: 'Free the team',         d: 'Automate the robot work. Let people do the work that grows the business.',     metric: 'Faster', unit: 'daily ops',        tag: 'Operations' }
+    { n: '03', t: 'Self-managed systems', d: 'Fewer tools, one partner. Retire the current stack and its renewals.',          metric: 'Lower',  unit: 'total cost',       tag: 'Finance' },
+    { n: '04', t: 'Built-in growth engine', d: 'Conversion, AOV, retention — engineered in, not bolted on.',                  metric: 'Higher', unit: 'AOV + LTV',        tag: 'Growth' },
+    { n: '05', t: 'Automation',         d: 'Automate the robot work and free the team to focus on what grows the business.',     metric: 'Faster', unit: 'daily ops',        tag: 'Operations' }
   ];
   return (
     <BPSection id="objectives" n="03" label="Objectives" paper tail="WHAT SUCCESS LOOKS LIKE">
