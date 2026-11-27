@@ -416,9 +416,9 @@ function BPApproach() {
   // What success looks like: four outcomes clients reached on Shopify with Uncap.
   const wins = [
     { k: 'YoY Growth', v: '40%+', dir: '↑', d: 'Vosges Chocolate grew over 40% year over year after migrating to Shopify.', c: 'Vosges Chocolate' },
-    { k: 'TCO Decrease', v: '83%', dir: '↓', d: 'Canon reduced their technical debt by 83% after migrating to Shopify.', c: 'Canon' },
+    { k: 'TCO Decrease', v: '83%', dir: '↓', d: 'Canon Medical reduced their technical debt by 83% after migrating to Shopify.', c: 'Canon Medical' },
     { k: 'AOV Increase', v: '22%', dir: '↑', d: 'Kooks Headers increased their AOV by 22% after launching on Shopify.', c: 'Kooks Headers' },
-    { k: 'B2B Adoption', v: '85%', dir: '↑', d: 'WeldingStore increased their B2B adoption by 85%.', c: 'WeldingStore' }
+    { k: 'B2B Self-Serve', v: '85%', dir: '↑', d: 'WeldingStore increased their B2B self-serve adoption by 85%.', c: 'WeldingStore' }
   ];
   return (
     <BPSection id="approach" n="04" label="What Success Looks Like" dark tail="THE PROOF">
