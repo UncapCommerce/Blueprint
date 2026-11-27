@@ -269,7 +269,7 @@ function BPSummary() {
           { v: '12 wk', l: 'Estimated timeline to upgrade & go live' },
           { v: 'Unified', l: 'B2C, B2B & Unified Commerce on Shopify' },
           { v: '2.0 OS', l: 'Upgraded theme and app cleanup' },
-          { v: 'Speed', l: 'Sidekick ready solution for self management' }
+          { v: 'Fast', l: 'Sidekick ready solution for self management' }
         ].map((s, i) => (
           <div key={i} style={{
             padding: 'clamp(24px, 3vw, 36px)',

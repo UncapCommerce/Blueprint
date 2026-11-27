@@ -266,7 +266,7 @@ function BPSummary() {
           { v: '12 wk', l: 'Estimated timeline to launch on Shopify' },
           { v: 'Unified', l: 'B2C, B2B and back-office on Shopify' },
           { v: 'OS 2.0', l: 'Upgraded Shopify Theme and Experience' },
-          { v: 'Speed', l: 'Sidekick based self management' }
+          { v: 'Fast', l: 'Sidekick based self management' }
         ].map((s, i) => (
           <div key={i} style={{
             padding: 'clamp(24px, 3vw, 36px)',
