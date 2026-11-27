@@ -503,11 +503,14 @@
     fitBodyToBar();
   }
   // The signing modal lives inside the page's own stacking layer, so it
-  // can't rise above this bar; the bar steps aside while the modal is open.
+  // can't rise above this bar or the fixed section nav; both step aside
+  // while the modal is open, leaving the modal over the whole screen.
   function syncApproveBar() {
+    const open = !!document.querySelector('[role="dialog"][aria-modal="true"]');
+    document.querySelectorAll('nav[style*="position: fixed"]').forEach((n) => { n.style.visibility = open ? 'hidden' : ''; });
     const bar = document.getElementById(APPROVE_BAR_ID);
-    if (!bar) { maybeShowApproveBar(); return; }
-    bar.style.display = document.querySelector('[role="dialog"][aria-modal="true"]') ? 'none' : 'flex';
+    if (!bar) { if (!open) maybeShowApproveBar(); return; }
+    bar.style.display = open ? 'none' : 'flex';
   }
   window.addEventListener('bp:approve-ready', syncApproveBar);
   window.addEventListener('bp:approved', removeApproveBar);
