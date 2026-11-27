@@ -384,12 +384,13 @@ function BPObjectives() {
 
 // ── 04 RECOMMENDED APPROACH ────────────────────────────────────────────────
 function BPApproach() {
-  // What success looks like: four outcomes clients reached on Shopify with Uncap.
+  // What success looks like: the four measures we build toward, each proven
+  // by a client who reached it on Shopify with Uncap.
   const wins = [
-    { k: 'YoY Growth', v: '40%+', dir: '↑', d: 'Vosges Chocolate grew over 40% year over year after migrating to Shopify.', c: 'Vosges Chocolate' },
-    { k: 'TCO Decrease', v: '83%', dir: '↓', d: 'Canon Medical reduced their technical debt by 83% after migrating to Shopify.', c: 'Canon Medical' },
-    { k: 'AOV Increase', v: '22%', dir: '↑', d: 'Kooks Headers increased their AOV by 22% after launching on Shopify.', c: 'Kooks Headers' },
-    { k: 'B2B Self-Serve', v: '85%', dir: '↑', d: 'WeldingStore increased their B2B self-serve adoption by 85%.', c: 'WeldingStore' }
+    { m: 'YoY', full: 'Year-over-year growth', dir: '↑', d: 'Vosges Chocolate grew over 40% year over year after migrating to Shopify.', c: 'Vosges Chocolate' },
+    { m: 'TCO', full: 'Total cost of ownership', dir: '↓', d: 'Canon Medical reduced their technical debt by 83% after migrating to Shopify.', c: 'Canon Medical' },
+    { m: 'AOV', full: 'Average order value', dir: '↑', d: 'Kooks Headers increased their AOV by 22% after launching on Shopify.', c: 'Kooks Headers' },
+    { m: 'B2B', full: 'B2B self-serve adoption', dir: '↑', d: 'WeldingStore increased their B2B self-serve adoption by 85%.', c: 'WeldingStore' }
   ];
   return (
     <BPSection id="approach" n="04" label="What Success Looks Like" dark tail="THE PROOF">
@@ -410,11 +411,14 @@ function BPApproach() {
             padding: 'clamp(20px, 2.4vw, 28px)', display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0
           }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--uc-signal)' }}>{w.k}</span>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--uc-signal)' }}>{String(i + 1).padStart(2, '0')}</span>
               <span style={{ width: 8, height: 8, borderRadius: 999, background: 'var(--uc-signal)', flexShrink: 0 }}/>
             </div>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(36px, 4vw, 56px)', letterSpacing: '-0.045em', lineHeight: 0.9, color: 'var(--uc-paper)' }}>
-              <span style={{ fontSize: '0.55em', color: 'var(--uc-signal)' }}>{w.dir}</span>{w.v}
+            <div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(26px, 2.6vw, 38px)', letterSpacing: '-0.04em', lineHeight: 1, color: 'var(--uc-paper)' }}>
+                <span style={{ fontSize: '0.7em', color: 'var(--uc-signal)', flexShrink: 0 }}>{w.dir}</span><span style={{ minWidth: 0 }}>{w.m}</span>
+              </div>
+              <div style={{ marginTop: 8, fontFamily: 'var(--font-mono)', fontSize: 10.5, fontWeight: 700, letterSpacing: '0.1em', textTransform: 'uppercase', color: 'var(--uc-stone-500)' }}>{w.full}</div>
             </div>
             <div style={{ fontFamily: 'var(--font-serif)', fontSize: 14.5, lineHeight: 1.5, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>{w.d}</div>
             <div style={{ marginTop: 'auto', paddingTop: 14, borderTop: '1px solid #1F1F1F', fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.04em', color: 'var(--uc-stone-500)' }}>{w.c}</div>
