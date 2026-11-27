@@ -344,7 +344,7 @@ function BPWhere() {
 // ── 03 OBJECTIVES ───────────────────────────────────────────────────────────
 function BPObjectives() {
   const items = [
-    { n: '01', t: 'Unify commerce',   d: 'One platform for storefront, B2B, and back-office. No reconciling.',           metric: 'One',    unit: 'system of record', tag: 'Revenue' },
+    { n: '01', t: 'Unified Commerce',   d: 'One platform for storefront, B2B, and back-office. No reconciling.',           metric: 'One',    unit: 'system of record', tag: 'Revenue' },
     { n: '02', t: 'Self-managed systems', d: 'Fewer tools, one partner. Retire the legacy stack and its renewals.',          metric: 'Lower',  unit: 'total cost',       tag: 'Finance' },
     { n: '03', t: 'Built-in growth engine', d: 'Conversion, AOV and retention engineered in, not bolted on.',                  metric: 'Higher', unit: 'AOV + LTV',        tag: 'Growth' },
     { n: '04', t: 'Native automation',         d: 'Automate the robot work and free the team to focus on what grows the business.',     metric: 'Faster', unit: 'daily ops',        tag: 'Operations' }

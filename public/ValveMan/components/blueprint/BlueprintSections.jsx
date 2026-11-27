@@ -360,7 +360,7 @@ function BPWhere() {
 function BPObjectives() {
   const items = [
     { n: '01', t: 'Seamless replatforming', d: 'Uncap owns the project end to end. Keep what works, built for growth.', metric: 'Zero', unit: 'lost ground', tag: 'Tech' },
-    { n: '02', t: 'Unify commerce', d: 'B2C storefront and B2B portal, integrated with Epicor P21.', metric: 'One', unit: 'system of record', tag: 'Revenue' },
+    { n: '02', t: 'Unified Commerce', d: 'B2C storefront and B2B portal, integrated with Epicor P21.', metric: 'One', unit: 'system of record', tag: 'Revenue' },
     { n: '03', t: 'Self-managed systems', d: 'Fewer tools, one partner. Retire the legacy stack and own the custom software.', metric: 'Lower', unit: 'total cost', tag: 'Finance' },
     { n: '04', t: 'Built-in growth engine', d: 'Built for growth, optimized for KPIs, speed, and performance.', metric: 'Higher', unit: 'AOV + LTV', tag: 'Growth' },
     { n: '05', t: 'Native automation', d: 'Automate the robot work and free the team to focus on what grows the business.', metric: 'Faster', unit: 'daily ops', tag: 'Operations' }
