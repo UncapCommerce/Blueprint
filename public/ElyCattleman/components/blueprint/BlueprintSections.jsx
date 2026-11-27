@@ -402,35 +402,40 @@ function BPObjectives() {
 
 // ── 04 RECOMMENDED APPROACH ────────────────────────────────────────────────
 function BPApproach() {
-  const steps = [
-    { n: 'Phase 1', t: 'Blueprint', d: 'Architecture, data model, integration map. A plan that holds up under scrutiny.', wk: '2 weeks' },
-    { n: 'Phase 2', t: 'Build', d: 'Storefront, B2B, ERP sync. Fixed scope, senior team, no surprises.', wk: '12 weeks' },
-    { n: 'Phase 3', t: 'Grow', d: 'Go live, then optimize conversion, AOV, and automation.', wk: 'Months 6–12' }
+  // What success looks like: four outcomes clients reached on Shopify with Uncap.
+  const wins = [
+    { k: 'YoY Growth', v: '40%+', dir: '↑', d: 'Vosges Chocolate grew over 40% year over year after migrating to Shopify.', c: 'Vosges Chocolate' },
+    { k: 'TCO Decrease', v: '83%', dir: '↓', d: 'Canon reduced their technical debt by 83% after migrating to Shopify.', c: 'Canon' },
+    { k: 'AOV Increase', v: '22%', dir: '↑', d: 'Kooks Headers increased their AOV by 22% after launching on Shopify.', c: 'Kooks Headers' },
+    { k: 'B2B Adoption', v: '85%', dir: '↑', d: 'WeldingStore increased their B2B adoption by 85%.', c: 'WeldingStore' }
   ];
   return (
-    <BPSection id="approach" n="04" label="Recommended Approach" dark tail="THE PLAN">
+    <BPSection id="approach" n="04" label="What Success Looks Like" dark tail="THE PROOF">
       <BPHeadline dark>
-        Three phases.{' '}
-        <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, color: 'var(--uc-stone-300)' }}>One straight line.</span>
+        What success{' '}
+        <span style={{ fontFamily: 'var(--font-serif)', fontWeight: 400, color: 'var(--uc-stone-300)' }}>looks like.</span>
       </BPHeadline>
+      <p style={{ marginTop: 'clamp(16px, 2vw, 22px)', maxWidth: 620, fontFamily: 'var(--font-serif)', fontSize: 'clamp(15px, 1.3vw, 18px)', lineHeight: 1.5, color: 'var(--uc-stone-300)' }}>
+        The outcomes we build toward, measured on stores that made the same move to Shopify with Uncap.
+      </p>
       <div style={{
-        marginTop: 'clamp(32px, 4vw, 56px)',
-        display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, position: 'relative'
+        marginTop: 'clamp(28px, 3.5vw, 48px)',
+        display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16
       }}>
-        <div aria-hidden="true" style={{ position: 'absolute', left: '8%', right: '8%', top: 40, height: 1, background: '#2B2B2B' }}/>
-        {steps.map((s, i) => (
+        {wins.map((w, i) => (
           <div key={i} style={{
             background: '#0F0F0F', border: '1px solid #1F1F1F', borderRadius: 5,
-            padding: 'clamp(22px, 2.6vw, 30px)', display: 'flex', flexDirection: 'column', gap: 14,
-            position: 'relative', zIndex: 1
+            padding: 'clamp(20px, 2.4vw, 28px)', display: 'flex', flexDirection: 'column', gap: 14, minWidth: 0
           }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', color: 'var(--uc-signal)' }}>{s.n}</span>
-              <span style={{ width: 8, height: 8, borderRadius: 999, background: 'var(--uc-signal)' }}/>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, letterSpacing: '0.08em', textTransform: 'uppercase', color: 'var(--uc-signal)' }}>{w.k}</span>
+              <span style={{ width: 8, height: 8, borderRadius: 999, background: 'var(--uc-signal)', flexShrink: 0 }}/>
             </div>
-            <div style={{ fontFamily: 'var(--font-hero)', fontWeight: 700, fontSize: 'clamp(26px, 2.8vw, 40px)', letterSpacing: '-0.035em', color: 'var(--uc-paper)' }}>{s.t}</div>
-            <div style={{ fontFamily: 'var(--font-serif)', fontSize: 14.5, lineHeight: 1.5, color: 'var(--uc-stone-300)' }}>{s.d}</div>
-            <div style={{ marginTop: 'auto', paddingTop: 14, borderTop: '1px solid #1F1F1F', fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--uc-stone-500)' }}>{s.wk}</div>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: 6, fontFamily: 'var(--font-hero)', fontWeight: 800, fontSize: 'clamp(36px, 4vw, 56px)', letterSpacing: '-0.045em', lineHeight: 0.9, color: 'var(--uc-paper)' }}>
+              <span style={{ fontSize: '0.55em', color: 'var(--uc-signal)' }}>{w.dir}</span>{w.v}
+            </div>
+            <div style={{ fontFamily: 'var(--font-serif)', fontSize: 14.5, lineHeight: 1.5, color: 'var(--uc-stone-300)', textWrap: 'pretty' }}>{w.d}</div>
+            <div style={{ marginTop: 'auto', paddingTop: 14, borderTop: '1px solid #1F1F1F', fontFamily: 'var(--font-mono)', fontSize: 11, letterSpacing: '0.04em', color: 'var(--uc-stone-500)' }}>{w.c}</div>
           </div>
         ))}
       </div>
@@ -2893,7 +2898,7 @@ function BPNav() {
     { id: 'summary',     n: '01', l: 'Summary' },
     { id: 'where',       n: '02', l: 'Today' },
     { id: 'objectives',  n: '03', l: 'Objectives' },
-    { id: 'approach',    n: '04', l: 'Approach' },
+    { id: 'approach',    n: '04', l: 'Success' },
     { id: 'scope',       n: '05', l: 'Scope' },
     { id: 'performance', n: '06', l: 'Commerce' },
     { id: 'content',     n: '07', l: 'Content' },
